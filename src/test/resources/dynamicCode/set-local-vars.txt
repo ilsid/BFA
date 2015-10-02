@@ -1,0 +1,5 @@
+DeclareLocalVar("Var1", "Number");
+DeclareLocalVar("Var2", "Decimal");
+
+SetLocalVar("Var1", "1");
+SetLocalVar("Var2", "2");

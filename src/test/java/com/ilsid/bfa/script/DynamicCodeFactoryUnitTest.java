@@ -5,24 +5,23 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 
 import org.jmock.Expectations;
-import org.jmock.syntax.ReceiverClause;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.script.Action;
-import com.ilsid.bfa.script.DynamicCodeException;
-import com.ilsid.bfa.script.DynamicCodeFactory;
-import com.ilsid.bfa.script.DynamicCodeInvocation;
-import com.ilsid.bfa.script.GlobalContext;
-import com.ilsid.bfa.script.Script;
-import com.ilsid.bfa.script.ScriptException;
-import com.ilsid.bfa.script.TypeResolver;
 
 public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	private static final String EXPRESSION_CLASS_NAME_PREFIX = DynamicCodeFactory.GENERATED_PACKAGE + "TestScript$";
 
 	private static final String SCRIPTS_DIR = "src/test/resources/dynamicCode/";
+
+	private ScriptContext mockContext;
+
+	@Before
+	public void setUp() {
+		mockContext = mock(ScriptContext.class);
+	}
 
 	@Test
 	public void generatedClassNameDoesNotContainSpaces() {
@@ -84,45 +83,52 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void generatedClassNameIsPrependedWithScriptName() throws Exception {
+	public void expressionClassNameIsPrependedWithScriptName() throws Exception {
 		assertEquals(DynamicCodeFactory.GENERATED_PACKAGE + "SomeScript$2_Mns_1",
 				getInvocation("Some Script", "2 - 1", "return Integer.valueOf(2 - 1);").getClass().getName());
+	}
+	
+	@Test
+	public void sameClassIsReturnedForSameScriptOnConsequentCalls() throws Exception {
+		Script script1 = getScriptWithStubImplementation();
+		Script script2 = getScriptWithStubImplementation();
+		Script script3 = getScriptWithStubImplementation();
+
+		assertSame(script1.getClass(), script2.getClass());
+		assertSame(script2.getClass(), script3.getClass());
 	}
 
 	@Test
 	public void scriptWithDeclarationsOnlyCanBeInvoked() throws Exception {
-		Script script = createScript("Script01", "declarations-only.txt");
-		assertEquals(DynamicCodeFactory.GENERATED_PACKAGE + "Script01", script.getClass().getName());
-
-		final ScriptContext mockContext = mock(ScriptContext.class);
-		checking(new Expectations() {
+		verifyScript("Script01", "declarations-only-script.txt", new Expectations() {
 			{
-				exactly(2).of(mockContext).addLocalVar(with(any(String.class)), with(any(String.class)));
+				oneOf(mockContext).addLocalVar("Var1", "Number");
+				oneOf(mockContext).addLocalVar("Var2", "Decimal");
 			}
 		});
-
-		script.setGlobalContext(new GlobalContext());
-		setInaccessibleParentField(script, "scriptContext", mockContext);
-		script.execute();
-
-		assertIsSatisfed();
 	}
 
 	@Test
 	public void scriptWithSetLocalVarsCanBeInvoked() throws Exception {
 		final String scriptName = "Script02";
-		Script script = createScript(scriptName, "set-local-vars.txt");
-		assertEquals(DynamicCodeFactory.GENERATED_PACKAGE + scriptName, script.getClass().getName());
-
-		final ScriptContext mockContext = mock(ScriptContext.class);
-		checking(new Expectations() {
+		
+		verifyScript(scriptName, "set-local-vars-script.txt", new Expectations() {
 			{
-				exactly(2).of(mockContext).addLocalVar(with(any(String.class)), with(any(String.class)));
+				oneOf(mockContext).addLocalVar("Var1", "Number");
+				oneOf(mockContext).addLocalVar("Var2", "Decimal");
 				exactly(2).of(mockContext).getScriptName();
 				will(returnValue(scriptName));
-				exactly(2).of(mockContext).updateLocalVar(with(any(String.class)), with(any(Object.class)));
+				oneOf(mockContext).updateLocalVar("Var1", 1);
+				oneOf(mockContext).updateLocalVar("Var2", 2.0);
 			}
 		});
+	}
+
+	private void verifyScript(String scriptName, String scriptFile, Expectations expectations) throws Exception {
+		Script script = createScript(scriptName, scriptFile);
+		assertEquals(DynamicCodeFactory.GENERATED_PACKAGE + scriptName, script.getClass().getName());
+
+		checking(expectations);
 
 		script.setGlobalContext(new GlobalContext());
 		setInaccessibleParentField(script, "scriptContext", mockContext);
@@ -147,6 +153,11 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			throws DynamicCodeException {
 		return DynamicCodeFactory.getInvocation("TestScript", origExpression, "return null;");
 	}
+	
+	private Script getScriptWithStubImplementation()
+			throws Exception {
+		return createScript("Stub Script", "empty-script.txt");
+	}
 
 	private Object invokeExpression(String origExpression, String compileExpression) throws DynamicCodeException {
 		DynamicCodeInvocation invocation = DynamicCodeFactory.getInvocation("TestScript", origExpression,
@@ -167,7 +178,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 				return new TypeResolver() {
 
 					public String resolveJavaTypeName(String typeName) throws ScriptException {
-						return null;
+						return typeName;
 					}
 
 					public Action resolveAction(String actionName) throws ScriptException {

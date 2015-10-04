@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 
@@ -31,9 +32,9 @@ class DynamicCodeFactory {
 
 	private static Map<String, String> replaceableSymbols = new HashMap<>();
 
-	private static Map<String, Class<DynamicCodeInvocation>> invocationCache = new HashMap<>();
+	private static ConcurrentHashMap<String, Class<DynamicCodeInvocation>> invocationCache = new ConcurrentHashMap<>();
 
-	private static Map<String, Class<Script>> scriptCache = new HashMap<>();
+	private static ConcurrentHashMap<String, Class<Script>> scriptCache = new ConcurrentHashMap<>();
 
 	static {
 		replaceableSymbols.put("-", "_Mns_");
@@ -61,8 +62,8 @@ class DynamicCodeFactory {
 			throws DynamicCodeException {
 
 		String className = generateClassName(scriptName, scriptExpression);
-		DynamicCodeInvocation invocation = tryInstantiateFromCache(className, invocationCache);
-
+		
+		DynamicCodeInvocation invocation = tryCreateInstance(className, invocationCache);
 		if (invocation != null) {
 			return invocation;
 		}
@@ -90,14 +91,7 @@ class DynamicCodeFactory {
 			method.setBody(javaExpression);
 			clazz.addMethod(method);
 
-			byte[] bytes = clazz.toBytecode();
-			pool.appendClassPath(new ByteArrayClassPath(className, bytes));
-			clazz = pool.get(className);
-
-			@SuppressWarnings("unchecked")
-			Class<DynamicCodeInvocation> invocationClass = clazz.toClass();
-			putToCache(className, invocationClass, invocationCache);
-			invocation = (DynamicCodeInvocation) invocationClass.newInstance();
+			invocation = createInstance(clazz, invocationCache);
 
 		} catch (InstantiationException | IllegalAccessException | NotFoundException | CannotCompileException
 				| IOException e) {
@@ -123,8 +117,8 @@ class DynamicCodeFactory {
 	 */
 	public static Script getScript(String scriptName, InputStream scriptBody) throws DynamicCodeException {
 		String className = generateClassName(scriptName);
-		Script script = tryInstantiateFromCache(className, scriptCache);
-
+		
+		Script script = tryCreateInstance(className, scriptCache);
 		if (script != null) {
 			return script;
 		}
@@ -144,14 +138,7 @@ class DynamicCodeFactory {
 			method.setBody(body);
 			clazz.addMethod(method);
 
-			byte[] bytes = clazz.toBytecode();
-			pool.appendClassPath(new ByteArrayClassPath(className, bytes));
-			clazz = pool.get(className);
-
-			@SuppressWarnings("unchecked")
-			Class<Script> scriptClass = clazz.toClass();
-			putToCache(className, scriptClass, scriptCache);
-			script = (Script) scriptClass.newInstance();
+			script = createInstance(clazz, scriptCache);
 
 		} catch (NotFoundException | CannotCompileException | InstantiationException | IllegalAccessException
 				| IOException e) {
@@ -179,16 +166,11 @@ class DynamicCodeFactory {
 		return expr;
 	}
 
-	private static synchronized <T> T tryInstantiateFromCache(String className, Map<String, Class<T>> cache)
+	private static <T> T tryCreateInstance(String className, ConcurrentHashMap<String, Class<T>> cache)
 			throws DynamicCodeException {
-
 		Class<T> clazz = cache.get(className);
-		T instance = tryCreateInstance(clazz);
-		return instance;
-	}
-
-	private static <T> T tryCreateInstance(Class<T> clazz) throws DynamicCodeException {
 		T instance = null;
+
 		if (clazz != null) {
 			try {
 				instance = clazz.newInstance();
@@ -200,10 +182,27 @@ class DynamicCodeFactory {
 		return instance;
 	}
 
-	private static synchronized <T> void putToCache(String className, Class<T> clazz, Map<String, Class<T>> cache) {
-		if (cache.get(className) == null) {
-			cache.put(className, clazz);
+	// FIXME: ctClass.toClass() may be called twice in parallel threads here
+	@SuppressWarnings("unchecked")
+	private static <T> T createInstance(CtClass ctClass, ConcurrentHashMap<String, Class<T>> cache)
+			throws CannotCompileException, InstantiationException, IllegalAccessException, IOException {
+
+		Class<T> instanceClass;
+		T instance;
+
+		instanceClass = ctClass.toClass();
+		String className = ctClass.getName();
+		Class<T> alreadyInCacheClass = cache.putIfAbsent(className, instanceClass);
+
+		if (alreadyInCacheClass != null) {
+			instance = alreadyInCacheClass.newInstance();
+		} else {
+			byte[] bytes = ctClass.toBytecode();
+			ctClass.getClassPool().appendClassPath(new ByteArrayClassPath(className, bytes));
+			instance = instanceClass.newInstance();
 		}
+
+		return instance;
 	}
 
 }

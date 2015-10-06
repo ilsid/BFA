@@ -8,7 +8,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import com.ilsid.bfa.common.NumberUtil;
 
 /**
- * Parses a scripting expressions and returns a corresponding Java source code.
+ * Parses a scripting expression and returns a corresponding Java source code.
  * 
  * @author illia.sydorovych
  *

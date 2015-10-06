@@ -184,19 +184,20 @@ class DynamicCodeFactory {
 	private static <T> T createInstance(CtClass ctClass, Map<String, Class<T>> cache)
 			throws CannotCompileException, InstantiationException, IllegalAccessException, IOException {
 		T instance;
+		Class<T> instanceClass;
 		
 		synchronized (cache) {
 			String className = ctClass.getName();
 			Class<T> alreadyInCacheClass = cache.get(className);
 			if (alreadyInCacheClass == null) {
-				Class<T> instanceClass = ctClass.toClass();
+				instanceClass = ctClass.toClass();
 				cache.put(className, instanceClass);
-				instance = instanceClass.newInstance();
 			} else {
-				instance = alreadyInCacheClass.newInstance();
+				instanceClass = alreadyInCacheClass;
 			}
 		}
 
+		instance = instanceClass.newInstance();
 		return instance;
 	}
 

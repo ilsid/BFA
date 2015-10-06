@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 
-import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -32,9 +30,9 @@ class DynamicCodeFactory {
 
 	private static Map<String, String> replaceableSymbols = new HashMap<>();
 
-	private static ConcurrentHashMap<String, Class<DynamicCodeInvocation>> invocationCache = new ConcurrentHashMap<>();
+	private static Map<String, Class<DynamicCodeInvocation>> invocationCache = new HashMap<>();
 
-	private static ConcurrentHashMap<String, Class<Script>> scriptCache = new ConcurrentHashMap<>();
+	private static Map<String, Class<Script>> scriptCache = new HashMap<>();
 
 	static {
 		replaceableSymbols.put("-", "_Mns_");
@@ -166,7 +164,7 @@ class DynamicCodeFactory {
 		return expr;
 	}
 
-	private static <T> T tryCreateInstance(String className, ConcurrentHashMap<String, Class<T>> cache)
+	private static <T> T tryCreateInstance(String className, Map<String, Class<T>> cache)
 			throws DynamicCodeException {
 		Class<T> clazz = cache.get(className);
 		T instance = null;
@@ -182,24 +180,21 @@ class DynamicCodeFactory {
 		return instance;
 	}
 
-	// FIXME: ctClass.toClass() may be called twice in parallel threads here
 	@SuppressWarnings("unchecked")
-	private static <T> T createInstance(CtClass ctClass, ConcurrentHashMap<String, Class<T>> cache)
+	private static <T> T createInstance(CtClass ctClass, Map<String, Class<T>> cache)
 			throws CannotCompileException, InstantiationException, IllegalAccessException, IOException {
-
-		Class<T> instanceClass;
 		T instance;
-
-		instanceClass = ctClass.toClass();
-		String className = ctClass.getName();
-		Class<T> alreadyInCacheClass = cache.putIfAbsent(className, instanceClass);
-
-		if (alreadyInCacheClass != null) {
-			instance = alreadyInCacheClass.newInstance();
-		} else {
-			byte[] bytes = ctClass.toBytecode();
-			ctClass.getClassPool().appendClassPath(new ByteArrayClassPath(className, bytes));
-			instance = instanceClass.newInstance();
+		
+		synchronized (cache) {
+			String className = ctClass.getName();
+			Class<T> alreadyInCacheClass = cache.get(className);
+			if (alreadyInCacheClass == null) {
+				Class<T> instanceClass = ctClass.toClass();
+				cache.put(className, instanceClass);
+				instance = instanceClass.newInstance();
+			} else {
+				instance = alreadyInCacheClass.newInstance();
+			}
 		}
 
 		return instance;

@@ -1,16 +1,22 @@
 package com.ilsid.bfa.script;
 
+import com.ilsid.bfa.BFAException;
+
+/**
+ * Signals that a script execution failure occurred.
+ * 
+ * @author illia.sydorovych
+ *
+ */
 @SuppressWarnings("serial")
-public class ScriptException extends Exception {
+public class ScriptException extends BFAException {
 
 	public ScriptException(String message, Throwable cause) {
 		super(message, cause);
-		// TODO Auto-generated constructor stub
 	}
 
 	public ScriptException(String message) {
 		super(message);
-		// TODO Auto-generated constructor stub
 	}
 	
 	

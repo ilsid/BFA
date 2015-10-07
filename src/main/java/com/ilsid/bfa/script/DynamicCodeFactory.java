@@ -95,7 +95,7 @@ class DynamicCodeFactory {
 				| IOException e) {
 
 			throw new DynamicCodeException(
-					"Failed to create class for expression [" + scriptExpression + "] in script [" + scriptName + "]",
+					"Failed to create instance of the expression [" + scriptExpression + "] in the script [" + scriptName + "]",
 					e);
 		}
 
@@ -141,7 +141,7 @@ class DynamicCodeFactory {
 		} catch (NotFoundException | CannotCompileException | InstantiationException | IllegalAccessException
 				| IOException e) {
 
-			throw new DynamicCodeException("Failed to create class for script [" + scriptName + "]", e);
+			throw new DynamicCodeException("Failed to create instance of the script [" + scriptName + "]", e);
 		}
 
 		return script;

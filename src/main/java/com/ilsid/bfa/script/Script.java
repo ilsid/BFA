@@ -113,7 +113,7 @@ public abstract class Script implements Executable<Void> {
 			try {
 				return new DynamicCode((String) expr, scriptContext);
 			} catch (ClassCastException e) {
-				throw new ScriptException("Expected string expression but was " + expr);
+				throw new ScriptException("Expected string expression but was " + expr, e);
 			}
 		}
 	}

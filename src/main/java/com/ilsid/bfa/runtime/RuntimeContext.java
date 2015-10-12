@@ -33,7 +33,7 @@ public class RuntimeContext {
 		return codeRepository;
 	}
 
-	public void setCodeRepository(CodeRepository codeRepository) {
+	void setCodeRepository(CodeRepository codeRepository) {
 		this.codeRepository = codeRepository;
 	}
 	

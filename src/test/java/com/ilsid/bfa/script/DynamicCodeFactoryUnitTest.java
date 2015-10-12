@@ -45,9 +45,9 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	private ScriptContext mockContext;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception {
 		mockContext = mock(ScriptContext.class);
-		RuntimeContext.getInstance().setCodeRepository(null);
+		setInaccessibleField(RuntimeContext.getInstance(), "codeRepository", null);
 	}
 
 	@Test
@@ -191,7 +191,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 		DynamicCodeFactory.getScript("NonExistentScript", null);
 	}
 
-	private void defineRepository() {
+	private void defineRepository() throws Exception {
 		CodeRepository repository = new CodeRepository() {
 
 			public byte[] load(String className) throws PersistenceException {
@@ -209,7 +209,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			}
 		};
 
-		RuntimeContext.getInstance().setCodeRepository(repository);;
+		setInaccessibleField(RuntimeContext.getInstance(), "codeRepository", repository);
 	}
 
 	private void verifyScript(String scriptName, String scriptFile, Expectations expectations) throws Exception {

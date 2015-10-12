@@ -15,6 +15,15 @@ import com.ilsid.bfa.generated.DummyScript;
 import com.ilsid.bfa.generated.DummyScript$$DummyExpression;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.runtime.RuntimeContext;
+import com.ilsid.bfa.script.Action;
+import com.ilsid.bfa.script.DynamicCodeException;
+import com.ilsid.bfa.script.DynamicCodeFactory;
+import com.ilsid.bfa.script.DynamicCodeInvocation;
+import com.ilsid.bfa.script.Script;
+import com.ilsid.bfa.script.ScriptContext;
+import com.ilsid.bfa.script.ScriptException;
+import com.ilsid.bfa.script.TypeResolver;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -24,7 +33,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	private static final String DUMMY_SCRIPT_NAME = "DummyScript";
 
-	private static final GlobalContext FAKE_GLOBAL_CONTEXT = new GlobalContext();
+	private static final RuntimeContext FAKE_RUNTIME_CONTEXT = RuntimeContext.getInstance();
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
 
@@ -38,6 +47,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		mockContext = mock(ScriptContext.class);
+		RuntimeContext.getInstance().setCodeRepository(null);
 	}
 
 	@Test
@@ -131,8 +141,6 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 		verifyScript(scriptName, "set-local-vars-script.txt", new Expectations() {
 			{
-				exactly(2).of(mockContext).getGlobalContext();
-				will(returnValue(FAKE_GLOBAL_CONTEXT));
 				oneOf(mockContext).addLocalVar("Var1", "Number");
 				oneOf(mockContext).addLocalVar("Var2", "Decimal");
 				exactly(2).of(mockContext).getScriptName();
@@ -145,8 +153,9 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void expressionClassIsLoadedFromRepositoryIfRespositoryDefined() throws Exception {
-		DynamicCodeInvocation expr = DynamicCodeFactory.getInvocation(
-				getScriptContextWithMockRepository(DUMMY_SCRIPT_NAME), "DummyExpression", "dummy java expr");
+		defineRepository();
+		DynamicCodeInvocation expr = DynamicCodeFactory.getInvocation(DUMMY_SCRIPT_NAME, "DummyExpression",
+				"dummy java expr");
 		assertSame(DummyScript$$DummyExpression.class, expr.getClass());
 		assertEquals(TestConstants.DUMMY_EXPRESSION_RESULT, expr.invoke());
 	}
@@ -157,13 +166,14 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 		exceptionRule.expectMessage("Class [" + DynamicCodeFactory.GENERATED_PACKAGE
 				+ "NonExistentScript$$DummyExpression] does not exist in repository");
 
-		DynamicCodeFactory.getInvocation(getScriptContextWithMockRepository("NonExistentScript"), "DummyExpression",
-				"dummy java expr");
+		defineRepository();
+		DynamicCodeFactory.getInvocation("NonExistentScript", "DummyExpression", "dummy java expr");
 	}
 
 	@Test
 	public void scriptClassIsLoadedFromRepositoryIfRespositoryDefined() throws Exception {
-		Script script = DynamicCodeFactory.getScript(getScriptContextWithMockRepository(DUMMY_SCRIPT_NAME), null);
+		defineRepository();
+		Script script = DynamicCodeFactory.getScript(DUMMY_SCRIPT_NAME, null);
 		assertSame(DummyScript.class, script.getClass());
 		DummyScript dummyScript = (DummyScript) script;
 		assertNull(dummyScript.getResult());
@@ -177,10 +187,11 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 		exceptionRule.expectMessage(
 				"Class [" + DynamicCodeFactory.GENERATED_PACKAGE + "NonExistentScript] does not exist in repository");
 
-		DynamicCodeFactory.getScript(getScriptContextWithMockRepository("NonExistentScript"), null);
+		defineRepository();
+		DynamicCodeFactory.getScript("NonExistentScript", null);
 	}
 
-	private ScriptContext getScriptContextWithMockRepository(String scriptName) {
+	private void defineRepository() {
 		CodeRepository repository = new CodeRepository() {
 
 			public byte[] load(String className) throws PersistenceException {
@@ -198,12 +209,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			}
 		};
 
-		GlobalContext globalContext = new GlobalContext();
-		globalContext.setCodeRepository(repository);
-		ScriptContext scriptContext = new ScriptContext(globalContext);
-		scriptContext.setScriptName(scriptName);
-
-		return scriptContext;
+		RuntimeContext.getInstance().setCodeRepository(repository);;
 	}
 
 	private void verifyScript(String scriptName, String scriptFile, Expectations expectations) throws Exception {
@@ -212,7 +218,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 		checking(expectations);
 
-		script.setGlobalContext(FAKE_GLOBAL_CONTEXT);
+		script.setRuntimeContext(FAKE_RUNTIME_CONTEXT);
 		setInaccessibleParentField(script, "scriptContext", mockContext);
 		script.execute();
 
@@ -228,16 +234,12 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	private DynamicCodeInvocation getInvocation(String scriptName, String origExpression, String compileExpression)
 			throws DynamicCodeException {
-		ScriptContext context = new ScriptContext(FAKE_GLOBAL_CONTEXT);
-		context.setScriptName(scriptName);
-		return DynamicCodeFactory.getInvocation(context, origExpression, "return null;");
+		return DynamicCodeFactory.getInvocation(scriptName, origExpression, "return null;");
 	}
 
 	private DynamicCodeInvocation getInvocationWithStubImplementation(String origExpression)
 			throws DynamicCodeException {
-		ScriptContext context = new ScriptContext(FAKE_GLOBAL_CONTEXT);
-		context.setScriptName("TestScript");
-		return DynamicCodeFactory.getInvocation(context, origExpression, "return null;");
+		return DynamicCodeFactory.getInvocation(TEST_SCRIPT_NAME, origExpression, "return null;");
 	}
 
 	private Script getScriptWithStubImplementation() throws Exception {
@@ -245,42 +247,32 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	}
 
 	private Object invokeExpression(String origExpression, String compileExpression) throws DynamicCodeException {
-		ScriptContext context = new ScriptContext(FAKE_GLOBAL_CONTEXT);
-		context.setScriptName("TestScript");
-		DynamicCodeInvocation invocation = DynamicCodeFactory.getInvocation(context, origExpression, compileExpression);
+		DynamicCodeInvocation invocation = DynamicCodeFactory.getInvocation(TEST_SCRIPT_NAME, origExpression, compileExpression);
 		Object result = invocation.invoke();
 		return result;
 	}
 
 	private Script createScript(String scriptName, String fileName) throws Exception {
 		Script script;
-		ScriptContext context = new ScriptContext(FAKE_GLOBAL_CONTEXT);
-		context.setScriptName(scriptName);
 		try (InputStream body = loadScript(fileName);) {
-			script = DynamicCodeFactory.getScript(context, body);
+			script = DynamicCodeFactory.getScript(scriptName, body);
 		}
 
-		GlobalContext mockGlobalContext = new GlobalContext() {
-			@Override
-			public TypeResolver getTypeResolver() {
-				return new TypeResolver() {
+		script.setRuntimeContext(RuntimeContext.getInstance());
+		script.setTypeResolver(new TypeResolver() {
 
-					public String resolveJavaTypeName(String typeName) throws ScriptException {
-						return typeName;
-					}
-
-					public Action resolveAction(String actionName) throws ScriptException {
-						return null;
-					}
-
-					public Script resolveSubflow(String flowName) throws ScriptException {
-						return null;
-					}
-				};
+			public String resolveJavaTypeName(String typeName) throws ScriptException {
+				return typeName;
 			}
-		};
 
-		script.setGlobalContext(mockGlobalContext);
+			public Action resolveAction(String actionName) throws ScriptException {
+				return null;
+			}
+
+			public Script resolveSubflow(String flowName) throws ScriptException {
+				return null;
+			}
+		});
 
 		return script;
 	}

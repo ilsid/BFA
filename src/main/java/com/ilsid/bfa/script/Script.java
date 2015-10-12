@@ -1,12 +1,14 @@
 package com.ilsid.bfa.script;
 
+import com.ilsid.bfa.runtime.RuntimeContext;
+
 //TODO: complete implementation
 //TODO: complete javadocs
 public abstract class Script implements Executable<Void> {
 
 	private ScriptContext scriptContext;
 	
-	private GlobalContext globalContext;
+	private RuntimeContext runtimeContext;
 	
 	private TypeResolver typeResolver; 
 
@@ -17,10 +19,9 @@ public abstract class Script implements Executable<Void> {
 		return null;
 	}
 	
-	public void setGlobalContext(GlobalContext globalContext) {
-		this.globalContext = globalContext;
-		typeResolver = globalContext.getTypeResolver();
-		scriptContext = new ScriptContext(globalContext);
+	public void setRuntimeContext(RuntimeContext runtimeContext) {
+		this.runtimeContext = runtimeContext;
+		scriptContext = new ScriptContext(runtimeContext);
 		scriptContext.setScriptName(this.getClass().getSimpleName());
 	}
 	
@@ -41,11 +42,11 @@ public abstract class Script implements Executable<Void> {
 	}
 
 	public Object GetGlobalVar(String name) {
-		return globalContext.getGlobalVar(name);
+		return runtimeContext.getGlobalVar(name);
 	}
 
 	public void SetGlobalVar(String name, Object expr) throws ScriptException {
-		globalContext.setGlobalVar(name, getValue(expr));
+		runtimeContext.setGlobalVar(name, getValue(expr));
 	}
 
 	public boolean EqualCondition(Object expr1, Object expr2) throws ScriptException {
@@ -112,7 +113,7 @@ public abstract class Script implements Executable<Void> {
 		}
 		else {
 			try {
-				return new DynamicCode((String) expr, scriptContext);
+				return new ScriptExpression((String) expr, scriptContext);
 			} catch (ClassCastException e) {
 				throw new ScriptException("Expected string expression but was " + expr, e);
 			}

@@ -4,18 +4,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.script.DynamicCodeException;
-import com.ilsid.bfa.script.DynamicCodeFactory;
-import com.ilsid.bfa.script.DynamicCodeInvocation;
-import com.ilsid.bfa.script.DynamicCodeParser;
+import com.ilsid.bfa.script.ScriptExpressionParser;
 import com.ilsid.bfa.script.ScriptContext;
 import com.ilsid.bfa.script.Variable;
 import com.ilsid.bfa.test.types.Contract;
 import com.ilsid.bfa.test.types.Subscriber;
 
-public class DynamicCodeParserUnitTest extends BaseUnitTestCase {
+public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 
-	private DynamicCodeParser parser;
+	private ScriptExpressionParser parser;
 
 	private ScriptContext context;
 
@@ -23,7 +20,7 @@ public class DynamicCodeParserUnitTest extends BaseUnitTestCase {
 	public void setUp() {
 		context = new ScriptContext(null);
 		context.setScriptName("TestScript");
-		parser = new DynamicCodeParser(context);
+		parser = new ScriptExpressionParser(context);
 	}
 
 	@Test
@@ -357,7 +354,7 @@ public class DynamicCodeParserUnitTest extends BaseUnitTestCase {
 			}
 		};
 
-		parser = new DynamicCodeParser(context);
+		parser = new ScriptExpressionParser(context);
 	}
 
 	private void assertOutput(String input, String output) throws Exception {

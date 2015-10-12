@@ -3,6 +3,8 @@ package com.ilsid.bfa.script;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ilsid.bfa.runtime.RuntimeContext;
+
 /**
  * Script context. Holds state for a single script.
  * 
@@ -11,7 +13,7 @@ import java.util.Map;
  */
 public class ScriptContext {
 
-	private GlobalContext globalContext;
+	private RuntimeContext runtimeContext;
 
 	private Map<String, Variable> inputVars = new HashMap<>();
 
@@ -25,25 +27,25 @@ public class ScriptContext {
 	/**
 	 * Creates new instance.
 	 * 
-	 * @param globalContext
-	 *            a global context shared between all scripts.
+	 * @param runtimeContext
+	 *            a runtime context shared between all scripts.
 	 */
-	public ScriptContext(GlobalContext globalContext) {
-		this.globalContext = globalContext;
+	public ScriptContext(RuntimeContext runtimeContext) {
+		this.runtimeContext = runtimeContext;
 	}
 	
 	/**
-	 * Provides global context.
-	 * @return global context
+	 * Provides runtime context.
+	 * @return runtime context
 	 */
-	public GlobalContext getGlobalContext() {
-		return globalContext;
+	public RuntimeContext getRuntimeContext() {
+		return runtimeContext;
 	}
 
 	public void addInputVar(String name, String javaType) throws ScriptException {
 		// FIXME: validate name format
 		checkVarNameUniqueness(name);
-		inputVars.put(name, new Variable(name, javaType, globalContext.getInputVar(name)));
+		inputVars.put(name, new Variable(name, javaType, runtimeContext.getInputVar(name)));
 	}
 
 	public void addLocalVar(String name, String javaType) throws ScriptException {

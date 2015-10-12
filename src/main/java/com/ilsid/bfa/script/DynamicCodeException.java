@@ -1,5 +1,7 @@
 package com.ilsid.bfa.script;
 
+import com.ilsid.bfa.BFAException;
+
 /**
  * Signals that error occurred when parsing or compiling dynamic scripting code.
  * 
@@ -7,7 +9,7 @@ package com.ilsid.bfa.script;
  *
  */
 @SuppressWarnings("serial")
-public class DynamicCodeException extends ScriptException {
+public class DynamicCodeException extends BFAException {
 
 	/**
 	 * 

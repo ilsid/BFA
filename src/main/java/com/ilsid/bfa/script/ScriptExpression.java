@@ -6,14 +6,14 @@ package com.ilsid.bfa.script;
  * @author illia.sydorovych
  *
  */
-class DynamicCode implements Expression<Object> {
+public class ScriptExpression implements Expression<Object> {
 
 	private String input;
 
 	private ScriptContext scriptContext;
 
-	private DynamicCodeParser parser;
-	
+	private ScriptExpressionParser parser;
+
 	private Object value;
 
 	/**
@@ -24,23 +24,31 @@ class DynamicCode implements Expression<Object> {
 	 * @param scriptContext
 	 *            {@link ScriptContext} instance
 	 */
-	public DynamicCode(String input, ScriptContext scriptContext) {
+	public ScriptExpression(String input, ScriptContext scriptContext) {
 		this.input = input;
 		this.scriptContext = scriptContext;
-		parser = new DynamicCodeParser(scriptContext);
+		parser = new ScriptExpressionParser(scriptContext);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see com.ilsid.bfa.script.Expression#getValue()
 	 */
-	public Object getValue() throws DynamicCodeException {
+	public Object getValue() throws ScriptException {
 		if (value != null) {
 			return value;
 		}
 
-		String javaExpression = parse(input);
-		DynamicCodeInvocation invocation = compile(javaExpression);
+		String javaExpression;
+		DynamicCodeInvocation invocation;
+		try {
+			javaExpression = parse(input);
+			invocation = compile(javaExpression);
+		} catch (DynamicCodeException e) {
+			throw new ScriptException("Failed to get a value from the expression [" + input + "]", e);
+		}
+
 		invocation.setScriptContext(scriptContext);
 		value = invocation.invoke();
 
@@ -53,7 +61,8 @@ class DynamicCode implements Expression<Object> {
 	}
 
 	private DynamicCodeInvocation compile(String javaExpression) throws DynamicCodeException {
-		DynamicCodeInvocation result = DynamicCodeFactory.getInvocation(scriptContext, input, javaExpression);
+		DynamicCodeInvocation result = DynamicCodeFactory.getInvocation(scriptContext.getScriptName(), input,
+				javaExpression);
 		return result;
 	}
 

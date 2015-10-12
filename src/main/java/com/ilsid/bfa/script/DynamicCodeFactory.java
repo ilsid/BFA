@@ -9,6 +9,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.runtime.RuntimeContext;
 
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
@@ -27,7 +28,7 @@ import javassist.NotFoundException;
  *
  */
 // TODO: change caching mechanism
-class DynamicCodeFactory {
+public class DynamicCodeFactory {
 
 	static final String GENERATED_PACKAGE = "com.ilsid.bfa.generated.";
 
@@ -67,10 +68,9 @@ class DynamicCodeFactory {
 	 *             <li>if the class instantiation failed</li>
 	 *             </ul>
 	 */
-	public static DynamicCodeInvocation getInvocation(ScriptContext scriptContext, String scriptExpression,
-			String javaExpression) throws DynamicCodeException {
+	public static DynamicCodeInvocation getInvocation(String scriptName, String scriptExpression, String javaExpression)
+			throws DynamicCodeException {
 
-		String scriptName = scriptContext.getScriptName();
 		String className = generateClassName(scriptName, scriptExpression);
 
 		DynamicCodeInvocation invocation = (DynamicCodeInvocation) tryInstantiateFromCache(className);
@@ -80,7 +80,7 @@ class DynamicCodeFactory {
 
 		ClassPool classPool = ClassPool.getDefault();
 		try {
-			invocation = tryInstantiateFromRepository(className, scriptContext, classPool, DynamicCodeInvocation.class);
+			invocation = tryInstantiateFromRepository(className, classPool, DynamicCodeInvocation.class);
 		} catch (LoadFromRepositoryException e) {
 			throw new DynamicCodeException("Failed to load the expression [" + scriptExpression + "] in the script ["
 					+ scriptName + "] from the repository", e.getCause());
@@ -125,8 +125,8 @@ class DynamicCodeFactory {
 	}
 
 	/**
-	 * Returns {@link Script} instance with given java source code.
-	 * If a code repository is defined in the passed script context, then the
+	 * Returns {@link Script} instance with given java source code. If a code
+	 * repository is defined in the passed script context, then the
 	 * corresponding class is searched in this repository. Otherwise, the class
 	 * is built on-the-fly.
 	 * 
@@ -143,8 +143,7 @@ class DynamicCodeFactory {
 	 *             <li>if the class instantiation failed</li>
 	 *             </ul>
 	 */
-	public static Script getScript(ScriptContext scriptContext, InputStream scriptBody) throws DynamicCodeException {
-		String scriptName = scriptContext.getScriptName();
+	public static Script getScript(String scriptName, InputStream scriptBody) throws DynamicCodeException {
 		String className = generateClassName(scriptName);
 
 		Script script = (Script) tryInstantiateFromCache(className);
@@ -154,12 +153,12 @@ class DynamicCodeFactory {
 
 		ClassPool classPool = ClassPool.getDefault();
 		try {
-			script = tryInstantiateFromRepository(className, scriptContext, classPool, Script.class);
+			script = tryInstantiateFromRepository(className, classPool, Script.class);
 		} catch (LoadFromRepositoryException e) {
 			throw new DynamicCodeException("Failed to load the script [" + scriptName + "] from the repository",
 					e.getCause());
 		}
-		
+
 		if (script != null) {
 			return script;
 		}
@@ -207,11 +206,11 @@ class DynamicCodeFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> T tryInstantiateFromRepository(String className, ScriptContext scriptContext,
-			ClassPool classPool, Class<T> instanceClass) throws DynamicCodeException, LoadFromRepositoryException {
+	private static <T> T tryInstantiateFromRepository(String className, ClassPool classPool, Class<T> instanceClass)
+			throws DynamicCodeException, LoadFromRepositoryException {
 
 		T instance = null;
-		CodeRepository codeRepository = scriptContext.getGlobalContext().getCodeRepository();
+		CodeRepository codeRepository = RuntimeContext.getInstance().getCodeRepository();
 
 		if (codeRepository != null) {
 			try {

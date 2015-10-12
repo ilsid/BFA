@@ -13,7 +13,7 @@ import com.ilsid.bfa.common.NumberUtil;
  * @author illia.sydorovych
  *
  */
-class DynamicCodeParser {
+public class ScriptExpressionParser {
 
 	private ScriptContext scriptContext;
 
@@ -23,7 +23,7 @@ class DynamicCodeParser {
 	 * @param scriptContext
 	 *            script context
 	 */
-	public DynamicCodeParser(ScriptContext scriptContext) {
+	public ScriptExpressionParser(ScriptContext scriptContext) {
 		this.scriptContext = scriptContext;
 	}
 

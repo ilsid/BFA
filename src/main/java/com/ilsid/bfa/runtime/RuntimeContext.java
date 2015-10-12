@@ -1,12 +1,21 @@
-package com.ilsid.bfa.script;
+package com.ilsid.bfa.runtime;
 
 import com.ilsid.bfa.persistence.CodeRepository;
 
 //TODO: Complete implementation
 //TODO: Put javadocs
-class GlobalContext {
+public class RuntimeContext {
+	
+	private static final RuntimeContext instance = new RuntimeContext();
 	
 	private CodeRepository codeRepository;
+	
+	RuntimeContext() {
+	}
+	
+	public static RuntimeContext getInstance() {
+		return instance;
+	}
 	
 	public Object getInputVar(String name) {
 		return null;
@@ -18,23 +27,6 @@ class GlobalContext {
 	
 	public void setGlobalVar(String name, Object value) {
 
-	}
-	
-	public TypeResolver getTypeResolver() {
-		return new TypeResolver() {
-			
-			public String resolveJavaTypeName(String typeName) throws ScriptException {
-				return typeName;
-			}
-			
-			public Action resolveAction(String actionName) throws ScriptException {
-				return null;
-			}
-
-			public Script resolveSubflow(String flowName) throws ScriptException {
-				return null;
-			}
-		};
 	}
 	
 	public CodeRepository getCodeRepository() {

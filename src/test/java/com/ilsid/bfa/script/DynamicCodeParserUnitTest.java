@@ -22,6 +22,7 @@ public class DynamicCodeParserUnitTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		context = new ScriptContext(null);
+		context.setScriptName("TestScript");
 		parser = new DynamicCodeParser(context);
 	}
 
@@ -370,14 +371,6 @@ public class DynamicCodeParserUnitTest extends BaseUnitTestCase {
 		} catch (DynamicCodeException e) {
 			assertEquals(expectedMsg, e.getMessage());
 		}
-	}
-
-	private Object invoke(String origExpression, String compileExpression) throws DynamicCodeException {
-		DynamicCodeInvocation invocation = DynamicCodeFactory.getInvocation("TestScript", origExpression, compileExpression);
-		invocation.setScriptContext(context);
-		Object result = invocation.invoke();
-		System.out.println(result);
-		return result;
 	}
 
 }

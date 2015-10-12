@@ -1,9 +1,12 @@
 package com.ilsid.bfa.script;
 
+import com.ilsid.bfa.persistence.CodeRepository;
+
 //TODO: Complete implementation
 //TODO: Put javadocs
 class GlobalContext {
 	
+	private CodeRepository codeRepository;
 	
 	public Object getInputVar(String name) {
 		return null;
@@ -29,5 +32,13 @@ class GlobalContext {
 			}
 		};
 	}
+	
+	public CodeRepository getCodeRepository() {
+		return codeRepository;
+	}
 
+	public void setCodeRepository(CodeRepository codeRepository) {
+		this.codeRepository = codeRepository;
+	}
+	
 }

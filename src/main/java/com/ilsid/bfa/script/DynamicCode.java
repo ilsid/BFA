@@ -13,7 +13,7 @@ class DynamicCode implements Expression<Object> {
 	private ScriptContext scriptContext;
 
 	private DynamicCodeParser parser;
-
+	
 	private Object value;
 
 	/**
@@ -53,8 +53,7 @@ class DynamicCode implements Expression<Object> {
 	}
 
 	private DynamicCodeInvocation compile(String javaExpression) throws DynamicCodeException {
-		DynamicCodeInvocation result = DynamicCodeFactory.getInvocation(scriptContext.getScriptName(), input,
-				javaExpression);
+		DynamicCodeInvocation result = DynamicCodeFactory.getInvocation(scriptContext, input, javaExpression);
 		return result;
 	}
 

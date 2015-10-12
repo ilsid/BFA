@@ -1,12 +1,12 @@
 package com.ilsid.bfa.persistence;
 
 /**
- * Represents a repository for a dynamic code.
+ * Represents a code repository.
  * 
  * @author illia.sydorovych
  *
  */
-public interface DynamicCodeRepository {
+public interface CodeRepository {
 
 	/**
 	 * Loads a byte code for a given class name.

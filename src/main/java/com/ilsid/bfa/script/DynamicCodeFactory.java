@@ -7,6 +7,10 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
+import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.PersistenceException;
+
+import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -22,17 +26,16 @@ import javassist.NotFoundException;
  * @author illia.sydorovych
  *
  */
+// TODO: change caching mechanism
 class DynamicCodeFactory {
 
-	static String GENERATED_PACKAGE = "com.ilsid.bfa.generated.";
+	static final String GENERATED_PACKAGE = "com.ilsid.bfa.generated.";
 
 	private static final CtClass[] NO_ARGS = {};
 
 	private static Map<String, String> replaceableSymbols = new HashMap<>();
 
-	private static Map<String, Class<DynamicCodeInvocation>> invocationCache = new HashMap<>();
-
-	private static Map<String, Class<Script>> scriptCache = new HashMap<>();
+	private static Map<String, Class<?>> cache = new HashMap<>();
 
 	static {
 		replaceableSymbols.put("-", "_Mns_");
@@ -44,9 +47,12 @@ class DynamicCodeFactory {
 
 	/**
 	 * Returns {@link DynamicCodeInvocation} instance for given java expression.
+	 * If a code repository is defined in the passed script context, then the
+	 * corresponding class is searched in this repository. Otherwise, the class
+	 * is built on-the-fly.
 	 * 
-	 * @param scriptName
-	 *            name of script where this expression is defined
+	 * @param scriptContext
+	 *            context of this scripting expression
 	 * @param scriptExpression
 	 *            original scripting expression
 	 * @param javaExpression
@@ -54,24 +60,41 @@ class DynamicCodeFactory {
 	 * @return {@link DynamicCodeInvocation} instance that executes the java
 	 *         expression
 	 * @throws DynamicCodeException
-	 *             in case of compilation or instantiation failure
+	 *             <ul>
+	 *             <li>if the on-the-fly compilation failed</li>
+	 *             <li>if a code repository is defined, but no needed class was
+	 *             found there</li>
+	 *             <li>if the class instantiation failed</li>
+	 *             </ul>
 	 */
-	public static DynamicCodeInvocation getInvocation(String scriptName, String scriptExpression, String javaExpression)
-			throws DynamicCodeException {
+	public static DynamicCodeInvocation getInvocation(ScriptContext scriptContext, String scriptExpression,
+			String javaExpression) throws DynamicCodeException {
 
+		String scriptName = scriptContext.getScriptName();
 		String className = generateClassName(scriptName, scriptExpression);
-		
-		DynamicCodeInvocation invocation = tryCreateInstance(className, invocationCache);
+
+		DynamicCodeInvocation invocation = (DynamicCodeInvocation) tryInstantiateFromCache(className);
 		if (invocation != null) {
 			return invocation;
 		}
 
-		ClassPool pool = ClassPool.getDefault();
-		CtClass clazz = pool.makeClass(className);
+		ClassPool classPool = ClassPool.getDefault();
 		try {
-			clazz.addInterface(pool.get(DynamicCodeInvocation.class.getName()));
+			invocation = tryInstantiateFromRepository(className, scriptContext, classPool, DynamicCodeInvocation.class);
+		} catch (LoadFromRepositoryException e) {
+			throw new DynamicCodeException("Failed to load the expression [" + scriptExpression + "] in the script ["
+					+ scriptName + "] from the repository", e.getCause());
+		}
 
-			CtClass scriptContextClass = pool.get(ScriptContext.class.getName());
+		if (invocation != null) {
+			return invocation;
+		}
+
+		try {
+			CtClass clazz = classPool.makeClass(className);
+			clazz.addInterface(classPool.get(DynamicCodeInvocation.class.getName()));
+
+			CtClass scriptContextClass = classPool.get(ScriptContext.class.getName());
 			CtField field = new CtField(scriptContextClass, "scriptContext", clazz);
 			field.setModifiers(Modifier.PRIVATE);
 			clazz.addField(field);
@@ -85,18 +108,17 @@ class DynamicCodeFactory {
 			method.setBody("scriptContext = $1;");
 			clazz.addMethod(method);
 
-			method = new CtMethod(pool.get(Object.class.getName()), "invoke", NO_ARGS, clazz);
+			method = new CtMethod(classPool.get(Object.class.getName()), "invoke", NO_ARGS, clazz);
 			method.setBody(javaExpression);
 			clazz.addMethod(method);
 
-			invocation = createInstance(clazz, invocationCache);
+			invocation = (DynamicCodeInvocation) createInstance(clazz);
 
 		} catch (InstantiationException | IllegalAccessException | NotFoundException | CannotCompileException
 				| IOException e) {
 
-			throw new DynamicCodeException(
-					"Failed to create instance of the expression [" + scriptExpression + "] in the script [" + scriptName + "]",
-					e);
+			throw new DynamicCodeException("Failed to create instance of the expression [" + scriptExpression
+					+ "] in the script [" + scriptName + "]", e);
 		}
 
 		return invocation;
@@ -104,27 +126,47 @@ class DynamicCodeFactory {
 
 	/**
 	 * Returns {@link Script} instance with given java source code.
+	 * If a code repository is defined in the passed script context, then the
+	 * corresponding class is searched in this repository. Otherwise, the class
+	 * is built on-the-fly.
 	 * 
-	 * @param scriptName
-	 *            script name
+	 * @param scriptContext
+	 *            context of this scripting expression
 	 * @param scriptBody
 	 *            java source code
 	 * @return {@link Script} instance that executes the given code
 	 * @throws DynamicCodeException
-	 *             in case of compilation or instantiation failure
+	 *             <ul>
+	 *             <li>if the on-the-fly compilation failed</li>
+	 *             <li>if a code repository is defined, but no needed class was
+	 *             found there</li>
+	 *             <li>if the class instantiation failed</li>
+	 *             </ul>
 	 */
-	public static Script getScript(String scriptName, InputStream scriptBody) throws DynamicCodeException {
+	public static Script getScript(ScriptContext scriptContext, InputStream scriptBody) throws DynamicCodeException {
+		String scriptName = scriptContext.getScriptName();
 		String className = generateClassName(scriptName);
-		
-		Script script = tryCreateInstance(className, scriptCache);
+
+		Script script = (Script) tryInstantiateFromCache(className);
 		if (script != null) {
 			return script;
 		}
 
-		ClassPool pool = ClassPool.getDefault();
-		CtClass clazz = pool.makeClass(className);
+		ClassPool classPool = ClassPool.getDefault();
 		try {
-			clazz.setSuperclass(pool.get(Script.class.getName()));
+			script = tryInstantiateFromRepository(className, scriptContext, classPool, Script.class);
+		} catch (LoadFromRepositoryException e) {
+			throw new DynamicCodeException("Failed to load the script [" + scriptName + "] from the repository",
+					e.getCause());
+		}
+		
+		if (script != null) {
+			return script;
+		}
+
+		try {
+			CtClass clazz = classPool.makeClass(className);
+			clazz.setSuperclass(classPool.get(Script.class.getName()));
 
 			CtConstructor cons = new CtConstructor(NO_ARGS, clazz);
 			cons.setBody(";");
@@ -136,7 +178,7 @@ class DynamicCodeFactory {
 			method.setBody(body);
 			clazz.addMethod(method);
 
-			script = createInstance(clazz, scriptCache);
+			script = (Script) createInstance(clazz);
 
 		} catch (NotFoundException | CannotCompileException | InstantiationException | IllegalAccessException
 				| IOException e) {
@@ -164,10 +206,30 @@ class DynamicCodeFactory {
 		return expr;
 	}
 
-	private static <T> T tryCreateInstance(String className, Map<String, Class<T>> cache)
-			throws DynamicCodeException {
-		Class<T> clazz = cache.get(className);
+	@SuppressWarnings("unchecked")
+	private static <T> T tryInstantiateFromRepository(String className, ScriptContext scriptContext,
+			ClassPool classPool, Class<T> instanceClass) throws DynamicCodeException, LoadFromRepositoryException {
+
 		T instance = null;
+		CodeRepository codeRepository = scriptContext.getGlobalContext().getCodeRepository();
+
+		if (codeRepository != null) {
+			try {
+				instance = (T) instantiateFromRepository(className, codeRepository, classPool);
+			} catch (InstantiationException | IllegalAccessException | NotFoundException | CannotCompileException e) {
+				throw new LoadFromRepositoryException(e);
+			} catch (ClassCastException e) {
+				throw new DynamicCodeException(
+						"Unexpected class was loaded from the repository. Expected: " + instanceClass.getName(), e);
+			}
+		}
+
+		return instance;
+	}
+
+	private static Object tryInstantiateFromCache(String className) throws DynamicCodeException {
+		Class<?> clazz = cache.get(className);
+		Object instance = null;
 
 		if (clazz != null) {
 			try {
@@ -180,15 +242,40 @@ class DynamicCodeFactory {
 		return instance;
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T> T createInstance(CtClass ctClass, Map<String, Class<T>> cache)
+	private static Object instantiateFromRepository(String className, CodeRepository codeRepository,
+			ClassPool classPool) throws DynamicCodeException, NotFoundException, CannotCompileException,
+					InstantiationException, IllegalAccessException {
+
+		byte[] byteCode;
+		try {
+			byteCode = codeRepository.load(className);
+		} catch (PersistenceException e) {
+			throw new DynamicCodeException("Failed to load class [" + className + "] from repository", e);
+		}
+
+		if (byteCode.length == 0) {
+			throw new DynamicCodeException("Class [" + className + "] does not exist in repository");
+		}
+
+		// FIXME: not thread safe
+		classPool.appendClassPath(new ByteArrayClassPath(className, byteCode));
+		CtClass clazz = classPool.get(className);
+		Class<?> instanceClass = clazz.toClass();
+		cache.put(className, instanceClass);
+		Object instance = instanceClass.newInstance();
+
+		return instance;
+	}
+
+	private static Object createInstance(CtClass ctClass)
 			throws CannotCompileException, InstantiationException, IllegalAccessException, IOException {
-		T instance;
-		Class<T> instanceClass;
-		
+		Object instance;
+		Class<?> instanceClass;
+
+		// TODO: Think of ConcurrentHashMap usage
 		synchronized (cache) {
 			String className = ctClass.getName();
-			Class<T> alreadyInCacheClass = cache.get(className);
+			Class<?> alreadyInCacheClass = cache.get(className);
 			if (alreadyInCacheClass == null) {
 				instanceClass = ctClass.toClass();
 				cache.put(className, instanceClass);
@@ -199,6 +286,14 @@ class DynamicCodeFactory {
 
 		instance = instanceClass.newInstance();
 		return instance;
+	}
+
+	@SuppressWarnings("serial")
+	private static class LoadFromRepositoryException extends Exception {
+
+		public LoadFromRepositoryException(Throwable cause) {
+			super(cause);
+		}
 	}
 
 }

@@ -22,6 +22,8 @@ import javassist.NotFoundException;
 
 public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
+	private static final String DUMMY_SCRIPT_NAME = "DummyScript";
+
 	private static final GlobalContext FAKE_GLOBAL_CONTEXT = new GlobalContext();
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
@@ -143,26 +145,49 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void expressionClassIsLoadedFromRepositoryIfRespositoryDefined() throws Exception {
-		DynamicCodeInvocation expr = DynamicCodeFactory.getInvocation(getScriptContextWithMockRepository(),
-				"DummyExpression", "dummy java expr");
+		DynamicCodeInvocation expr = DynamicCodeFactory.getInvocation(
+				getScriptContextWithMockRepository(DUMMY_SCRIPT_NAME), "DummyExpression", "dummy java expr");
 		assertSame(DummyScript$DummyExpression.class, expr.getClass());
 		assertEquals(TestConstants.DUMMY_EXPRESSION_RESULT, expr.invoke());
 	}
 
 	@Test
+	public void expressionClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
+		exceptionRule.expect(DynamicCodeException.class);
+		exceptionRule.expectMessage(
+				"Class [com.ilsid.bfa.generated.NonExistentScript$DummyExpression] does not exist in repository");
+
+		DynamicCodeFactory.getInvocation(getScriptContextWithMockRepository("NonExistentScript"), "DummyExpression",
+				"dummy java expr");
+	}
+
+	@Test
 	public void scriptClassIsLoadedFromRepositoryIfRespositoryDefined() throws Exception {
-		Script script = DynamicCodeFactory.getScript(getScriptContextWithMockRepository(), null);
+		Script script = DynamicCodeFactory.getScript(getScriptContextWithMockRepository(DUMMY_SCRIPT_NAME), null);
 		assertSame(DummyScript.class, script.getClass());
 		DummyScript dummyScript = (DummyScript) script;
 		assertNull(dummyScript.getResult());
 		script.execute();
 		assertEquals(TestConstants.DUMMY_SCRIPT_RESULT, dummyScript.getResult());
 	}
+	
+	@Test
+	public void scriptClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
+		exceptionRule.expect(DynamicCodeException.class);
+		exceptionRule.expectMessage(
+				"Class [com.ilsid.bfa.generated.NonExistentScript] does not exist in repository");
 
-	private ScriptContext getScriptContextWithMockRepository() {
+		DynamicCodeFactory.getScript(getScriptContextWithMockRepository("NonExistentScript"), null);
+	}
+
+	private ScriptContext getScriptContextWithMockRepository(String scriptName) {
 		CodeRepository repository = new CodeRepository() {
 
 			public byte[] load(String className) throws PersistenceException {
+				if (!className.startsWith(DynamicCodeFactory.GENERATED_PACKAGE + DUMMY_SCRIPT_NAME)) {
+					return new byte[0];
+				}
+
 				byte[] result = null;
 				try {
 					result = ClassPool.getDefault().get(className).toBytecode();
@@ -176,7 +201,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 		GlobalContext globalContext = new GlobalContext();
 		globalContext.setCodeRepository(repository);
 		ScriptContext scriptContext = new ScriptContext(globalContext);
-		scriptContext.setScriptName("DummyScript");
+		scriptContext.setScriptName(scriptName);
 
 		return scriptContext;
 	}

@@ -7,6 +7,8 @@ import org.jmock.integration.junit4.JUnit4Mockery;
 import org.jmock.internal.ExpectationBuilder;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 
 public class BaseUnitTestCase {
 
@@ -15,6 +17,9 @@ public class BaseUnitTestCase {
 			setImposteriser(ClassImposteriser.INSTANCE);
 		}
 	};
+	
+	@Rule
+	public ExpectedException exceptionRule = ExpectedException.none();
 	
 	protected void setInaccessibleField(Object target, String fieldName, Object fieldValue)
 			throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {

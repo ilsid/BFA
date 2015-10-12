@@ -84,7 +84,8 @@ public abstract class Script implements Executable<Void> {
 	}
 	
 	public void SubFlow(String name) throws ScriptException {
-		//TODO: implement
+		Script subFlow = typeResolver.resolveSubflow(name);
+		subFlow.execute();
 	}
 
 	public Expression<Boolean> AsBoolean(String input) {

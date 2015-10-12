@@ -272,6 +272,10 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 					public Action resolveAction(String actionName) throws ScriptException {
 						return null;
 					}
+
+					public Script resolveSubflow(String flowName) throws ScriptException {
+						return null;
+					}
 				};
 			}
 		};

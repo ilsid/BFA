@@ -190,7 +190,7 @@ class DynamicCodeFactory {
 	}
 
 	static String generateClassName(String scriptName, String expression) {
-		return GENERATED_PACKAGE + generateSimpleClassName(scriptName) + "$" + generateSimpleClassName(expression);
+		return GENERATED_PACKAGE + generateSimpleClassName(scriptName) + "$$" + generateSimpleClassName(expression);
 	}
 
 	static String generateClassName(String scriptName) {

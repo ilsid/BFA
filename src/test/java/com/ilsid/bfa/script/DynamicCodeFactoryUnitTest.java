@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.generated.DummyScript;
 import com.ilsid.bfa.generated.DummyScript$$DummyExpression;
 import com.ilsid.bfa.persistence.CodeRepository;
@@ -37,9 +38,6 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
 
-	private static final String EXPRESSION_CLASS_NAME_PREFIX = DynamicCodeFactory.GENERATED_PACKAGE + TEST_SCRIPT_NAME
-			+ "$$";
-
 	private static final String SCRIPTS_DIR = "src/test/resources/dynamicCode/";
 
 	private ScriptContext mockContext;
@@ -50,44 +48,6 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	public void setUp() throws Exception {
 		mockContext = mock(ScriptContext.class);
 		setInaccessibleField(RuntimeContext.getInstance(), "codeRepository", null);
-	}
-
-	@Test
-	public void generatedClassNameDoesNotContainSpaces() {
-		assertEquals("AB", getClassNameWoPrefix("A B"));
-		assertEquals("AB", getClassNameWoPrefix(" AB "));
-		assertEquals("ABC", getClassNameWoPrefix(" A B C "));
-	}
-
-	@Test
-	public void generatedClassNameContainsReaplacedDots() {
-		assertEquals("A%dtB", getClassNameWoPrefix("A.B"));
-		assertEquals("%dtAB%dt", getClassNameWoPrefix(".AB."));
-		assertEquals("%dtA%dtB%dtC%dt", getClassNameWoPrefix(".A.B.C."));
-	}
-
-	@Test
-	public void generatedClassNameContainsReplacedMinusSign() {
-		assertEquals("A_Mns_B", getClassNameWoPrefix("A-B"));
-		assertEquals("A_Mns_B", getClassNameWoPrefix("A - B"));
-	}
-
-	@Test
-	public void generatedClassNameContainsReplacedPlusSign() {
-		assertEquals("A_Pls_B", getClassNameWoPrefix("A+B"));
-		assertEquals("A_Pls_B", getClassNameWoPrefix("A + B"));
-	}
-
-	@Test
-	public void generatedClassNameContainsReplacedMultiplySign() {
-		assertEquals("A_Mlt_B", getClassNameWoPrefix("A*B"));
-		assertEquals("A_Mlt_B", getClassNameWoPrefix("A * B"));
-	}
-
-	@Test
-	public void generatedClassNameContainsReplacedDivisionSign() {
-		assertEquals("A_Div_B", getClassNameWoPrefix("A/B"));
-		assertEquals("A_Div_B", getClassNameWoPrefix("A / B"));
 	}
 
 	@Test
@@ -113,7 +73,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void expressionClassNameIsPrependedWithScriptName() throws Exception {
-		assertEquals(DynamicCodeFactory.GENERATED_PACKAGE + "SomeScript$$2_Mns_1",
+		assertEquals(ClassNameUtil.GENERATED_PACKAGE + "SomeScript$$2_Mns_1",
 				getInvocation("Some Script", "2 - 1").getClass().getName());
 	}
 
@@ -164,7 +124,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void expressionClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
 		exceptionRule.expect(DynamicCodeException.class);
-		exceptionRule.expectMessage("Class [" + DynamicCodeFactory.GENERATED_PACKAGE
+		exceptionRule.expectMessage("Class [" + ClassNameUtil.GENERATED_PACKAGE
 				+ "NonExistentScript$$DummyExpression] does not exist in repository");
 
 		defineRepository();
@@ -186,7 +146,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	public void scriptClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
 		exceptionRule.expect(DynamicCodeException.class);
 		exceptionRule.expectMessage(
-				"Class [" + DynamicCodeFactory.GENERATED_PACKAGE + "NonExistentScript] does not exist in repository");
+				"Class [" + ClassNameUtil.GENERATED_PACKAGE + "NonExistentScript] does not exist in repository");
 
 		defineRepository();
 		DynamicCodeFactory.getScript("NonExistentScript", null);
@@ -196,7 +156,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 		CodeRepository repository = new CodeRepository() {
 
 			public byte[] load(String className) throws PersistenceException {
-				if (!className.startsWith(DynamicCodeFactory.GENERATED_PACKAGE + DUMMY_SCRIPT_NAME)) {
+				if (!className.startsWith(ClassNameUtil.GENERATED_PACKAGE + DUMMY_SCRIPT_NAME)) {
 					return new byte[0];
 				}
 
@@ -208,6 +168,15 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 				}
 				return result;
 			}
+
+			public void save(String className, byte[] byteCode) throws PersistenceException {
+			}
+
+			public void update(String className, byte[] byteCode) throws PersistenceException {
+			}
+
+			public void delete(String className) throws PersistenceException {
+			}
 		};
 
 		setInaccessibleField(RuntimeContext.getInstance(), "codeRepository", repository);
@@ -215,7 +184,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	private void verifyScript(String scriptName, String scriptFile, Expectations expectations) throws Exception {
 		Script script = createScript(scriptName, scriptFile);
-		assertEquals(DynamicCodeFactory.GENERATED_PACKAGE + scriptName, script.getClass().getName());
+		assertEquals(ClassNameUtil.GENERATED_PACKAGE + scriptName, script.getClass().getName());
 
 		checking(expectations);
 
@@ -224,13 +193,6 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 		script.execute();
 
 		assertIsSatisfed();
-	}
-
-	private String getClassNameWoPrefix(String expression) {
-		String className = DynamicCodeFactory.generateClassName(TEST_SCRIPT_NAME, expression);
-		assertTrue(className.startsWith(EXPRESSION_CLASS_NAME_PREFIX));
-
-		return className.substring(EXPRESSION_CLASS_NAME_PREFIX.length());
 	}
 
 	private DynamicCodeInvocation getInvocation(String scriptName, String origExpression) throws DynamicCodeException {

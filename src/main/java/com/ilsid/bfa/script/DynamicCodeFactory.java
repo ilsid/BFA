@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.runtime.RuntimeContext;
@@ -29,8 +30,6 @@ import javassist.NotFoundException;
  */
 // TODO: change caching mechanism
 public class DynamicCodeFactory {
-
-	static final String GENERATED_PACKAGE = "com.ilsid.bfa.generated.";
 
 	private static final CtClass[] NO_ARGS = {};
 
@@ -74,7 +73,7 @@ public class DynamicCodeFactory {
 	public static DynamicCodeInvocation getInvocation(String scriptName, String scriptExpression,
 			ScriptExpressionParser parser) throws DynamicCodeException {
 
-		String className = generateClassName(scriptName, scriptExpression);
+		String className = ClassNameUtil.generateClassName(scriptName, scriptExpression);
 
 		DynamicCodeInvocation invocation = (DynamicCodeInvocation) tryInstantiateFromCache(className);
 		if (invocation != null) {
@@ -149,7 +148,7 @@ public class DynamicCodeFactory {
 	 *             </ul>
 	 */
 	public static Script getScript(String scriptName, InputStream scriptBody) throws DynamicCodeException {
-		String className = generateClassName(scriptName);
+		String className = ClassNameUtil.generateClassName(scriptName);
 
 		Script script = (Script) tryInstantiateFromCache(className);
 		if (script != null) {
@@ -191,23 +190,6 @@ public class DynamicCodeFactory {
 		}
 
 		return script;
-	}
-
-	static String generateClassName(String scriptName, String expression) {
-		return GENERATED_PACKAGE + generateSimpleClassName(scriptName) + "$$" + generateSimpleClassName(expression);
-	}
-
-	static String generateClassName(String scriptName) {
-		return GENERATED_PACKAGE + generateSimpleClassName(scriptName);
-	}
-
-	private static String generateSimpleClassName(String expression) {
-		String expr = expression.replaceAll("\\s", "");
-		for (String smb : replaceableSymbols.keySet()) {
-			expr = expr.replace(smb, replaceableSymbols.get(smb));
-		}
-
-		return expr;
 	}
 
 	@SuppressWarnings("unchecked")

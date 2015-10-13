@@ -6,6 +6,7 @@ package com.ilsid.bfa.persistence;
  * @author illia.sydorovych
  *
  */
+//TODO: complete javadocs
 public interface CodeRepository {
 
 	/**
@@ -19,5 +20,10 @@ public interface CodeRepository {
 	 *             in case of any repository access issues
 	 */
 	public byte[] load(String className) throws PersistenceException;
-
+	
+	public void save(String className, byte[] byteCode) throws PersistenceException;
+	
+	public void update(String className, byte[] byteCode) throws PersistenceException;
+	
+	public void delete(String className) throws PersistenceException;
 }

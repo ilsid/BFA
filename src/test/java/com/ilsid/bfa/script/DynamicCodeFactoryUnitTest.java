@@ -44,6 +44,8 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	private ScriptContext mockContext;
 
+	private ScriptExpressionParser parser = new ScriptExpressionParser(new ScriptContext());
+
 	@Before
 	public void setUp() throws Exception {
 		mockContext = mock(ScriptContext.class);
@@ -90,12 +92,12 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void integerArithmeticExpressionCanBeInvoked() throws Exception {
-		assertEquals(Integer.valueOf(1), invokeExpression("2 - 1", "return Integer.valueOf(2 - 1);"));
+		assertEquals(Integer.valueOf(1), invokeExpression("2 - 1"));
 	}
 
 	@Test
 	public void doubleArithmeticExpressionCanBeInvoked() throws Exception {
-		assertEquals(Double.valueOf(1.0), invokeExpression("2.0 - 1.0", "return Double.valueOf(2.0 - 1.0);"));
+		assertEquals(Double.valueOf(1.0), invokeExpression("2.0 - 1.0"));
 	}
 
 	@Test
@@ -112,7 +114,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void expressionClassNameIsPrependedWithScriptName() throws Exception {
 		assertEquals(DynamicCodeFactory.GENERATED_PACKAGE + "SomeScript$$2_Mns_1",
-				getInvocation("Some Script", "2 - 1", "return Integer.valueOf(2 - 1);").getClass().getName());
+				getInvocation("Some Script", "2 - 1").getClass().getName());
 	}
 
 	@Test
@@ -154,8 +156,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void expressionClassIsLoadedFromRepositoryIfRespositoryDefined() throws Exception {
 		defineRepository();
-		DynamicCodeInvocation expr = DynamicCodeFactory.getInvocation(DUMMY_SCRIPT_NAME, "DummyExpression",
-				"dummy java expr");
+		DynamicCodeInvocation expr = DynamicCodeFactory.getInvocation(DUMMY_SCRIPT_NAME, "DummyExpression", null);
 		assertSame(DummyScript$$DummyExpression.class, expr.getClass());
 		assertEquals(TestConstants.DUMMY_EXPRESSION_RESULT, expr.invoke());
 	}
@@ -167,7 +168,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 				+ "NonExistentScript$$DummyExpression] does not exist in repository");
 
 		defineRepository();
-		DynamicCodeFactory.getInvocation("NonExistentScript", "DummyExpression", "dummy java expr");
+		DynamicCodeFactory.getInvocation("NonExistentScript", "DummyExpression", null);
 	}
 
 	@Test
@@ -232,22 +233,21 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 		return className.substring(EXPRESSION_CLASS_NAME_PREFIX.length());
 	}
 
-	private DynamicCodeInvocation getInvocation(String scriptName, String origExpression, String compileExpression)
-			throws DynamicCodeException {
-		return DynamicCodeFactory.getInvocation(scriptName, origExpression, "return null;");
+	private DynamicCodeInvocation getInvocation(String scriptName, String origExpression) throws DynamicCodeException {
+		return DynamicCodeFactory.getInvocation(scriptName, origExpression, parser);
 	}
 
 	private DynamicCodeInvocation getInvocationWithStubImplementation(String origExpression)
 			throws DynamicCodeException {
-		return DynamicCodeFactory.getInvocation(TEST_SCRIPT_NAME, origExpression, "return null;");
+		return DynamicCodeFactory.getInvocation(TEST_SCRIPT_NAME, origExpression, parser);
 	}
 
 	private Script getScriptWithStubImplementation() throws Exception {
 		return createScript("Stub Script", "empty-script.txt");
 	}
 
-	private Object invokeExpression(String origExpression, String compileExpression) throws DynamicCodeException {
-		DynamicCodeInvocation invocation = DynamicCodeFactory.getInvocation(TEST_SCRIPT_NAME, origExpression, compileExpression);
+	private Object invokeExpression(String origExpression) throws DynamicCodeException {
+		DynamicCodeInvocation invocation = DynamicCodeFactory.getInvocation(TEST_SCRIPT_NAME, origExpression, parser);
 		Object result = invocation.invoke();
 		return result;
 	}

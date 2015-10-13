@@ -47,29 +47,32 @@ public class DynamicCodeFactory {
 	}
 
 	/**
-	 * Returns {@link DynamicCodeInvocation} instance for given java expression.
-	 * If a code repository is defined in the passed script context, then the
-	 * corresponding class is searched in this repository. Otherwise, the class
-	 * is built on-the-fly.
+	 * Returns {@link DynamicCodeInvocation} instance for the given script
+	 * expression. If a code repository is defined in the global
+	 * {@link RuntimeContext}, then the corresponding class is searched by the
+	 * "script name/expression" combination in the repository. Otherwise, the
+	 * expression is parsed and translated into Java code by the specified
+	 * parser and the expression class is built on-the-fly.
 	 * 
-	 * @param scriptContext
-	 *            context of this scripting expression
+	 * @param scriptName
+	 *            script name
 	 * @param scriptExpression
-	 *            original scripting expression
-	 * @param javaExpression
-	 *            java expression
-	 * @return {@link DynamicCodeInvocation} instance that executes the java
+	 *            script expression
+	 * @param parser
+	 *            script expression parser
+	 * @return {@link DynamicCodeInvocation} instance that executes the given
 	 *         expression
 	 * @throws DynamicCodeException
 	 *             <ul>
-	 *             <li>if the on-the-fly compilation failed</li>
+	 *             <li>if the expression parsing is failed</li>
+	 *             <li>if the on-the-fly compilation is failed</li>
 	 *             <li>if a code repository is defined, but no needed class was
 	 *             found there</li>
 	 *             <li>if the class instantiation failed</li>
 	 *             </ul>
 	 */
-	public static DynamicCodeInvocation getInvocation(String scriptName, String scriptExpression, String javaExpression)
-			throws DynamicCodeException {
+	public static DynamicCodeInvocation getInvocation(String scriptName, String scriptExpression,
+			ScriptExpressionParser parser) throws DynamicCodeException {
 
 		String className = generateClassName(scriptName, scriptExpression);
 
@@ -89,6 +92,8 @@ public class DynamicCodeFactory {
 		if (invocation != null) {
 			return invocation;
 		}
+
+		String javaExpression = parser.parse(scriptExpression);
 
 		try {
 			CtClass clazz = classPool.makeClass(className);
@@ -125,13 +130,13 @@ public class DynamicCodeFactory {
 	}
 
 	/**
-	 * Returns {@link Script} instance with given java source code. If a code
-	 * repository is defined in the passed script context, then the
-	 * corresponding class is searched in this repository. Otherwise, the class
+	 * Returns {@link Script} instance that executes the given Java code. If a
+	 * code repository is defined in the global {@link RuntimeContext}, then the
+	 * corresponding class is searched by the script name in this repository. Otherwise, the class
 	 * is built on-the-fly.
 	 * 
-	 * @param scriptContext
-	 *            context of this scripting expression
+	 * @param scriptName
+	 *            script name
 	 * @param scriptBody
 	 *            java source code
 	 * @return {@link Script} instance that executes the given code

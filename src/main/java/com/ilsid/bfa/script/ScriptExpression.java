@@ -12,8 +12,6 @@ public class ScriptExpression implements Expression<Object> {
 
 	private ScriptContext scriptContext;
 
-	private ScriptExpressionParser parser;
-
 	private Object value;
 
 	/**
@@ -27,7 +25,6 @@ public class ScriptExpression implements Expression<Object> {
 	public ScriptExpression(String input, ScriptContext scriptContext) {
 		this.input = input;
 		this.scriptContext = scriptContext;
-		parser = new ScriptExpressionParser(scriptContext);
 	}
 
 	/*
@@ -40,11 +37,10 @@ public class ScriptExpression implements Expression<Object> {
 			return value;
 		}
 
-		String javaExpression;
 		DynamicCodeInvocation invocation;
 		try {
-			javaExpression = parse(input);
-			invocation = compile(javaExpression);
+			invocation = DynamicCodeFactory.getInvocation(scriptContext.getScriptName(), input,
+					new ScriptExpressionParser(scriptContext));
 		} catch (DynamicCodeException e) {
 			throw new ScriptException("Failed to get a value from the expression [" + input + "]", e);
 		}
@@ -53,17 +49,6 @@ public class ScriptExpression implements Expression<Object> {
 		value = invocation.invoke();
 
 		return value;
-	}
-
-	private String parse(String input) throws DynamicCodeException {
-		String result = parser.parse(input);
-		return result;
-	}
-
-	private DynamicCodeInvocation compile(String javaExpression) throws DynamicCodeException {
-		DynamicCodeInvocation result = DynamicCodeFactory.getInvocation(scriptContext.getScriptName(), input,
-				javaExpression);
-		return result;
 	}
 
 }

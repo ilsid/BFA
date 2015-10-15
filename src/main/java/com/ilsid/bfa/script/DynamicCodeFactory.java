@@ -1,26 +1,15 @@
 package com.ilsid.bfa.script;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
-
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.compiler.ClassCompilationException;
+import com.ilsid.bfa.compiler.ClassCompiler;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.runtime.RuntimeContext;
-
-import javassist.ByteArrayClassPath;
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtConstructor;
-import javassist.CtField;
-import javassist.CtMethod;
-import javassist.Modifier;
-import javassist.NotFoundException;
 
 /**
  * Utility for dynamic Java code processing.
@@ -28,22 +17,9 @@ import javassist.NotFoundException;
  * @author illia.sydorovych
  *
  */
-// TODO: change caching mechanism
 public class DynamicCodeFactory {
 
-	private static final CtClass[] NO_ARGS = {};
-
-	private static Map<String, String> replaceableSymbols = new HashMap<>();
-
 	private static Map<String, Class<?>> cache = new HashMap<>();
-
-	static {
-		replaceableSymbols.put("-", "_Mns_");
-		replaceableSymbols.put("+", "_Pls_");
-		replaceableSymbols.put("*", "_Mlt_");
-		replaceableSymbols.put("/", "_Div_");
-		replaceableSymbols.put(".", "%dt");
-	}
 
 	/**
 	 * Returns {@link DynamicCodeInvocation} instance for the given script
@@ -80,9 +56,8 @@ public class DynamicCodeFactory {
 			return invocation;
 		}
 
-		ClassPool classPool = ClassPool.getDefault();
 		try {
-			invocation = tryInstantiateFromRepository(className, classPool, DynamicCodeInvocation.class);
+			invocation = tryInstantiateFromRepository(className, DynamicCodeInvocation.class);
 		} catch (LoadFromRepositoryException e) {
 			throw new DynamicCodeException("Failed to load the expression [" + scriptExpression + "] in the script ["
 					+ scriptName + "] from the repository", e.getCause());
@@ -95,32 +70,9 @@ public class DynamicCodeFactory {
 		String javaExpression = parser.parse(scriptExpression);
 
 		try {
-			CtClass clazz = classPool.makeClass(className);
-			clazz.addInterface(classPool.get(DynamicCodeInvocation.class.getName()));
-
-			CtClass scriptContextClass = classPool.get(ScriptContext.class.getName());
-			CtField field = new CtField(scriptContextClass, "scriptContext", clazz);
-			field.setModifiers(Modifier.PRIVATE);
-			clazz.addField(field);
-
-			CtConstructor cons = new CtConstructor(NO_ARGS, clazz);
-			cons.setBody(";");
-			clazz.addConstructor(cons);
-
-			CtMethod method;
-			method = new CtMethod(CtClass.voidType, "setScriptContext", new CtClass[] { scriptContextClass }, clazz);
-			method.setBody("scriptContext = $1;");
-			clazz.addMethod(method);
-
-			method = new CtMethod(classPool.get(Object.class.getName()), "invoke", NO_ARGS, clazz);
-			method.setBody(javaExpression);
-			clazz.addMethod(method);
-
-			invocation = (DynamicCodeInvocation) createInstance(clazz);
-
-		} catch (InstantiationException | IllegalAccessException | NotFoundException | CannotCompileException
-				| IOException e) {
-
+			invocation = (DynamicCodeInvocation) createInstance(
+					new InvocationCompilerDelegate(className, javaExpression));
+		} catch (InstantiationException | IllegalAccessException | ClassCompilationException e) {
 			throw new DynamicCodeException("Failed to create instance of the expression [" + scriptExpression
 					+ "] in the script [" + scriptName + "]", e);
 		}
@@ -131,8 +83,8 @@ public class DynamicCodeFactory {
 	/**
 	 * Returns {@link Script} instance that executes the given Java code. If a
 	 * code repository is defined in the global {@link RuntimeContext}, then the
-	 * corresponding class is searched by the script name in this repository. Otherwise, the class
-	 * is built on-the-fly.
+	 * corresponding class is searched by the script name in this repository.
+	 * Otherwise, the class is built on-the-fly.
 	 * 
 	 * @param scriptName
 	 *            script name
@@ -155,9 +107,8 @@ public class DynamicCodeFactory {
 			return script;
 		}
 
-		ClassPool classPool = ClassPool.getDefault();
 		try {
-			script = tryInstantiateFromRepository(className, classPool, Script.class);
+			script = tryInstantiateFromRepository(className, Script.class);
 		} catch (LoadFromRepositoryException e) {
 			throw new DynamicCodeException("Failed to load the script [" + scriptName + "] from the repository",
 					e.getCause());
@@ -168,24 +119,8 @@ public class DynamicCodeFactory {
 		}
 
 		try {
-			CtClass clazz = classPool.makeClass(className);
-			clazz.setSuperclass(classPool.get(Script.class.getName()));
-
-			CtConstructor cons = new CtConstructor(NO_ARGS, clazz);
-			cons.setBody(";");
-			clazz.addConstructor(cons);
-
-			CtMethod method = new CtMethod(CtClass.voidType, "doExecute", NO_ARGS, clazz);
-			method.setModifiers(Modifier.PROTECTED);
-			String body = "{" + IOUtils.toString(scriptBody, "UTF-8") + "}";
-			method.setBody(body);
-			clazz.addMethod(method);
-
-			script = (Script) createInstance(clazz);
-
-		} catch (NotFoundException | CannotCompileException | InstantiationException | IllegalAccessException
-				| IOException e) {
-
+			script = (Script) createInstance(new ScriptCompilerDelegate(className, scriptBody));
+		} catch (InstantiationException | IllegalAccessException | ClassCompilationException e) {
 			throw new DynamicCodeException("Failed to create instance of the script [" + scriptName + "]", e);
 		}
 
@@ -193,7 +128,7 @@ public class DynamicCodeFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> T tryInstantiateFromRepository(String className, ClassPool classPool, Class<T> instanceClass)
+	private static <T> T tryInstantiateFromRepository(String className, Class<T> instanceClass)
 			throws DynamicCodeException, LoadFromRepositoryException {
 
 		T instance = null;
@@ -201,8 +136,8 @@ public class DynamicCodeFactory {
 
 		if (codeRepository != null) {
 			try {
-				instance = (T) instantiateFromRepository(className, codeRepository, classPool);
-			} catch (InstantiationException | IllegalAccessException | NotFoundException | CannotCompileException e) {
+				instance = (T) instantiateFromRepository(className, codeRepository);
+			} catch (InstantiationException | IllegalAccessException | ClassCompilationException e) {
 				throw new LoadFromRepositoryException(e);
 			} catch (ClassCastException e) {
 				throw new DynamicCodeException(
@@ -228,9 +163,8 @@ public class DynamicCodeFactory {
 		return instance;
 	}
 
-	private static Object instantiateFromRepository(String className, CodeRepository codeRepository,
-			ClassPool classPool) throws DynamicCodeException, NotFoundException, CannotCompileException,
-					InstantiationException, IllegalAccessException {
+	private static Object instantiateFromRepository(String className, CodeRepository codeRepository)
+			throws DynamicCodeException, InstantiationException, IllegalAccessException, ClassCompilationException {
 
 		byte[] byteCode;
 		try {
@@ -242,35 +176,27 @@ public class DynamicCodeFactory {
 		if (byteCode.length == 0) {
 			throw new DynamicCodeException("Class [" + className + "] does not exist in repository");
 		}
-
-		// FIXME: not thread safe
-		classPool.appendClassPath(new ByteArrayClassPath(className, byteCode));
-		CtClass clazz = classPool.get(className);
-		Class<?> instanceClass = clazz.toClass();
-		cache.put(className, instanceClass);
-		Object instance = instanceClass.newInstance();
-
+		
+		Object instance = createInstance(new CompileFromBytecodeDelegate(className, byteCode));
 		return instance;
 	}
 
-	private static Object createInstance(CtClass ctClass)
-			throws CannotCompileException, InstantiationException, IllegalAccessException, IOException {
-		Object instance;
-		Class<?> instanceClass;
+	private static Object createInstance(ClassCompilerDelegate compiler)
+			throws ClassCompilationException, InstantiationException, IllegalAccessException {
+		String className = compiler.getClassName();
+		Class<?> clazz;
 
-		// TODO: Think of ConcurrentHashMap usage
-		synchronized (cache) {
-			String className = ctClass.getName();
+		synchronized (className.intern()) {
 			Class<?> alreadyInCacheClass = cache.get(className);
 			if (alreadyInCacheClass == null) {
-				instanceClass = ctClass.toClass();
-				cache.put(className, instanceClass);
+				clazz = compiler.compile();
+				cache.put(className, clazz);
 			} else {
-				instanceClass = alreadyInCacheClass;
+				clazz = alreadyInCacheClass;
 			}
 		}
 
-		instance = instanceClass.newInstance();
+		Object instance = clazz.newInstance();
 		return instance;
 	}
 
@@ -280,6 +206,76 @@ public class DynamicCodeFactory {
 		public LoadFromRepositoryException(Throwable cause) {
 			super(cause);
 		}
+	}
+
+	private static interface ClassCompilerDelegate {
+
+		Class<?> compile() throws ClassCompilationException;
+
+		String getClassName();
+	}
+
+	private static class InvocationCompilerDelegate implements ClassCompilerDelegate {
+
+		private String className;
+
+		private String javaExpression;
+
+		public InvocationCompilerDelegate(String className, String javaExpression) {
+			this.className = className;
+			this.javaExpression = javaExpression;
+		}
+
+		public Class<?> compile() throws ClassCompilationException {
+			return ClassCompiler.compileInvocation(className, javaExpression);
+		}
+
+		public String getClassName() {
+			return className;
+		}
+
+	}
+
+	private static class ScriptCompilerDelegate implements ClassCompilerDelegate {
+
+		private String className;
+
+		private InputStream scriptBody;
+
+		public ScriptCompilerDelegate(String className, InputStream scriptBody) {
+			this.className = className;
+			this.scriptBody = scriptBody;
+		}
+
+		public Class<?> compile() throws ClassCompilationException {
+			return ClassCompiler.compileScript(className, scriptBody);
+		}
+
+		public String getClassName() {
+			return className;
+		}
+
+	}
+	
+	private static class CompileFromBytecodeDelegate implements ClassCompilerDelegate {
+
+		private String className;
+
+		private byte[] byteCode;
+
+		public CompileFromBytecodeDelegate(String className, byte[] byteCode) {
+			this.className = className;
+			this.byteCode = byteCode;
+		}
+
+		public Class<?> compile() throws ClassCompilationException {
+			return ClassCompiler.compileFromBytecode(className, byteCode);
+		}
+
+		public String getClassName() {
+			return className;
+		}
+
 	}
 
 }

@@ -75,7 +75,7 @@ public class ClassCompiler {
 			result = toClass(clazz);
 		} catch (NotFoundException | CannotCompileException e) {
 			throw new ClassCompilationException(String.format(
-					"Compilation of Invocation class failed. Class %s. Expression [%s]", className, expression), e);
+					"Compilation of Invocation class failed. Class [%s]. Expression [%s]", className, expression), e);
 		}
 
 		return result;
@@ -113,7 +113,7 @@ public class ClassCompiler {
 			result = toClass(clazz);
 		} catch (NotFoundException | CannotCompileException | IOException e) {
 
-			throw new ClassCompilationException(String.format("Compilation of Script class %s failed", className), e);
+			throw new ClassCompilationException(String.format("Compilation of Script class [%s] failed", className), e);
 		}
 
 		return result;

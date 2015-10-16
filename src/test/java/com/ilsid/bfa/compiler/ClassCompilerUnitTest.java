@@ -3,7 +3,9 @@ package com.ilsid.bfa.compiler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 
+import org.apache.commons.io.IOUtils;
 import org.jmock.Expectations;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +19,8 @@ import com.ilsid.bfa.script.TypeResolver;
 public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private static final String SCRIPTS_DIR = "src/test/resources/dynamicCode/";
+
+	private static final String BYTECODE_DIR = "src/test/resources/byteCode/";
 
 	private static final String TEST_INVOCATION_EXPRESSION = "return Integer.valueOf(2 - 1);";
 
@@ -43,8 +47,6 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	public void invocationCanBeCompiled() throws Exception {
 		Class<DynamicCodeInvocation> clazz = (Class<DynamicCodeInvocation>) ClassCompiler
 				.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
-
-		System.out.println(clazz.hashCode());
 
 		DynamicCodeInvocation instance = clazz.newInstance();
 		assertEquals(new Integer(1), instance.invoke());
@@ -95,13 +97,42 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	public void scriptWithSameNameCanNotBeCompiledTwice() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		exceptionRule.expectMessage("Compilation of Script class [com.ilsid.bfa.test.generated.TestScript2] failed");
-		
+
 		// Note, we must use unique class name in this test to avoid conflicts
 		// with classes already loaded into JVM by other tests.
 		compileScript(TEST_SCRIPT_CLASS_NAME_2);
 		compileScript(TEST_SCRIPT_CLASS_NAME_2);
 	}
-	
+
+	@Test
+	public void classCanBeCompiledFromBytecode() throws Exception {
+		byte[] byteCode = loadClass("DummyClass.class");
+
+		Class<?> dummyClass = ClassCompiler.compileFromBytecode("com.ilsid.bfa.test.types.DummyClass", byteCode);
+		Object dummy = dummyClass.newInstance();
+
+		assertNull(invokeMethod(dummy, "getValue"));
+		String value = "some value";
+		invokeMethod(dummy, "setValue", value);
+		assertEquals(value, invokeMethod(dummy, "getValue"));
+	}
+
+	@Test
+	@SuppressWarnings("unused")
+	public void classCanNotBeCompiledTwiceFromBytecode() throws Exception {
+		exceptionRule.expect(ClassCompilationException.class);
+		exceptionRule.expectMessage("Failed to create class com.ilsid.bfa.test.types.DummyClass2 from byte code");
+		
+		byte[] byteCode = loadClass("DummyClass2.class");
+
+		Class<?> dummyClass;
+		// Note, we must use unique class name in this test to avoid conflicts
+		// with classes already loaded into JVM by other tests.
+		String className = "com.ilsid.bfa.test.types.DummyClass2";
+		dummyClass = ClassCompiler.compileFromBytecode(className, byteCode);
+		dummyClass = ClassCompiler.compileFromBytecode(className, byteCode);
+	}
+
 	@SuppressWarnings("unused")
 	private void compileScript(String className) throws Exception {
 		try (InputStream body = loadScript("declarations-only-script.txt");) {
@@ -111,6 +142,26 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private InputStream loadScript(String fileName) throws Exception {
 		return new FileInputStream(new File(SCRIPTS_DIR + fileName));
+	}
+
+	private byte[] loadClass(String fileName) throws Exception {
+		byte[] result;
+
+		try (InputStream is = new FileInputStream(BYTECODE_DIR + fileName)) {
+			result = IOUtils.toByteArray(is);
+		}
+
+		return result;
+	}
+
+	private String invokeMethod(Object target, String name) throws Exception {
+		Method method = target.getClass().getDeclaredMethod(name);
+		return (String) method.invoke(target);
+	}
+
+	private void invokeMethod(Object target, String name, String value) throws Exception {
+		Method method = target.getClass().getDeclaredMethod(name, String.class);
+		method.invoke(target, value);
 	}
 
 }

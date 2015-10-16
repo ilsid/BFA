@@ -137,8 +137,8 @@ public class ClassCompiler {
 		Class<?> result;
 		try {
 			CtClass clazz = classPool.get(className);
-			classPool.removeClassPath(classPathEntry);
 			result = toClass(clazz);
+			classPool.removeClassPath(classPathEntry);
 		} catch (NotFoundException | CannotCompileException e) {
 			throw new ClassCompilationException(String.format("Failed to create class %s from byte code", className),
 					e);

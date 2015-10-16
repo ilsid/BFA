@@ -105,10 +105,10 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void classCanBeCompiledFromBytecode() throws Exception {
+	public void classCanBeLoadedFromBytecode() throws Exception {
 		byte[] byteCode = loadClass("DummyClass.class");
 
-		Class<?> dummyClass = ClassCompiler.compileFromBytecode("com.ilsid.bfa.test.types.DummyClass", byteCode);
+		Class<?> dummyClass = ClassCompiler.loadFromBytecode("com.ilsid.bfa.test.types.DummyClass", byteCode);
 		Object dummy = dummyClass.newInstance();
 
 		assertNull(invokeMethod(dummy, "getValue"));
@@ -119,7 +119,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@Test
 	@SuppressWarnings("unused")
-	public void classCanNotBeCompiledTwiceFromBytecode() throws Exception {
+	public void classCanNotBeLoadedTwiceFromBytecode() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		exceptionRule.expectMessage("Failed to create class com.ilsid.bfa.test.types.DummyClass2 from byte code");
 		
@@ -129,8 +129,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		// Note, we must use unique class name in this test to avoid conflicts
 		// with classes already loaded into JVM by other tests.
 		String className = "com.ilsid.bfa.test.types.DummyClass2";
-		dummyClass = ClassCompiler.compileFromBytecode(className, byteCode);
-		dummyClass = ClassCompiler.compileFromBytecode(className, byteCode);
+		dummyClass = ClassCompiler.loadFromBytecode(className, byteCode);
+		dummyClass = ClassCompiler.loadFromBytecode(className, byteCode);
 	}
 
 	@SuppressWarnings("unused")

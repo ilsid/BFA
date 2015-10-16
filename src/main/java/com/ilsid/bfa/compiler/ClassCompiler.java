@@ -51,27 +51,7 @@ public class ClassCompiler {
 		ClassPool classPool = getClassPool();
 
 		try {
-			CtClass clazz = classPool.makeClass(className);
-			clazz.addInterface(classPool.get(INVOCATION_INTERFACE_NAME));
-
-			CtClass scriptContextClass = classPool.get(SCRIPT_CONTEXT_CLASS_NAME);
-			CtField field = new CtField(scriptContextClass, "scriptContext", clazz);
-			field.setModifiers(Modifier.PRIVATE);
-			clazz.addField(field);
-
-			CtConstructor cons = new CtConstructor(NO_ARGS, clazz);
-			cons.setBody(";");
-			clazz.addConstructor(cons);
-
-			CtMethod method;
-			method = new CtMethod(CtClass.voidType, "setScriptContext", new CtClass[] { scriptContextClass }, clazz);
-			method.setBody("scriptContext = $1;");
-			clazz.addMethod(method);
-
-			method = new CtMethod(classPool.get(Object.class.getName()), "invoke", NO_ARGS, clazz);
-			method.setBody(expression);
-			clazz.addMethod(method);
-
+			CtClass clazz = buildInvocationClass(className, expression, classPool);
 			result = toClass(clazz);
 		} catch (NotFoundException | CannotCompileException e) {
 			throw new ClassCompilationException(String.format(
@@ -97,19 +77,7 @@ public class ClassCompiler {
 		ClassPool classPool = getClassPool();
 
 		try {
-			CtClass clazz = classPool.makeClass(className);
-			clazz.setSuperclass(classPool.get(SCRIPT_CLASS_NAME));
-
-			CtConstructor cons = new CtConstructor(NO_ARGS, clazz);
-			cons.setBody(";");
-			clazz.addConstructor(cons);
-
-			CtMethod method = new CtMethod(CtClass.voidType, "doExecute", NO_ARGS, clazz);
-			method.setModifiers(Modifier.PROTECTED);
-			String body = "{" + StringUtils.LF + IOUtils.toString(scriptBody, "UTF-8") + StringUtils.LF + "}";
-			method.setBody(body);
-			clazz.addMethod(method);
-
+			CtClass clazz = buildScriptClass(className, scriptBody, classPool);
 			result = toClass(clazz);
 		} catch (NotFoundException | CannotCompileException | IOException e) {
 
@@ -130,7 +98,7 @@ public class ClassCompiler {
 	 * @throws ClassCompilationException
 	 *             in case of compilation failure
 	 */
-	public static Class<?> compileFromBytecode(String className, byte[] byteCode) throws ClassCompilationException {
+	public static Class<?> loadFromBytecode(String className, byte[] byteCode) throws ClassCompilationException {
 		ByteArrayClassPath classPathEntry = new ByteArrayClassPath(className, byteCode);
 		ClassPool classPool = getClassPool();
 		classPool.appendClassPath(classPathEntry);
@@ -150,6 +118,49 @@ public class ClassCompiler {
 	private static ClassPool getClassPool() {
 		// TODO: non-default class pool may be needed
 		return ClassPool.getDefault();
+	}
+	
+	private static CtClass buildInvocationClass(String className, String expression, ClassPool classPool) throws NotFoundException, CannotCompileException {
+		CtClass clazz = classPool.makeClass(className);
+		clazz.addInterface(classPool.get(INVOCATION_INTERFACE_NAME));
+
+		CtClass scriptContextClass = classPool.get(SCRIPT_CONTEXT_CLASS_NAME);
+		CtField field = new CtField(scriptContextClass, "scriptContext", clazz);
+		field.setModifiers(Modifier.PRIVATE);
+		clazz.addField(field);
+
+		CtConstructor cons = new CtConstructor(NO_ARGS, clazz);
+		cons.setBody(";");
+		clazz.addConstructor(cons);
+
+		CtMethod method;
+		method = new CtMethod(CtClass.voidType, "setScriptContext", new CtClass[] { scriptContextClass }, clazz);
+		method.setBody("scriptContext = $1;");
+		clazz.addMethod(method);
+
+		method = new CtMethod(classPool.get(Object.class.getName()), "invoke", NO_ARGS, clazz);
+		method.setBody(expression);
+		clazz.addMethod(method);
+		
+		return clazz;
+	}
+	
+	private static CtClass buildScriptClass(String className, InputStream scriptBody, ClassPool classPool)
+			throws NotFoundException, CannotCompileException, IOException {
+		CtClass clazz = classPool.makeClass(className);
+		clazz.setSuperclass(classPool.get(SCRIPT_CLASS_NAME));
+
+		CtConstructor cons = new CtConstructor(NO_ARGS, clazz);
+		cons.setBody(";");
+		clazz.addConstructor(cons);
+
+		CtMethod method = new CtMethod(CtClass.voidType, "doExecute", NO_ARGS, clazz);
+		method.setModifiers(Modifier.PROTECTED);
+		String body = "{" + StringUtils.LF + IOUtils.toString(scriptBody, "UTF-8") + StringUtils.LF + "}";
+		method.setBody(body);
+		clazz.addMethod(method);
+		
+		return clazz;
 	}
 
 	private static Class<?> toClass(CtClass clazz) throws CannotCompileException {

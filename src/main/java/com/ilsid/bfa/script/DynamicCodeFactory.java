@@ -177,7 +177,7 @@ public class DynamicCodeFactory {
 			throw new DynamicCodeException("Class [" + className + "] does not exist in repository");
 		}
 		
-		Object instance = createInstance(new CompileFromBytecodeDelegate(className, byteCode));
+		Object instance = createInstance(new LoadFromBytecodeDelegate(className, byteCode));
 		return instance;
 	}
 
@@ -257,19 +257,19 @@ public class DynamicCodeFactory {
 
 	}
 	
-	private static class CompileFromBytecodeDelegate implements ClassCompilerDelegate {
+	private static class LoadFromBytecodeDelegate implements ClassCompilerDelegate {
 
 		private String className;
 
 		private byte[] byteCode;
 
-		public CompileFromBytecodeDelegate(String className, byte[] byteCode) {
+		public LoadFromBytecodeDelegate(String className, byte[] byteCode) {
 			this.className = className;
 			this.byteCode = byteCode;
 		}
 
 		public Class<?> compile() throws ClassCompilationException {
-			return ClassCompiler.compileFromBytecode(className, byteCode);
+			return ClassCompiler.loadFromBytecode(className, byteCode);
 		}
 
 		public String getClassName() {

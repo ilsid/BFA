@@ -1,6 +1,6 @@
 package com.ilsid.bfa.script;
 
-class StringLiteralExpression implements Expression<String> {
+class StringLiteralExpression implements ValueExpression<String> {
 	
 	private String input;
 	

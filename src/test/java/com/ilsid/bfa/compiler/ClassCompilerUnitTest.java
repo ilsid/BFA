@@ -59,7 +59,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		// with classes already loaded into JVM by other tests.
 		exceptionRule.expect(ClassCompilationException.class);
 		exceptionRule.expectMessage(
-				"Compilation of Invocation class failed. Class [com.ilsid.bfa.test.generated.TestInvocation2]. Expression [return Integer.valueOf(2 - 1);]");
+				"Compilation of Invocation class failed. Class [com.ilsid.bfa.test.generated.TestInvocation2]. ValueExpression [return Integer.valueOf(2 - 1);]");
 
 		Class<?> clazz;
 		clazz = ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME_2, TEST_INVOCATION_EXPRESSION);
@@ -122,7 +122,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	public void classCanNotBeLoadedTwiceFromBytecode() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		exceptionRule.expectMessage("Failed to create class com.ilsid.bfa.test.types.DummyClass2 from byte code");
-		
+
 		byte[] byteCode = loadClass("DummyClass2.class");
 
 		Class<?> dummyClass;
@@ -131,6 +131,16 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		String className = "com.ilsid.bfa.test.types.DummyClass2";
 		dummyClass = ClassCompiler.loadFromBytecode(className, byteCode);
 		dummyClass = ClassCompiler.loadFromBytecode(className, byteCode);
+	}
+
+	@Test
+	public void compileExpressionsSanityCheck() throws Exception {
+		try (InputStream body = loadScript("set-local-vars-script.txt");) {
+			String scriptClassName = "com.ilsid.bfa.test.generated.TestScript33";
+			byte[] scriptByteCode = ClassCompiler
+					.compileScriptToBytecode(scriptClassName, body);
+			ClassCompiler.compileScriptExpressions(scriptClassName, scriptByteCode);
+		}
 	}
 
 	@SuppressWarnings("unused")

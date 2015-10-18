@@ -1,12 +1,12 @@
 package com.ilsid.bfa.script;
 
 /**
- * Expression that represents some scripting source code.
+ * ValueExpression that represents some scripting source code.
  * 
  * @author illia.sydorovych
  *
  */
-public class ScriptExpression implements Expression<Object> {
+public class ScriptExpression implements ValueExpression<Object> {
 
 	private String input;
 
@@ -30,7 +30,7 @@ public class ScriptExpression implements Expression<Object> {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.script.Expression#getValue()
+	 * @see com.ilsid.bfa.script.ValueExpression#getValue()
 	 */
 	public Object getValue() throws ScriptException {
 		if (value != null) {

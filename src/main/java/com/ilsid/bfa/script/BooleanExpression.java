@@ -8,7 +8,7 @@ import org.apache.commons.lang3.Validate;
  * @author illia.sydorovych
  *
  */
-class BooleanExpression implements Expression<Boolean> {
+class BooleanExpression implements ValueExpression<Boolean> {
 
 	private static final String VALID_TRUE_VALUE = "True";
 	

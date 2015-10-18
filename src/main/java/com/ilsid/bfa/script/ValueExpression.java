@@ -1,13 +1,13 @@
 package com.ilsid.bfa.script;
 
 /**
- * Expression that provides some value as a result of its calculation.
+ * Expression that provides some value.
  * 
  * @author illia.sydorovych
  *
  * @param <T>
  */
-interface Expression<T> {
+interface ValueExpression<T> {
 
 	/**
 	 * Provides calculation result.

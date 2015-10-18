@@ -2,6 +2,7 @@ package com.ilsid.bfa.compiler;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +12,8 @@ import com.ilsid.bfa.script.Script;
 
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
+import javassist.ClassClassPath;
+import javassist.ClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
@@ -18,6 +21,9 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
+import javassist.bytecode.Descriptor;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
 
 /**
  * Compiles classes in runtime.
@@ -25,6 +31,7 @@ import javassist.NotFoundException;
  * @author illia.sydorovych
  *
  */
+// TODO: unit tests for *toBytecode() methods
 public class ClassCompiler {
 
 	private static final String SCRIPT_CONTEXT_CLASS_NAME = "com.ilsid.bfa.script.ScriptContext";
@@ -48,14 +55,44 @@ public class ClassCompiler {
 	 */
 	public static Class<?> compileInvocation(String className, String expression) throws ClassCompilationException {
 		Class<?> result;
-		ClassPool classPool = getClassPool();
 
 		try {
-			CtClass clazz = buildInvocationClass(className, expression, classPool);
+			CtClass clazz = buildInvocationClass(className, expression);
 			result = toClass(clazz);
 		} catch (NotFoundException | CannotCompileException e) {
-			throw new ClassCompilationException(String.format(
-					"Compilation of Invocation class failed. Class [%s]. Expression [%s]", className, expression), e);
+			throw new ClassCompilationException(
+					String.format("Compilation of Invocation class failed. Class [%s]. ValueExpression [%s]", className,
+							expression),
+					e);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Compiles a byte code for a class that implements
+	 * {@link DynamicCodeInvocation} interface.
+	 * 
+	 * @param className
+	 *            class name
+	 * @param expression
+	 *            java source code (implementation)
+	 * @return a byte code for {@link DynamicCodeInvocation} implementation
+	 * @throws ClassCompilationException
+	 *             in case of compilation failure
+	 */
+	public static byte[] compileInvocationToBytecode(String className, String expression)
+			throws ClassCompilationException {
+		byte[] result;
+
+		try {
+			CtClass clazz = buildInvocationClass(className, expression);
+			result = toBytecode(clazz);
+		} catch (NotFoundException | CannotCompileException | IOException e) {
+			throw new ClassCompilationException(
+					String.format("Compilation of Invocation to byte code failed. Class [%s]. ValueExpression [%s]",
+							className, expression),
+					e);
 		}
 
 		return result;
@@ -74,14 +111,40 @@ public class ClassCompiler {
 	 */
 	public static Class<?> compileScript(String className, InputStream scriptBody) throws ClassCompilationException {
 		Class<?> result;
-		ClassPool classPool = getClassPool();
 
 		try {
-			CtClass clazz = buildScriptClass(className, scriptBody, classPool);
+			CtClass clazz = buildScriptClass(className, scriptBody);
 			result = toClass(clazz);
 		} catch (NotFoundException | CannotCompileException | IOException e) {
 
 			throw new ClassCompilationException(String.format("Compilation of Script class [%s] failed", className), e);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Compiles a byte code for a class that extends {@link Script} class.
+	 * 
+	 * @param className
+	 *            class name
+	 * @param scriptBody
+	 *            java source code (implementation)
+	 * @return a byte code for {@link Script} descendant
+	 * @throws ClassCompilationException
+	 *             in case of compilation failure
+	 */
+	public static byte[] compileScriptToBytecode(String className, InputStream scriptBody)
+			throws ClassCompilationException {
+		byte[] result;
+
+		try {
+			CtClass clazz = buildScriptClass(className, scriptBody);
+			result = toBytecode(clazz);
+		} catch (NotFoundException | CannotCompileException | IOException e) {
+
+			throw new ClassCompilationException(
+					String.format("Compilation of Script [%s] to byte code failed", className), e);
 		}
 
 		return result;
@@ -99,7 +162,7 @@ public class ClassCompiler {
 	 *             in case of compilation failure
 	 */
 	public static Class<?> loadFromBytecode(String className, byte[] byteCode) throws ClassCompilationException {
-		ByteArrayClassPath classPathEntry = new ByteArrayClassPath(className, byteCode);
+		ClassPath classPathEntry = new ByteArrayClassPath(className, byteCode);
 		ClassPool classPool = getClassPool();
 		classPool.appendClassPath(classPathEntry);
 		Class<?> result;
@@ -115,12 +178,68 @@ public class ClassCompiler {
 		return result;
 	}
 
+	/**
+	 * Compiles all dynamic expressions defined in a given script.
+	 * 
+	 * @param scriptClassName
+	 *            script class name
+	 * @param scriptByteCode
+	 *            script byte code
+	 * @return a list of {@link CompilationUnit} instances corresponding to each
+	 *         expression or an empty list, if no expressions are defined
+	 * @throws ClassCompilationException
+	 *             if compilation of any expression failed
+	 */
+	//TODO: complete implementation
+	public static List<CompilationUnit> compileScriptExpressions(String scriptClassName, byte[] scriptByteCode)
+			throws ClassCompilationException {
+		ClassPath classPathEntry = new ByteArrayClassPath(scriptClassName, scriptByteCode);
+		ClassPool classPool = getClassPool();
+		classPool.appendClassPath(classPathEntry);
+		CtClass clazz;
+		try {
+			clazz = classPool.get(scriptClassName);
+		} catch (NotFoundException e) {
+			throw new ClassCompilationException(String.format("Script class [%s] not found", scriptClassName), e);
+		}
+
+		if (clazz.isFrozen()) {
+			clazz.defrost();
+		}
+
+		CtMethod method;
+		try {
+			method = clazz.getMethod("doExecute", Descriptor.ofMethod(CtClass.voidType, NO_ARGS));
+		} catch (NotFoundException e) {
+			throw new ClassCompilationException(
+					String.format("Method [%s] not found in class [%s]", "doExecute()", scriptClassName), e);
+		}
+
+		try {
+			method.instrument(new ExprEditor() {
+				@Override
+				public void edit(MethodCall m) throws CannotCompileException {
+					System.out.println(m.getMethodName());
+				}
+			});
+		} catch (CannotCompileException e) {
+			throw new ClassCompilationException(
+					String.format("Failed to compile expressions in the script [%s]", scriptClassName), e);
+		}
+
+		classPool.removeClassPath(classPathEntry);
+
+		return null;
+	}
+
 	private static ClassPool getClassPool() {
 		// TODO: non-default class pool may be needed
 		return ClassPool.getDefault();
 	}
-	
-	private static CtClass buildInvocationClass(String className, String expression, ClassPool classPool) throws NotFoundException, CannotCompileException {
+
+	private static CtClass buildInvocationClass(String className, String expression)
+			throws NotFoundException, CannotCompileException {
+		ClassPool classPool = getClassPool();
 		CtClass clazz = classPool.makeClass(className);
 		clazz.addInterface(classPool.get(INVOCATION_INTERFACE_NAME));
 
@@ -141,12 +260,13 @@ public class ClassCompiler {
 		method = new CtMethod(classPool.get(Object.class.getName()), "invoke", NO_ARGS, clazz);
 		method.setBody(expression);
 		clazz.addMethod(method);
-		
+
 		return clazz;
 	}
-	
-	private static CtClass buildScriptClass(String className, InputStream scriptBody, ClassPool classPool)
+
+	private static CtClass buildScriptClass(String className, InputStream scriptBody)
 			throws NotFoundException, CannotCompileException, IOException {
+		ClassPool classPool = getClassPool();
 		CtClass clazz = classPool.makeClass(className);
 		clazz.setSuperclass(classPool.get(SCRIPT_CLASS_NAME));
 
@@ -159,7 +279,7 @@ public class ClassCompiler {
 		String body = "{" + StringUtils.LF + IOUtils.toString(scriptBody, "UTF-8") + StringUtils.LF + "}";
 		method.setBody(body);
 		clazz.addMethod(method);
-		
+
 		return clazz;
 	}
 
@@ -167,6 +287,12 @@ public class ClassCompiler {
 		// TODO: Here, a custom class loader may be needed if deploying on
 		// application server
 		Class<?> result = clazz.toClass();
+		clazz.detach();
+		return result;
+	}
+
+	private static byte[] toBytecode(CtClass clazz) throws CannotCompileException, IOException {
+		byte[] result = clazz.toBytecode();
 		clazz.detach();
 		return result;
 	}

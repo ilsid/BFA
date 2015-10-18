@@ -6,7 +6,7 @@ package com.ilsid.bfa.persistence;
  * @author illia.sydorovych
  *
  */
-//TODO: complete javadocs
+// TODO: complete javadocs
 public interface CodeRepository {
 
 	/**
@@ -20,10 +20,20 @@ public interface CodeRepository {
 	 *             in case of any repository access issues
 	 */
 	public byte[] load(String className) throws PersistenceException;
-	
-	public void save(String className, byte[] byteCode) throws PersistenceException;
-	
-	public void update(String className, byte[] byteCode) throws PersistenceException;
-	
+
+	/**
+	 * Source code here is not the whole code of the class, but the variable
+	 * part only (script body or dynamic expression), that may be updated by
+	 * user in the future.
+	 * 
+	 * @param className
+	 * @param byteCode
+	 * @param sourceCode
+	 * @throws PersistenceException
+	 */
+	public void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
+
+	public void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
+
 	public void delete(String className) throws PersistenceException;
 }

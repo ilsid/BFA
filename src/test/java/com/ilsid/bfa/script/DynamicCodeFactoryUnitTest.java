@@ -169,13 +169,13 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 				return result;
 			}
 
-			public void save(String className, byte[] byteCode) throws PersistenceException {
-			}
-
-			public void update(String className, byte[] byteCode) throws PersistenceException {
-			}
-
 			public void delete(String className) throws PersistenceException {
+			}
+
+			public void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
+			}
+
+			public void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
 			}
 		};
 

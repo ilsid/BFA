@@ -6,13 +6,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares a method parameter as expression. 
+ * Declares that a method sets a variable.
  * 
  * @author illia.sydorovych
  *
  */
-@Target(value=ElementType.PARAMETER)
-@Retention(value=RetentionPolicy.RUNTIME)
-public @interface Expression {
+@Target(value = ElementType.METHOD)
+@Retention(value = RetentionPolicy.RUNTIME)
+public @interface Var {
 
+	Scope scope();
+
+	public static enum Scope {
+		INPUT, LOCAL
+	}
 }

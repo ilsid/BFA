@@ -1,7 +1,7 @@
 package com.ilsid.bfa.script;
 
 /**
- * Expression that provides some value.
+ * ExprParam that provides some value.
  * 
  * @author illia.sydorovych
  *

@@ -2,17 +2,26 @@ package com.ilsid.bfa.compiler;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseException;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.StringLiteralExpr;
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.ilsid.bfa.script.DynamicCodeInvocation;
 import com.ilsid.bfa.script.Script;
 
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
-import javassist.ClassClassPath;
 import javassist.ClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -33,12 +42,6 @@ import javassist.expr.MethodCall;
  */
 // TODO: unit tests for *toBytecode() methods
 public class ClassCompiler {
-
-	private static final String SCRIPT_CONTEXT_CLASS_NAME = "com.ilsid.bfa.script.ScriptContext";
-
-	private static final String INVOCATION_INTERFACE_NAME = "com.ilsid.bfa.script.DynamicCodeInvocation";
-
-	private static final String SCRIPT_CLASS_NAME = "com.ilsid.bfa.script.Script";
 
 	private static final CtClass[] NO_ARGS = {};
 
@@ -185,13 +188,13 @@ public class ClassCompiler {
 	 *            script class name
 	 * @param scriptByteCode
 	 *            script byte code
-	 * @return a list of {@link CompilationUnit} instances corresponding to each
-	 *         expression or an empty list, if no expressions are defined
+	 * @return a list of {@link CompilationBlock} instances corresponding to
+	 *         each expression or an empty list, if no expressions are defined
 	 * @throws ClassCompilationException
 	 *             if compilation of any expression failed
 	 */
-	//TODO: complete implementation
-	public static List<CompilationUnit> compileScriptExpressions(String scriptClassName, byte[] scriptByteCode)
+	// TODO: complete implementation
+	public static List<CompilationBlock> compileScriptExpressions(String scriptClassName, byte[] scriptByteCode)
 			throws ClassCompilationException {
 		ClassPath classPathEntry = new ByteArrayClassPath(scriptClassName, scriptByteCode);
 		ClassPool classPool = getClassPool();
@@ -220,6 +223,22 @@ public class ClassCompiler {
 				@Override
 				public void edit(MethodCall m) throws CannotCompileException {
 					System.out.println(m.getMethodName());
+					// System.out.println(m.isSuper());
+					try {
+						System.out.println(m.getMethod().getSignature());
+						// System.out.println(m.getMethod().getMethodInfo().toString());
+						// System.out.println(m.getMethod().getMethodInfo2().toString());
+						CtClass[] params = m.getMethod().getParameterTypes();
+						for (CtClass param : params) {
+							Object[] ants = param.getAvailableAnnotations();
+							for (Object ant : ants) {
+								System.out.println(ant);
+							}
+						}
+					} catch (NotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			});
 		} catch (CannotCompileException e) {
@@ -228,6 +247,25 @@ public class ClassCompiler {
 		}
 
 		classPool.removeClassPath(classPathEntry);
+		clazz.detach();
+
+		return null;
+	}
+
+	public static List<CompilationBlock> compileScriptExpressions(String scriptClassName, InputStream scriptSourceCode)
+			throws ClassCompilationException {
+		CompilationUnit cu;
+		try {
+			cu = JavaParser.parse(scriptSourceCode);
+		} catch (ParseException e) {
+			throw new ClassCompilationException(
+					String.format("Failed to parse a source code of the class [%s]", scriptClassName), e);
+		}
+
+		MethodCallVisitorContext visitorContext = new MethodCallVisitorContext();
+		visitorContext.scriptClassName = scriptClassName;
+
+		new MethodCallVisitor().visit(cu, visitorContext);
 
 		return null;
 	}
@@ -241,9 +279,9 @@ public class ClassCompiler {
 			throws NotFoundException, CannotCompileException {
 		ClassPool classPool = getClassPool();
 		CtClass clazz = classPool.makeClass(className);
-		clazz.addInterface(classPool.get(INVOCATION_INTERFACE_NAME));
+		clazz.addInterface(classPool.get(CompilerConstants.INVOCATION_INTERFACE_NAME));
 
-		CtClass scriptContextClass = classPool.get(SCRIPT_CONTEXT_CLASS_NAME);
+		CtClass scriptContextClass = classPool.get(CompilerConstants.SCRIPT_CONTEXT_CLASS_NAME);
 		CtField field = new CtField(scriptContextClass, "scriptContext", clazz);
 		field.setModifiers(Modifier.PRIVATE);
 		clazz.addField(field);
@@ -268,7 +306,7 @@ public class ClassCompiler {
 			throws NotFoundException, CannotCompileException, IOException {
 		ClassPool classPool = getClassPool();
 		CtClass clazz = classPool.makeClass(className);
-		clazz.setSuperclass(classPool.get(SCRIPT_CLASS_NAME));
+		clazz.setSuperclass(classPool.get(CompilerConstants.SCRIPT_CLASS_NAME));
 
 		CtConstructor cons = new CtConstructor(NO_ARGS, clazz);
 		cons.setBody(";");
@@ -295,6 +333,49 @@ public class ClassCompiler {
 		byte[] result = clazz.toBytecode();
 		clazz.detach();
 		return result;
+	}
+
+	private static class MethodCallVisitorContext {
+
+		String scriptClassName;
+
+		List<Exception> exceptions = new LinkedList<>();
+
+		List<CompilationBlock> compiledExpressions = new LinkedList<>();
+	}
+
+	private static class MethodCallVisitor extends VoidVisitorAdapter<MethodCallVisitorContext> {
+
+		@Override
+		public void visit(MethodCallExpr m, MethodCallVisitorContext visitorContext) {
+			Expression[] methodParams = m.getArgs().toArray(new Expression[] {});
+			System.out.println(m.getName());
+
+			Method[] parentMethods = CompilerConstants.SCRIPT_CLASS.getMethods();
+			for (Method parentMethod : parentMethods) {
+				if (m.getName().equals(parentMethod.getName())
+						&& methodParams.length == parentMethod.getParameterTypes().length) {
+
+					int paramIdx = 0;
+					for (Annotation[] annotations : parentMethod.getParameterAnnotations()) {
+						for (Annotation a : annotations) {
+							if (a.annotationType() == ExprParam.class) {
+								processExpression(methodParams[paramIdx], visitorContext);
+							}
+						}
+						paramIdx++;
+					}
+					break;
+				}
+			}
+		}
+
+		private void processExpression(Expression expression, MethodCallVisitorContext visitorContext) {
+			if (StringLiteralExpr.class.isInstance(expression)) {
+				System.out.println("Expression: " + expression);
+			}
+		}
+
 	}
 
 }

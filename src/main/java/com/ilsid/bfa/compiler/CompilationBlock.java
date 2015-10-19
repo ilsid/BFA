@@ -1,13 +1,13 @@
 package com.ilsid.bfa.compiler;
 
 /**
- * Class compilation unit. Contains a class name, a byte code and a source code
+ * A compilation block. Contains a class name, a byte code and a source code
  * of a dynamic part (script body or dynamic expression).
  * 
  * @author illia.sydorovych
  *
  */
-public class CompilationUnit {
+public class CompilationBlock {
 
 	private String className;
 

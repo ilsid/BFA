@@ -3,9 +3,11 @@ package com.ilsid.bfa.compiler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.StringBufferInputStream;
 import java.lang.reflect.Method;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jmock.Expectations;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,7 +16,14 @@ import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.script.DynamicCodeInvocation;
 import com.ilsid.bfa.script.Script;
 import com.ilsid.bfa.script.ScriptContext;
+import com.ilsid.bfa.script.ScriptException;
 import com.ilsid.bfa.script.TypeResolver;
+
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtConstructor;
+import javassist.CtMethod;
+import javassist.Modifier;
 
 public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
@@ -133,14 +142,30 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		dummyClass = ClassCompiler.loadFromBytecode(className, byteCode);
 	}
 
-	@Test
+	// @Test
 	public void compileExpressionsSanityCheck() throws Exception {
-		try (InputStream body = loadScript("set-local-vars-script.txt");) {
-			String scriptClassName = "com.ilsid.bfa.test.generated.TestScript33";
-			byte[] scriptByteCode = ClassCompiler
-					.compileScriptToBytecode(scriptClassName, body);
-			ClassCompiler.compileScriptExpressions(scriptClassName, scriptByteCode);
+		String scriptClassName = "com.ilsid.bfa.test.generated.TestScript33";
+		byte[] scriptByteCode = loadScript(scriptClassName, "set-local-vars-script.txt");
+		ClassCompiler.compileScriptExpressions(scriptClassName, scriptByteCode);
+	}
+
+	@Test
+	public void compileExpressionsSanityCheck2() throws Exception {
+		//String scriptClassName = "com.ilsid.bfa.test.generated.TestScript33";
+		StringBuilder sourceCode = new StringBuilder();
+		try (InputStream scriptBody = loadScript("single-expression-script.txt");) {
+			sourceCode.append("package com.ilsid.bfa.generated;").append("\n");
+			sourceCode.append("import com.ilsid.bfa.script.Script;").append("\n");
+			sourceCode.append("import com.ilsid.bfa.script.ScriptException;").append("\n");
+			sourceCode.append("public class TestScript33 extends Script {").append("\n");
+			sourceCode.append("protected void doExecute() throws ScriptException {").append("\n");
+			sourceCode.append(IOUtils.toString(scriptBody, "UTF-8")).append("\n");
+			sourceCode.append("}").append("\n");
+			sourceCode.append("}");
+			//System.out.println(sourceCode.toString());
 		}
+		InputStream scriptSource = IOUtils.toInputStream(sourceCode.toString(), "UTF-8");
+		ClassCompiler.compileScriptExpressions(null, scriptSource);
 	}
 
 	@SuppressWarnings("unused")
@@ -152,6 +177,30 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private InputStream loadScript(String fileName) throws Exception {
 		return new FileInputStream(new File(SCRIPTS_DIR + fileName));
+	}
+
+	private byte[] loadScript(String className, String fileName) throws Exception {
+		byte[] result;
+		try (InputStream scriptBody = loadScript(fileName);) {
+			CtClass[] noArgs = {};
+			ClassPool classPool = ClassPool.getDefault();
+			CtClass clazz = classPool.makeClass(className);
+			clazz.setSuperclass(classPool.get(CompilerConstants.SCRIPT_CLASS_NAME));
+
+			CtConstructor cons = new CtConstructor(noArgs, clazz);
+			cons.setBody(";");
+			clazz.addConstructor(cons);
+
+			CtMethod method = new CtMethod(CtClass.voidType, "doExecute", noArgs, clazz);
+			method.setModifiers(Modifier.PROTECTED);
+			String body = "{" + StringUtils.LF + IOUtils.toString(scriptBody, "UTF-8") + StringUtils.LF + "}";
+			method.setBody(body);
+			clazz.addMethod(method);
+
+			result = clazz.toBytecode();
+		}
+
+		return result;
 	}
 
 	private byte[] loadClass(String fileName) throws Exception {

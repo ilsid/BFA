@@ -1,6 +1,7 @@
 package com.ilsid.bfa.script;
 
-import com.ilsid.bfa.compiler.Expression;
+import com.ilsid.bfa.compiler.ExprParam;
+import com.ilsid.bfa.compiler.Var;
 import com.ilsid.bfa.runtime.RuntimeContext;
 
 //TODO: complete implementation
@@ -26,19 +27,22 @@ public abstract class Script implements Executable<Void> {
 		scriptContext.setScriptName(this.getClass().getSimpleName());
 	}
 
+	@Var(scope = Var.Scope.INPUT)
 	public void DeclareInputVar(String name, String type) throws ScriptException {
 		scriptContext.addInputVar(name, typeResolver.resolveJavaTypeName(type));
 	}
-
+	
+	@Var(scope = Var.Scope.LOCAL)
 	public void DeclareLocalVar(String name, String type) throws ScriptException {
 		scriptContext.addLocalVar(name, typeResolver.resolveJavaTypeName(type));
 	}
-
+	
+	@Var(scope = Var.Scope.LOCAL)
 	public void DeclareLocalVar(String name, String type, Object initValue) throws ScriptException {
 		scriptContext.addLocalVar(name, typeResolver.resolveJavaTypeName(type), initValue);
 	}
 	
-	public void SetLocalVar(String name, @Expression Object expr) throws ScriptException {
+	public void SetLocalVar(String name, @ExprParam Object expr) throws ScriptException {
 		scriptContext.updateLocalVar(name, getValue(expr));
 	}
 
@@ -46,15 +50,15 @@ public abstract class Script implements Executable<Void> {
 		return runtimeContext.getGlobalVar(name);
 	}
 
-	public void SetGlobalVar(String name, @Expression Object expr) throws ScriptException {
+	public void SetGlobalVar(String name, @ExprParam Object expr) throws ScriptException {
 		runtimeContext.setGlobalVar(name, getValue(expr));
 	}
 
-	public boolean EqualCondition(@Expression Object expr1, @Expression Object expr2) throws ScriptException {
+	public boolean EqualCondition(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
 		return EqualCondition(expr1, expr2, null);
 	}
 
-	public boolean EqualCondition(@Expression Object expr1, @Expression Object expr2, String description)
+	public boolean EqualCondition(@ExprParam Object expr1, @ExprParam Object expr2, String description)
 			throws ScriptException {
 		AbstractCondition condition = new EqualCondition(getValue(expr1), getValue(expr2));
 		if (description != null) {
@@ -64,11 +68,11 @@ public abstract class Script implements Executable<Void> {
 		return condition.isTrue();
 	}
 
-	public boolean LessOrEqualCondition(@Expression Object expr1, @Expression Object expr2) throws ScriptException {
+	public boolean LessOrEqualCondition(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
 		return LessOrEqualCondition(expr1, expr2, null);
 	}
 
-	public boolean LessOrEqualCondition(@Expression Object expr1, @Expression Object expr2, String description)
+	public boolean LessOrEqualCondition(@ExprParam Object expr1, @ExprParam Object expr2, String description)
 			throws ScriptException {
 		AbstractCondition condition = new LessOrEqualCondition(getValue(expr1), getValue(expr2));
 		if (description != null) {

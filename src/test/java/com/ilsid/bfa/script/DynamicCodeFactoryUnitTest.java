@@ -11,19 +11,11 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
-import com.ilsid.bfa.common.ClassNameUtil;
-import com.ilsid.bfa.generated.DummyScript;
-import com.ilsid.bfa.generated.DummyScript$$DummyExpression;
+import com.ilsid.bfa.generated.script.DummyScript;
+import com.ilsid.bfa.generated.script.DummyScript$$DummyExpr;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.runtime.GlobalContext;
-import com.ilsid.bfa.script.Action;
-import com.ilsid.bfa.script.DynamicCodeException;
-import com.ilsid.bfa.script.DynamicCodeFactory;
-import com.ilsid.bfa.script.DynamicCodeInvocation;
-import com.ilsid.bfa.script.Script;
-import com.ilsid.bfa.script.ScriptException;
-import com.ilsid.bfa.script.TypeResolver;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -31,11 +23,13 @@ import javassist.NotFoundException;
 
 public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
+	private static final String SCRIPT_CLASS_NAME_PREFIX = "com.ilsid.bfa.generated.script.";
+
 	private static final String DUMMY_SCRIPT_NAME = "DummyScript";
 
 	private static final GlobalContext FAKE_RUNTIME_CONTEXT = GlobalContext.getInstance();
 
-	private static final String TEST_SCRIPT_NAME = "TestScript";
+	private static final String TEST_SCRIPT_NAME = "Test";
 
 	private static final String SCRIPTS_DIR = "src/test/resources/dynamicCode/";
 
@@ -72,7 +66,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void expressionClassNameIsPrependedWithScriptName() throws Exception {
-		assertEquals(ClassNameUtil.GENERATED_PACKAGE + "SomeScript$$2_Mns_1",
+		assertEquals(SCRIPT_CLASS_NAME_PREFIX + "SomeScript$$2_Mns_1",
 				getInvocation("Some Script", "2 - 1").getClass().getName());
 	}
 
@@ -88,22 +82,22 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void scriptWithDeclarationsOnlyCanBeInvoked() throws Exception {
-		verifyScript("Script01", "declarations-only-script.txt", new Expectations() {
+		verifyScript("01", "declarations-only-script.txt", new Expectations() {
 			{
-				oneOf(mockContext).addLocalVar("Var1", "Number");
-				oneOf(mockContext).addLocalVar("Var2", "Decimal");
+				oneOf(mockContext).addLocalVar("Var1", "Integer");
+				oneOf(mockContext).addLocalVar("Var2", "Double");
 			}
 		});
 	}
 
 	@Test
 	public void scriptWithSetLocalVarsCanBeInvoked() throws Exception {
-		final String scriptName = "Script02";
+		final String scriptName = "02";
 
 		verifyScript(scriptName, "set-local-vars-script.txt", new Expectations() {
 			{
-				oneOf(mockContext).addLocalVar("Var1", "Number");
-				oneOf(mockContext).addLocalVar("Var2", "Decimal");
+				oneOf(mockContext).addLocalVar("Var1", "Integer");
+				oneOf(mockContext).addLocalVar("Var2", "Double");
 				exactly(2).of(mockContext).getScriptName();
 				will(returnValue(scriptName));
 				oneOf(mockContext).updateLocalVar("Var1", 1);
@@ -115,19 +109,19 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void expressionClassIsLoadedFromRepositoryIfRespositoryDefined() throws Exception {
 		defineRepository();
-		DynamicCodeInvocation expr = DynamicCodeFactory.getInvocation(DUMMY_SCRIPT_NAME, "DummyExpression", null);
-		assertSame(DummyScript$$DummyExpression.class, expr.getClass());
+		DynamicCodeInvocation expr = DynamicCodeFactory.getInvocation(DUMMY_SCRIPT_NAME, "DummyExpr", null);
+		assertSame(DummyScript$$DummyExpr.class, expr.getClass());
 		assertEquals(TestConstants.DUMMY_EXPRESSION_RESULT, expr.invoke());
 	}
 
 	@Test
 	public void expressionClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
 		exceptionRule.expect(DynamicCodeException.class);
-		exceptionRule.expectMessage("Class [" + ClassNameUtil.GENERATED_PACKAGE
-				+ "NonExistentScript$$DummyExpression] does not exist in repository");
+		exceptionRule.expectMessage(
+				"Class [" + SCRIPT_CLASS_NAME_PREFIX + "NonExistentScript$$DummyExpr] does not exist in repository");
 
 		defineRepository();
-		DynamicCodeFactory.getInvocation("NonExistentScript", "DummyExpression", null);
+		DynamicCodeFactory.getInvocation("NonExistentScript", "DummyExpr", null);
 	}
 
 	@Test
@@ -144,18 +138,17 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void scriptClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
 		exceptionRule.expect(DynamicCodeException.class);
-		exceptionRule.expectMessage(
-				"Class [" + ClassNameUtil.GENERATED_PACKAGE + "NonExistentScript] does not exist in repository");
+		exceptionRule.expectMessage("Class [" + SCRIPT_CLASS_NAME_PREFIX + "NonExistent] does not exist in repository");
 
 		defineRepository();
-		DynamicCodeFactory.getScript("NonExistentScript", null);
+		DynamicCodeFactory.getScript("NonExistent", null);
 	}
 
 	private void defineRepository() throws Exception {
 		CodeRepository repository = new CodeRepository() {
 
 			public byte[] load(String className) throws PersistenceException {
-				if (!className.startsWith(ClassNameUtil.GENERATED_PACKAGE + DUMMY_SCRIPT_NAME)) {
+				if (!className.startsWith(SCRIPT_CLASS_NAME_PREFIX + DUMMY_SCRIPT_NAME)) {
 					return new byte[0];
 				}
 
@@ -183,7 +176,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	private void verifyScript(String scriptName, String scriptFile, Expectations expectations) throws Exception {
 		Script script = createScript(scriptName, scriptFile);
-		assertEquals(ClassNameUtil.GENERATED_PACKAGE + scriptName, script.getClass().getName());
+		assertEquals(SCRIPT_CLASS_NAME_PREFIX + scriptName, script.getClass().getName());
 
 		checking(expectations);
 
@@ -218,22 +211,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 		try (InputStream body = loadScript(fileName);) {
 			script = DynamicCodeFactory.getScript(scriptName, body);
 		}
-
 		script.setRuntimeContext(GlobalContext.getInstance());
-		script.setTypeResolver(new TypeResolver() {
-
-			public String resolveJavaTypeName(String typeName) throws ScriptException {
-				return typeName;
-			}
-
-			public Action resolveAction(String actionName) throws ScriptException {
-				return null;
-			}
-
-			public Script resolveSubflow(String flowName) throws ScriptException {
-				return null;
-			}
-		});
 
 		return script;
 	}

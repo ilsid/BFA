@@ -1,4 +1,4 @@
-package com.ilsid.bfa.compiler;
+package com.ilsid.bfa.script;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,5 +1,8 @@
 package com.ilsid.bfa.compiler;
 
+import com.ilsid.bfa.BFAError;
+import com.ilsid.bfa.common.BFAClassLoader;
+
 public final class CompilerConstants {
 
 	public static final String SCRIPT_CONTEXT_CLASS_NAME = "com.ilsid.bfa.script.ScriptContext";
@@ -12,10 +15,10 @@ public final class CompilerConstants {
 
 	static {
 		try {
-			// TODO: custom class loader may be needed here
-			SCRIPT_CLASS = Class.forName(CompilerConstants.SCRIPT_CLASS_NAME);
+			// TODO: test custom class loader after implementation completion
+			SCRIPT_CLASS = Class.forName(CompilerConstants.SCRIPT_CLASS_NAME, true, BFAClassLoader.getInstance());
 		} catch (ClassNotFoundException e) {
-			throw new Error(String.format("Class [%s] not found", CompilerConstants.SCRIPT_CLASS_NAME), e);
+			throw new BFAError(String.format("Class [%s] not found", CompilerConstants.SCRIPT_CLASS_NAME), e);
 		}
 	}
 

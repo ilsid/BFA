@@ -17,8 +17,15 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.script.DynamicCodeException;
 import com.ilsid.bfa.script.DynamicCodeInvocation;
+import com.ilsid.bfa.script.ExprParam;
 import com.ilsid.bfa.script.Script;
+import com.ilsid.bfa.script.ScriptContext;
+import com.ilsid.bfa.script.ScriptException;
+import com.ilsid.bfa.script.ScriptExpressionParser;
+import com.ilsid.bfa.script.Var;
 
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
@@ -30,9 +37,6 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
-import javassist.bytecode.Descriptor;
-import javassist.expr.ExprEditor;
-import javassist.expr.MethodCall;
 
 /**
  * Compiles classes in runtime.
@@ -41,6 +45,7 @@ import javassist.expr.MethodCall;
  *
  */
 // TODO: unit tests for *toBytecode() methods
+// FIXME: resolve cyclic package dependencies
 public class ClassCompiler {
 
 	private static final CtClass[] NO_ARGS = {};
@@ -181,77 +186,7 @@ public class ClassCompiler {
 		return result;
 	}
 
-	/**
-	 * Compiles all dynamic expressions defined in a given script.
-	 * 
-	 * @param scriptClassName
-	 *            script class name
-	 * @param scriptByteCode
-	 *            script byte code
-	 * @return a list of {@link CompilationBlock} instances corresponding to
-	 *         each expression or an empty list, if no expressions are defined
-	 * @throws ClassCompilationException
-	 *             if compilation of any expression failed
-	 */
-	// TODO: complete implementation
-	public static List<CompilationBlock> compileScriptExpressions(String scriptClassName, byte[] scriptByteCode)
-			throws ClassCompilationException {
-		ClassPath classPathEntry = new ByteArrayClassPath(scriptClassName, scriptByteCode);
-		ClassPool classPool = getClassPool();
-		classPool.appendClassPath(classPathEntry);
-		CtClass clazz;
-		try {
-			clazz = classPool.get(scriptClassName);
-		} catch (NotFoundException e) {
-			throw new ClassCompilationException(String.format("Script class [%s] not found", scriptClassName), e);
-		}
-
-		if (clazz.isFrozen()) {
-			clazz.defrost();
-		}
-
-		CtMethod method;
-		try {
-			method = clazz.getMethod("doExecute", Descriptor.ofMethod(CtClass.voidType, NO_ARGS));
-		} catch (NotFoundException e) {
-			throw new ClassCompilationException(
-					String.format("Method [%s] not found in class [%s]", "doExecute()", scriptClassName), e);
-		}
-
-		try {
-			method.instrument(new ExprEditor() {
-				@Override
-				public void edit(MethodCall m) throws CannotCompileException {
-					System.out.println(m.getMethodName());
-					// System.out.println(m.isSuper());
-					try {
-						System.out.println(m.getMethod().getSignature());
-						// System.out.println(m.getMethod().getMethodInfo().toString());
-						// System.out.println(m.getMethod().getMethodInfo2().toString());
-						CtClass[] params = m.getMethod().getParameterTypes();
-						for (CtClass param : params) {
-							Object[] ants = param.getAvailableAnnotations();
-							for (Object ant : ants) {
-								System.out.println(ant);
-							}
-						}
-					} catch (NotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			});
-		} catch (CannotCompileException e) {
-			throw new ClassCompilationException(
-					String.format("Failed to compile expressions in the script [%s]", scriptClassName), e);
-		}
-
-		classPool.removeClassPath(classPathEntry);
-		clazz.detach();
-
-		return null;
-	}
-
+	//TODO: complete implementation
 	public static List<CompilationBlock> compileScriptExpressions(String scriptClassName, InputStream scriptSourceCode)
 			throws ClassCompilationException {
 		CompilationUnit cu;
@@ -337,6 +272,10 @@ public class ClassCompiler {
 
 	private static class MethodCallVisitorContext {
 
+		private ScriptContext scriptContext = new ScriptContext();
+
+		private ScriptExpressionParser parser = new ScriptExpressionParser(scriptContext);
+
 		String scriptClassName;
 
 		List<Exception> exceptions = new LinkedList<>();
@@ -349,12 +288,17 @@ public class ClassCompiler {
 		@Override
 		public void visit(MethodCallExpr m, MethodCallVisitorContext visitorContext) {
 			Expression[] methodParams = m.getArgs().toArray(new Expression[] {});
-			System.out.println(m.getName());
-
 			Method[] parentMethods = CompilerConstants.SCRIPT_CLASS.getMethods();
+			
 			for (Method parentMethod : parentMethods) {
 				if (m.getName().equals(parentMethod.getName())
 						&& methodParams.length == parentMethod.getParameterTypes().length) {
+
+					Var varAnnotation = parentMethod.getAnnotation(Var.class);
+					if (varAnnotation != null) {
+						processVariableDeclaration(methodParams, varAnnotation, visitorContext);
+						break;
+					}
 
 					int paramIdx = 0;
 					for (Annotation[] annotations : parentMethod.getParameterAnnotations()) {
@@ -370,9 +314,42 @@ public class ClassCompiler {
 			}
 		}
 
+		private void processVariableDeclaration(Expression[] methodParams, Var varAnnotation,
+				MethodCallVisitorContext visitorContext) {
+			// Method with Var annotation must have at least two string
+			// parameters: name and type
+			String varName = ((StringLiteralExpr) methodParams[0]).getValue();
+			String varType = ((StringLiteralExpr) methodParams[1]).getValue();
+
+			ScriptContext scriptContext = visitorContext.scriptContext;
+
+			try {
+				String javaType = ClassNameUtil.resolveJavaClassName(varType);
+				if (varAnnotation.scope() == Var.Scope.LOCAL) {
+					scriptContext.addLocalVar(varName, javaType);
+				} else {
+					scriptContext.addInputVar(varName, javaType);
+				}
+			} catch (ScriptException e) {
+				visitorContext.exceptions.add(e);
+			}
+		}
+
 		private void processExpression(Expression expression, MethodCallVisitorContext visitorContext) {
 			if (StringLiteralExpr.class.isInstance(expression)) {
-				System.out.println("Expression: " + expression);
+				String scriptExpr = ((StringLiteralExpr) expression).getValue();
+				String javaExpr;
+				byte[] byteCode;
+				try {
+					javaExpr = visitorContext.parser.parse(scriptExpr);
+					byteCode = compileInvocationToBytecode(visitorContext.scriptClassName, javaExpr);
+				} catch (DynamicCodeException | ClassCompilationException e) {
+					visitorContext.exceptions.add(e);
+					return;
+				}
+				
+				CompilationBlock cb = new CompilationBlock(visitorContext.scriptClassName, byteCode, javaExpr);
+				visitorContext.compiledExpressions.add(cb);
 			}
 		}
 

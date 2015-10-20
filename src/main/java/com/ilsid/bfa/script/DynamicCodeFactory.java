@@ -49,7 +49,7 @@ public class DynamicCodeFactory {
 	public static DynamicCodeInvocation getInvocation(String scriptName, String scriptExpression,
 			ScriptExpressionParser parser) throws DynamicCodeException {
 
-		String className = ClassNameUtil.generateClassName(scriptName, scriptExpression);
+		String className = ClassNameUtil.resolveExpressionClassName(scriptName, scriptExpression);
 
 		DynamicCodeInvocation invocation = (DynamicCodeInvocation) tryInstantiateFromCache(className);
 		if (invocation != null) {
@@ -100,7 +100,7 @@ public class DynamicCodeFactory {
 	 *             </ul>
 	 */
 	public static Script getScript(String scriptName, InputStream scriptBody) throws DynamicCodeException {
-		String className = ClassNameUtil.generateClassName(scriptName);
+		String className = ClassNameUtil.resolveScriptClassName(scriptName);
 
 		Script script = (Script) tryInstantiateFromCache(className);
 		if (script != null) {

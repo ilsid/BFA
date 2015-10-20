@@ -3,7 +3,6 @@ package com.ilsid.bfa.compiler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.StringBufferInputStream;
 import java.lang.reflect.Method;
 
 import org.apache.commons.io.IOUtils;
@@ -16,8 +15,6 @@ import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.script.DynamicCodeInvocation;
 import com.ilsid.bfa.script.Script;
 import com.ilsid.bfa.script.ScriptContext;
-import com.ilsid.bfa.script.ScriptException;
-import com.ilsid.bfa.script.TypeResolver;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -43,12 +40,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private ScriptContext mockContext;
 
-	private TypeResolver mockTypeResolver;
-
 	@Before
 	public void setUp() throws Exception {
 		mockContext = mock(ScriptContext.class);
-		mockTypeResolver = mock(TypeResolver.class);
 	}
 
 	@Test
@@ -82,19 +76,11 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 			Class<Script> clazz = (Class<Script>) ClassCompiler.compileScript(TEST_SCRIPT_CLASS_NAME, body);
 			Script script = clazz.newInstance();
 			setInaccessibleParentField(script, "scriptContext", mockContext);
-			script.setTypeResolver(mockTypeResolver);
 
 			checking(new Expectations() {
 				{
-					String numberTypeName = "Number";
-					String decimalTypeName = "Decimal";
-
-					oneOf(mockTypeResolver).resolveJavaTypeName(numberTypeName);
-					will(returnValue(numberTypeName));
-					oneOf(mockContext).addLocalVar("Var1", numberTypeName);
-					oneOf(mockTypeResolver).resolveJavaTypeName(decimalTypeName);
-					will(returnValue(decimalTypeName));
-					oneOf(mockContext).addLocalVar("Var2", decimalTypeName);
+					oneOf(mockContext).addLocalVar("Var1", "Integer");
+					oneOf(mockContext).addLocalVar("Var2", "Double");
 				}
 			});
 
@@ -142,19 +128,11 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		dummyClass = ClassCompiler.loadFromBytecode(className, byteCode);
 	}
 
-	// @Test
-	public void compileExpressionsSanityCheck() throws Exception {
-		String scriptClassName = "com.ilsid.bfa.test.generated.TestScript33";
-		byte[] scriptByteCode = loadScript(scriptClassName, "set-local-vars-script.txt");
-		ClassCompiler.compileScriptExpressions(scriptClassName, scriptByteCode);
-	}
-
 	@Test
 	public void compileExpressionsSanityCheck2() throws Exception {
-		//String scriptClassName = "com.ilsid.bfa.test.generated.TestScript33";
 		StringBuilder sourceCode = new StringBuilder();
 		try (InputStream scriptBody = loadScript("single-expression-script.txt");) {
-			sourceCode.append("package com.ilsid.bfa.generated;").append("\n");
+			sourceCode.append("package com.ilsid.bfa.generated.script;").append("\n");
 			sourceCode.append("import com.ilsid.bfa.script.Script;").append("\n");
 			sourceCode.append("import com.ilsid.bfa.script.ScriptException;").append("\n");
 			sourceCode.append("public class TestScript33 extends Script {").append("\n");
@@ -162,10 +140,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 			sourceCode.append(IOUtils.toString(scriptBody, "UTF-8")).append("\n");
 			sourceCode.append("}").append("\n");
 			sourceCode.append("}");
-			//System.out.println(sourceCode.toString());
 		}
 		InputStream scriptSource = IOUtils.toInputStream(sourceCode.toString(), "UTF-8");
-		ClassCompiler.compileScriptExpressions(null, scriptSource);
+		ClassCompiler.compileScriptExpressions("com.ilsid.bfa.generated.script.TestScript33", scriptSource);
 	}
 
 	@SuppressWarnings("unused")
@@ -177,30 +154,6 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private InputStream loadScript(String fileName) throws Exception {
 		return new FileInputStream(new File(SCRIPTS_DIR + fileName));
-	}
-
-	private byte[] loadScript(String className, String fileName) throws Exception {
-		byte[] result;
-		try (InputStream scriptBody = loadScript(fileName);) {
-			CtClass[] noArgs = {};
-			ClassPool classPool = ClassPool.getDefault();
-			CtClass clazz = classPool.makeClass(className);
-			clazz.setSuperclass(classPool.get(CompilerConstants.SCRIPT_CLASS_NAME));
-
-			CtConstructor cons = new CtConstructor(noArgs, clazz);
-			cons.setBody(";");
-			clazz.addConstructor(cons);
-
-			CtMethod method = new CtMethod(CtClass.voidType, "doExecute", noArgs, clazz);
-			method.setModifiers(Modifier.PROTECTED);
-			String body = "{" + StringUtils.LF + IOUtils.toString(scriptBody, "UTF-8") + StringUtils.LF + "}";
-			method.setBody(body);
-			clazz.addMethod(method);
-
-			result = clazz.toBytecode();
-		}
-
-		return result;
 	}
 
 	private byte[] loadClass(String fileName) throws Exception {

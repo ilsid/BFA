@@ -1,7 +1,6 @@
 package com.ilsid.bfa.script;
 
-import com.ilsid.bfa.compiler.ExprParam;
-import com.ilsid.bfa.compiler.Var;
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.runtime.GlobalContext;
 
 //TODO: complete implementation
@@ -11,8 +10,6 @@ public abstract class Script implements Executable<Void> {
 	private ScriptContext scriptContext;
 
 	private GlobalContext runtimeContext;
-
-	private TypeResolver typeResolver;
 
 	protected abstract void doExecute() throws ScriptException;
 
@@ -26,20 +23,20 @@ public abstract class Script implements Executable<Void> {
 		scriptContext = new ScriptContext(runtimeContext);
 		scriptContext.setScriptName(this.getClass().getSimpleName());
 	}
-
+	
 	@Var(scope = Var.Scope.INPUT)
 	public void DeclareInputVar(String name, String type) throws ScriptException {
-		scriptContext.addInputVar(name, typeResolver.resolveJavaTypeName(type));
+		scriptContext.addInputVar(name, ClassNameUtil.resolveJavaClassName(type));
 	}
 	
 	@Var(scope = Var.Scope.LOCAL)
 	public void DeclareLocalVar(String name, String type) throws ScriptException {
-		scriptContext.addLocalVar(name, typeResolver.resolveJavaTypeName(type));
+		scriptContext.addLocalVar(name, ClassNameUtil.resolveJavaClassName(type));
 	}
 	
 	@Var(scope = Var.Scope.LOCAL)
 	public void DeclareLocalVar(String name, String type, Object initValue) throws ScriptException {
-		scriptContext.addLocalVar(name, typeResolver.resolveJavaTypeName(type), initValue);
+		scriptContext.addLocalVar(name, ClassNameUtil.resolveJavaClassName(type), initValue);
 	}
 	
 	public void SetLocalVar(String name, @ExprParam Object expr) throws ScriptException {
@@ -83,7 +80,9 @@ public abstract class Script implements Executable<Void> {
 	}
 
 	public ActionResult Action(String name, Object... params) throws ScriptException {
-		Action action = typeResolver.resolveAction(name);
+		//Action action = typeResolver.resolveType(name, Action.class);
+		//FIXME
+		Action action = null;
 		action.setInputParameters(params);
 		Object[] result = action.execute();
 		ActionResult actionResult = new ActionResultImpl(result);
@@ -92,7 +91,9 @@ public abstract class Script implements Executable<Void> {
 	}
 
 	public void SubFlow(String name) throws ScriptException {
-		Script subFlow = typeResolver.resolveSubflow(name);
+		//Script subFlow = typeResolver.resolveType(name, Script.class);
+		//FIXME
+		Script subFlow = null;
 		subFlow.execute();
 	}
 
@@ -102,10 +103,6 @@ public abstract class Script implements Executable<Void> {
 
 	public ValueExpression<String> AsString(String input) {
 		return new StringLiteralExpression(input);
-	}
-
-	public void setTypeResolver(TypeResolver typeResolver) {
-		this.typeResolver = typeResolver;
 	}
 
 	public interface ActionResult {

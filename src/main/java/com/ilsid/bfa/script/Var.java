@@ -1,4 +1,4 @@
-package com.ilsid.bfa.compiler;
+package com.ilsid.bfa.script;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,7 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares that a method sets a variable.
+ * States that a method declares a variable. The first method argument contains
+ * a variable name. The second argument contains a string representation of
+ * variable type. Both arguments are string literals.
  * 
  * @author illia.sydorovych
  *

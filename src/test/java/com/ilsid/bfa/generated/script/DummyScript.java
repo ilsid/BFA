@@ -1,4 +1,4 @@
-package com.ilsid.bfa.generated;
+package com.ilsid.bfa.generated.script;
 
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.script.Script;

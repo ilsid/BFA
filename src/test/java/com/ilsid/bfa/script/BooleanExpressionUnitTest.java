@@ -5,7 +5,6 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.script.BooleanExpression;
-import com.ilsid.bfa.script.ScriptException;
 
 public class BooleanExpressionUnitTest extends BaseUnitTestCase {
 	

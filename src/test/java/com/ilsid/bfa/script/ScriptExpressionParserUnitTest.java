@@ -5,7 +5,6 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.script.ScriptExpressionParser;
-import com.ilsid.bfa.script.ScriptContext;
 import com.ilsid.bfa.script.Variable;
 import com.ilsid.bfa.test.types.Contract;
 import com.ilsid.bfa.test.types.Subscriber;

@@ -3,7 +3,7 @@ package com.ilsid.bfa.script;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ilsid.bfa.runtime.RuntimeContext;
+import com.ilsid.bfa.runtime.GlobalContext;
 
 /**
  * Script context. Holds state for a single script.
@@ -13,7 +13,7 @@ import com.ilsid.bfa.runtime.RuntimeContext;
  */
 public class ScriptContext {
 
-	private RuntimeContext runtimeContext;
+	private GlobalContext runtimeContext;
 
 	private Map<String, Variable> inputVars = new HashMap<>();
 
@@ -30,7 +30,7 @@ public class ScriptContext {
 	 * @param runtimeContext
 	 *            a runtime context shared between all scripts.
 	 */
-	public ScriptContext(RuntimeContext runtimeContext) {
+	public ScriptContext(GlobalContext runtimeContext) {
 		this.runtimeContext = runtimeContext;
 	}
 	
@@ -38,7 +38,7 @@ public class ScriptContext {
 	 * Provides runtime context.
 	 * @return runtime context
 	 */
-	public RuntimeContext getRuntimeContext() {
+	public GlobalContext getRuntimeContext() {
 		return runtimeContext;
 	}
 

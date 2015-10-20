@@ -2,7 +2,7 @@ package com.ilsid.bfa.script;
 
 import com.ilsid.bfa.compiler.ExprParam;
 import com.ilsid.bfa.compiler.Var;
-import com.ilsid.bfa.runtime.RuntimeContext;
+import com.ilsid.bfa.runtime.GlobalContext;
 
 //TODO: complete implementation
 //TODO: complete javadocs
@@ -10,7 +10,7 @@ public abstract class Script implements Executable<Void> {
 
 	private ScriptContext scriptContext;
 
-	private RuntimeContext runtimeContext;
+	private GlobalContext runtimeContext;
 
 	private TypeResolver typeResolver;
 
@@ -21,7 +21,7 @@ public abstract class Script implements Executable<Void> {
 		return null;
 	}
 
-	public void setRuntimeContext(RuntimeContext runtimeContext) {
+	public void setRuntimeContext(GlobalContext runtimeContext) {
 		this.runtimeContext = runtimeContext;
 		scriptContext = new ScriptContext(runtimeContext);
 		scriptContext.setScriptName(this.getClass().getSimpleName());

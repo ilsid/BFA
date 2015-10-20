@@ -9,7 +9,7 @@ import com.ilsid.bfa.compiler.ClassCompilationException;
 import com.ilsid.bfa.compiler.ClassCompiler;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
-import com.ilsid.bfa.runtime.RuntimeContext;
+import com.ilsid.bfa.runtime.GlobalContext;
 
 /**
  * Utility for dynamic Java code processing.
@@ -24,7 +24,7 @@ public class DynamicCodeFactory {
 	/**
 	 * Returns {@link DynamicCodeInvocation} instance for the given script
 	 * expression. If a code repository is defined in the global
-	 * {@link RuntimeContext}, then the corresponding class is searched by the
+	 * {@link GlobalContext}, then the corresponding class is searched by the
 	 * "script name/expression" combination in the repository. Otherwise, the
 	 * expression is parsed and translated into Java code by the specified
 	 * parser and the expression class is built on-the-fly.
@@ -82,7 +82,7 @@ public class DynamicCodeFactory {
 
 	/**
 	 * Returns {@link Script} instance that executes the given Java code. If a
-	 * code repository is defined in the global {@link RuntimeContext}, then the
+	 * code repository is defined in the global {@link GlobalContext}, then the
 	 * corresponding class is searched by the script name in this repository.
 	 * Otherwise, the class is built on-the-fly.
 	 * 
@@ -132,7 +132,7 @@ public class DynamicCodeFactory {
 			throws DynamicCodeException, LoadFromRepositoryException {
 
 		T instance = null;
-		CodeRepository codeRepository = RuntimeContext.getInstance().getCodeRepository();
+		CodeRepository codeRepository = GlobalContext.getInstance().getCodeRepository();
 
 		if (codeRepository != null) {
 			try {

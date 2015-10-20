@@ -4,16 +4,16 @@ import com.ilsid.bfa.persistence.CodeRepository;
 
 //TODO: Complete implementation
 //TODO: Put javadocs
-public class RuntimeContext {
+public class GlobalContext {
 	
-	private static final RuntimeContext instance = new RuntimeContext();
+	private static final GlobalContext instance = new GlobalContext();
 	
 	private CodeRepository codeRepository;
 	
-	RuntimeContext() {
+	GlobalContext() {
 	}
 	
-	public static RuntimeContext getInstance() {
+	public static GlobalContext getInstance() {
 		return instance;
 	}
 	

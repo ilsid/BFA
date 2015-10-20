@@ -16,13 +16,12 @@ import com.ilsid.bfa.generated.DummyScript;
 import com.ilsid.bfa.generated.DummyScript$$DummyExpression;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
-import com.ilsid.bfa.runtime.RuntimeContext;
+import com.ilsid.bfa.runtime.GlobalContext;
 import com.ilsid.bfa.script.Action;
 import com.ilsid.bfa.script.DynamicCodeException;
 import com.ilsid.bfa.script.DynamicCodeFactory;
 import com.ilsid.bfa.script.DynamicCodeInvocation;
 import com.ilsid.bfa.script.Script;
-import com.ilsid.bfa.script.ScriptContext;
 import com.ilsid.bfa.script.ScriptException;
 import com.ilsid.bfa.script.TypeResolver;
 
@@ -34,7 +33,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	private static final String DUMMY_SCRIPT_NAME = "DummyScript";
 
-	private static final RuntimeContext FAKE_RUNTIME_CONTEXT = RuntimeContext.getInstance();
+	private static final GlobalContext FAKE_RUNTIME_CONTEXT = GlobalContext.getInstance();
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
 
@@ -47,7 +46,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() throws Exception {
 		mockContext = mock(ScriptContext.class);
-		setInaccessibleField(RuntimeContext.getInstance(), "codeRepository", null);
+		setInaccessibleField(GlobalContext.getInstance(), "codeRepository", null);
 	}
 
 	@Test
@@ -179,7 +178,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			}
 		};
 
-		setInaccessibleField(RuntimeContext.getInstance(), "codeRepository", repository);
+		setInaccessibleField(GlobalContext.getInstance(), "codeRepository", repository);
 	}
 
 	private void verifyScript(String scriptName, String scriptFile, Expectations expectations) throws Exception {
@@ -220,7 +219,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			script = DynamicCodeFactory.getScript(scriptName, body);
 		}
 
-		script.setRuntimeContext(RuntimeContext.getInstance());
+		script.setRuntimeContext(GlobalContext.getInstance());
 		script.setTypeResolver(new TypeResolver() {
 
 			public String resolveJavaTypeName(String typeName) throws ScriptException {

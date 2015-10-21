@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.Collection;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,12 +16,6 @@ import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.script.DynamicCodeInvocation;
 import com.ilsid.bfa.script.Script;
 import com.ilsid.bfa.script.ScriptContext;
-
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtConstructor;
-import javassist.CtMethod;
-import javassist.Modifier;
 
 public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
@@ -37,6 +32,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	private static final String TEST_SCRIPT_CLASS_NAME = "com.ilsid.bfa.test.generated.TestScript";
 
 	private static final String TEST_SCRIPT_CLASS_NAME_2 = "com.ilsid.bfa.test.generated.TestScript2";
+
+	private static final String SCRIPT_PACKAGE = "com.ilsid.bfa.generated.script";
 
 	private ScriptContext mockContext;
 
@@ -129,20 +126,60 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void compileExpressionsSanityCheck2() throws Exception {
-		StringBuilder sourceCode = new StringBuilder();
-		try (InputStream scriptBody = loadScript("single-expression-script.txt");) {
-			sourceCode.append("package com.ilsid.bfa.generated.script;").append("\n");
-			sourceCode.append("import com.ilsid.bfa.script.Script;").append("\n");
-			sourceCode.append("import com.ilsid.bfa.script.ScriptException;").append("\n");
-			sourceCode.append("public class TestScript33 extends Script {").append("\n");
-			sourceCode.append("protected void doExecute() throws ScriptException {").append("\n");
-			sourceCode.append(IOUtils.toString(scriptBody, "UTF-8")).append("\n");
-			sourceCode.append("}").append("\n");
-			sourceCode.append("}");
-		}
-		InputStream scriptSource = IOUtils.toInputStream(sourceCode.toString(), "UTF-8");
-		ClassCompiler.compileScriptExpressions("com.ilsid.bfa.generated.script.TestScript33", scriptSource);
+	public void singleScriptExpressionCanBeCompiled() throws Exception {
+		// The script contains two "Var1 - Var2" expressions, but only a single
+		// compiled expression is returned
+		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "single-expression-script.txt");
+
+		assertEquals(1, expressions.length);
+		assertExpressionShortClassName("TestScript33$$Var1_Mns_Var2", expressions[0].getClassName());
+	}
+
+	@Test
+	public void nothingIsCompiledInScriptWithNoExpressions() throws Exception {
+		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "declarations-only-script.txt");
+		assertEquals(0, expressions.length);
+	}
+
+	@Test
+	public void onlyUniqueScriptExpressionsAreCompiled() throws Exception {
+		// The script contains two "Var1 - Var2" expressions, but only a single
+		// compiled expression is returned
+		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "duplicated-expression-script.txt");
+		assertEquals(2, expressions.length);
+		assertExpressionShortClassName("TestScript33$$Var1_Mns_Var2", expressions[0].getClassName());
+		assertExpressionShortClassName("TestScript33$$1", expressions[1].getClassName());
+	}
+
+	@Test
+	public void errorDetailsAreProvidedIfScriptContainsInvalidExpression() throws Exception {
+		exceptionRule.expect(ClassCompilationException.class);
+		StringBuilder msg = new StringBuilder();
+		msg.append("Compilation of expressions in script [TestScript33] failed").append(StringUtils.LF);
+		msg.append(
+				"Could not parse expression [Var1 - Var33]: Integer value or variable is expected after operand [-], but was [Var33]")
+				.append(StringUtils.LF);
+		msg.append("   Caused by: Integer value or variable is expected after operand [-], but was [Var33]");
+		exceptionRule.expectMessage(msg.toString());
+
+		compileScriptExpressions("TestScript33", "one-invalid-expression-script.txt");
+	}
+
+	@Test
+	public void errorDetailsAreProvidedIfScriptContainsMultipleInvalidExpression() throws Exception {
+		exceptionRule.expect(ClassCompilationException.class);
+		StringBuilder msg = new StringBuilder();
+		msg.append("Compilation of expressions in script [TestScript33] failed").append(StringUtils.LF);
+		msg.append(
+				"Could not parse expression [Var1 - Var33]: Integer value or variable is expected after operand [-], but was [Var33]")
+				.append(StringUtils.LF);
+		msg.append("   Caused by: Integer value or variable is expected after operand [-], but was [Var33]")
+				.append(StringUtils.LF);
+		msg.append("Could not parse expression [abc]: Unexpected token [abc]").append(StringUtils.LF);
+		msg.append("   Caused by: Unexpected token [abc]").append(StringUtils.LF);
+		exceptionRule.expectMessage(msg.toString());
+
+		compileScriptExpressions("TestScript33", "two-invalid-expressions-script.txt");
 	}
 
 	@SuppressWarnings("unused")
@@ -174,6 +211,28 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	private void invokeMethod(Object target, String name, String value) throws Exception {
 		Method method = target.getClass().getDeclaredMethod(name, String.class);
 		method.invoke(target, value);
+	}
+	
+	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
+		StringBuilder sourceCode = new StringBuilder();
+		try (InputStream scriptBody = loadScript(fileName);) {
+			sourceCode.append("package ").append(SCRIPT_PACKAGE).append(";\n");
+			sourceCode.append("import com.ilsid.bfa.script.Script;").append("\n");
+			sourceCode.append("import com.ilsid.bfa.script.ScriptException;").append("\n");
+			sourceCode.append("public class ").append(shortClassName).append(" extends Script {").append("\n");
+			sourceCode.append("protected void doExecute() throws ScriptException {").append("\n");
+			sourceCode.append(IOUtils.toString(scriptBody, "UTF-8")).append("\n");
+			sourceCode.append("}").append("\n");
+			sourceCode.append("}");
+		}
+		InputStream scriptSource = IOUtils.toInputStream(sourceCode.toString(), "UTF-8");
+		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(shortClassName, scriptSource);
+
+		return expressions.toArray(new CompilationBlock[] {});
+	}
+
+	private void assertExpressionShortClassName(String expected, String actual) {
+		assertEquals(SCRIPT_PACKAGE + "." + expected, actual);
 	}
 
 }

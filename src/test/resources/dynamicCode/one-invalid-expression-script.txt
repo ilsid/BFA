@@ -1,0 +1,8 @@
+DeclareLocalVar("Var1", "Number", "2");
+DeclareLocalVar("Var2", "Number", "1");
+DeclareLocalVar("Res", "Number");
+
+// Invalid expression: no Var33 was declared
+if (Equal("Var1 - Var33", "1")) {
+	SetLocalVar("Res", "Var1 - Var2");
+}

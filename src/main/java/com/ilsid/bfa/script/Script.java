@@ -51,11 +51,11 @@ public abstract class Script implements Executable<Void> {
 		runtimeContext.setGlobalVar(name, getValue(expr));
 	}
 
-	public boolean EqualCondition(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
-		return EqualCondition(expr1, expr2, null);
+	public boolean Equal(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
+		return Equal(expr1, expr2, null);
 	}
 
-	public boolean EqualCondition(@ExprParam Object expr1, @ExprParam Object expr2, String description)
+	public boolean Equal(@ExprParam Object expr1, @ExprParam Object expr2, String description)
 			throws ScriptException {
 		AbstractCondition condition = new EqualCondition(getValue(expr1), getValue(expr2));
 		if (description != null) {
@@ -65,11 +65,11 @@ public abstract class Script implements Executable<Void> {
 		return condition.isTrue();
 	}
 
-	public boolean LessOrEqualCondition(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
-		return LessOrEqualCondition(expr1, expr2, null);
+	public boolean LessOrEqual(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
+		return LessOrEqual(expr1, expr2, null);
 	}
 
-	public boolean LessOrEqualCondition(@ExprParam Object expr1, @ExprParam Object expr2, String description)
+	public boolean LessOrEqual(@ExprParam Object expr1, @ExprParam Object expr2, String description)
 			throws ScriptException {
 		AbstractCondition condition = new LessOrEqualCondition(getValue(expr1), getValue(expr2));
 		if (description != null) {
@@ -80,7 +80,6 @@ public abstract class Script implements Executable<Void> {
 	}
 
 	public ActionResult Action(String name, Object... params) throws ScriptException {
-		//Action action = typeResolver.resolveType(name, Action.class);
 		//FIXME
 		Action action = null;
 		action.setInputParameters(params);
@@ -91,7 +90,6 @@ public abstract class Script implements Executable<Void> {
 	}
 
 	public void SubFlow(String name) throws ScriptException {
-		//Script subFlow = typeResolver.resolveType(name, Script.class);
 		//FIXME
 		Script subFlow = null;
 		subFlow.execute();

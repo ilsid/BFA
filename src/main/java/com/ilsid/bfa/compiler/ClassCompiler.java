@@ -4,8 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +23,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.script.DynamicCodeException;
 import com.ilsid.bfa.script.DynamicCodeInvocation;
 import com.ilsid.bfa.script.ExprParam;
@@ -186,23 +192,41 @@ public class ClassCompiler {
 		return result;
 	}
 
-	//TODO: complete implementation
-	public static List<CompilationBlock> compileScriptExpressions(String scriptClassName, InputStream scriptSourceCode)
-			throws ClassCompilationException {
-		CompilationUnit cu;
+	/**
+	 * Compiles all expressions defined in the given script.
+	 * 
+	 * @param scriptShortClassName
+	 *            the script short class name (without package prefix)
+	 * @param scriptSourceCode
+	 *            the script source code
+	 * @return a collection of {@link CompilationBlock} instances for each
+	 *         expression
+	 * @throws ClassCompilationException
+	 *             if the compilation of any expression failed
+	 */
+	public static Collection<CompilationBlock> compileScriptExpressions(String scriptShortClassName,
+			InputStream scriptSourceCode) throws ClassCompilationException {
+		CompilationUnit compilationUnit;
 		try {
-			cu = JavaParser.parse(scriptSourceCode);
+			compilationUnit = JavaParser.parse(scriptSourceCode);
 		} catch (ParseException e) {
 			throw new ClassCompilationException(
-					String.format("Failed to parse a source code of the class [%s]", scriptClassName), e);
+					String.format("Failed to parse a source code of the class [%s]", scriptShortClassName), e);
 		}
 
 		MethodCallVisitorContext visitorContext = new MethodCallVisitorContext();
-		visitorContext.scriptClassName = scriptClassName;
+		visitorContext.scriptShortClassName = scriptShortClassName;
 
-		new MethodCallVisitor().visit(cu, visitorContext);
+		new MethodCallVisitor().visit(compilationUnit, visitorContext);
 
-		return null;
+		List<Exception> exceptions = visitorContext.exceptions;
+		if (!exceptions.isEmpty()) {
+			throw new ClassCompilationException(
+					String.format("Compilation of expressions in script [%s] failed", scriptShortClassName)
+							+ StringUtils.LF + mergeMessages(exceptions));
+		}
+
+		return visitorContext.compiledExpressions.values();
 	}
 
 	private static ClassPool getClassPool() {
@@ -270,17 +294,26 @@ public class ClassCompiler {
 		return result;
 	}
 
+	private static String mergeMessages(List<Exception> exceptions) {
+		StringBuilder messages = new StringBuilder();
+		for (Exception e : exceptions) {
+			messages.append(ExceptionUtil.getExceptionMessageChain(e)).append(StringUtils.LF);
+		}
+
+		return messages.toString();
+	}
+
 	private static class MethodCallVisitorContext {
 
 		private ScriptContext scriptContext = new ScriptContext();
 
 		private ScriptExpressionParser parser = new ScriptExpressionParser(scriptContext);
 
-		String scriptClassName;
+		String scriptShortClassName;
 
 		List<Exception> exceptions = new LinkedList<>();
 
-		List<CompilationBlock> compiledExpressions = new LinkedList<>();
+		Map<String, CompilationBlock> compiledExpressions = new HashMap<>();
 	}
 
 	private static class MethodCallVisitor extends VoidVisitorAdapter<MethodCallVisitorContext> {
@@ -289,7 +322,7 @@ public class ClassCompiler {
 		public void visit(MethodCallExpr m, MethodCallVisitorContext visitorContext) {
 			Expression[] methodParams = m.getArgs().toArray(new Expression[] {});
 			Method[] parentMethods = CompilerConstants.SCRIPT_CLASS.getMethods();
-			
+
 			for (Method parentMethod : parentMethods) {
 				if (m.getName().equals(parentMethod.getName())
 						&& methodParams.length == parentMethod.getParameterTypes().length) {
@@ -323,6 +356,8 @@ public class ClassCompiler {
 
 			ScriptContext scriptContext = visitorContext.scriptContext;
 
+			// Variables are saved in the script context for the further
+			// expressions parsing stage
 			try {
 				String javaType = ClassNameUtil.resolveJavaClassName(varType);
 				if (varAnnotation.scope() == Var.Scope.LOCAL) {
@@ -340,16 +375,26 @@ public class ClassCompiler {
 				String scriptExpr = ((StringLiteralExpr) expression).getValue();
 				String javaExpr;
 				byte[] byteCode;
+				String className;
+				Map<String, CompilationBlock> expressions = visitorContext.compiledExpressions;
 				try {
+					className = ClassNameUtil.resolveExpressionClassName(visitorContext.scriptShortClassName,
+							scriptExpr);
+
+					// Skip compilation of the same expression
+					if (expressions.containsKey(className)) {
+						return;
+					}
+
 					javaExpr = visitorContext.parser.parse(scriptExpr);
-					byteCode = compileInvocationToBytecode(visitorContext.scriptClassName, javaExpr);
+					byteCode = compileInvocationToBytecode(className, javaExpr);
 				} catch (DynamicCodeException | ClassCompilationException e) {
 					visitorContext.exceptions.add(e);
 					return;
 				}
-				
-				CompilationBlock cb = new CompilationBlock(visitorContext.scriptClassName, byteCode, javaExpr);
-				visitorContext.compiledExpressions.add(cb);
+
+				CompilationBlock cb = new CompilationBlock(className, byteCode, javaExpr);
+				expressions.put(className, cb);
 			}
 		}
 

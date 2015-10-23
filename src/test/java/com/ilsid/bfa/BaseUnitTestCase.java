@@ -59,7 +59,6 @@ public class BaseUnitTestCase {
 
 	protected void fail(String msg) {
 		Assert.fail(msg);
-		;
 	}
 
 	protected <T> T mock(Class<T> clazz) {

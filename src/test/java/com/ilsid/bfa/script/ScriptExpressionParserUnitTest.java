@@ -341,18 +341,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 
 	
 	private void createContext(final Variable... vars) {
-		context = new ScriptContext(null) {
-			@Override
-			public Variable getLocalVar(String name) {
-				for (Variable var : vars) {
-					if (name.equals(var.getName())) {
-						return var;
-					}
-				}
-				return null;
-			}
-		};
-
+		context = ScriptContextUtil.createContext(vars);
 		parser = new ScriptExpressionParser(context);
 	}
 

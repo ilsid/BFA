@@ -16,6 +16,13 @@ import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.script.DynamicCodeInvocation;
 import com.ilsid.bfa.script.Script;
 import com.ilsid.bfa.script.ScriptContext;
+import com.ilsid.bfa.script.ScriptContextUtil;
+import com.ilsid.bfa.script.Variable;
+
+import javassist.ByteArrayClassPath;
+import javassist.ClassPath;
+import javassist.ClassPool;
+import javassist.CtClass;
 
 public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
@@ -29,9 +36,13 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private static final String TEST_INVOCATION_CLASS_NAME_2 = "com.ilsid.bfa.test.generated.TestInvocation2";
 
+	private static final String TEST_INVOCATION_CLASS_NAME_3 = "com.ilsid.bfa.test.generated.TestInvocation3";
+
 	private static final String TEST_SCRIPT_CLASS_NAME = "com.ilsid.bfa.test.generated.TestScript";
 
 	private static final String TEST_SCRIPT_CLASS_NAME_2 = "com.ilsid.bfa.test.generated.TestScript2";
+
+	private static final String TEST_SCRIPT_CLASS_NAME_3 = "com.ilsid.bfa.test.generated.TestScript3";
 
 	private static final String SCRIPT_PACKAGE = "com.ilsid.bfa.generated.script";
 
@@ -73,14 +84,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 			Class<Script> clazz = (Class<Script>) ClassCompiler.compileScript(TEST_SCRIPT_CLASS_NAME, body);
 			Script script = clazz.newInstance();
 			setInaccessibleParentField(script, "scriptContext", mockContext);
-
-			checking(new Expectations() {
-				{
-					oneOf(mockContext).addLocalVar("Var1", "Integer");
-					oneOf(mockContext).addLocalVar("Var2", "Double");
-				}
-			});
-
+			checking(getScriptExpectations());
 			script.execute();
 		}
 	}
@@ -94,6 +98,49 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		// with classes already loaded into JVM by other tests.
 		compileScript(TEST_SCRIPT_CLASS_NAME_2);
 		compileScript(TEST_SCRIPT_CLASS_NAME_2);
+	}
+
+	@Test
+	public void scriptCanBeCompiledToBytecode() throws Exception {
+		try (InputStream body = loadScript("declarations-only-script.txt");) {
+			byte[] byteCode = ClassCompiler.compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3, body);
+			Script script = (Script) loadFromBytecode(TEST_SCRIPT_CLASS_NAME_3, byteCode).newInstance();
+			setInaccessibleParentField(script, "scriptContext", mockContext);
+			checking(getScriptExpectations());
+			script.execute();
+		}
+	}
+
+	@Test
+	public void scriptWithSameNameCanBeCompiledToBytecodeMultipleTimes() {
+		try {
+			compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3);
+			compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3);
+			compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3);
+		} catch (Exception e) {
+			failCausedByUnexpectedException(e);
+		}
+	}
+
+	@Test
+	public void invocationCanBeCompiledToBytecode() throws Exception {
+		byte[] byteCode = ClassCompiler.compileInvocationToBytecode(TEST_INVOCATION_CLASS_NAME_3,
+				TEST_INVOCATION_EXPRESSION);
+
+		DynamicCodeInvocation instance = (DynamicCodeInvocation) loadFromBytecode(TEST_INVOCATION_CLASS_NAME_3,
+				byteCode).newInstance();
+		assertEquals(new Integer(1), instance.invoke());
+	}
+
+	@Test
+	public void invocationWithSameNameCanBeCompiledToBytecodeMultipleTimes() {
+		try {
+			ClassCompiler.compileInvocationToBytecode(TEST_INVOCATION_CLASS_NAME_3, TEST_INVOCATION_EXPRESSION);
+			ClassCompiler.compileInvocationToBytecode(TEST_INVOCATION_CLASS_NAME_3, TEST_INVOCATION_EXPRESSION);
+			ClassCompiler.compileInvocationToBytecode(TEST_INVOCATION_CLASS_NAME_3, TEST_INVOCATION_EXPRESSION);
+		} catch (ClassCompilationException e) {
+			failCausedByUnexpectedException(e);
+		}
 	}
 
 	@Test
@@ -132,7 +179,19 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "single-expression-script.txt");
 
 		assertEquals(1, expressions.length);
-		assertExpressionShortClassName("TestScript33$$Var1_Mns_Var2", expressions[0].getClassName());
+
+		String exprClassName = expressions[0].getClassName();
+		assertExpressionShortClassName("TestScript33$$Var1_Mns_Var2", exprClassName);
+
+		DynamicCodeInvocation expr = (DynamicCodeInvocation) loadFromBytecode(exprClassName,
+				expressions[0].getByteCode()).newInstance();
+		// Define the variables declared in the script. They are needed for the
+		// expression runtime.
+		expr.setScriptContext(
+				ScriptContextUtil.createContext(new Variable("Var1", "Number", 2), new Variable("Var2", "Number", 1)));
+
+		Integer exprResult = (Integer) expr.invoke();
+		assertEquals(1, exprResult);
 	}
 
 	@Test
@@ -145,10 +204,30 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	public void onlyUniqueScriptExpressionsAreCompiled() throws Exception {
 		// The script contains two "Var1 - Var2" expressions, but only a single
 		// compiled expression is returned
-		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "duplicated-expression-script.txt");
+		CompilationBlock[] expressions = compileScriptExpressions("TestScript44", "duplicated-expression-script.txt");
+
 		assertEquals(2, expressions.length);
-		assertExpressionShortClassName("TestScript33$$Var1_Mns_Var2", expressions[0].getClassName());
-		assertExpressionShortClassName("TestScript33$$1", expressions[1].getClassName());
+
+		String exprName1 = expressions[0].getClassName();
+		String exprName2 = expressions[1].getClassName();
+
+		assertExpressionShortClassName("TestScript44$$Var1_Mns_Var2", exprName1);
+		assertExpressionShortClassName("TestScript44$$1", exprName2);
+
+		DynamicCodeInvocation expr1 = (DynamicCodeInvocation) loadFromBytecode(exprName1, expressions[0].getByteCode())
+				.newInstance();
+		DynamicCodeInvocation expr2 = (DynamicCodeInvocation) loadFromBytecode(exprName2, expressions[1].getByteCode())
+				.newInstance();
+
+		// Define the variables declared in the script. They are needed for the
+		// expression runtime.
+		expr1.setScriptContext(
+				ScriptContextUtil.createContext(new Variable("Var1", "Number", 2), new Variable("Var2", "Number", 1)));
+
+		Integer exprResult1 = (Integer) expr1.invoke();
+		Integer exprResult2 = (Integer) expr2.invoke();
+		assertEquals(1, exprResult1);
+		assertEquals(1, exprResult2);
 	}
 
 	@Test
@@ -189,6 +268,13 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		}
 	}
 
+	@SuppressWarnings("unused")
+	private void compileScriptToBytecode(String className) throws Exception {
+		try (InputStream body = loadScript("declarations-only-script.txt");) {
+			byte[] byteCode = ClassCompiler.compileScriptToBytecode(className, body);
+		}
+	}
+
 	private InputStream loadScript(String fileName) throws Exception {
 		return new FileInputStream(new File(SCRIPTS_DIR + fileName));
 	}
@@ -212,7 +298,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		Method method = target.getClass().getDeclaredMethod(name, String.class);
 		method.invoke(target, value);
 	}
-	
+
 	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
 		StringBuilder sourceCode = new StringBuilder();
 		try (InputStream scriptBody = loadScript(fileName);) {
@@ -233,6 +319,31 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private void assertExpressionShortClassName(String expected, String actual) {
 		assertEquals(SCRIPT_PACKAGE + "." + expected, actual);
+	}
+
+	private Expectations getScriptExpectations() throws Exception {
+		return new Expectations() {
+			{
+				oneOf(mockContext).addLocalVar("Var1", "Integer");
+				oneOf(mockContext).addLocalVar("Var2", "Double");
+			}
+		};
+	}
+
+	private Class<?> loadFromBytecode(String className, byte[] byteCode) throws Exception {
+		ClassPath classPathEntry = new ByteArrayClassPath(className, byteCode);
+		ClassPool classPool = ClassPool.getDefault();
+		classPool.appendClassPath(classPathEntry);
+		CtClass clazz = classPool.get(className);
+		Class<?> scriptClass = clazz.toClass();
+		clazz.detach();
+		classPool.removeClassPath(classPathEntry);
+
+		return scriptClass;
+	}
+
+	private void failCausedByUnexpectedException(Exception e) {
+		fail("Unexpected exception was thrown: " + e.getMessage());
 	}
 
 }

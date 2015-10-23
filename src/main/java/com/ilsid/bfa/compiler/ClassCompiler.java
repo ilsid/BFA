@@ -5,12 +5,10 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -50,7 +48,6 @@ import javassist.NotFoundException;
  * @author illia.sydorovych
  *
  */
-// TODO: unit tests for *toBytecode() methods
 // FIXME: resolve cyclic package dependencies
 public class ClassCompiler {
 
@@ -198,7 +195,7 @@ public class ClassCompiler {
 	 * @param scriptShortClassName
 	 *            the script short class name (without package prefix)
 	 * @param scriptSourceCode
-	 *            the script source code
+	 *            the source code of the script class
 	 * @return a collection of {@link CompilationBlock} instances for each
 	 *         expression
 	 * @throws ClassCompilationException
@@ -313,7 +310,7 @@ public class ClassCompiler {
 
 		List<Exception> exceptions = new LinkedList<>();
 
-		Map<String, CompilationBlock> compiledExpressions = new HashMap<>();
+		Map<String, CompilationBlock> compiledExpressions = new LinkedHashMap<>();
 	}
 
 	private static class MethodCallVisitor extends VoidVisitorAdapter<MethodCallVisitorContext> {

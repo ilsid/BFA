@@ -79,7 +79,7 @@ public abstract class Script implements Executable<Void> {
 		return condition.isTrue();
 	}
 
-	public ActionResult Action(String name, Object... params) throws ScriptException {
+	public ActionResult Action(String name, @ExprParam Object... params) throws ScriptException {
 		//FIXME
 		Action action = null;
 		action.setInputParameters(params);

@@ -15,6 +15,7 @@ import com.ilsid.bfa.generated.script.DummyScript;
 import com.ilsid.bfa.generated.script.DummyScript$$DummyExpr;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.TransactionManager;
 import com.ilsid.bfa.runtime.GlobalContext;
 
 import javassist.CannotCompileException;
@@ -168,6 +169,10 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			}
 
 			public void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
+			}
+
+			public TransactionManager getTransactionManager() {
+				return null;
 			}
 		};
 

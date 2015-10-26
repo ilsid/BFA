@@ -94,6 +94,21 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 		assertEquals("A_Div_B", getActionClassName("A/B"));
 		assertEquals("A_Div_B", getActionClassName("A / B"));
 	}
+	
+	@Test
+	public void shortClassNameForSimplePackageCanBeResolved() {
+		assertEquals("Foo", ClassNameUtil.resolveShortClassName("com.Foo"));
+	}
+	
+	@Test
+	public void shortClassNameForComplexPackageCanBeResolved() {
+		assertEquals("Foo", ClassNameUtil.resolveShortClassName("com.my.Foo"));
+	}
+	
+	@Test
+	public void shortClassNameForNoPackageCanBeResolved() {
+		assertEquals("Foo", ClassNameUtil.resolveShortClassName("Foo"));
+	}
 
 	private String getExpressionClassNamePart(String expression) {
 		String className = ClassNameUtil.resolveExpressionClassName(TEST_SCRIPT_NAME, expression);

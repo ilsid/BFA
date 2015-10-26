@@ -56,6 +56,11 @@ public class ClassNameUtil {
 		return GENERATED_ACTION_PACKAGE + generateSimpleClassName(scriptName);
 	}
 	
+	public static String resolveShortClassName(String className) {
+		int lastDotIdx = className.lastIndexOf('.');
+		return className.substring(lastDotIdx + 1);
+	}
+	
 	private static String generateSimpleClassName(String expression) {
 		String expr = expression.replaceAll("\\s", "");
 		for (String smb : replaceableSymbols.keySet()) {

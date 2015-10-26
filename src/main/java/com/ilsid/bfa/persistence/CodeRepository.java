@@ -19,21 +19,33 @@ public interface CodeRepository {
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
-	public byte[] load(String className) throws PersistenceException;
+	byte[] load(String className) throws PersistenceException;
 
 	/**
-	 * Source code here is not the whole code of the class, but the variable
-	 * part only (script body or dynamic expression), that may be updated by
-	 * user in the future.
+	 * Saves the class. Source code here is not the whole code of the class, but
+	 * the variable part only (script body or dynamic expression), that may be
+	 * updated by user in the future.
 	 * 
 	 * @param className
+	 *            the class name
 	 * @param byteCode
+	 *            the class byte code
 	 * @param sourceCode
+	 *            the source code of the variable part
 	 * @throws PersistenceException
+	 *             in case of any repository access issues
 	 */
-	public void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
+	void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
 
-	public void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
+	void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
 
-	public void delete(String className) throws PersistenceException;
+	void delete(String className) throws PersistenceException;
+
+	/**
+	 * Returns a proper {@link TransactionManager} instance for this code
+	 * repository.
+	 * 
+	 * @return a transaction manager for this repository
+	 */
+	TransactionManager getTransactionManager();
 }

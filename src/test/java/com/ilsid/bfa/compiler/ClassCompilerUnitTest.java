@@ -300,17 +300,12 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
-		StringBuilder sourceCode = new StringBuilder();
+		String sourceCode;
 		try (InputStream scriptBody = loadScript(fileName);) {
-			sourceCode.append("package ").append(SCRIPT_PACKAGE).append(";\n");
-			sourceCode.append("import com.ilsid.bfa.script.Script;").append("\n");
-			sourceCode.append("import com.ilsid.bfa.script.ScriptException;").append("\n");
-			sourceCode.append("public class ").append(shortClassName).append(" extends Script {").append("\n");
-			sourceCode.append("protected void doExecute() throws ScriptException {").append("\n");
-			sourceCode.append(IOUtils.toString(scriptBody, "UTF-8")).append("\n");
-			sourceCode.append("}").append("\n");
-			sourceCode.append("}");
+			sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, shortClassName,
+					IOUtils.toString(scriptBody, "UTF-8"));
 		}
+
 		InputStream scriptSource = IOUtils.toInputStream(sourceCode.toString(), "UTF-8");
 		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(shortClassName, scriptSource);
 

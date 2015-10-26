@@ -1,0 +1,12 @@
+package com.ilsid.bfa.generated.script;
+
+import com.ilsid.bfa.script.Script;
+import com.ilsid.bfa.script.ScriptException;
+
+public class %s extends Script {
+
+	protected void doExecute() throws ScriptException {
+		%s
+	}
+
+}

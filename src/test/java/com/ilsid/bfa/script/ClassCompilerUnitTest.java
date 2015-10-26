@@ -1,4 +1,4 @@
-package com.ilsid.bfa.compiler;
+package com.ilsid.bfa.script;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,10 +13,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.script.ClassCompilationException;
+import com.ilsid.bfa.script.ClassCompiler;
+import com.ilsid.bfa.script.CompilationBlock;
+import com.ilsid.bfa.script.CompilerConstants;
 import com.ilsid.bfa.script.DynamicCodeInvocation;
 import com.ilsid.bfa.script.Script;
 import com.ilsid.bfa.script.ScriptContext;
-import com.ilsid.bfa.script.ScriptContextUtil;
 import com.ilsid.bfa.script.Variable;
 
 import javassist.ByteArrayClassPath;

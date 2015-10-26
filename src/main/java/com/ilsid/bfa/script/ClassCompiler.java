@@ -1,4 +1,4 @@
-package com.ilsid.bfa.compiler;
+package com.ilsid.bfa.script;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,14 +22,6 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.ExceptionUtil;
-import com.ilsid.bfa.script.DynamicCodeException;
-import com.ilsid.bfa.script.DynamicCodeInvocation;
-import com.ilsid.bfa.script.ExprParam;
-import com.ilsid.bfa.script.Script;
-import com.ilsid.bfa.script.ScriptContext;
-import com.ilsid.bfa.script.ScriptException;
-import com.ilsid.bfa.script.ScriptExpressionParser;
-import com.ilsid.bfa.script.Var;
 
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;

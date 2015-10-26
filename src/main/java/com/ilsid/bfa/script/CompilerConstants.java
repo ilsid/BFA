@@ -1,4 +1,4 @@
-package com.ilsid.bfa.compiler;
+package com.ilsid.bfa.script;
 
 import java.io.IOException;
 import java.io.InputStream;

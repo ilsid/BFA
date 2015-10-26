@@ -1,4 +1,4 @@
-package com.ilsid.bfa.compiler;
+package com.ilsid.bfa.script;
 
 /**
  * A compilation block. Contains a class name, a byte code and a source code of

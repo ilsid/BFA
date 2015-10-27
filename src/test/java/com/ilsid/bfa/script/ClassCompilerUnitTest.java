@@ -248,7 +248,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void errorDetailsAreProvidedIfScriptContainsMultipleInvalidExpression() throws Exception {
+	public void errorDetailsAreProvidedIfScriptContainsMultipleInvalidExpressions() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
 		msg.append("Compilation of expressions in script [TestScript33] failed").append(StringUtils.LF);

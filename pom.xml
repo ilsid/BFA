@@ -3,6 +3,7 @@
   <groupId>business-flow-automation</groupId>
   <artifactId>bfa</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <packaging>war</packaging>
   
   <dependencies>
   	<dependency>
@@ -21,9 +22,24 @@
   		<version>3.18.2-GA</version>
   	</dependency>
   	<dependency>
-    <groupId>com.github.javaparser</groupId>
+    	<groupId>com.github.javaparser</groupId>
 	    <artifactId>javaparser-core</artifactId>
 	    <version>2.2.2</version>
+	</dependency>
+	<dependency>
+    	<groupId>com.sun.jersey</groupId>
+	    <artifactId>jersey-server</artifactId>
+	    <version>1.19</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.sun.jersey</groupId>
+	    <artifactId>jersey-servlet</artifactId>
+	    <version>1.19</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.sun.jersey</groupId>
+	    <artifactId>jersey-json</artifactId>
+	    <version>1.19</version>
 	</dependency>
   	<dependency>
       <groupId>junit</groupId>
@@ -46,8 +62,8 @@
   </dependencies>
   
   <build>
-  	<pluginManagement>
-			<plugins>
+  	  <pluginManagement>
+		   <plugins>
 				<plugin>
 				  <groupId>org.apache.maven.plugins</groupId>
 				  <artifactId>maven-compiler-plugin</artifactId>

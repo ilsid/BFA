@@ -15,11 +15,33 @@ import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.CompilationBlock;
 import com.ilsid.bfa.script.CompilerConstants;
 
-//TODO: write javadocs
+/**
+ * Provides a set of management operations for scripts.
+ * 
+ * @author illia.sydorovych
+ *
+ */
+// TODO: write unit tests
 public class ScriptManager {
 
 	private CodeRepository repository;
 
+	/**
+	 * Creates new script in the repository.
+	 * 
+	 * @param scriptName
+	 *            script name
+	 * @param scriptBody
+	 *            script body
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if the script itself or any of its expressions can't be
+	 *             compiled or persisted</li>
+	 *             <li>if the script with such name already exist in the
+	 *             repository</li>
+	 *             </ul>
+	 */
+	//TODO: implement script name uniqueness check
 	public void createScript(String scriptName, InputStream scriptBody) throws ManagementException {
 		String scriptClassName = ClassNameUtil.resolveScriptClassName(scriptName);
 		try {
@@ -50,6 +72,12 @@ public class ScriptManager {
 		}
 	}
 
+	/**
+	 * Defines a repository implementation.
+	 * 
+	 * @param repository
+	 *            a code repository
+	 */
 	public void setRepository(CodeRepository repository) {
 		this.repository = repository;
 	}

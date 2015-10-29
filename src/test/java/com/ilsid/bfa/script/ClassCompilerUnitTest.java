@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.script.ClassCompilationException;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.CompilationBlock;
@@ -28,10 +29,6 @@ import javassist.ClassPool;
 import javassist.CtClass;
 
 public class ClassCompilerUnitTest extends BaseUnitTestCase {
-
-	private static final String SCRIPTS_DIR = "src/test/resources/dynamicCode/";
-
-	private static final String BYTECODE_DIR = "src/test/resources/byteCode/";
 
 	private static final String TEST_INVOCATION_EXPRESSION = "return Integer.valueOf(2 - 1);";
 
@@ -83,7 +80,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void scriptCanBeCompiled() throws Exception {
-		try (InputStream body = loadScript("declarations-only-script.txt");) {
+		try (InputStream body = IOHelper.loadScript("declarations-only-script.txt");) {
 			Class<Script> clazz = (Class<Script>) ClassCompiler.compileScript(TEST_SCRIPT_CLASS_NAME, body);
 			Script script = clazz.newInstance();
 			setInaccessibleParentField(script, "scriptContext", mockContext);
@@ -105,7 +102,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void scriptCanBeCompiledToBytecode() throws Exception {
-		try (InputStream body = loadScript("declarations-only-script.txt");) {
+		try (InputStream body = IOHelper.loadScript("declarations-only-script.txt");) {
 			byte[] byteCode = ClassCompiler.compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3, body);
 			Script script = (Script) loadFromBytecode(TEST_SCRIPT_CLASS_NAME_3, byteCode).newInstance();
 			setInaccessibleParentField(script, "scriptContext", mockContext);
@@ -148,7 +145,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void classCanBeLoadedFromBytecode() throws Exception {
-		byte[] byteCode = loadClass("DummyClass.class");
+		byte[] byteCode = IOHelper.loadClass("DummyClass.class");
 
 		Class<?> dummyClass = ClassCompiler.loadFromBytecode("com.ilsid.bfa.test.types.DummyClass", byteCode);
 		Object dummy = dummyClass.newInstance();
@@ -165,7 +162,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		exceptionRule.expect(ClassCompilationException.class);
 		exceptionRule.expectMessage("Failed to create class com.ilsid.bfa.test.types.DummyClass2 from byte code");
 
-		byte[] byteCode = loadClass("DummyClass2.class");
+		byte[] byteCode = IOHelper.loadClass("DummyClass2.class");
 
 		Class<?> dummyClass;
 		// Note, we must use unique class name in this test to avoid conflicts
@@ -266,30 +263,16 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@SuppressWarnings("unused")
 	private void compileScript(String className) throws Exception {
-		try (InputStream body = loadScript("declarations-only-script.txt");) {
+		try (InputStream body = IOHelper.loadScript("declarations-only-script.txt");) {
 			Class<?> clazz = ClassCompiler.compileScript(className, body);
 		}
 	}
 
 	@SuppressWarnings("unused")
 	private void compileScriptToBytecode(String className) throws Exception {
-		try (InputStream body = loadScript("declarations-only-script.txt");) {
+		try (InputStream body = IOHelper.loadScript("declarations-only-script.txt");) {
 			byte[] byteCode = ClassCompiler.compileScriptToBytecode(className, body);
 		}
-	}
-
-	private InputStream loadScript(String fileName) throws Exception {
-		return new FileInputStream(new File(SCRIPTS_DIR + fileName));
-	}
-
-	private byte[] loadClass(String fileName) throws Exception {
-		byte[] result;
-
-		try (InputStream is = new FileInputStream(BYTECODE_DIR + fileName)) {
-			result = IOUtils.toByteArray(is);
-		}
-
-		return result;
 	}
 
 	private String invokeMethod(Object target, String name) throws Exception {
@@ -304,7 +287,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
 		String sourceCode;
-		try (InputStream scriptBody = loadScript(fileName);) {
+		try (InputStream scriptBody = IOHelper.loadScript(fileName);) {
 			sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, shortClassName,
 					IOUtils.toString(scriptBody, "UTF-8"));
 		}

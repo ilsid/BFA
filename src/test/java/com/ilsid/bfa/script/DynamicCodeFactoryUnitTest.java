@@ -174,6 +174,9 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			public TransactionManager getTransactionManager() {
 				return null;
 			}
+
+			public void save(String className, byte[] byteCode) throws PersistenceException {
+			}
 		};
 
 		setInaccessibleField(GlobalContext.getInstance(), "codeRepository", repository);

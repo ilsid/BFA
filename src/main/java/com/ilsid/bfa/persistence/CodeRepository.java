@@ -14,17 +14,15 @@ public interface CodeRepository {
 	 * 
 	 * @param className
 	 *            class name
-	 * @return a byte array representing Java byte code or an empty array if a
-	 *         class with such name does not exist
+	 * @return a byte array representing Java byte code or an empty array if a class with such name does not exist
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
 	byte[] load(String className) throws PersistenceException;
 
 	/**
-	 * Saves the class. Source code here is not the whole code of the class, but
-	 * the variable part only (script body or dynamic expression), that may be
-	 * updated by user in the future.
+	 * Saves new class. Source code here is not the whole code of the class, but the variable part only (for example, a
+	 * script body), that may be updated by user in the future.
 	 * 
 	 * @param className
 	 *            the class name
@@ -33,17 +31,34 @@ public interface CodeRepository {
 	 * @param sourceCode
 	 *            the source code of the variable part
 	 * @throws PersistenceException
-	 *             in case of any repository access issues
+	 *             <ul>
+	 *             <li>if the class with the given name already exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
 	 */
 	void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
 
+	/**
+	 * Saves new class.
+	 * 
+	 * @param className
+	 *            the class name
+	 * @param byteCode
+	 *            the class byte code
+	 * @throws PersistenceException
+	 *             <ul>
+	 *             <li>if the class with the given name already exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	void save(String className, byte[] byteCode) throws PersistenceException;
+
 	void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
 
-	void delete(String className) throws PersistenceException;
+	void delete(String classNamePattern) throws PersistenceException;
 
 	/**
-	 * Returns a proper {@link TransactionManager} instance for this code
-	 * repository.
+	 * Returns a proper {@link TransactionManager} instance for this code repository.
 	 * 
 	 * @return a transaction manager for this repository
 	 */

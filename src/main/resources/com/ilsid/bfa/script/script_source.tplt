@@ -5,8 +5,8 @@ import com.ilsid.bfa.script.ScriptException;
 
 public class %s extends Script {
 
-	protected void doExecute() throws ScriptException {
-		%s
-	}
+protected void doExecute() throws ScriptException {
+%s
+}
 
 }

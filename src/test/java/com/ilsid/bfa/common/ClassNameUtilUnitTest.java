@@ -125,7 +125,7 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void classNameWithNoPackageCanNotBeResolved() {
+	public void classNameWithNoPackageIsFailedToConvertedToDirs() {
 		// Precondition: class name must contain a package
 		exceptionRule.expect(IndexOutOfBoundsException.class);
 		ClassNameUtil.getDirs("MyClass");

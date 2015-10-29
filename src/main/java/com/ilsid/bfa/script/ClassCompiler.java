@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
@@ -73,8 +74,7 @@ public class ClassCompiler {
 	}
 
 	/**
-	 * Compiles a byte code for a class that implements
-	 * {@link DynamicCodeInvocation} interface.
+	 * Compiles a byte code for a class that implements {@link DynamicCodeInvocation} interface.
 	 * 
 	 * @param className
 	 *            class name
@@ -184,38 +184,38 @@ public class ClassCompiler {
 	/**
 	 * Compiles all expressions defined in the given script.
 	 * 
-	 * @param scriptShortClassName
-	 *            the script short class name (without package prefix)
 	 * @param scriptSourceCode
 	 *            the source code of the script class
-	 * @return a collection of {@link CompilationBlock} instances for each
-	 *         expression
+	 * @return a collection of {@link CompilationBlock} instances for each expression
 	 * @throws ClassCompilationException
 	 *             if the compilation of any expression failed
+	 * @throws IllegalArgumentException
+	 *             in case of invalid source code
 	 */
-	public static Collection<CompilationBlock> compileScriptExpressions(String scriptShortClassName,
-			InputStream scriptSourceCode) throws ClassCompilationException {
+	public static Collection<CompilationBlock> compileScriptExpressions(InputStream scriptSourceCode)
+			throws ClassCompilationException, IllegalArgumentException {
 		CompilationUnit compilationUnit;
 		try {
 			compilationUnit = JavaParser.parse(scriptSourceCode);
 		} catch (ParseException e) {
-			throw new ClassCompilationException(
-					String.format("Failed to parse a source code of the class [%s]", scriptShortClassName), e);
+			throw new IllegalArgumentException("Invalid script source code", e);
 		}
 
-		MethodCallVisitorContext visitorContext = new MethodCallVisitorContext();
-		visitorContext.scriptShortClassName = scriptShortClassName;
+		ClassDeclarationVisitor classDeclarationVisitor = new ClassDeclarationVisitor();
+		classDeclarationVisitor.visit(compilationUnit, null);
 
-		new MethodCallVisitor().visit(compilationUnit, visitorContext);
+		MethodCallVisitorContext methodCallContext = new MethodCallVisitorContext();
+		methodCallContext.scriptShortClassName = classDeclarationVisitor.shortClassName;
 
-		List<Exception> exceptions = visitorContext.exceptions;
+		new MethodCallVisitor().visit(compilationUnit, methodCallContext);
+
+		List<Exception> exceptions = methodCallContext.exceptions;
 		if (!exceptions.isEmpty()) {
-			throw new ClassCompilationException(
-					String.format("Compilation of expressions in script [%s] failed", scriptShortClassName)
-							+ StringUtils.LF + mergeMessages(exceptions));
+			throw new ClassCompilationException(String.format("Compilation of expressions in script [%s] failed",
+					classDeclarationVisitor.shortClassName) + StringUtils.LF + mergeMessages(exceptions));
 		}
 
-		return visitorContext.compiledExpressions.values();
+		return methodCallContext.compiledExpressions.values();
 	}
 
 	private static ClassPool getClassPool() {
@@ -387,6 +387,16 @@ public class ClassCompiler {
 			}
 		}
 
+	}
+
+	private static class ClassDeclarationVisitor extends VoidVisitorAdapter<Void> {
+
+		String shortClassName;
+
+		@Override
+		public void visit(final ClassOrInterfaceDeclaration clsDeclaration, final Void context) {
+			shortClassName = clsDeclaration.getName();
+		}
 	}
 
 }

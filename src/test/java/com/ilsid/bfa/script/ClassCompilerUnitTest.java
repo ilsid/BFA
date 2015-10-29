@@ -293,7 +293,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		}
 
 		InputStream scriptSource = IOUtils.toInputStream(sourceCode.toString(), "UTF-8");
-		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(shortClassName, scriptSource);
+		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(scriptSource);
 
 		return expressions.toArray(new CompilationBlock[] {});
 	}

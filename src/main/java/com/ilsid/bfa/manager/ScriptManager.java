@@ -48,10 +48,10 @@ public class ScriptManager {
 			String scriptBodySource = IOUtils.toString(scriptBody, "UTF-8");
 
 			Collection<CompilationBlock> expressions;
+			String scriptShortClassName = ClassNameUtil.getShortClassName(scriptClassName);
 			try (InputStream scriptSourceCode = IOUtils.toInputStream(
-					String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, scriptClassName, scriptBodySource));) {
-				String scriptShortClassName = ClassNameUtil.getShortClassName(scriptClassName);
-				expressions = ClassCompiler.compileScriptExpressions(scriptShortClassName, scriptSourceCode);
+					String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, scriptShortClassName, scriptBodySource));) {
+				expressions = ClassCompiler.compileScriptExpressions(scriptSourceCode);
 			}
 
 			startTransaction();

@@ -1,23 +1,26 @@
 package com.ilsid.bfa.common;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 //TODO: write javadocs
 public class ClassNameUtil {
-	
+
 	private static final String GENERATED_PACKAGE = "com.ilsid.bfa.generated.";
-	
+
 	private static final String GENERATED_SCRIPT_PACKAGE = GENERATED_PACKAGE + "script.";
-	
+
 	private static final String GENERATED_ACTION_PACKAGE = GENERATED_PACKAGE + "action.";
-	
+
 	private static final String GENERATED_POJO_PACKAGE = GENERATED_PACKAGE + "type.";
-	
+
 	private static final String EXPRESSION_PREFIX = "$$";
 
+	private static final char DOT = '.';
+
 	private static final Map<String, String> replaceableSymbols = new HashMap<>();
-	
+
 	private static final Map<String, String> predefinedTypes = new HashMap<>();
 
 	static {
@@ -27,38 +30,50 @@ public class ClassNameUtil {
 		replaceableSymbols.put("/", "_Div_");
 		replaceableSymbols.put(".", "%dt");
 	}
-	
+
 	static {
 		predefinedTypes.put("Number", "Integer");
 		predefinedTypes.put("Decimal", "Double");
 	}
 
-	//TODO: write unit tests
-	public static String resolveJavaClassName(String scriptName) {
-		String predefinedType = predefinedTypes.get(scriptName);
+	public static String resolveJavaClassName(String typeName) {
+		String predefinedType = predefinedTypes.get(typeName);
 		if (predefinedType != null) {
 			return predefinedType;
 		}
-		
-		return GENERATED_POJO_PACKAGE + generateSimpleClassName(scriptName);
+
+		return GENERATED_POJO_PACKAGE + typeName;
 	}
-	
+
 	public static String resolveScriptClassName(String scriptName) {
 		return GENERATED_SCRIPT_PACKAGE + generateSimpleClassName(scriptName);
 	}
-	
+
 	public static String resolveExpressionClassName(String scriptName, String expression) {
 		return GENERATED_SCRIPT_PACKAGE + generateSimpleClassName(scriptName) + EXPRESSION_PREFIX
 				+ generateSimpleClassName(expression);
 	}
-	
-	public static String resolveActionClassName(String scriptName) {
-		return GENERATED_ACTION_PACKAGE + generateSimpleClassName(scriptName);
+
+	public static String resolveActionClassName(String actionName) {
+		return GENERATED_ACTION_PACKAGE + generateSimpleClassName(actionName);
 	}
-	
-	public static String resolveShortClassName(String className) {
+
+	public static String getShortClassName(String className) {
 		int lastDotIdx = className.lastIndexOf('.');
 		return className.substring(lastDotIdx + 1);
+	}
+
+	/**
+	 * Returns directories string from the given class name. For example, the method returns the string
+	 * <i>com/foo/bar</i> for the class name <i>com.foo.bar.MyClass</i>.
+	 * 
+	 * @param className
+	 *            a fully qualified class name
+	 * @return directories for the class' package
+	 */
+	public static String getDirs(String className) {
+		int lastDotIdx = className.lastIndexOf(DOT);
+		return className.substring(0, lastDotIdx).replace(DOT, File.separatorChar);
 	}
 	
 	private static String generateSimpleClassName(String expression) {

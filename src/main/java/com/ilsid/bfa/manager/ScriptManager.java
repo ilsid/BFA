@@ -41,7 +41,6 @@ public class ScriptManager {
 	 *             repository</li>
 	 *             </ul>
 	 */
-	//TODO: implement script name uniqueness check
 	public void createScript(String scriptName, InputStream scriptBody) throws ManagementException {
 		String scriptClassName = ClassNameUtil.resolveScriptClassName(scriptName);
 		try {
@@ -51,7 +50,7 @@ public class ScriptManager {
 			Collection<CompilationBlock> expressions;
 			try (InputStream scriptSourceCode = IOUtils.toInputStream(
 					String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, scriptClassName, scriptBodySource));) {
-				String scriptShortClassName = ClassNameUtil.resolveShortClassName(scriptClassName);
+				String scriptShortClassName = ClassNameUtil.getShortClassName(scriptClassName);
 				expressions = ClassCompiler.compileScriptExpressions(scriptShortClassName, scriptSourceCode);
 			}
 
@@ -59,7 +58,7 @@ public class ScriptManager {
 			repository.save(scriptClassName, scriptByteCode, scriptBodySource);
 
 			for (CompilationBlock expr : expressions) {
-				repository.save(expr.getClassName(), expr.getByteCode(), expr.getSourceCode());
+				repository.save(expr.getClassName(), expr.getByteCode());
 			}
 			commitTransaction();
 

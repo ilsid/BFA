@@ -27,21 +27,21 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 
 	private final static String PATH_WO_EXTENSION = ROOT_DIR_PATH + "/" + SCRIPT_CLASS_NAME.replace('.', '/');
 
-	private final static File SCRIPT_CLASS_FILE = new File(PATH_WO_EXTENSION + ".class");
+	private final static File SAVED_SCRIPT_CLASS_FILE = new File(PATH_WO_EXTENSION + ".class");
 
-	private final static File SCRIPT_SRC_FILE = new File(PATH_WO_EXTENSION + ".src");
+	private final static File SAVED_SCRIPT_SRC_FILE = new File(PATH_WO_EXTENSION + ".src");
 
 	private final static File ROOT_DIR = new File(ROOT_DIR_PATH);
 
 	private CodeRepository repository = new FSCodeRepository(ROOT_DIR_PATH);
 
 	@Before
-	public void beforeAllTests() throws IOException {
+	public void setUp() throws IOException {
 		FileUtils.forceMkdir(ROOT_DIR);
 	}
 
 	@After
-	public void afterAllTests() throws IOException {
+	public void tearDown() throws IOException {
 		FileUtils.forceDelete(ROOT_DIR);
 	}
 
@@ -49,27 +49,27 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 	public void classOnlyCanBeSaved() throws Exception {
 		saveClass();
 
-		assertTrue(SCRIPT_CLASS_FILE.exists());
-		assertFalse(SCRIPT_SRC_FILE.exists());
+		assertTrue(SAVED_SCRIPT_CLASS_FILE.exists());
+		assertFalse(SAVED_SCRIPT_SRC_FILE.exists());
 	}
 
 	@Test
 	public void classAndSourceCodeCanBeSaved() throws Exception {
 		saveClassAndSource();
 
-		assertTrue(SCRIPT_CLASS_FILE.exists());
-		assertTrue(SCRIPT_SRC_FILE.exists());
-		
+		assertTrue(SAVED_SCRIPT_CLASS_FILE.exists());
+		assertTrue(SAVED_SCRIPT_SRC_FILE.exists());
+
 		String savedScriptBodySource;
-		try (InputStream savedScriptBody = new FileInputStream(SCRIPT_SRC_FILE)) {
+		try (InputStream savedScriptBody = new FileInputStream(SAVED_SCRIPT_SRC_FILE)) {
 			savedScriptBodySource = IOUtils.toString(savedScriptBody, "UTF-8");
 		}
-		
+
 		String inputScriptBodySource;
 		try (InputStream inputScriptBody = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);) {
 			inputScriptBodySource = IOUtils.toString(inputScriptBody, "UTF-8");
 		}
-		
+
 		assertEquals(inputScriptBodySource, savedScriptBodySource);
 	}
 

@@ -42,7 +42,20 @@
 			<artifactId>jersey-json</artifactId>
 			<version>1.19</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>com.sun.jersey.contribs</groupId>
+			<artifactId>jersey-guice</artifactId>
+			<version>1.19</version>
+		</dependency>
+
+		<!-- Provided dependencies -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+
 		<!-- Testing dependencies -->
 		<dependency>
 			<groupId>junit</groupId>

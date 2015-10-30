@@ -6,13 +6,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares a method parameter as a dynamic expression. 
+ * Declares a method parameter as a dynamic expression.
  * 
  * @author illia.sydorovych
  *
  */
-@Target(value=ElementType.PARAMETER)
-@Retention(value=RetentionPolicy.RUNTIME)
+@Target(value = ElementType.PARAMETER)
+@Retention(value = RetentionPolicy.RUNTIME)
 public @interface ExprParam {
 
 }

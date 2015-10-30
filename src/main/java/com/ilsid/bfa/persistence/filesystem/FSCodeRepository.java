@@ -2,9 +2,11 @@ package com.ilsid.bfa.persistence.filesystem;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 
+import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
@@ -18,20 +20,13 @@ import com.ilsid.bfa.persistence.TransactionManager;
  */
 public class FSCodeRepository implements CodeRepository {
 
+	private static final String ROOT_DIR_PROP_NAME = "bfa.persistence.fs.root_dir";
+
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
 	private static final String SOURCE_FILE_EXTENSION = ".src";
 
 	private String rootDir;
-
-	/**
-	 * Creates an instance with the specified root directory for holding class files.
-	 * 
-	 * @param rootDir
-	 */
-	public FSCodeRepository(String rootDir) {
-		this.rootDir = rootDir;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -94,6 +89,10 @@ public class FSCodeRepository implements CodeRepository {
 	}
 
 	private void doSave(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
+		if (rootDir == null) {
+			throw new IllegalStateException("Root directory is not set");
+		}
+		
 		String shortClassName = ClassNameUtil.getShortClassName(className);
 		String fileClassName = shortClassName + CLASS_FILE_EXTENSION;
 		String fileClassDirs = rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
@@ -130,6 +129,18 @@ public class FSCodeRepository implements CodeRepository {
 				throw new PersistenceException(String
 						.format("Failed to save a source code for class [%s] in directory %s", className, rootDir), e);
 			}
+		}
+	}
+
+	public void setConfiguration(Map<String, String> config) throws ConfigurationException {
+		rootDir = config.get(ROOT_DIR_PROP_NAME);
+		if (rootDir == null) {
+			throw new ConfigurationException("Required [" + ROOT_DIR_PROP_NAME + "] property not found");
+		}
+
+		if (!new File(rootDir).isDirectory()) {
+			throw new ConfigurationException(
+					"[" + rootDir + "] value defined by [" + ROOT_DIR_PROP_NAME + "] property is not a directory");
 		}
 	}
 

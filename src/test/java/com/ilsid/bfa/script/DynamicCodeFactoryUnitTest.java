@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 import org.jmock.Expectations;
 import org.junit.Before;
@@ -176,6 +177,9 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			}
 
 			public void save(String className, byte[] byteCode) throws PersistenceException {
+			}
+
+			public void setConfiguration(Map<String, String> config) {
 			}
 		};
 

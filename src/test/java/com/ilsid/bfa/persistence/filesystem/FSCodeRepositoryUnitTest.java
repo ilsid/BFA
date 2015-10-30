@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -12,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.CompileHelper;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.persistence.CodeRepository;
@@ -33,11 +35,18 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 
 	private final static File ROOT_DIR = new File(ROOT_DIR_PATH);
 
-	private CodeRepository repository = new FSCodeRepository(ROOT_DIR_PATH);
+	private CodeRepository repository = new FSCodeRepository();
 
 	@Before
-	public void setUp() throws IOException {
+	@SuppressWarnings("serial")
+	public void setUp() throws Exception {
 		FileUtils.forceMkdir(ROOT_DIR);
+
+		repository.setConfiguration(new HashMap<String, String>() {
+			{
+				put("bfa.persistence.fs.root_dir", ROOT_DIR_PATH);
+			}
+		});
 	}
 
 	@After
@@ -73,12 +82,55 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(inputScriptBodySource, savedScriptBodySource);
 	}
 
+	@Test
+	public void classOnlySaveFailsIfConfigurationIsNotSet() throws Exception {
+		expectExceptionIfConfigIsNotSet();
+		saveClass();
+	}
+
+	@Test
+	public void classAndSourceSaveFailsIfConfigurationIsNotSet() throws Exception {
+		expectExceptionIfConfigIsNotSet();
+		saveClassAndSource();
+	}
+
+	@Test
+	public void rootDirectoryPropertyIsRequiredInConfiguration() throws Exception {
+		exceptionRule.expect(ConfigurationException.class);
+		exceptionRule.expectMessage("Required [bfa.persistence.fs.root_dir] property not found");
+
+		CodeRepository rep = new FSCodeRepository();
+		rep.setConfiguration(new HashMap<String, String>());
+	}
+
+	@Test
+	@SuppressWarnings("serial")
+	public void existingDirectoryValueIsRequiredInConfiguration() throws Exception {
+		exceptionRule.expect(ConfigurationException.class);
+		exceptionRule.expectMessage(
+				"[src/test/resources/non-existent-dir] value defined by [bfa.persistence.fs.root_dir] property is not a directory");
+
+		CodeRepository rep = new FSCodeRepository();
+		rep.setConfiguration(new HashMap<String, String>() {
+			{
+				put("bfa.persistence.fs.root_dir", "src/test/resources/non-existent-dir");
+			}
+		});
+	}
+
 	private void saveClassAndSource() throws Exception {
 		saveClass(true);
 	}
 
 	private void saveClass() throws Exception {
 		saveClass(false);
+	}
+
+	private void expectExceptionIfConfigIsNotSet() {
+		exceptionRule.expect(IllegalStateException.class);
+		exceptionRule.expectMessage("Root directory is not set");
+
+		repository = new FSCodeRepository();
 	}
 
 	private void saveClass(boolean saveSource) throws Exception {

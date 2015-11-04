@@ -73,11 +73,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 		try (InputStream savedScriptBody = new FileInputStream(SAVED_SCRIPT_SRC_FILE)) {
 			savedScriptBodySource = IOUtils.toString(savedScriptBody, "UTF-8");
 		}
-
-		String inputScriptBodySource;
-		try (InputStream inputScriptBody = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);) {
-			inputScriptBodySource = IOUtils.toString(inputScriptBody, "UTF-8");
-		}
+		String inputScriptBodySource = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);
 
 		assertEquals(inputScriptBodySource, savedScriptBodySource);
 	}
@@ -134,15 +130,11 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 	}
 
 	private void saveClass(boolean saveSource) throws Exception {
-		String scriptBodySource;
-		try (InputStream script = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);) {
-			scriptBodySource = IOUtils.toString(script);
-		}
-
-		byte[] byteCode = CompileHelper.compileScript(SCRIPT_CLASS_NAME, IOUtils.toInputStream(scriptBodySource));
+		String scriptBody = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);
+		byte[] byteCode = CompileHelper.compileScript(SCRIPT_CLASS_NAME, IOUtils.toInputStream(scriptBody));
 
 		if (saveSource) {
-			repository.save(SCRIPT_CLASS_NAME, byteCode, scriptBodySource);
+			repository.save(SCRIPT_CLASS_NAME, byteCode, scriptBody);
 		} else {
 			repository.save(SCRIPT_CLASS_NAME, byteCode);
 		}

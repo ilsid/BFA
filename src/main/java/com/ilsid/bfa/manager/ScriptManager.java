@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.common.ClassNameUtil;
@@ -41,21 +43,20 @@ public class ScriptManager {
 	 *             repository</li>
 	 *             </ul>
 	 */
-	public void createScript(String scriptName, InputStream scriptBody) throws ManagementException {
+	public void createScript(String scriptName, String scriptBody) throws ManagementException {
 		String scriptClassName = ClassNameUtil.resolveScriptClassName(scriptName);
 		try {
 			byte[] scriptByteCode = ClassCompiler.compileScriptToBytecode(scriptClassName, scriptBody);
-			String scriptBodySource = IOUtils.toString(scriptBody, "UTF-8");
-
+			
 			Collection<CompilationBlock> expressions;
 			String scriptShortClassName = ClassNameUtil.getShortClassName(scriptClassName);
 			try (InputStream scriptSourceCode = IOUtils.toInputStream(
-					String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, scriptShortClassName, scriptBodySource));) {
+					String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, scriptShortClassName, scriptBody));) {
 				expressions = ClassCompiler.compileScriptExpressions(scriptSourceCode);
 			}
 
 			startTransaction();
-			repository.save(scriptClassName, scriptByteCode, scriptBodySource);
+			repository.save(scriptClassName, scriptByteCode, scriptBody);
 
 			for (CompilationBlock expr : expressions) {
 				repository.save(expr.getClassName(), expr.getByteCode());
@@ -64,10 +65,10 @@ public class ScriptManager {
 
 		} catch (ClassCompilationException | IOException e) {
 			rollbackTransaction();
-			throw new ManagementException(String.format("Compilation of the script [%] failed", scriptName), e);
+			throw new ManagementException(String.format("Compilation of the script [%s] failed", scriptName), e);
 		} catch (PersistenceException e) {
 			rollbackTransaction();
-			throw new ManagementException(String.format("Failed to persist the script [%]", scriptName), e);
+			throw new ManagementException(String.format("Failed to persist the script [%s]", scriptName), e);
 		}
 	}
 
@@ -77,6 +78,7 @@ public class ScriptManager {
 	 * @param repository
 	 *            a code repository
 	 */
+	@Inject
 	public void setRepository(CodeRepository repository) {
 		this.repository = repository;
 	}

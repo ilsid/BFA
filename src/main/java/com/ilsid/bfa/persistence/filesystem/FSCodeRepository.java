@@ -4,12 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 
 import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.TransactionManager;
 
 /**
@@ -92,7 +95,7 @@ public class FSCodeRepository implements CodeRepository {
 		if (rootDir == null) {
 			throw new IllegalStateException("Root directory is not set");
 		}
-		
+
 		String shortClassName = ClassNameUtil.getShortClassName(className);
 		String fileClassName = shortClassName + CLASS_FILE_EXTENSION;
 		String fileClassDirs = rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
@@ -132,7 +135,8 @@ public class FSCodeRepository implements CodeRepository {
 		}
 	}
 
-	public void setConfiguration(Map<String, String> config) throws ConfigurationException {
+	@Inject
+	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
 		rootDir = config.get(ROOT_DIR_PROP_NAME);
 		if (rootDir == null) {
 			throw new ConfigurationException("Required [" + ROOT_DIR_PROP_NAME + "] property not found");

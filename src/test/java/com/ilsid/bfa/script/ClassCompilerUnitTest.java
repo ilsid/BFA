@@ -1,7 +1,5 @@
 package com.ilsid.bfa.script;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -14,14 +12,6 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.common.IOHelper;
-import com.ilsid.bfa.script.ClassCompilationException;
-import com.ilsid.bfa.script.ClassCompiler;
-import com.ilsid.bfa.script.CompilationBlock;
-import com.ilsid.bfa.script.CompilerConstants;
-import com.ilsid.bfa.script.DynamicCodeInvocation;
-import com.ilsid.bfa.script.Script;
-import com.ilsid.bfa.script.ScriptContext;
-import com.ilsid.bfa.script.Variable;
 
 import javassist.ByteArrayClassPath;
 import javassist.ClassPath;
@@ -80,13 +70,12 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void scriptCanBeCompiled() throws Exception {
-		try (InputStream body = IOHelper.loadScript("declarations-only-script.txt");) {
-			Class<Script> clazz = (Class<Script>) ClassCompiler.compileScript(TEST_SCRIPT_CLASS_NAME, body);
-			Script script = clazz.newInstance();
-			setInaccessibleParentField(script, "scriptContext", mockContext);
-			checking(getScriptExpectations());
-			script.execute();
-		}
+		String body = IOHelper.loadScript("declarations-only-script.txt");
+		Class<Script> clazz = (Class<Script>) ClassCompiler.compileScript(TEST_SCRIPT_CLASS_NAME, body);
+		Script script = clazz.newInstance();
+		setInaccessibleParentField(script, "scriptContext", mockContext);
+		checking(getScriptExpectations());
+		script.execute();
 	}
 
 	@Test
@@ -102,13 +91,12 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void scriptCanBeCompiledToBytecode() throws Exception {
-		try (InputStream body = IOHelper.loadScript("declarations-only-script.txt");) {
-			byte[] byteCode = ClassCompiler.compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3, body);
-			Script script = (Script) loadFromBytecode(TEST_SCRIPT_CLASS_NAME_3, byteCode).newInstance();
-			setInaccessibleParentField(script, "scriptContext", mockContext);
-			checking(getScriptExpectations());
-			script.execute();
-		}
+		String body = IOHelper.loadScript("declarations-only-script.txt");
+		byte[] byteCode = ClassCompiler.compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3, body);
+		Script script = (Script) loadFromBytecode(TEST_SCRIPT_CLASS_NAME_3, byteCode).newInstance();
+		setInaccessibleParentField(script, "scriptContext", mockContext);
+		checking(getScriptExpectations());
+		script.execute();
 	}
 
 	@Test
@@ -263,16 +251,13 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@SuppressWarnings("unused")
 	private void compileScript(String className) throws Exception {
-		try (InputStream body = IOHelper.loadScript("declarations-only-script.txt");) {
-			Class<?> clazz = ClassCompiler.compileScript(className, body);
-		}
+		Class<?> clazz = ClassCompiler.compileScript(className, IOHelper.loadScript("declarations-only-script.txt"));
 	}
 
 	@SuppressWarnings("unused")
 	private void compileScriptToBytecode(String className) throws Exception {
-		try (InputStream body = IOHelper.loadScript("declarations-only-script.txt");) {
-			byte[] byteCode = ClassCompiler.compileScriptToBytecode(className, body);
-		}
+		byte[] byteCode = ClassCompiler.compileScriptToBytecode(className,
+				IOHelper.loadScript("declarations-only-script.txt"));
 	}
 
 	private String invokeMethod(Object target, String name) throws Exception {
@@ -286,11 +271,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
-		String sourceCode;
-		try (InputStream scriptBody = IOHelper.loadScript(fileName);) {
-			sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, shortClassName,
-					IOUtils.toString(scriptBody, "UTF-8"));
-		}
+		String body = IOHelper.loadScript(fileName);
+		String sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, shortClassName, body);
 
 		InputStream scriptSource = IOUtils.toInputStream(sourceCode.toString(), "UTF-8");
 		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(scriptSource);

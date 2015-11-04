@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.github.javaparser.JavaParser;
@@ -26,6 +25,7 @@ import com.ilsid.bfa.common.ExceptionUtil;
 
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
+import javassist.ClassClassPath;
 import javassist.ClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -45,6 +45,14 @@ import javassist.NotFoundException;
 public class ClassCompiler {
 
 	private static final CtClass[] NO_ARGS = {};
+	
+	private static final ClassPool classPool;
+	
+	static {
+		//TODO: non-default class pool may be needed here
+		classPool = ClassPool.getDefault();
+		classPool.appendClassPath(new ClassClassPath(CompilerConstants.SCRIPT_CLASS));
+	}
 
 	/**
 	 * Compiles class that implements {@link DynamicCodeInvocation} interface.
@@ -112,7 +120,7 @@ public class ClassCompiler {
 	 * @throws ClassCompilationException
 	 *             in case of compilation failure
 	 */
-	public static Class<?> compileScript(String className, InputStream scriptBody) throws ClassCompilationException {
+	public static Class<?> compileScript(String className, String scriptBody) throws ClassCompilationException {
 		Class<?> result;
 
 		try {
@@ -137,7 +145,7 @@ public class ClassCompiler {
 	 * @throws ClassCompilationException
 	 *             in case of compilation failure
 	 */
-	public static byte[] compileScriptToBytecode(String className, InputStream scriptBody)
+	public static byte[] compileScriptToBytecode(String className, String scriptBody)
 			throws ClassCompilationException {
 		byte[] result;
 
@@ -219,8 +227,7 @@ public class ClassCompiler {
 	}
 
 	private static ClassPool getClassPool() {
-		// TODO: non-default class pool may be needed
-		return ClassPool.getDefault();
+		return classPool;
 	}
 
 	private static CtClass buildInvocationClass(String className, String expression)
@@ -250,7 +257,7 @@ public class ClassCompiler {
 		return clazz;
 	}
 
-	private static CtClass buildScriptClass(String className, InputStream scriptBody)
+	private static CtClass buildScriptClass(String className, String scriptBody)
 			throws NotFoundException, CannotCompileException, IOException {
 		ClassPool classPool = getClassPool();
 		CtClass clazz = classPool.makeClass(className);
@@ -262,7 +269,7 @@ public class ClassCompiler {
 
 		CtMethod method = new CtMethod(CtClass.voidType, "doExecute", NO_ARGS, clazz);
 		method.setModifiers(Modifier.PROTECTED);
-		String body = "{" + StringUtils.LF + IOUtils.toString(scriptBody, "UTF-8") + StringUtils.LF + "}";
+		String body = "{" + StringUtils.LF + scriptBody + StringUtils.LF + "}";
 		method.setBody(body);
 		clazz.addMethod(method);
 

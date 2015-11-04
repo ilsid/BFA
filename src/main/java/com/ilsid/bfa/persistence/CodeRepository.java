@@ -12,7 +12,7 @@ import com.ilsid.bfa.ConfigurationException;
  */
 // TODO: complete javadocs
 public interface CodeRepository {
-
+	
 	/**
 	 * Loads a byte code for a given class name.
 	 * 

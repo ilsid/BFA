@@ -1,9 +1,6 @@
 package com.ilsid.bfa.script;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 
 import org.jmock.Expectations;
@@ -12,6 +9,7 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
+import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.generated.script.DummyScript;
 import com.ilsid.bfa.generated.script.DummyScript$$DummyExpr;
 import com.ilsid.bfa.persistence.CodeRepository;
@@ -32,8 +30,6 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	private static final GlobalContext FAKE_RUNTIME_CONTEXT = GlobalContext.getInstance();
 
 	private static final String TEST_SCRIPT_NAME = "Test";
-
-	private static final String SCRIPTS_DIR = "src/test/resources/dynamicCode/";
 
 	private ScriptContext mockContext;
 
@@ -219,17 +215,11 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	}
 
 	private Script createScript(String scriptName, String fileName) throws Exception {
-		Script script;
-		try (InputStream body = loadScript(fileName);) {
-			script = DynamicCodeFactory.getScript(scriptName, body);
-		}
+		String body = IOHelper.loadScript(fileName);
+		Script script = DynamicCodeFactory.getScript(scriptName, body);
 		script.setRuntimeContext(GlobalContext.getInstance());
 
 		return script;
-	}
-
-	private InputStream loadScript(String fileName) throws Exception {
-		return new FileInputStream(new File(SCRIPTS_DIR + fileName));
 	}
 
 }

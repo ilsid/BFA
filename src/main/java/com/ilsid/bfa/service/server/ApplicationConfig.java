@@ -5,7 +5,11 @@ import java.util.Map;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provides;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.RepositoryConfig;
+import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.guice.JerseyServletModule;
@@ -13,11 +17,13 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 /**
  * REST Application configuration.
+ * 
  * @see <i>web.xml</i>
  * 
  * @author illia.sydorovych
  *
  */
+// FIXME: remove hardcoded config and CodeRepository implementation
 public class ApplicationConfig extends GuiceServletContextListener {
 
 	@Override
@@ -26,13 +32,24 @@ public class ApplicationConfig extends GuiceServletContextListener {
 
 			@Override
 			protected void configureServlets() {
-				Map<String, String> config = new HashMap<>();
-				// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping
-				config.put(PackagesResourceConfig.PROPERTY_PACKAGES,
-						"com.ilsid.bfa.service.server;org.codehaus.jackson.jaxrs");
-				config.put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE.toString());
+				bind(CodeRepository.class).to(FSCodeRepository.class);
 
-				serve("/*").with(GuiceContainer.class, config);
+				Map<String, String> webConfig = new HashMap<>();
+				// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping
+				webConfig.put(PackagesResourceConfig.PROPERTY_PACKAGES,
+						"com.ilsid.bfa.service.server;org.codehaus.jackson.jaxrs");
+				webConfig.put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE.toString());
+
+				serve("/*").with(GuiceContainer.class, webConfig);
+			}
+
+			@Provides
+			@RepositoryConfig
+			protected Map<String, String> provideRepositoryConfiguration() {
+				Map<String, String> result = new HashMap<>();
+				result.put("bfa.persistence.fs.root_dir", "d:\\temp\\glassfish\\code_repository");
+
+				return result;
 			}
 		});
 	}

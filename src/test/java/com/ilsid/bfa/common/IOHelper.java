@@ -12,8 +12,13 @@ public class IOHelper {
 	
 	private static final String BYTECODE_DIR = "src/test/resources/byteCode/";
 	
-	public static InputStream loadScript(String fileName) throws Exception {
-		return new FileInputStream(new File(SCRIPTS_DIR + fileName));
+	public static String loadScript(String fileName) throws Exception {
+		String result;
+		try (InputStream is = new FileInputStream(new File(SCRIPTS_DIR + fileName));) {
+			result = IOUtils.toString(is);
+		}
+		
+		return result;
 	}
 	
 	public static byte[] loadClass(String fileName) throws Exception {

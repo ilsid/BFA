@@ -1,6 +1,5 @@
 package com.ilsid.bfa.script;
 
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -97,7 +96,7 @@ public class DynamicCodeFactory {
 	 *             <li>if the class instantiation failed</li>
 	 *             </ul>
 	 */
-	public static Script getScript(String scriptName, InputStream scriptBody) throws DynamicCodeException {
+	public static Script getScript(String scriptName, String scriptBody) throws DynamicCodeException {
 		String className = ClassNameUtil.resolveScriptClassName(scriptName);
 
 		Script script = (Script) tryInstantiateFromCache(className);
@@ -238,9 +237,9 @@ public class DynamicCodeFactory {
 
 		private String className;
 
-		private InputStream scriptBody;
+		private String scriptBody;
 
-		public ScriptCompilerDelegate(String className, InputStream scriptBody) {
+		public ScriptCompilerDelegate(String className, String scriptBody) {
 			this.className = className;
 			this.scriptBody = scriptBody;
 		}

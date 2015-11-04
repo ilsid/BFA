@@ -18,7 +18,8 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
 
-	private static final String EXPRESSION_CLASS_NAME_PREFIX = SCRIPT_CLASS_NAME_PREFIX + TEST_SCRIPT_NAME + "$$";
+	private static final String EXPRESSION_CLASS_NAME_PREFIX = SCRIPT_CLASS_NAME_PREFIX + TEST_SCRIPT_NAME.toLowerCase()
+			+ "." + TEST_SCRIPT_NAME + "$$";
 
 	@Test
 	public void generatedClassNameDoesNotContainSpaces() {
@@ -37,17 +38,17 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void generatedClassNameContainsReaplacedDots() {
-		assertEquals("A%dtB", getScriptClassName("A.B"));
-		assertEquals("%dtAB%dt", getScriptClassName(".AB."));
-		assertEquals("%dtA%dtB%dtC%dt", getScriptClassName(".A.B.C."));
+		assertEquals("A_dt_B", getScriptClassName("A.B"));
+		assertEquals("_dt_AB_dt_", getScriptClassName(".AB."));
+		assertEquals("_dt_A_dt_B_dt_C_dt_", getScriptClassName(".A.B.C."));
 
-		assertEquals("A%dtB", getExpressionClassNamePart("A.B"));
-		assertEquals("%dtAB%dt", getExpressionClassNamePart(".AB."));
-		assertEquals("%dtA%dtB%dtC%dt", getExpressionClassNamePart(".A.B.C."));
+		assertEquals("A_dt_B", getExpressionClassNamePart("A.B"));
+		assertEquals("_dt_AB_dt_", getExpressionClassNamePart(".AB."));
+		assertEquals("_dt_A_dt_B_dt_C_dt_", getExpressionClassNamePart(".A.B.C."));
 
-		assertEquals("A%dtB", getActionClassName("A.B"));
-		assertEquals("%dtAB%dt", getActionClassName(".AB."));
-		assertEquals("%dtA%dtB%dtC%dt", getActionClassName(".A.B.C."));
+		assertEquals("A_dt_B", getActionClassName("A.B"));
+		assertEquals("_dt_AB_dt_", getActionClassName(".AB."));
+		assertEquals("_dt_A_dt_B_dt_C_dt_", getActionClassName(".A.B.C."));
 	}
 
 	@Test
@@ -148,6 +149,8 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 
 	private String getExpressionClassNamePart(String expression) {
 		String className = ClassNameUtil.resolveExpressionClassName(TEST_SCRIPT_NAME, expression);
+		System.out.println(className);
+		System.out.println(EXPRESSION_CLASS_NAME_PREFIX);
 		assertTrue(className.startsWith(EXPRESSION_CLASS_NAME_PREFIX));
 
 		return className.substring(EXPRESSION_CLASS_NAME_PREFIX.length());
@@ -155,9 +158,11 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 
 	private String getScriptClassName(String scriptName) {
 		String className = ClassNameUtil.resolveScriptClassName(scriptName);
-		assertTrue(className.startsWith(SCRIPT_CLASS_NAME_PREFIX));
+		final String scriptPackage = SCRIPT_CLASS_NAME_PREFIX
+				+ className.substring(className.lastIndexOf('.') + 1).toLowerCase() + ".";
+		assertTrue(className.startsWith(scriptPackage));
 
-		return className.substring(SCRIPT_CLASS_NAME_PREFIX.length());
+		return className.substring(scriptPackage.length());
 	}
 
 	private String getActionClassName(String scriptName) {

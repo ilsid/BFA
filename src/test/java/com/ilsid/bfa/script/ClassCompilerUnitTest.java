@@ -281,7 +281,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	private void assertExpressionShortClassName(String expected, String actual) {
-		assertEquals(SCRIPT_PACKAGE + "." + expected, actual);
+		String scriptChildPackage = expected.substring(0, expected.lastIndexOf("$$")).toLowerCase();
+		assertEquals(SCRIPT_PACKAGE + "." + scriptChildPackage + "." + expected, actual);
 	}
 
 	private Expectations getScriptExpectations() throws Exception {

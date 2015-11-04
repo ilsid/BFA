@@ -10,8 +10,8 @@ import org.junit.Test;
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.IOHelper;
-import com.ilsid.bfa.generated.script.DummyScript;
-import com.ilsid.bfa.generated.script.DummyScript$$DummyExpr;
+import com.ilsid.bfa.generated.script.dummyscript.DummyScript;
+import com.ilsid.bfa.generated.script.dummyscript.DummyScript$$DummyExpr;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
@@ -23,7 +23,7 @@ import javassist.NotFoundException;
 
 public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
-	private static final String SCRIPT_CLASS_NAME_PREFIX = "com.ilsid.bfa.generated.script.";
+	private static final String SCRIPT_ROOT_PACKAGE = "com.ilsid.bfa.generated.script.";
 
 	private static final String DUMMY_SCRIPT_NAME = "DummyScript";
 
@@ -64,7 +64,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void expressionClassNameIsPrependedWithScriptName() throws Exception {
-		assertEquals(SCRIPT_CLASS_NAME_PREFIX + "SomeScript$$2_Mns_1",
+		assertEquals(SCRIPT_ROOT_PACKAGE + "somescript.SomeScript$$2_Mns_1",
 				getInvocation("Some Script", "2 - 1").getClass().getName());
 	}
 
@@ -116,7 +116,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	public void expressionClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
 		exceptionRule.expect(DynamicCodeException.class);
 		exceptionRule.expectMessage(
-				"Class [" + SCRIPT_CLASS_NAME_PREFIX + "NonExistentScript$$DummyExpr] does not exist in repository");
+				"Class [" + SCRIPT_ROOT_PACKAGE + "nonexistentscript.NonExistentScript$$DummyExpr] does not exist in repository");
 
 		defineRepository();
 		DynamicCodeFactory.getInvocation("NonExistentScript", "DummyExpr", null);
@@ -136,7 +136,8 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void scriptClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
 		exceptionRule.expect(DynamicCodeException.class);
-		exceptionRule.expectMessage("Class [" + SCRIPT_CLASS_NAME_PREFIX + "NonExistent] does not exist in repository");
+		exceptionRule.expectMessage(
+				"Class [" + SCRIPT_ROOT_PACKAGE + "nonexistent.NonExistent] does not exist in repository");
 
 		defineRepository();
 		DynamicCodeFactory.getScript("NonExistent", null);
@@ -146,7 +147,8 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 		CodeRepository repository = new CodeRepository() {
 
 			public byte[] load(String className) throws PersistenceException {
-				if (!className.startsWith(SCRIPT_CLASS_NAME_PREFIX + DUMMY_SCRIPT_NAME)) {
+				if (!className
+						.startsWith(SCRIPT_ROOT_PACKAGE + DUMMY_SCRIPT_NAME.toLowerCase() + "." + DUMMY_SCRIPT_NAME)) {
 					return new byte[0];
 				}
 
@@ -184,7 +186,8 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	private void verifyScript(String scriptName, String scriptFile, Expectations expectations) throws Exception {
 		Script script = createScript(scriptName, scriptFile);
-		assertEquals(SCRIPT_CLASS_NAME_PREFIX + scriptName, script.getClass().getName());
+		String scriptChildPackage = script.getClass().getSimpleName().toLowerCase() + ".";
+		assertEquals(SCRIPT_ROOT_PACKAGE + scriptChildPackage + scriptName, script.getClass().getName());
 
 		checking(expectations);
 

@@ -9,7 +9,7 @@ public class ClassNameUtil {
 
 	private static final String GENERATED_PACKAGE = "com.ilsid.bfa.generated.";
 
-	private static final String GENERATED_SCRIPT_PACKAGE = GENERATED_PACKAGE + "script.";
+	private static final String GENERATED_SCRIPT_ROOT_PACKAGE = GENERATED_PACKAGE + "script.";
 
 	private static final String GENERATED_ACTION_PACKAGE = GENERATED_PACKAGE + "action.";
 
@@ -28,7 +28,7 @@ public class ClassNameUtil {
 		replaceableSymbols.put("+", "_Pls_");
 		replaceableSymbols.put("*", "_Mlt_");
 		replaceableSymbols.put("/", "_Div_");
-		replaceableSymbols.put(".", "%dt");
+		replaceableSymbols.put(".", "_dt_");
 	}
 
 	static {
@@ -46,11 +46,13 @@ public class ClassNameUtil {
 	}
 
 	public static String resolveScriptClassName(String scriptName) {
-		return GENERATED_SCRIPT_PACKAGE + generateSimpleClassName(scriptName);
+		final String simpleClassName = generateSimpleClassName(scriptName);
+		return generateScriptPackageName(simpleClassName) + simpleClassName;
 	}
 
 	public static String resolveExpressionClassName(String scriptName, String expression) {
-		return GENERATED_SCRIPT_PACKAGE + generateSimpleClassName(scriptName) + EXPRESSION_PREFIX
+		final String scriptSimpleClassName = generateSimpleClassName(scriptName);
+		return generateScriptPackageName(scriptSimpleClassName) + scriptSimpleClassName + EXPRESSION_PREFIX
 				+ generateSimpleClassName(expression);
 	}
 
@@ -75,7 +77,7 @@ public class ClassNameUtil {
 		int lastDotIdx = className.lastIndexOf(DOT);
 		return className.substring(0, lastDotIdx).replace(DOT, File.separatorChar);
 	}
-	
+
 	private static String generateSimpleClassName(String expression) {
 		String expr = expression.replaceAll("\\s", "");
 		for (String smb : replaceableSymbols.keySet()) {
@@ -83,6 +85,10 @@ public class ClassNameUtil {
 		}
 
 		return expr;
+	}
+
+	private static String generateScriptPackageName(String simpleScriptClassName) {
+		return GENERATED_SCRIPT_ROOT_PACKAGE + simpleScriptClassName.toLowerCase() + DOT;
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.ilsid.bfa.generated.script;
+package com.ilsid.bfa.generated.script.dummyscript;
 
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.script.DynamicCodeInvocation;

@@ -7,13 +7,13 @@ import java.util.Map;
 //TODO: write javadocs
 public class ClassNameUtil {
 
-	private static final String GENERATED_PACKAGE = "com.ilsid.bfa.generated.";
+	private static final String GENERATED_ROOT_PACKAGE = "com.ilsid.bfa.generated.";
 
-	private static final String GENERATED_SCRIPT_ROOT_PACKAGE = GENERATED_PACKAGE + "script.";
+	private static final String GENERATED_SCRIPT_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "script.";
 
-	private static final String GENERATED_ACTION_PACKAGE = GENERATED_PACKAGE + "action.";
+	private static final String GENERATED_ACTION_PACKAGE = GENERATED_ROOT_PACKAGE + "action.";
 
-	private static final String GENERATED_POJO_PACKAGE = GENERATED_PACKAGE + "type.";
+	private static final String GENERATED_POJO_PACKAGE = GENERATED_ROOT_PACKAGE + "type.";
 
 	private static final String EXPRESSION_PREFIX = "$$";
 

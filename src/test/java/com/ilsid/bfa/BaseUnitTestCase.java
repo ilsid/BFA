@@ -10,7 +10,7 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
-public class BaseUnitTestCase {
+public abstract class BaseUnitTestCase {
 
 	private Mockery mockery = new JUnit4Mockery() {
 		{

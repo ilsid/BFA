@@ -149,8 +149,6 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 
 	private String getExpressionClassNamePart(String expression) {
 		String className = ClassNameUtil.resolveExpressionClassName(TEST_SCRIPT_NAME, expression);
-		System.out.println(className);
-		System.out.println(EXPRESSION_CLASS_NAME_PREFIX);
 		assertTrue(className.startsWith(EXPRESSION_CLASS_NAME_PREFIX));
 
 		return className.substring(EXPRESSION_CLASS_NAME_PREFIX.length());

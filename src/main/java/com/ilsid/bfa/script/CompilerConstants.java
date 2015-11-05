@@ -6,7 +6,6 @@ import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.BFAError;
-import com.ilsid.bfa.common.BFAClassLoader;
 
 public final class CompilerConstants {
 	
@@ -22,13 +21,7 @@ public final class CompilerConstants {
 
 	static {
 		SCRIPT_CLASS = Script.class;
-		// try {
-		// // TODO: test custom class loader after implementation completion
-		// //SCRIPT_CLASS = Class.forName(CompilerConstants.SCRIPT_CLASS_NAME, true, BFAClassLoader.getInstance());
-		// } catch (ClassNotFoundException e) {
-		// throw new BFAError(String.format("Class [%s] not found", CompilerConstants.SCRIPT_CLASS_NAME), e);
-		// }
-		
+
 		try (InputStream tplt = CompilerConstants.class.getResourceAsStream("script_source.tplt")) {
 			SCRIPT_SOURCE_TEMPLATE = IOUtils.toString(tplt, "UTF-8");
 		} catch (IOException e) {

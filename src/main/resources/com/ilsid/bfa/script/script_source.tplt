@@ -1,4 +1,4 @@
-package com.ilsid.bfa.generated.script;
+package com.ilsid.bfa.generated.script.%s;
 
 import com.ilsid.bfa.script.Script;
 import com.ilsid.bfa.script.ScriptException;

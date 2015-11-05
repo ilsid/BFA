@@ -37,21 +37,20 @@ public class ScriptManager {
 	 *            script body
 	 * @throws ManagementException
 	 *             <ul>
-	 *             <li>if the script itself or any of its expressions can't be
-	 *             compiled or persisted</li>
-	 *             <li>if the script with such name already exist in the
-	 *             repository</li>
+	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
+	 *             <li>if the script with such name already exist in the repository</li>
 	 *             </ul>
 	 */
 	public void createScript(String scriptName, String scriptBody) throws ManagementException {
 		String scriptClassName = ClassNameUtil.resolveScriptClassName(scriptName);
 		try {
 			byte[] scriptByteCode = ClassCompiler.compileScriptToBytecode(scriptClassName, scriptBody);
-			
+
 			Collection<CompilationBlock> expressions;
 			String scriptShortClassName = ClassNameUtil.getShortClassName(scriptClassName);
-			try (InputStream scriptSourceCode = IOUtils.toInputStream(
-					String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, scriptShortClassName, scriptBody));) {
+			try (InputStream scriptSourceCode = IOUtils
+					.toInputStream(String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
+							scriptShortClassName.toLowerCase(), scriptShortClassName, scriptBody));) {
 				expressions = ClassCompiler.compileScriptExpressions(scriptSourceCode);
 			}
 

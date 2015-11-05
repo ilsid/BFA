@@ -272,7 +272,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
 		String body = IOHelper.loadScript(fileName);
-		String sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, shortClassName, body);
+		String sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, shortClassName.toLowerCase(),
+				shortClassName, body);
 
 		InputStream scriptSource = IOUtils.toInputStream(sourceCode.toString(), "UTF-8");
 		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(scriptSource);

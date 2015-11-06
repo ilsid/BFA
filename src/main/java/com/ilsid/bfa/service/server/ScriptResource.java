@@ -9,7 +9,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.manager.ScriptManager;
 import com.ilsid.bfa.service.common.Paths;

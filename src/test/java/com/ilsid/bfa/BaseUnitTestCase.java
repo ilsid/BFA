@@ -52,6 +52,10 @@ public abstract class BaseUnitTestCase {
 	protected void assertTrue(boolean condition) {
 		Assert.assertTrue(condition);
 	}
+	
+	protected void assertTrue(String message, boolean condition) {
+		Assert.assertTrue(message, condition);
+	}
 
 	protected void assertFalse(boolean condition) {
 		Assert.assertFalse(condition);

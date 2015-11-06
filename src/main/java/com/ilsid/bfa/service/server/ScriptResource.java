@@ -4,6 +4,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -30,19 +31,19 @@ public class ScriptResource {
 	 * 
 	 * @param script
 	 *            the script data
-	 * @return response to the client. The response can be {@link Status#OK} in case of successful script creation or
-	 *         {@link Status#INTERNAL_SERVER_ERROR} in case of any operation failure.
+	 * @return the {@link Status#OK} response.
+	 * @throws WebApplicationException
+	 *             in case if the operation failed
+	 * @see WebApplicationExceptionMapper            
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_CREATE_OPERATION)
-	//FIXME: add error logging
 	public Response create(ScriptDTO script) {
 		try {
 			scriptManager.createScript(script.getName(), script.getBody());
 		} catch (ManagementException e) {
-			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ExceptionUtil.getExceptionMessageChain(e))
-					.build();
+			throw new WebApplicationException(e);
 		}
 
 		return Response.status(Status.OK).build();

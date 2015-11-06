@@ -19,7 +19,7 @@ public class ExceptionUtil {
 	 *            exception
 	 * @return the exception message chain
 	 */
-	public static String getExceptionMessageChain(Exception exception) {
+	public static String getExceptionMessageChain(Throwable exception) {
 		StringBuilder chain = new StringBuilder();
 		chain.append(exception.getMessage());
 

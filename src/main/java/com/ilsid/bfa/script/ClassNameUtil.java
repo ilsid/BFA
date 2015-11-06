@@ -1,4 +1,4 @@
-package com.ilsid.bfa.common;
+package com.ilsid.bfa.script;
 
 import java.io.File;
 import java.util.HashMap;

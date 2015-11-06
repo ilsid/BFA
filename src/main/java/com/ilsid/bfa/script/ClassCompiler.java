@@ -20,7 +20,6 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.ExceptionUtil;
 
 import javassist.ByteArrayClassPath;

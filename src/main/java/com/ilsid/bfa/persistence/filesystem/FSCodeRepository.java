@@ -9,11 +9,11 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 
 import com.ilsid.bfa.ConfigurationException;
-import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.TransactionManager;
+import com.ilsid.bfa.script.ClassNameUtil;
 
 /**
  * The code repository based on the file system.

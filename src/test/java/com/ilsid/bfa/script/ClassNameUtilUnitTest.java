@@ -1,10 +1,11 @@
-package com.ilsid.bfa.common;
+package com.ilsid.bfa.script;
 
 import java.io.File;
 
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.script.ClassNameUtil;
 
 public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 

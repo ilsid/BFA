@@ -1,6 +1,5 @@
 package com.ilsid.bfa.script;
 
-import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.runtime.GlobalContext;
 
 //TODO: complete implementation

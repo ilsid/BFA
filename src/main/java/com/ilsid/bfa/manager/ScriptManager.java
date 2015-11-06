@@ -8,12 +8,12 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 
-import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
 import com.ilsid.bfa.script.ClassCompilationException;
 import com.ilsid.bfa.script.ClassCompiler;
+import com.ilsid.bfa.script.ClassNameUtil;
 import com.ilsid.bfa.script.CompilationBlock;
 import com.ilsid.bfa.script.CompilerConstants;
 

@@ -30,7 +30,7 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIntegrationTestCase {
 
-	private static final String GENERATED_SCRIPT_ROOT_PATH = "com/ilsid/bfa/generated/script/";
+	private static final String GENERATED_SCRIPT_ROOT_PATH = "com/ilsid/bfa/generated/script";
 
 	private static final File CODE_REPOSITORY_DIR = new File(FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH);
 
@@ -50,19 +50,36 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	public void validScriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
 		WebResource webResource = getWebResource("script/create");
 		ScriptDTO script = new ScriptDTO("Script001", IOHelper.loadScript("duplicated-expression-script.txt"));
-		// ScriptDTO script = new ScriptDTO("Script001", IOHelper.loadScript("two-invalid-expressions-script.txt"));
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		assertFilesExist("script001", new String[] { "Script001.class", "Script001.src", "Script001$$1.class",
+
+		File scriptDir = new File(
+				FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script001");
+
+		assertTrue(scriptDir.isDirectory());
+		assertFilesExist(scriptDir.getPath(), new String[] { "Script001.class", "Script001.src", "Script001$$1.class",
 				"Script001$$Var1_Mns_Var2.class" });
 	}
 
-	private void assertFilesExist(String scriptPackage, String[] fileNames) {
+	@Test
+	public void invalidScriptIsNotSavedInFileSystem() throws Exception {
+		WebResource webResource = getWebResource("script/create");
+		ScriptDTO script = new ScriptDTO("Script002", IOHelper.loadScript("two-invalid-expressions-script.txt"));
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertTrue(response.getEntity(String.class).startsWith("Compilation of the script [Script002] failed"));
+		assertFalse(new File(
+				FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script002")
+						.exists());
+	}
+
+	private void assertFilesExist(String dirPath, String[] fileNames) {
 		for (String fileName : fileNames) {
-			String filePath = FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH
-					+ scriptPackage + "/" + fileName;
+			String filePath = dirPath + "/" + fileName;
 			assertTrue("Expected file [" + filePath + "] does not exist", new File(filePath).exists());
 		}
 	}

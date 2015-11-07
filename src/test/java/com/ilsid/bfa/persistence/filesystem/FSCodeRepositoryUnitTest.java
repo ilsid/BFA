@@ -17,6 +17,7 @@ import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.CompileHelper;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.PersistenceException;
 
 public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 
@@ -113,6 +114,27 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 			}
 		});
 	}
+
+	@Test
+	public void classOnlySaveFailsIfClassWithSuchNameAlreadyExists() throws Exception {
+		exceptionRule.expect(PersistenceException.class);
+		exceptionRule.expectMessage(
+				"Class [com.ilsid.bfa.generated.script.FSCodeRepositoryUnitTestScript01] already exists in directory src/test/resources/__tmp_class_repository");
+
+		saveClass();
+		saveClass();
+	}
+	
+	@Test
+	public void classAndSourceSaveFailsIfClassWithSuchNameAlreadyExists() throws Exception {
+		exceptionRule.expect(PersistenceException.class);
+		exceptionRule.expectMessage(
+				"Class [com.ilsid.bfa.generated.script.FSCodeRepositoryUnitTestScript01] already exists in directory src/test/resources/__tmp_class_repository");
+
+		saveClassAndSource();
+		saveClassAndSource();
+	}
+
 
 	private void saveClassAndSource() throws Exception {
 		saveClass(true);

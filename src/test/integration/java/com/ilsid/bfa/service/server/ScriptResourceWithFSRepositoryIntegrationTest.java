@@ -11,12 +11,15 @@ import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.ilsid.bfa.common.IOHelper;
+import com.ilsid.bfa.common.LoggingConfigurator;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
@@ -30,6 +33,8 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIntegrationTestCase {
 
+	private static final String LOGGING_CONFIG_FILE = "src/test/resources/log4j.xml";
+
 	private static final String GENERATED_SCRIPT_ROOT_PATH = "com/ilsid/bfa/generated/script";
 
 	private static final File CODE_REPOSITORY_DIR = new File(FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH);
@@ -37,6 +42,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	@BeforeClass
 	public static void setUp() throws Exception {
 		FileUtils.forceMkdir(CODE_REPOSITORY_DIR);
+		LoggingConfigurator.configureLog4j(LOGGING_CONFIG_FILE);
 		startWebServer(new FSRepositoryApplicationConfig());
 	}
 
@@ -86,6 +92,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 
 	private static class FSRepositoryApplicationConfig extends GuiceServletContextListener {
 
+		private static final String LOGGER_NAME = "test_logger";
 		final static String CODE_REPOSITORY_PATH = "src/test/resources/__tmp_code_repository";
 
 		@Override
@@ -95,7 +102,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 				@Override
 				protected void configureServlets() {
 					bind(CodeRepository.class).to(FSCodeRepository.class);
-
+					
 					Map<String, String> webConfig = new HashMap<>();
 					// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping
 					webConfig.put(PackagesResourceConfig.PROPERTY_PACKAGES,
@@ -112,6 +119,12 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 					result.put("bfa.persistence.fs.root_dir", CODE_REPOSITORY_PATH);
 
 					return result;
+				}
+				
+				@Provides
+				@WebAppLogger
+				protected Logger provideLogger() {
+					return LoggerFactory.getLogger(LOGGER_NAME);
 				}
 			});
 		}

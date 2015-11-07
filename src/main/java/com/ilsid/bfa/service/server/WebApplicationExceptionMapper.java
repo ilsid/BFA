@@ -1,10 +1,13 @@
 package com.ilsid.bfa.service.server;
 
+import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+
+import org.slf4j.Logger;
 
 import com.ilsid.bfa.common.ExceptionUtil;
 
@@ -15,19 +18,39 @@ import com.ilsid.bfa.common.ExceptionUtil;
  *
  */
 @Provider
-// FIXME: add error logging
 public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplicationException> {
 
+	private static final String ERROR_MESSAGE = "Service error occurred";
+
+	private Logger logger;
+
 	/**
-	 * Logs the exception and returns {@link Status#INTERNAL_SERVER_ERROR} response containing the list of exception
-	 * messages.
+	 * Logs the exception if the logger is defined and returns {@link Status#INTERNAL_SERVER_ERROR} response containing
+	 * the list of exception messages.
 	 * 
 	 * @return {@link Status#INTERNAL_SERVER_ERROR} response
 	 */
 	public Response toResponse(WebApplicationException exception) {
-		return Response.status(Status.INTERNAL_SERVER_ERROR)
-				.entity(ExceptionUtil.getExceptionMessageChain(exception.getCause())).build();
+		Throwable actualException = exception.getCause();
 
+		if (logger != null) {
+			logger.error(ERROR_MESSAGE, actualException);
+		}
+
+		return Response.status(Status.INTERNAL_SERVER_ERROR)
+				.entity(ExceptionUtil.getExceptionMessageChain(actualException)).build();
+
+	}
+
+	/**
+	 * Defines the logger implementation.
+	 * 
+	 * @param logger
+	 *            the logger instance
+	 */
+	@Inject
+	public void setLogger(@WebAppLogger Logger logger) {
+		this.logger = logger;
 	}
 
 }

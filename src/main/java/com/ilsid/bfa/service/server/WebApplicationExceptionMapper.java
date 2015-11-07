@@ -12,15 +12,15 @@ import org.slf4j.Logger;
 import com.ilsid.bfa.common.ExceptionUtil;
 
 /**
- * Intercepts {@link WebApplicationException} exceptions raised by resource methods.
+ * Intercepts {@link ResourceException} exceptions raised by resource methods.
  * 
  * @author illia.sydorovych
  *
  */
 @Provider
-public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplicationException> {
+public class WebApplicationExceptionMapper implements ExceptionMapper<ResourceException> {
 
-	private static final String ERROR_MESSAGE = "Service error occurred";
+	private static final String ERROR_MESSAGE_TEMPLATE = "Service [{}] failed";
 
 	private Logger logger;
 
@@ -30,11 +30,10 @@ public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplica
 	 * 
 	 * @return {@link Status#INTERNAL_SERVER_ERROR} response
 	 */
-	public Response toResponse(WebApplicationException exception) {
+	public Response toResponse(ResourceException exception) {
 		Throwable actualException = exception.getCause();
-
 		if (logger != null) {
-			logger.error(ERROR_MESSAGE, actualException);
+			logger.error(ERROR_MESSAGE_TEMPLATE, exception.getMessage(), actualException);
 		}
 
 		return Response.status(Status.INTERNAL_SERVER_ERROR)

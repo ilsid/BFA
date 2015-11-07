@@ -33,7 +33,7 @@ public class ScriptResource {
 	 * @return the {@link Status#OK} response.
 	 * @throws WebApplicationException
 	 *             in case if the operation failed
-	 * @see WebApplicationExceptionMapper            
+	 * @see WebApplicationExceptionMapper
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -42,7 +42,7 @@ public class ScriptResource {
 		try {
 			scriptManager.createScript(script.getName(), script.getBody());
 		} catch (ManagementException e) {
-			throw new WebApplicationException(e);
+			throw new ResourceException(Paths.SCRIPT_CREATE_SERVICE, e);
 		}
 
 		return Response.status(Status.OK).build();

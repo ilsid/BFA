@@ -44,11 +44,11 @@ import javassist.NotFoundException;
 public class ClassCompiler {
 
 	private static final CtClass[] NO_ARGS = {};
-	
+
 	private static final ClassPool classPool;
-	
+
 	static {
-		//TODO: non-default class pool may be needed here
+		// TODO: non-default class pool may be needed here
 		classPool = ClassPool.getDefault();
 		classPool.appendClassPath(new ClassClassPath(CompilerConstants.SCRIPT_CLASS));
 	}
@@ -144,8 +144,7 @@ public class ClassCompiler {
 	 * @throws ClassCompilationException
 	 *             in case of compilation failure
 	 */
-	public static byte[] compileScriptToBytecode(String className, String scriptBody)
-			throws ClassCompilationException {
+	public static byte[] compileScriptToBytecode(String className, String scriptBody) throws ClassCompilationException {
 		byte[] result;
 
 		try {
@@ -189,7 +188,7 @@ public class ClassCompiler {
 	}
 
 	/**
-	 * Compiles all expressions defined in the given script.
+	 * Compiles all expressions defined in the given script. The expression classes are defined in the script's package.
 	 * 
 	 * @param scriptSourceCode
 	 *            the source code of the script class

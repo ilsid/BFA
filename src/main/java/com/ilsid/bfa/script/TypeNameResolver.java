@@ -10,12 +10,15 @@ public class TypeNameResolver {
 
 	private static final String GENERATED_SCRIPT_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "script.";
 
+	private static final String GENERATED_SCRIPT_DEFAULT_GROUP_PACKAGE = GENERATED_SCRIPT_ROOT_PACKAGE
+			+ "default_group.";
+
 	private static final String GENERATED_ACTION_PACKAGE = GENERATED_ROOT_PACKAGE + "action.";
 
 	private static final String GENERATED_POJO_PACKAGE = GENERATED_ROOT_PACKAGE + "type.";
 
 	private static final String EXPRESSION_PREFIX = "$$";
-	
+
 	private static final char DOT = '.';
 
 	private static final Map<String, String> replaceableSymbols = new HashMap<>();
@@ -69,7 +72,7 @@ public class TypeNameResolver {
 	}
 
 	private static String generateScriptPackageName(String simpleScriptClassName) {
-		return GENERATED_SCRIPT_ROOT_PACKAGE + simpleScriptClassName.toLowerCase() + DOT;
+		return GENERATED_SCRIPT_DEFAULT_GROUP_PACKAGE + simpleScriptClassName.toLowerCase() + DOT;
 	}
 
 }

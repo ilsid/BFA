@@ -1,4 +1,4 @@
-package com.ilsid.bfa.generated.script.dummyscript;
+package com.ilsid.bfa.generated.script.default_group.dummyscript;
 
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.script.Script;

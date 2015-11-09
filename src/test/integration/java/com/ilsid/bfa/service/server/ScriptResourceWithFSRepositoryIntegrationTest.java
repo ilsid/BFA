@@ -36,7 +36,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 
 	private static final String LOGGING_CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/log4j.xml";
 
-	private static final String GENERATED_SCRIPT_ROOT_PATH = "com/ilsid/bfa/generated/script";
+	private static final String GENERATED_SCRIPT_ROOT_PATH = "com/ilsid/bfa/generated/script/default_group";
 
 	private static final File CODE_REPOSITORY_DIR = new File(FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH);
 

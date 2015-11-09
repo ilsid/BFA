@@ -34,7 +34,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private static final String TEST_SCRIPT_CLASS_NAME_3 = "com.ilsid.bfa.test.generated.TestScript3";
 
-	private static final String SCRIPT_PACKAGE = "com.ilsid.bfa.generated.script";
+	private static final String SCRIPT_PACKAGE = "com.ilsid.bfa.generated.script.default_group";
 
 	private ScriptContext mockContext;
 

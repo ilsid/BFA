@@ -10,8 +10,8 @@ import org.junit.Test;
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.IOHelper;
-import com.ilsid.bfa.generated.script.dummyscript.DummyScript;
-import com.ilsid.bfa.generated.script.dummyscript.DummyScript$$DummyExpr;
+import com.ilsid.bfa.generated.script.default_group.dummyscript.DummyScript;
+import com.ilsid.bfa.generated.script.default_group.dummyscript.DummyScript$$DummyExpr;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
@@ -23,7 +23,7 @@ import javassist.NotFoundException;
 
 public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
-	private static final String SCRIPT_ROOT_PACKAGE = "com.ilsid.bfa.generated.script.";
+	private static final String SCRIPT_ROOT_PACKAGE = "com.ilsid.bfa.generated.script.default_group.";
 
 	private static final String DUMMY_SCRIPT_NAME = "DummyScript";
 

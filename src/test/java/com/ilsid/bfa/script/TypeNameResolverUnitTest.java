@@ -8,7 +8,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	private static final String BASE_PACKAGE = "com.ilsid.bfa.generated.";
 
-	private static final String SCRIPT_CLASS_NAME_PREFIX = BASE_PACKAGE + "script.";
+	private static final String SCRIPT_CLASS_NAME_PREFIX = BASE_PACKAGE + "script.default_group.";
 
 	private static final String ACTION_CLASS_NAME_PREFIX = BASE_PACKAGE + "action.";
 

@@ -8,6 +8,8 @@ public class ScriptDTO {
 	
 	private String body;
 	
+	private String group;
+	
 	private String encoding = DEFAULT_ENCODING;
 	
 	public ScriptDTO() {
@@ -18,10 +20,10 @@ public class ScriptDTO {
 		this.body = body;
 	}
 	
-	public ScriptDTO(String name, String body, String encoding) {
+	public ScriptDTO(String name, String body, String group) {
 		this.name = name;
 		this.body = body;
-		this.encoding = encoding;
+		this.group = group;
 	}
 	
 	public String getName() {
@@ -40,6 +42,14 @@ public class ScriptDTO {
 		this.body = scriptBody;
 	}
 
+	public String getGroup() {
+		return group;
+	}
+	
+	public void setGroup(String group) {
+		this.group = group;
+	}
+
 	public String getEncoding() {
 		return encoding;
 	}
@@ -49,3 +59,4 @@ public class ScriptDTO {
 	}
 
 }
+

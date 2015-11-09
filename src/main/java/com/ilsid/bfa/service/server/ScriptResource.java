@@ -32,7 +32,11 @@ public class ScriptResource {
 	 *            the script data
 	 * @return the {@link Status#OK} response.
 	 * @throws WebApplicationException
-	 *             in case if the operation failed
+	 *             <ul>
+	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
+	 *             <li>if the script with such name already exist in the repository</li>
+	 *             <li>in case of the repository access failure</li>
+	 *             </ul>
 	 * @see WebApplicationExceptionMapper
 	 */
 	@POST
@@ -43,6 +47,33 @@ public class ScriptResource {
 			scriptManager.createScript(script.getName(), script.getBody());
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_CREATE_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+
+	/**
+	 * Updates the existing script in the code repository.
+	 * 
+	 * @param script
+	 *            the script data
+	 * @return the {@link Status#OK} response.
+	 * @throws WebApplicationException
+	 *             <ul>
+	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
+	 *             <li>if the script with such name does not exist in the repository</li>
+	 *             <li>in case of the repository access failure</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path(Paths.SCRIPT_UPDATE_OPERATION)
+	public Response update(ScriptDTO script) {
+		try {
+			scriptManager.updateScript(script.getName(), script.getBody());
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.SCRIPT_UPDATE_SERVICE, e);
 		}
 
 		return Response.status(Status.OK).build();

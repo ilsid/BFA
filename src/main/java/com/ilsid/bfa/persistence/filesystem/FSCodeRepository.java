@@ -9,11 +9,11 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 
 import com.ilsid.bfa.ConfigurationException;
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.TransactionManager;
-import com.ilsid.bfa.script.ClassNameUtil;
 
 /**
  * The code repository based on the file system.
@@ -22,6 +22,8 @@ import com.ilsid.bfa.script.ClassNameUtil;
  *
  */
 public class FSCodeRepository implements CodeRepository {
+
+	private static final char DOT = '.';
 
 	private static final String ROOT_DIR_PROP_NAME = "bfa.persistence.fs.root_dir";
 
@@ -77,8 +79,23 @@ public class FSCodeRepository implements CodeRepository {
 	 * @see com.ilsid.bfa.persistence.CodeRepository#delete(java.lang.String)
 	 */
 	@Override
-	public void delete(String classNamePattern) throws PersistenceException {
+	public int deletePackage(String packageName) throws PersistenceException {
+		final String dirPath = rootDir + File.separatorChar + packageName.replace(DOT, File.separatorChar);
+		File packageDir = new File(dirPath);
 
+		if (!packageDir.isDirectory()) {
+			return 0;
+		}
+
+		int filesCnt = packageDir.list().length;
+
+		try {
+			FileUtils.forceDelete(packageDir);
+		} catch (IOException e) {
+			throw new PersistenceException(String.format("Failed to delete the package directory [%s]", dirPath), e);
+		}
+
+		return filesCnt;
 	}
 
 	/**

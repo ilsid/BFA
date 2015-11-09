@@ -18,6 +18,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.LoggingConfigurator;
 import com.ilsid.bfa.persistence.CodeRepository;
@@ -33,7 +34,7 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIntegrationTestCase {
 
-	private static final String LOGGING_CONFIG_FILE = "src/test/resources/log4j.xml";
+	private static final String LOGGING_CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/log4j.xml";
 
 	private static final String GENERATED_SCRIPT_ROOT_PATH = "com/ilsid/bfa/generated/script";
 
@@ -83,6 +84,36 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 						.exists());
 	}
 
+	@Test
+	public void validScriptAndItsSourceIsUpdatedInFileSystem() throws Exception {
+		// Creating the required pre-condition: script with the same name must exist in the repository
+		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + "/integration_tests/code_repository"),
+				CODE_REPOSITORY_DIR);
+
+		File scriptDir = new File(FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH
+				+ "/scripttoupdate");
+
+		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
+				"ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var2.class" });
+
+		WebResource webResource = getWebResource("script/update");
+		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script-upd.txt");
+		ScriptDTO script = new ScriptDTO("ScriptToUpdate", updatedScriptBody);
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		assertTrue(scriptDir.isDirectory());
+		// ScriptToUpdate$$Var1_Mns_Var2.class is replaced with ScriptToUpdate$$Var1_Mns_Var3.class, as Var2 is replaced
+		// with Var3 in "duplicated-expression-script-upd.txt" script
+		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
+				"ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var3.class" });
+
+		String actualScriptBody = IOHelper.loadScript(scriptDir.getPath(), "ScriptToUpdate.src");
+		assertEquals(updatedScriptBody, actualScriptBody);
+	}
+
 	private void assertFilesExist(String dirPath, String[] fileNames) {
 		for (String fileName : fileNames) {
 			String filePath = dirPath + "/" + fileName;
@@ -93,7 +124,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	private static class FSRepositoryApplicationConfig extends GuiceServletContextListener {
 
 		private static final String LOGGER_NAME = "test_logger";
-		final static String CODE_REPOSITORY_PATH = "src/test/resources/__tmp_code_repository";
+		final static String CODE_REPOSITORY_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_code_repository";
 
 		@Override
 		protected Injector getInjector() {
@@ -102,7 +133,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 				@Override
 				protected void configureServlets() {
 					bind(CodeRepository.class).to(FSCodeRepository.class);
-					
+
 					Map<String, String> webConfig = new HashMap<>();
 					// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping
 					webConfig.put(PackagesResourceConfig.PROPERTY_PACKAGES,
@@ -120,7 +151,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 
 					return result;
 				}
-				
+
 				@Provides
 				@WebAppLogger
 				protected Logger provideLogger() {

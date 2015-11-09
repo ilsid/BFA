@@ -25,17 +25,17 @@ public abstract class Script implements Executable<Void> {
 	
 	@Var(scope = Var.Scope.INPUT)
 	public void DeclareInputVar(String name, String type) throws ScriptException {
-		scriptContext.addInputVar(name, ClassNameUtil.resolveJavaClassName(type));
+		scriptContext.addInputVar(name, TypeNameResolver.resolveJavaClassName(type));
 	}
 	
 	@Var(scope = Var.Scope.LOCAL)
 	public void DeclareLocalVar(String name, String type) throws ScriptException {
-		scriptContext.addLocalVar(name, ClassNameUtil.resolveJavaClassName(type));
+		scriptContext.addLocalVar(name, TypeNameResolver.resolveJavaClassName(type));
 	}
 	
 	@Var(scope = Var.Scope.LOCAL)
 	public void DeclareLocalVar(String name, String type, Object initValue) throws ScriptException {
-		scriptContext.addLocalVar(name, ClassNameUtil.resolveJavaClassName(type), initValue);
+		scriptContext.addLocalVar(name, TypeNameResolver.resolveJavaClassName(type), initValue);
 	}
 	
 	public void SetLocalVar(String name, @ExprParam Object expr) throws ScriptException {

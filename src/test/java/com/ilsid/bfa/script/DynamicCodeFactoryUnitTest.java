@@ -161,7 +161,8 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 				return result;
 			}
 
-			public void delete(String className) throws PersistenceException {
+			public int deletePackage(String packageName) throws PersistenceException {
+				return 0;
 			}
 
 			public void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException {

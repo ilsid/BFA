@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.ConfigurationException;
+import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.CompileHelper;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.persistence.CodeRepository;
@@ -23,7 +24,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 
 	private static final String SCRIPT_SOURCE_FILE_NAME = "single-expression-script.txt";
 
-	private final static String ROOT_DIR_PATH = "src/test/resources/__tmp_class_repository";
+	private final static String ROOT_DIR_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_class_repository";
 
 	private final static String SCRIPT_CLASS_NAME = CompileHelper.GENERATED_SCRIPT_PACKAGE
 			+ FSCodeRepositoryUnitTest.class.getSimpleName() + "Script01";
@@ -124,7 +125,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 		saveClass();
 		saveClass();
 	}
-	
+
 	@Test
 	public void classAndSourceSaveFailsIfClassWithSuchNameAlreadyExists() throws Exception {
 		exceptionRule.expect(PersistenceException.class);
@@ -135,7 +136,48 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 		saveClassAndSource();
 	}
 
+	@Test
+	public void existingEmptyPackageCanBeDeleted() throws Exception {
+		String packageDirPath = ROOT_DIR_PATH + "/" + "com/test/pkg";
+		File packageDir = new File(packageDirPath);
 
+		FileUtils.forceMkdir(packageDir);
+		assertTrue(packageDir.exists());
+
+		int delCnt = repository.deletePackage("com.test.pkg");
+		assertEquals(0, delCnt);
+		assertFalse(packageDir.exists());
+	}
+	
+	@Test
+	public void existingPackageWithClassesCanBeDeleted() throws Exception {
+		String packageDirPath = ROOT_DIR_PATH + "/" + "com/test/pkg";
+		File packageDir = new File(packageDirPath);
+		
+		FileUtils.forceMkdir(packageDir);
+		assertTrue(packageDir.exists());
+		
+		new File(packageDirPath + "/file1.txt").createNewFile();
+		new File(packageDirPath + "/file2.txt").createNewFile();
+		
+		assertEquals(2, packageDir.list().length);
+		
+		int delCnt = repository.deletePackage("com.test.pkg");
+		assertEquals(2, delCnt);
+		assertFalse(packageDir.exists());
+	}
+	
+	@Test
+	public void nonExistingPackageIsIgnoredWhenDeleting() throws Exception {
+		String packageDirPath = ROOT_DIR_PATH + "/" + "com/test/not_exist/pkg";
+		File packageDir = new File(packageDirPath);
+
+		assertFalse(packageDir.exists());
+
+		int delCnt = repository.deletePackage("com.test.not_exist.pkg");
+		assertEquals(0, delCnt);
+	}
+	
 	private void saveClassAndSource() throws Exception {
 		saveClass(true);
 	}

@@ -12,6 +12,10 @@ public final class Paths {
 	
 	public final static String SCRIPT_CREATE_OPERATION = "create";
 	
+	public final static String SCRIPT_UPDATE_OPERATION = "update";
+	
 	public final static String SCRIPT_CREATE_SERVICE = SCRIPT_SERVICE_ROOT + "/" + SCRIPT_CREATE_OPERATION;
+	
+	public final static String SCRIPT_UPDATE_SERVICE = SCRIPT_SERVICE_ROOT + "/" + SCRIPT_UPDATE_OPERATION;
 
 }

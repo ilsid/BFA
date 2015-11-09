@@ -353,7 +353,7 @@ public class ClassCompiler {
 			// Variables are saved in the script context for the further
 			// expressions parsing stage
 			try {
-				String javaType = ClassNameUtil.resolveJavaClassName(varType);
+				String javaType = TypeNameResolver.resolveJavaClassName(varType);
 				if (varAnnotation.scope() == Var.Scope.LOCAL) {
 					scriptContext.addLocalVar(varName, javaType);
 				} else {
@@ -372,7 +372,7 @@ public class ClassCompiler {
 				String className;
 				Map<String, CompilationBlock> expressions = visitorContext.compiledExpressions;
 				try {
-					className = ClassNameUtil.resolveExpressionClassName(visitorContext.scriptShortClassName,
+					className = TypeNameResolver.resolveExpressionClassName(visitorContext.scriptShortClassName,
 							scriptExpr);
 
 					// Skip compilation of the same expression

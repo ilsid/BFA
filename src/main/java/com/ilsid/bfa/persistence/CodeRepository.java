@@ -12,7 +12,7 @@ import com.ilsid.bfa.ConfigurationException;
  */
 // TODO: complete javadocs
 public interface CodeRepository {
-	
+
 	/**
 	 * Loads a byte code for a given class name.
 	 * 
@@ -59,7 +59,17 @@ public interface CodeRepository {
 
 	void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
 
-	void delete(String classNamePattern) throws PersistenceException;
+	/**
+	 * Deletes all classes under the specified package.
+	 * 
+	 * @param packageName
+	 *            package to delete
+	 * @return a number of deleted classes. If no classes under the given package were found, then <code>0</code> is
+	 *         returned.
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	int deletePackage(String packageName) throws PersistenceException;
 
 	/**
 	 * Returns a proper {@link TransactionManager} instance for this code repository.

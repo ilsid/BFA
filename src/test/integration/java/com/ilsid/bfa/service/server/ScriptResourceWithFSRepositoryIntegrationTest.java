@@ -113,7 +113,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 		String actualScriptBody = IOHelper.loadScript(scriptDir.getPath(), "ScriptToUpdate.src");
 		assertEquals(updatedScriptBody, actualScriptBody);
 	}
-	
+
 	@Test
 	public void nonExistentScriptIsNotAllowedWhenTryingToUpdate() throws Exception {
 		WebResource webResource = getWebResource("script/update");
@@ -121,12 +121,12 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 		ScriptDTO script = new ScriptDTO("NonExistentScript", updatedScriptBody);
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
-		
+
 		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
-		assertTrue(response.getEntity(String.class).startsWith("The script [NonExistentScript] does not exist in the repository"));
-		assertFalse(new File(
-				FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/nonexistentscript")
-						.exists());
+		assertTrue(response.getEntity(String.class)
+				.startsWith("The script [NonExistentScript] does not exist in the repository"));
+		assertFalse(new File(FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH
+				+ "/nonexistentscript").exists());
 	}
 
 	private void assertFilesExist(String dirPath, String[] fileNames) {

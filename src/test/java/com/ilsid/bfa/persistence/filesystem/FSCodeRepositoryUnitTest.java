@@ -148,25 +148,25 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(0, delCnt);
 		assertFalse(packageDir.exists());
 	}
-	
+
 	@Test
 	public void existingPackageWithClassesCanBeDeleted() throws Exception {
 		String packageDirPath = ROOT_DIR_PATH + "/" + "com/test/pkg";
 		File packageDir = new File(packageDirPath);
-		
+
 		FileUtils.forceMkdir(packageDir);
 		assertTrue(packageDir.exists());
-		
+
 		new File(packageDirPath + "/file1.txt").createNewFile();
 		new File(packageDirPath + "/file2.txt").createNewFile();
-		
+
 		assertEquals(2, packageDir.list().length);
-		
+
 		int delCnt = repository.deletePackage("com.test.pkg");
 		assertEquals(2, delCnt);
 		assertFalse(packageDir.exists());
 	}
-	
+
 	@Test
 	public void nonExistingPackageIsIgnoredWhenDeleting() throws Exception {
 		String packageDirPath = ROOT_DIR_PATH + "/" + "com/test/not_exist/pkg";
@@ -177,7 +177,24 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 		int delCnt = repository.deletePackage("com.test.not_exist.pkg");
 		assertEquals(0, delCnt);
 	}
+
+	@Test
+	public void sourceCodeForExistingScriptCanBeLoaded() throws Exception {
+		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + "/code_repository"), ROOT_DIR);
+
+		String scriptSource = repository
+				.loadSourceCode("com.ilsid.bfa.generated.script.default_group.script001.Script001");
+		String expectedSource = IOHelper.loadScript(TestConstants.TEST_RESOURCES_DIR
+				+ "/code_repository/com/ilsid/bfa/generated/script/default_group/script001", "Script001.src");
+		
+		assertEquals(expectedSource, scriptSource);
+	}
 	
+	@Test
+	public void noSourceCodeIsLoadedforNonExistentScript() throws Exception {
+		assertNull(repository.loadSourceCode("some.nonexistent.script.Script001"));
+	}
+
 	private void saveClassAndSource() throws Exception {
 		saveClass(true);
 	}

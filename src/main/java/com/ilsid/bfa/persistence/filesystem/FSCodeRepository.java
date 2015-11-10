@@ -1,12 +1,16 @@
 package com.ilsid.bfa.persistence.filesystem;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.ClassNameUtil;
@@ -98,6 +102,39 @@ public class FSCodeRepository implements CodeRepository {
 		return filesCnt;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.persistence.CodeRepository#loadSourceCode(java.lang.String)
+	 */
+	public String loadSourceCode(String className) throws PersistenceException {
+		final String classDirPath = rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
+		File classDir = new File(classDirPath);
+
+		if (!classDir.isDirectory()) {
+			return null;
+		}
+
+		File sourceFile = new File(
+				classDirPath + File.separator + ClassNameUtil.getShortClassName(className) + SOURCE_FILE_EXTENSION);
+
+		if (!sourceFile.exists()) {
+			return null;
+		}
+
+		String sourceCode;
+		try (InputStream is = new FileInputStream(sourceFile)) {
+			sourceCode = IOUtils.toString(is);
+		} catch (FileNotFoundException e) {
+			return null;
+		} catch (IOException e) {
+			throw new PersistenceException(String.format("Failed to load the source file [%s]", sourceFile.getPath()),
+					e);
+		}
+
+		return sourceCode;
+	}
+
 	/**
 	 * Returns {@link FSTransactionManager} instance.
 	 * 
@@ -106,6 +143,19 @@ public class FSCodeRepository implements CodeRepository {
 	@Override
 	public TransactionManager getTransactionManager() {
 		return FSTransactionManager.getInstance();
+	}
+
+	@Inject
+	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
+		rootDir = config.get(ROOT_DIR_PROP_NAME);
+		if (rootDir == null) {
+			throw new ConfigurationException("Required [" + ROOT_DIR_PROP_NAME + "] property not found");
+		}
+
+		if (!new File(rootDir).isDirectory()) {
+			throw new ConfigurationException(
+					"[" + rootDir + "] value defined by [" + ROOT_DIR_PROP_NAME + "] property is not a directory");
+		}
 	}
 
 	private void doSave(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
@@ -149,19 +199,6 @@ public class FSCodeRepository implements CodeRepository {
 				throw new PersistenceException(String
 						.format("Failed to save a source code for class [%s] in directory %s", className, rootDir), e);
 			}
-		}
-	}
-
-	@Inject
-	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
-		rootDir = config.get(ROOT_DIR_PROP_NAME);
-		if (rootDir == null) {
-			throw new ConfigurationException("Required [" + ROOT_DIR_PROP_NAME + "] property not found");
-		}
-
-		if (!new File(rootDir).isDirectory()) {
-			throw new ConfigurationException(
-					"[" + rootDir + "] value defined by [" + ROOT_DIR_PROP_NAME + "] property is not a directory");
 		}
 	}
 

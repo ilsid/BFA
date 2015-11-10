@@ -30,7 +30,7 @@ public class ScriptManager {
 	private CodeRepository repository;
 
 	/**
-	 * Creates new script in the repository.
+	 * Creates new script in the repository. The script belongs to the Default Group.
 	 * 
 	 * @param scriptName
 	 *            script name
@@ -39,7 +39,8 @@ public class ScriptManager {
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
-	 *             <li>if the script with such name already exist in the repository</li>
+	 *             <li>if the script with such name already exist in the repository within the Default Group</li>
+	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
 	public void createScript(String scriptName, String scriptBody) throws ManagementException {
@@ -55,7 +56,7 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Updates the existing script in the repository.
+	 * Updates the existing script in the repository. The script is searched in the Default Group.
 	 * 
 	 * @param scriptName
 	 *            the name of the script to update
@@ -64,7 +65,8 @@ public class ScriptManager {
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
-	 *             <li>if the script with such name does not exist in the repository</li>
+	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
+	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
 	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
@@ -78,6 +80,35 @@ public class ScriptManager {
 			rollbackTransaction();
 			throw new ManagementException(String.format("Failed to update the script [%s]", scriptName), e);
 		}
+	}
+
+	/**
+	 * Loads the body of the given script from the repository. The script is searched in the Default Group.
+	 * 
+	 * @param scriptName
+	 *            the name of the script to load
+	 * @return the script body or <code>null</code>, if such script does not exist
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public String getScriptSourceCode(String scriptName) throws ManagementException {
+		String scriptClassName = TypeNameResolver.resolveScriptClassName(scriptName);
+		String scriptBody;
+		try {
+			scriptBody = repository.loadSourceCode(scriptClassName);
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to load a source code of the script [%s]", scriptName),
+					e);
+		}
+
+		if (scriptBody == null) {
+			throw new ManagementException(String.format("The script [%s] does not exist in the repository", scriptName));
+		}
+
+		return scriptBody;
 	}
 
 	/**

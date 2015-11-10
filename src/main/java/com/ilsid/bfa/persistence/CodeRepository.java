@@ -72,6 +72,18 @@ public interface CodeRepository {
 	int deletePackage(String packageName) throws PersistenceException;
 
 	/**
+	 * Loads the source code for the script defined by the given class name. The source code means here the variable
+	 * part only (the script body).
+	 * 
+	 * @param className
+	 *            the script's class name including the full package
+	 * @return the source code or <code>null</code>, if the script with such class name is not found
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	String loadSourceCode(String className) throws PersistenceException;
+
+	/**
 	 * Returns a proper {@link TransactionManager} instance for this code repository.
 	 * 
 	 * @return a transaction manager for this repository

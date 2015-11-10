@@ -180,6 +180,10 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 			public void setConfiguration(Map<String, String> config) {
 			}
+
+			public String loadSourceCode(String className) throws PersistenceException {
+				return null;
+			}
 		};
 
 		setInaccessibleField(GlobalContext.getInstance(), "codeRepository", repository);

@@ -15,7 +15,7 @@ import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ScriptDTO;
 
 /**
- * Provides the script administration related services.
+ * Provides the script administration services.
  * 
  * @author illia.sydorovych
  *
@@ -88,7 +88,7 @@ public class ScriptAdminResource {
 	 * 
 	 * @param script
 	 *            the script data. The name must be specified
-	 * @return the script's source code
+	 * @return the response containing the script's source code (as plain text)
 	 * @throws ResourceException
 	 *             <ul>
 	 *             <li>if the script with the specified name does not exist in the specified group</li>

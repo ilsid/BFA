@@ -5,7 +5,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -16,14 +15,14 @@ import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ScriptDTO;
 
 /**
- * Provides the script related services.
+ * Provides the script administration related services.
  * 
  * @author illia.sydorovych
  *
  */
-@Path(Paths.SCRIPT_SERVICE_ROOT)
+@Path(Paths.SCRIPT_SERVICE_ADMIN_ROOT)
 // FIXME: Handle non-default script groups
-public class ScriptResource {
+public class ScriptAdminResource {
 
 	private ScriptManager scriptManager;
 

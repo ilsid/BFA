@@ -40,7 +40,6 @@ import javassist.NotFoundException;
  * @author illia.sydorovych
  *
  */
-// FIXME: resolve cyclic package dependencies
 public class ClassCompiler {
 
 	private static final CtClass[] NO_ARGS = {};

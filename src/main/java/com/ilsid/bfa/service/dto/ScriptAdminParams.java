@@ -1,6 +1,6 @@
 package com.ilsid.bfa.service.dto;
 
-public class ScriptDTO {
+public class ScriptAdminParams {
 	
 	private static final String DEFAULT_ENCODING = "UTF-8";
 
@@ -12,15 +12,15 @@ public class ScriptDTO {
 	
 	private String encoding = DEFAULT_ENCODING;
 	
-	public ScriptDTO() {
+	public ScriptAdminParams() {
 	}	
 	
-	public ScriptDTO(String name, String body) {
+	public ScriptAdminParams(String name, String body) {
 		this.name = name;
 		this.body = body;
 	}
 	
-	public ScriptDTO(String name, String body, String group) {
+	public ScriptAdminParams(String name, String body, String group) {
 		this.name = name;
 		this.body = body;
 		this.group = group;

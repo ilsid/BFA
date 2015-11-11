@@ -25,7 +25,7 @@ import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
 import com.ilsid.bfa.service.common.Paths;
-import com.ilsid.bfa.service.dto.ScriptDTO;
+import com.ilsid.bfa.service.dto.ScriptAdminParams;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -62,7 +62,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	@Test
 	public void validScriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
-		ScriptDTO script = new ScriptDTO("Script 001", IOHelper.loadScript("duplicated-expression-script.txt"));
+		ScriptAdminParams script = new ScriptAdminParams("Script 001", IOHelper.loadScript("duplicated-expression-script.txt"));
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
@@ -79,7 +79,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	@Test
 	public void invalidScriptIsNotSavedInFileSystem() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
-		ScriptDTO script = new ScriptDTO("Script 002", IOHelper.loadScript("two-invalid-expressions-script.txt"));
+		ScriptAdminParams script = new ScriptAdminParams("Script 002", IOHelper.loadScript("two-invalid-expressions-script.txt"));
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
@@ -100,7 +100,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 
 		WebResource webResource = getWebResource(Paths.SCRIPT_UPDATE_SERVICE);
 		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script-upd.txt");
-		ScriptDTO script = new ScriptDTO("ScriptToUpdate", updatedScriptBody);
+		ScriptAdminParams script = new ScriptAdminParams("ScriptToUpdate", updatedScriptBody);
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
@@ -120,7 +120,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	public void nonExistentScriptIsNotAllowedWhenTryingToUpdate() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_UPDATE_SERVICE);
 		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script.txt");
-		ScriptDTO script = new ScriptDTO("NonExistentScript", updatedScriptBody);
+		ScriptAdminParams script = new ScriptAdminParams("NonExistentScript", updatedScriptBody);
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
@@ -134,7 +134,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	@Test
 	public void sourceCodeForExistingScriptIsLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
-		ScriptDTO script = new ScriptDTO();
+		ScriptAdminParams script = new ScriptAdminParams();
 		script.setName("ScriptToRead");
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
@@ -151,7 +151,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	@Test
 	public void sourceCodeForNonExistingScriptIsNotLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
-		ScriptDTO script = new ScriptDTO();
+		ScriptAdminParams script = new ScriptAdminParams();
 		script.setName("NonExistentScript");
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);

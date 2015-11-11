@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response.Status;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.manager.ScriptManager;
 import com.ilsid.bfa.service.common.Paths;
-import com.ilsid.bfa.service.dto.ScriptDTO;
+import com.ilsid.bfa.service.dto.ScriptAdminParams;
 
 /**
  * Provides the script administration services.
@@ -44,7 +44,7 @@ public class ScriptAdminResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_CREATE_OPERATION)
-	public Response create(ScriptDTO script) {
+	public Response create(ScriptAdminParams script) {
 		try {
 			scriptManager.createScript(script.getName(), script.getBody());
 		} catch (ManagementException e) {
@@ -72,7 +72,7 @@ public class ScriptAdminResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_UPDATE_OPERATION)
-	public Response update(ScriptDTO script) {
+	public Response update(ScriptAdminParams script) {
 		try {
 			scriptManager.updateScript(script.getName(), script.getBody());
 		} catch (ManagementException e) {
@@ -100,7 +100,7 @@ public class ScriptAdminResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
 	@Path(Paths.SCRIPT_GET_SOURCE_OPERATION)
-	public Response getSource(ScriptDTO script) {
+	public Response getSource(ScriptAdminParams script) {
 		String scriptSource;
 		try {
 			scriptSource = scriptManager.getScriptSourceCode(script.getName());

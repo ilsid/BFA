@@ -3,6 +3,9 @@ package com.ilsid.bfa.service.server;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
@@ -50,6 +53,12 @@ public class ApplicationConfig extends GuiceServletContextListener {
 				result.put("bfa.persistence.fs.root_dir", "d:\\temp\\glassfish\\code_repository");
 
 				return result;
+			}
+			
+			@Provides
+			@WebAppLogger
+			protected Logger provideLogger() {
+				return LoggerFactory.getLogger("error_logger");
 			}
 		});
 	}

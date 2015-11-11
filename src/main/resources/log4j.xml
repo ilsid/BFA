@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd"
+[
+    <!ENTITY logDir "bfaLogs">
+]
+>
+
+<log4j:configuration threshold="all" debug="false" xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+    <appender name="STDERR" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="ERROR"/>
+        <param name="Target" value="System.err"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="[%d{DATE}] [%c] [%t] [%p]%n %m %n %n"/>
+        </layout>
+    </appender>
+ 
+    <appender name="ERRORS" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="ERROR"/>
+        <param name="File" value="&logDir;/error.log"/>
+        <param name="MaxFileSize" value="5MB"/>
+        <param name="Append" value="false"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="[%d{DATE}] [%c] [%t] [%p]%n %m %n %n"/>
+        </layout>
+    </appender>
+
+    <logger name="error_logger">
+        <level value="ERROR"/>
+        <appender-ref ref="ERRORS"/>
+        <appender-ref ref="STDERR"/>
+    </logger>
+
+    <root>
+        <level value="WARN"/>
+    </root>
+</log4j:configuration>

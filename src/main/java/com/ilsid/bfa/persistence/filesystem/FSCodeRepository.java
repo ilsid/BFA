@@ -57,9 +57,9 @@ public class FSCodeRepository implements CodeRepository {
 		if (!classFile.exists()) {
 			return null;
 		}
-		
+
 		byte[] result;
-		
+
 		try {
 			try (InputStream is = new FileInputStream(classFile);) {
 				result = IOUtils.toByteArray(is);
@@ -68,7 +68,6 @@ public class FSCodeRepository implements CodeRepository {
 			throw new PersistenceException(String.format("Failed to load the class [%s]", className), e);
 		}
 
-		
 		return result;
 	}
 
@@ -141,8 +140,6 @@ public class FSCodeRepository implements CodeRepository {
 		String sourceCode;
 		try (InputStream is = new FileInputStream(sourceFile)) {
 			sourceCode = IOUtils.toString(is);
-		} catch (FileNotFoundException e) {
-			return null;
 		} catch (IOException e) {
 			throw new PersistenceException(String.format("Failed to load the source file [%s]", sourceFile.getPath()),
 					e);
@@ -150,9 +147,10 @@ public class FSCodeRepository implements CodeRepository {
 
 		return sourceCode;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see com.ilsid.bfa.persistence.CodeRepository#getNextRuntimeId()
 	 */
 	@Override
@@ -179,8 +177,8 @@ public class FSCodeRepository implements CodeRepository {
 		}
 
 		if (!new File(rootDir).isDirectory()) {
-			throw new ConfigurationException(
-					"[" + rootDir + "] value defined by [" + CONFIG_PROP_ROOT_DIR_NAME + "] property is not a directory");
+			throw new ConfigurationException("[" + rootDir + "] value defined by [" + CONFIG_PROP_ROOT_DIR_NAME
+					+ "] property is not a directory");
 		}
 	}
 
@@ -227,10 +225,9 @@ public class FSCodeRepository implements CodeRepository {
 			}
 		}
 	}
-	
+
 	private String getClassDirectoryPath(String className) {
 		return rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
 	}
-
 
 }

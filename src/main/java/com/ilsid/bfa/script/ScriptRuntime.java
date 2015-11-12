@@ -3,23 +3,35 @@ package com.ilsid.bfa.script;
 import javax.inject.Inject;
 
 import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.PersistenceException;
 
 //TODO: support for group name and input params is needed
 public class ScriptRuntime {
-	
+
 	private CodeRepository repository;
-	
-	public void runScript(String scriptName) throws ScriptException {
+
+	public long runScript(String scriptName) throws ScriptException {
 		Script script;
 		try {
 			script = DynamicCodeFactory.getScript(scriptName, null);
 		} catch (DynamicCodeException e) {
 			throw new ScriptException(String.format("Failed to initialize the script [%s]", scriptName), e);
 		}
-		
+
+		long runtimeId;
+		try {
+			runtimeId = repository.getNextRuntimeId();
+		} catch (PersistenceException e) {
+			throw new ScriptException(String.format("Failed to generate runtime id for the script [%s]", scriptName),
+					e);
+		}
+
+		script.setRuntimeId(runtimeId);
 		script.execute();
+		
+		return runtimeId;
 	}
-	
+
 	/**
 	 * Defines a code repository implementation.
 	 * 

@@ -95,16 +95,6 @@ public class FSCodeRepository implements CodeRepository {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.CodeRepository#update(java.lang.String, byte[], java.lang.String)
-	 */
-	@Override
-	public void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
-
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see com.ilsid.bfa.persistence.CodeRepository#delete(java.lang.String)
 	 */
 	@Override
@@ -132,6 +122,7 @@ public class FSCodeRepository implements CodeRepository {
 	 * 
 	 * @see com.ilsid.bfa.persistence.CodeRepository#loadSourceCode(java.lang.String)
 	 */
+	@Override
 	public String loadSourceCode(String className) throws PersistenceException {
 		final String classDirPath = getClassDirectoryPath(className);
 		File classDir = new File(classDirPath);
@@ -158,6 +149,16 @@ public class FSCodeRepository implements CodeRepository {
 		}
 
 		return sourceCode;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see com.ilsid.bfa.persistence.CodeRepository#getNextRuntimeId()
+	 */
+	@Override
+	public long getNextRuntimeId() throws PersistenceException {
+		// TODO: implement
+		return 1;
 	}
 
 	/**
@@ -230,5 +231,6 @@ public class FSCodeRepository implements CodeRepository {
 	private String getClassDirectoryPath(String className) {
 		return rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
 	}
+
 
 }

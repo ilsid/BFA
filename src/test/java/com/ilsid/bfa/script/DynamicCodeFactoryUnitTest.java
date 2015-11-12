@@ -167,9 +167,6 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			public void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
 			}
 
-			public void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
-			}
-
 			public TransactionManager getTransactionManager() {
 				return null;
 			}
@@ -182,6 +179,10 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 			public String loadSourceCode(String className) throws PersistenceException {
 				return null;
+			}
+
+			public long getNextRuntimeId() throws PersistenceException {
+				return 0;
 			}
 		};
 		

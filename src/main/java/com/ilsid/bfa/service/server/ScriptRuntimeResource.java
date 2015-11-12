@@ -17,7 +17,7 @@ import com.ilsid.bfa.script.ScriptRuntime;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.RuntimeStatusType;
 import com.ilsid.bfa.service.dto.ScriptRuntimeParams;
-import com.ilsid.bfa.service.dto.ScriptRuntimeStatus;
+import com.ilsid.bfa.service.dto.RuntimeStatus;
 
 /**
  * Provides the script runtime services.
@@ -26,6 +26,7 @@ import com.ilsid.bfa.service.dto.ScriptRuntimeStatus;
  *
  */
 @Path(Paths.SCRIPT_SERVICE_RUNTIME_ROOT)
+//FIXME: Handle non-default script groups
 public class ScriptRuntimeResource {
 
 	private ScriptRuntime scriptRuntime;
@@ -36,22 +37,29 @@ public class ScriptRuntimeResource {
 	 * @param script
 	 *            the script parameters. The script name must be specified. If the group is not specified, then the
 	 *            script is searched within the Default Group.
-	 * @return the script completion status represented by {@link ScriptRuntimeStatus} entity. The status can have
-	 *         {@link RuntimeStatusType#COMPLETED} or {@link RuntimeStatusType#FAILED} value.
+	 * @return the response with {@link RuntimeStatus} instance including the script runtime identifier.
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the script with the specified name does not exist in the the specified group</li>
+	 *             <li>if the execution of the script failed</li>
+	 *             <li>in case of the repository access failure</li>
+	 *             </ul>
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_RUN_OPERATION)
-	//TODO: support for group name and input params is needed
+	// TODO: support for group name and input params is needed
 	public Response run(ScriptRuntimeParams script) {
+		long runtimeId;
 		try {
-			scriptRuntime.runScript(script.getName());
+			runtimeId = scriptRuntime.runScript(script.getName());
 		} catch (ScriptException e) {
 			throw new ResourceException(Paths.SCRIPT_RUN_SERVICE, e);
 		}
+		RuntimeStatus status = RuntimeStatus.runtimeId(runtimeId).statusType(RuntimeStatusType.COMPLETED).build();
 
-		return Response.status(Status.OK).entity(new ScriptRuntimeStatus(RuntimeStatusType.COMPLETED)).build();
+		return Response.status(Status.OK).entity(status).build();
 	}
 
 	@POST

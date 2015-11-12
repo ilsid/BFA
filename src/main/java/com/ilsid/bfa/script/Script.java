@@ -7,6 +7,8 @@ public abstract class Script implements Executable<Void> {
 	private ScriptContext scriptContext;
 
 	private GlobalContext runtimeContext;
+	
+	private long runtimeId;
 
 	protected abstract void doExecute() throws ScriptException;
 
@@ -108,6 +110,14 @@ public abstract class Script implements Executable<Void> {
 
 		public ActionResult SetLocalVar(String name) throws ScriptException;
 
+	}
+	
+	public long getRuntimeId() {
+		return runtimeId;
+	}
+
+	public void setRuntimeId(long runtimeId) {
+		this.runtimeId = runtimeId;
 	}
 
 	private ValueExpression<?> toExpression(Object expr) throws ScriptException {

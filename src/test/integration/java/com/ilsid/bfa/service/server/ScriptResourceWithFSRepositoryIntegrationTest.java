@@ -26,8 +26,10 @@ import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
 import com.ilsid.bfa.script.DynamicCodeFactory;
 import com.ilsid.bfa.service.common.Paths;
+import com.ilsid.bfa.service.dto.RuntimeStatusType;
 import com.ilsid.bfa.service.dto.ScriptAdminParams;
 import com.ilsid.bfa.service.dto.ScriptRuntimeParams;
+import com.ilsid.bfa.service.dto.RuntimeStatus;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -171,7 +173,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	}
 
 	@Test
-	public void runScriptSanityCheck() throws Exception {
+	public void validScriptIsRun() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_RUN_SERVICE);
 		ScriptRuntimeParams script = new ScriptRuntimeParams();
 		script.setName("ScriptToRead");
@@ -179,6 +181,10 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		RuntimeStatus status = response.getEntity(RuntimeStatus.class);
+		assertTrue(status.getRuntimeId() > 0);
+		assertEquals(RuntimeStatusType.COMPLETED, status.getStatusType());
 	}
 
 	private void assertFilesExist(String dirPath, String[] fileNames) {

@@ -58,8 +58,6 @@ public interface CodeRepository {
 	 */
 	void save(String className, byte[] byteCode) throws PersistenceException;
 
-	void update(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
-
 	/**
 	 * Deletes all classes under the specified package.
 	 * 
@@ -83,6 +81,15 @@ public interface CodeRepository {
 	 *             in case of any repository access issues
 	 */
 	String loadSourceCode(String className) throws PersistenceException;
+
+	/**
+	 * Generates new unique script runtime id.
+	 * 
+	 * @return the runtime id value
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	long getNextRuntimeId() throws PersistenceException;
 
 	/**
 	 * Returns a proper {@link TransactionManager} instance for this code repository.

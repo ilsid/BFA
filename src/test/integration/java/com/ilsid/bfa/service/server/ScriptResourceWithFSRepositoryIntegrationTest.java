@@ -24,8 +24,10 @@ import com.ilsid.bfa.common.LoggingConfigurator;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
+import com.ilsid.bfa.script.DynamicCodeFactory;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ScriptAdminParams;
+import com.ilsid.bfa.service.dto.ScriptRuntimeParams;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -62,7 +64,8 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	@Test
 	public void validScriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
-		ScriptAdminParams script = new ScriptAdminParams("Script 001", IOHelper.loadScript("duplicated-expression-script.txt"));
+		ScriptAdminParams script = new ScriptAdminParams("Script 001",
+				IOHelper.loadScript("duplicated-expression-script.txt"));
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
@@ -72,14 +75,16 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 				FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script001");
 
 		assertTrue(scriptDir.isDirectory());
-		assertFilesExist(scriptDir.getPath(), new String[] { "Script001.class", "Script001.src", "Script001$$1.class",
-				"Script001$$Var1_Mns_Var2.class" });
+		assertEquals(5, scriptDir.list().length);
+		assertFilesExist(scriptDir.getPath(), new String[] { "Script001.class", "Script001.src", "Script001$$2.class",
+				"Script001$$1.class", "Script001$$Var1_Mns_Var2.class" });
 	}
 
 	@Test
 	public void invalidScriptIsNotSavedInFileSystem() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
-		ScriptAdminParams script = new ScriptAdminParams("Script 002", IOHelper.loadScript("two-invalid-expressions-script.txt"));
+		ScriptAdminParams script = new ScriptAdminParams("Script 002",
+				IOHelper.loadScript("two-invalid-expressions-script.txt"));
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
@@ -95,8 +100,9 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 		File scriptDir = new File(FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH
 				+ "/scripttoupdate");
 
+		assertEquals(5, scriptDir.list().length);
 		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
-				"ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var2.class" });
+				"ScriptToUpdate$$2.class", "ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var2.class" });
 
 		WebResource webResource = getWebResource(Paths.SCRIPT_UPDATE_SERVICE);
 		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script-upd.txt");
@@ -107,10 +113,13 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		assertTrue(scriptDir.isDirectory());
+		assertEquals(6, scriptDir.list().length);
+		// Additional ScriptToUpdate$$3.class is persisted, as the expression "1" (that was duplicated) is replaced with
+		// new expression "3".
 		// ScriptToUpdate$$Var1_Mns_Var2.class is replaced with ScriptToUpdate$$Var1_Mns_Var3.class, as Var2 is replaced
 		// with Var3 in "duplicated-expression-script-upd.txt" script
 		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
-				"ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var3.class" });
+				"ScriptToUpdate$$3.class", "ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var3.class" });
 
 		String actualScriptBody = IOHelper.loadScript(scriptDir.getPath(), "ScriptToUpdate.src");
 		assertEquals(updatedScriptBody, actualScriptBody);
@@ -161,6 +170,17 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 				.startsWith("The script [NonExistentScript] does not exist in the repository"));
 	}
 
+	@Test
+	public void runScriptSanityCheck() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_RUN_SERVICE);
+		ScriptRuntimeParams script = new ScriptRuntimeParams();
+		script.setName("ScriptToRead");
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+	}
+
 	private void assertFilesExist(String dirPath, String[] fileNames) {
 		for (String fileName : fileNames) {
 			String filePath = dirPath + "/" + fileName;
@@ -181,6 +201,8 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 				@Override
 				protected void configureServlets() {
 					bind(CodeRepository.class).to(FSCodeRepository.class);
+
+					requestStaticInjection(DynamicCodeFactory.class);
 
 					Map<String, String> webConfig = new HashMap<>();
 					// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping

@@ -1,4 +1,4 @@
-package com.ilsid.bfa.runtime;
+package com.ilsid.bfa.script;
 
 import com.ilsid.bfa.persistence.CodeRepository;
 

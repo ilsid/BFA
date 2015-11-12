@@ -3,9 +3,10 @@ package com.ilsid.bfa.script;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
-import com.ilsid.bfa.runtime.GlobalContext;
 
 /**
  * Utility for dynamic Java code processing.
@@ -15,15 +16,15 @@ import com.ilsid.bfa.runtime.GlobalContext;
  */
 public class DynamicCodeFactory {
 
+	private static CodeRepository codeRepository;
+
 	private static Map<String, Class<?>> cache = new HashMap<>();
 
 	/**
-	 * Returns {@link DynamicCodeInvocation} instance for the given script
-	 * expression. If a code repository is defined in the global
-	 * {@link GlobalContext}, then the corresponding class is searched by the
-	 * "script name/expression" combination in the repository. Otherwise, the
-	 * expression is parsed and translated into Java code by the specified
-	 * parser and the expression class is built on-the-fly.
+	 * Returns {@link DynamicCodeInvocation} instance for the given script expression. If the code repository is
+	 * defined, then the corresponding class is searched by the "script name/expression" combination in the repository.
+	 * Otherwise, the expression is parsed and translated into Java code by the specified parser and the expression
+	 * class is built on-the-fly.
 	 * 
 	 * @param scriptName
 	 *            script name
@@ -31,14 +32,12 @@ public class DynamicCodeFactory {
 	 *            script expression
 	 * @param parser
 	 *            script expression parser
-	 * @return {@link DynamicCodeInvocation} instance that executes the given
-	 *         expression
+	 * @return {@link DynamicCodeInvocation} instance that executes the given expression
 	 * @throws DynamicCodeException
 	 *             <ul>
 	 *             <li>if the expression parsing is failed</li>
 	 *             <li>if the on-the-fly compilation is failed</li>
-	 *             <li>if a code repository is defined, but no needed class was
-	 *             found there</li>
+	 *             <li>if a code repository is defined, but no needed class was found there</li>
 	 *             <li>if the class instantiation failed</li>
 	 *             </ul>
 	 */
@@ -77,10 +76,8 @@ public class DynamicCodeFactory {
 	}
 
 	/**
-	 * Returns {@link Script} instance that executes the given Java code. If a
-	 * code repository is defined in the global {@link GlobalContext}, then the
-	 * corresponding class is searched by the script name in this repository.
-	 * Otherwise, the class is built on-the-fly.
+	 * Returns {@link Script} instance that executes the given Java code. If the code repository is defined, then the
+	 * corresponding class is searched by the script name in this repository. Otherwise, the class is built on-the-fly.
 	 * 
 	 * @param scriptName
 	 *            script name
@@ -90,8 +87,7 @@ public class DynamicCodeFactory {
 	 * @throws DynamicCodeException
 	 *             <ul>
 	 *             <li>if the on-the-fly compilation failed</li>
-	 *             <li>if a code repository is defined, but no needed class was
-	 *             found there</li>
+	 *             <li>if a code repository is defined, but no needed class was found there</li>
 	 *             <li>if the class instantiation failed</li>
 	 *             </ul>
 	 */
@@ -123,16 +119,26 @@ public class DynamicCodeFactory {
 		return script;
 	}
 
+	/**
+	 * Defines a code repository implementation.
+	 * 
+	 * @param repository
+	 *            a code repository
+	 */
+	@Inject
+	public static void setRepository(CodeRepository repository) {
+		codeRepository = repository;
+	}
+
 	@SuppressWarnings("unchecked")
 	private static <T> T tryInstantiateFromRepository(String className, Class<T> instanceClass)
 			throws DynamicCodeException, LoadFromRepositoryException {
 
 		T instance = null;
-		CodeRepository codeRepository = GlobalContext.getInstance().getCodeRepository();
 
 		if (codeRepository != null) {
 			try {
-				instance = (T) instantiateFromRepository(className, codeRepository);
+				instance = (T) instantiateFromRepository(className);
 			} catch (InstantiationException | IllegalAccessException | ClassCompilationException e) {
 				throw new LoadFromRepositoryException(e);
 			} catch (ClassCastException e) {
@@ -159,20 +165,20 @@ public class DynamicCodeFactory {
 		return instance;
 	}
 
-	private static Object instantiateFromRepository(String className, CodeRepository codeRepository)
+	private static Object instantiateFromRepository(String className)
 			throws DynamicCodeException, InstantiationException, IllegalAccessException, ClassCompilationException {
 
 		byte[] byteCode;
 		try {
 			byteCode = codeRepository.load(className);
 		} catch (PersistenceException e) {
-			throw new DynamicCodeException("Failed to load class [" + className + "] from repository", e);
+			throw new DynamicCodeException("Failed to load the class [" + className + "] from the repository", e);
 		}
 
-		if (byteCode.length == 0) {
-			throw new DynamicCodeException("Class [" + className + "] does not exist in repository");
+		if (byteCode == null) {
+			throw new DynamicCodeException("Class [" + className + "] does not exist in the repository");
 		}
-		
+
 		Object instance = createInstance(new LoadFromBytecodeDelegate(className, byteCode));
 		return instance;
 	}
@@ -252,7 +258,7 @@ public class DynamicCodeFactory {
 		}
 
 	}
-	
+
 	private static class LoadFromBytecodeDelegate implements ClassCompilerDelegate {
 
 		private String className;

@@ -1,5 +1,3 @@
+// Variable value is the expression
 DeclareLocalVar("Var1", "Number", "2");
-DeclareLocalVar("Var2", "Number", "1");
-DeclareLocalVar("Res", "Number");
 
-SetLocalVar("Res", "Var1 - Var2");

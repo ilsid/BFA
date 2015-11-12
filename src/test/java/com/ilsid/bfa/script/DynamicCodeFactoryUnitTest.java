@@ -15,7 +15,6 @@ import com.ilsid.bfa.generated.script.default_group.dummyscript.DummyScript$$Dum
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
-import com.ilsid.bfa.runtime.GlobalContext;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -38,7 +37,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() throws Exception {
 		mockContext = mock(ScriptContext.class);
-		setInaccessibleField(GlobalContext.getInstance(), "codeRepository", null);
+		DynamicCodeFactory.setRepository(null);
 	}
 
 	@Test
@@ -116,7 +115,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	public void expressionClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
 		exceptionRule.expect(DynamicCodeException.class);
 		exceptionRule.expectMessage(
-				"Class [" + SCRIPT_ROOT_PACKAGE + "nonexistentscript.NonExistentScript$$DummyExpr] does not exist in repository");
+				"Class [" + SCRIPT_ROOT_PACKAGE + "nonexistentscript.NonExistentScript$$DummyExpr] does not exist in the repository");
 
 		defineRepository();
 		DynamicCodeFactory.getInvocation("NonExistentScript", "DummyExpr", null);
@@ -137,7 +136,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	public void scriptClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
 		exceptionRule.expect(DynamicCodeException.class);
 		exceptionRule.expectMessage(
-				"Class [" + SCRIPT_ROOT_PACKAGE + "nonexistent.NonExistent] does not exist in repository");
+				"Class [" + SCRIPT_ROOT_PACKAGE + "nonexistent.NonExistent] does not exist in the repository");
 
 		defineRepository();
 		DynamicCodeFactory.getScript("NonExistent", null);
@@ -149,7 +148,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			public byte[] load(String className) throws PersistenceException {
 				if (!className
 						.startsWith(SCRIPT_ROOT_PACKAGE + DUMMY_SCRIPT_NAME.toLowerCase() + "." + DUMMY_SCRIPT_NAME)) {
-					return new byte[0];
+					return null;
 				}
 
 				byte[] result = null;
@@ -185,8 +184,8 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 				return null;
 			}
 		};
-
-		setInaccessibleField(GlobalContext.getInstance(), "codeRepository", repository);
+		
+		DynamicCodeFactory.setRepository(repository);
 	}
 
 	private void verifyScript(String scriptName, String scriptFile, Expectations expectations) throws Exception {

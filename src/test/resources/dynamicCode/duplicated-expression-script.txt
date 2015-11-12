@@ -1,4 +1,5 @@
 DeclareLocalVar("Var1", "Number", "2");
+// Expression "1" is defined twice, but is compiled only once
 DeclareLocalVar("Var2", "Number", "1");
 DeclareLocalVar("Res", "Number");
 

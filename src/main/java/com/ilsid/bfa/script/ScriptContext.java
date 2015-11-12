@@ -3,8 +3,6 @@ package com.ilsid.bfa.script;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ilsid.bfa.runtime.GlobalContext;
-
 /**
  * Script context. Holds state for a single script.
  * 
@@ -38,9 +36,9 @@ public class ScriptContext {
 	 * Provides runtime context.
 	 * @return runtime context
 	 */
-	public GlobalContext getRuntimeContext() {
-		return runtimeContext;
-	}
+//	public GlobalContext getRuntimeContext() {
+//		return runtimeContext;
+//	}
 
 	public void addInputVar(String name, String javaType) throws ScriptException {
 		// FIXME: validate name format

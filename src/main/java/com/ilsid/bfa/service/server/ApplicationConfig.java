@@ -13,6 +13,7 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
+import com.ilsid.bfa.script.DynamicCodeFactory;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.guice.JerseyServletModule;
@@ -36,6 +37,8 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			@Override
 			protected void configureServlets() {
 				bind(CodeRepository.class).to(FSCodeRepository.class);
+				
+				requestStaticInjection(DynamicCodeFactory.class);
 
 				Map<String, String> webConfig = new HashMap<>();
 				// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping
@@ -45,6 +48,8 @@ public class ApplicationConfig extends GuiceServletContextListener {
 
 				serve("/*").with(GuiceContainer.class, webConfig);
 			}
+			
+			
 
 			@Provides
 			@RepositoryConfig

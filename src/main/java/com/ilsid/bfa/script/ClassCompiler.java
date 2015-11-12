@@ -323,7 +323,6 @@ public class ClassCompiler {
 					Var varAnnotation = parentMethod.getAnnotation(Var.class);
 					if (varAnnotation != null) {
 						processVariableDeclaration(methodParams, varAnnotation, visitorContext);
-						break;
 					}
 
 					int paramIdx = 0;

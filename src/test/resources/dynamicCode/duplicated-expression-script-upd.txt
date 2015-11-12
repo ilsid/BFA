@@ -1,8 +1,9 @@
-DeclareLocalVar("Var1", "Number", "2");
+DeclareLocalVar("Var1", "Number", "3");
+// Expression "1" is defined twice, but is compiled only once
 DeclareLocalVar("Var3", "Number", "1");
 DeclareLocalVar("Res", "Number");
 
 // Expression "Var1 - Var3" is defined twice, but is compiled only once
-if (Equal("Var1 - Var3", "1")) {
+if (Equal("Var1 - Var3", "2")) {
 	SetLocalVar("Res", "Var1 - Var3");
 }

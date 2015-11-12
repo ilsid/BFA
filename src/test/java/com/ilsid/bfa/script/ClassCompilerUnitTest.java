@@ -162,24 +162,18 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void singleScriptExpressionCanBeCompiled() throws Exception {
-		// The script contains two "Var1 - Var2" expressions, but only a single
-		// compiled expression is returned
 		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "single-expression-script.txt");
 
 		assertEquals(1, expressions.length);
 
 		String exprClassName = expressions[0].getClassName();
-		assertExpressionShortClassName("TestScript33$$Var1_Mns_Var2", exprClassName);
+		assertExpressionShortClassName("TestScript33$$2", exprClassName);
 
 		DynamicCodeInvocation expr = (DynamicCodeInvocation) loadFromBytecode(exprClassName,
 				expressions[0].getByteCode()).newInstance();
-		// Define the variables declared in the script. They are needed for the
-		// expression runtime.
-		expr.setScriptContext(
-				ScriptContextUtil.createContext(new Variable("Var1", "Number", 2), new Variable("Var2", "Number", 1)));
 
 		Integer exprResult = (Integer) expr.invoke();
-		assertEquals(1, exprResult);
+		assertEquals(2, exprResult);
 	}
 
 	@Test
@@ -194,28 +188,36 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		// compiled expression is returned
 		CompilationBlock[] expressions = compileScriptExpressions("TestScript44", "duplicated-expression-script.txt");
 
-		assertEquals(2, expressions.length);
+		assertEquals(3, expressions.length);
 
 		String exprName1 = expressions[0].getClassName();
 		String exprName2 = expressions[1].getClassName();
+		String exprName3 = expressions[2].getClassName();
 
-		assertExpressionShortClassName("TestScript44$$Var1_Mns_Var2", exprName1);
+		assertExpressionShortClassName("TestScript44$$2", exprName1);
 		assertExpressionShortClassName("TestScript44$$1", exprName2);
+		assertExpressionShortClassName("TestScript44$$Var1_Mns_Var2", exprName3);
 
 		DynamicCodeInvocation expr1 = (DynamicCodeInvocation) loadFromBytecode(exprName1, expressions[0].getByteCode())
 				.newInstance();
 		DynamicCodeInvocation expr2 = (DynamicCodeInvocation) loadFromBytecode(exprName2, expressions[1].getByteCode())
 				.newInstance();
+		DynamicCodeInvocation expr3 = (DynamicCodeInvocation) loadFromBytecode(exprName3, expressions[2].getByteCode())
+				.newInstance();
 
-		// Define the variables declared in the script. They are needed for the
-		// expression runtime.
-		expr1.setScriptContext(
+		// Define the variables declared in the script. They are needed for the expression runtime.
+		expr3.setScriptContext(
 				ScriptContextUtil.createContext(new Variable("Var1", "Number", 2), new Variable("Var2", "Number", 1)));
 
 		Integer exprResult1 = (Integer) expr1.invoke();
 		Integer exprResult2 = (Integer) expr2.invoke();
-		assertEquals(1, exprResult1);
+		Integer exprResult3 = (Integer) expr3.invoke();
+		// Var1 = 2
+		assertEquals(2, exprResult1);
+		// Var2 = 1
 		assertEquals(1, exprResult2);
+		// Var2 - Var1 = 1
+		assertEquals(1, exprResult3);
 	}
 
 	@Test

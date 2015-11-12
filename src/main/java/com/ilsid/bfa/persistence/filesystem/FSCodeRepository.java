@@ -29,7 +29,7 @@ public class FSCodeRepository implements CodeRepository {
 
 	private static final char DOT = '.';
 
-	private static final String ROOT_DIR_PROP_NAME = "bfa.persistence.fs.root_dir";
+	private static final String CONFIG_PROP_ROOT_DIR_NAME = "bfa.persistence.fs.root_dir";
 
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
@@ -44,7 +44,32 @@ public class FSCodeRepository implements CodeRepository {
 	 */
 	@Override
 	public byte[] load(String className) throws PersistenceException {
-		return null;
+		final String classDirPath = getClassDirectoryPath(className);
+		File classDir = new File(classDirPath);
+
+		if (!classDir.isDirectory()) {
+			return null;
+		}
+
+		File classFile = new File(
+				classDirPath + File.separator + ClassNameUtil.getShortClassName(className) + CLASS_FILE_EXTENSION);
+
+		if (!classFile.exists()) {
+			return null;
+		}
+		
+		byte[] result;
+		
+		try {
+			try (InputStream is = new FileInputStream(classFile);) {
+				result = IOUtils.toByteArray(is);
+			}
+		} catch (IOException e) {
+			throw new PersistenceException(String.format("Failed to load the class [%s]", className), e);
+		}
+
+		
+		return result;
 	}
 
 	/*
@@ -108,7 +133,7 @@ public class FSCodeRepository implements CodeRepository {
 	 * @see com.ilsid.bfa.persistence.CodeRepository#loadSourceCode(java.lang.String)
 	 */
 	public String loadSourceCode(String className) throws PersistenceException {
-		final String classDirPath = rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
+		final String classDirPath = getClassDirectoryPath(className);
 		File classDir = new File(classDirPath);
 
 		if (!classDir.isDirectory()) {
@@ -147,14 +172,14 @@ public class FSCodeRepository implements CodeRepository {
 
 	@Inject
 	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
-		rootDir = config.get(ROOT_DIR_PROP_NAME);
+		rootDir = config.get(CONFIG_PROP_ROOT_DIR_NAME);
 		if (rootDir == null) {
-			throw new ConfigurationException("Required [" + ROOT_DIR_PROP_NAME + "] property not found");
+			throw new ConfigurationException("Required [" + CONFIG_PROP_ROOT_DIR_NAME + "] property not found");
 		}
 
 		if (!new File(rootDir).isDirectory()) {
 			throw new ConfigurationException(
-					"[" + rootDir + "] value defined by [" + ROOT_DIR_PROP_NAME + "] property is not a directory");
+					"[" + rootDir + "] value defined by [" + CONFIG_PROP_ROOT_DIR_NAME + "] property is not a directory");
 		}
 	}
 
@@ -165,16 +190,16 @@ public class FSCodeRepository implements CodeRepository {
 
 		String shortClassName = ClassNameUtil.getShortClassName(className);
 		String fileClassName = shortClassName + CLASS_FILE_EXTENSION;
-		String fileClassDirs = rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
+		String fileClassDir = getClassDirectoryPath(className);
 
-		File classFile = new File(fileClassDirs + File.separatorChar + fileClassName);
+		File classFile = new File(fileClassDir + File.separatorChar + fileClassName);
 		try {
 			if (classFile.exists()) {
 				throw new PersistenceException(
 						String.format("Class [%s] already exists in directory %s", className, rootDir));
 			}
 
-			File dirs = new File(fileClassDirs);
+			File dirs = new File(fileClassDir);
 			if (!dirs.exists()) {
 				dirs.mkdirs();
 			}
@@ -192,7 +217,7 @@ public class FSCodeRepository implements CodeRepository {
 
 		if (sourceCode != null) {
 			String fileSourceName = shortClassName + SOURCE_FILE_EXTENSION;
-			File sourceFile = new File(fileClassDirs + File.separatorChar + fileSourceName);
+			File sourceFile = new File(fileClassDir + File.separatorChar + fileSourceName);
 			try {
 				FileUtils.writeStringToFile(sourceFile, sourceCode, "UTF-8");
 			} catch (IOException e) {
@@ -200,6 +225,10 @@ public class FSCodeRepository implements CodeRepository {
 						.format("Failed to save a source code for class [%s] in directory %s", className, rootDir), e);
 			}
 		}
+	}
+	
+	private String getClassDirectoryPath(String className) {
+		return rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
 	}
 
 }

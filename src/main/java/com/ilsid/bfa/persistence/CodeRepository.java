@@ -18,9 +18,10 @@ public interface CodeRepository {
 	 * 
 	 * @param className
 	 *            class name
-	 * @return a byte array representing Java byte code or an empty array if a class with such name does not exist
+	 * @return a byte array representing Java byte code or <code>null</code>, if a class with such name does not exist
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
+	 * 
 	 */
 	byte[] load(String className) throws PersistenceException;
 

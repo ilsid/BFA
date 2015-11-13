@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
@@ -186,13 +187,29 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 				.loadSourceCode("com.ilsid.bfa.generated.script.default_group.script001.Script001");
 		String expectedSource = IOHelper.loadScript(TestConstants.TEST_RESOURCES_DIR
 				+ "/code_repository/com/ilsid/bfa/generated/script/default_group/script001", "Script001.src");
-		
+
 		assertEquals(expectedSource, scriptSource);
 	}
-	
+
 	@Test
 	public void noSourceCodeIsLoadedforNonExistentScript() throws Exception {
 		assertNull(repository.loadSourceCode("some.nonexistent.script.Script001"));
+	}
+
+	@Test
+	public void byteCodeForExistingScriptCanBeLoaded() throws Exception {
+		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + "/code_repository"), ROOT_DIR);
+
+		byte[] byteCode = repository.load("com.ilsid.bfa.generated.script.default_group.script001.Script001");
+		byte[] expectedByteCode = IOHelper.loadClass(TestConstants.TEST_RESOURCES_DIR
+				+ "/code_repository/com/ilsid/bfa/generated/script/default_group/script001", "Script001.class");
+		
+		assertTrue(Arrays.equals(expectedByteCode, byteCode));
+	}
+	
+	@Test
+	public void noByteCodeIsLoadedforNonExistentScript() throws Exception {
+		assertNull(repository.load("some.nonexistent.script.Script001"));
 	}
 
 	private void saveClassAndSource() throws Exception {

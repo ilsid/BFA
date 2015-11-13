@@ -41,5 +41,15 @@ public class IOHelper {
 
 		return result;
 	}
+	
+	public static byte[] loadClass(String dir, String fileName) throws Exception {
+		byte[] result;
+
+		try (InputStream is = new FileInputStream(new File(dir + "/" + fileName))) {
+			result = IOUtils.toByteArray(is);
+		}
+
+		return result;
+	}
 
 }

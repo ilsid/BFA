@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 
@@ -33,6 +34,8 @@ public class FSCodeRepository implements CodeRepository {
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
 	private static final String SOURCE_FILE_EXTENSION = ".src";
+	
+	private AtomicLong runtimeId = new AtomicLong(System.currentTimeMillis());
 
 	private String rootDir;
 
@@ -154,10 +157,9 @@ public class FSCodeRepository implements CodeRepository {
 	 */
 	@Override
 	public long getNextRuntimeId() throws PersistenceException {
-		// TODO: implement
-		return 1;
+		return runtimeId.incrementAndGet();
 	}
-
+	
 	/**
 	 * Returns {@link FSTransactionManager} instance.
 	 * 

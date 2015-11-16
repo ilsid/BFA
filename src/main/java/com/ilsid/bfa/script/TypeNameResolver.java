@@ -5,8 +5,15 @@ import java.util.Map;
 
 //TODO: write javadocs
 public class TypeNameResolver {
+	
+	/**
+	 * The root package for all generated classes.
+	 */
+	public static final String GENERATED_CLASSES_PACKAGE = "com.ilsid.bfa.generated";
 
-	private static final String GENERATED_ROOT_PACKAGE = "com.ilsid.bfa.generated.";
+	private static final char DOT = '.';
+	
+	private static final String GENERATED_ROOT_PACKAGE = GENERATED_CLASSES_PACKAGE + DOT;
 
 	private static final String GENERATED_SCRIPT_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "script.";
 
@@ -18,8 +25,6 @@ public class TypeNameResolver {
 	private static final String GENERATED_POJO_PACKAGE = GENERATED_ROOT_PACKAGE + "type.";
 
 	private static final String EXPRESSION_PREFIX = "$$";
-
-	private static final char DOT = '.';
 
 	private static final Map<String, String> replaceableSymbols = new HashMap<>();
 

@@ -3,12 +3,15 @@ package com.ilsid.bfa.manager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.persistence.ClassUpdateListener;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
@@ -28,6 +31,8 @@ import com.ilsid.bfa.script.TypeNameResolver;
 public class ScriptManager {
 
 	private CodeRepository repository;
+
+	private List<ClassUpdateListener> classUpdateListeners;
 
 	/**
 	 * Creates new script in the repository. The script belongs to the Default Group.
@@ -56,7 +61,8 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Updates the existing script in the repository. The script is searched in the Default Group.
+	 * Updates the existing script in the repository. The script is searched in the Default Group. Invokes the
+	 * registered class update listeners, if any.
 	 * 
 	 * @param scriptName
 	 *            the name of the script to update
@@ -68,6 +74,7 @@ public class ScriptManager {
 	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
+	 * @see {@link ScriptManager#addClassUpdateListener(ClassUpdateListener)}
 	 */
 	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
@@ -79,6 +86,12 @@ public class ScriptManager {
 		} catch (PersistenceException e) {
 			rollbackTransaction();
 			throw new ManagementException(String.format("Failed to update the script [%s]", scriptName), e);
+		}
+
+		if (classUpdateListeners != null) {
+			for (ClassUpdateListener listener : classUpdateListeners) {
+				listener.onClassUpdate(compilationUnit.scriptClassName);
+			}
 		}
 	}
 
@@ -105,7 +118,8 @@ public class ScriptManager {
 		}
 
 		if (scriptBody == null) {
-			throw new ManagementException(String.format("The script [%s] does not exist in the repository", scriptName));
+			throw new ManagementException(
+					String.format("The script [%s] does not exist in the repository", scriptName));
 		}
 
 		return scriptBody;
@@ -120,6 +134,20 @@ public class ScriptManager {
 	@Inject
 	public void setRepository(CodeRepository repository) {
 		this.repository = repository;
+	}
+
+	/**
+	 * Adds the class update listener.
+	 * 
+	 * @param listener
+	 *            the class update listener
+	 * @see {@link ClassUpdateListener}
+	 */
+	public void addClassUpdateListener(ClassUpdateListener listener) {
+		if (classUpdateListeners == null) {
+			classUpdateListeners = new LinkedList<>();
+		}
+		classUpdateListeners.add(listener);
 	}
 
 	private void saveScript(ScriptCompilationUnit compilationUnit, String scriptBody) throws ManagementException {

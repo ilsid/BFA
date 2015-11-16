@@ -5,8 +5,8 @@ import java.lang.reflect.Field;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
-import com.ilsid.bfa.common.BFAClassLoader;
 import com.ilsid.bfa.common.NumberUtil;
+import com.ilsid.bfa.persistence.BFAClassLoader;
 
 /**
  * Parses a scripting expression and returns a corresponding Java source code.

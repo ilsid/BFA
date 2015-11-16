@@ -21,15 +21,15 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.LoggingConfigurator;
+import com.ilsid.bfa.persistence.BFAClassLoader;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
-import com.ilsid.bfa.script.DynamicCodeFactory;
 import com.ilsid.bfa.service.common.Paths;
+import com.ilsid.bfa.service.dto.RuntimeStatus;
 import com.ilsid.bfa.service.dto.RuntimeStatusType;
 import com.ilsid.bfa.service.dto.ScriptAdminParams;
 import com.ilsid.bfa.service.dto.ScriptRuntimeParams;
-import com.ilsid.bfa.service.dto.RuntimeStatus;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -208,7 +208,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 				protected void configureServlets() {
 					bind(CodeRepository.class).to(FSCodeRepository.class);
 
-					requestStaticInjection(DynamicCodeFactory.class);
+					requestStaticInjection(BFAClassLoader.class);
 
 					Map<String, String> webConfig = new HashMap<>();
 					// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping

@@ -12,7 +12,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	private static final String ACTION_CLASS_NAME_PREFIX = BASE_PACKAGE + "action.";
 
-	private static final String POJO_CLASS_NAME_PREFIX = BASE_PACKAGE + "type.";
+	private static final String ENTITY_CLASS_NAME_PREFIX = BASE_PACKAGE + "entity.";
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
 
@@ -100,17 +100,17 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void predefinedNumberTypeCanBeResolved() {
-		assertEquals("Integer", TypeNameResolver.resolveJavaClassName("Number"));
+		assertEquals("Integer", TypeNameResolver.resolveEnityClassName("Number"));
 	}
 
 	@Test
 	public void predefinedDecimalTypeCanBeResolved() {
-		assertEquals("Double", TypeNameResolver.resolveJavaClassName("Decimal"));
+		assertEquals("Double", TypeNameResolver.resolveEnityClassName("Decimal"));
 	}
 
 	@Test
-	public void nonPredefinedPojoTypeCanBeResolved() {
-		assertEquals(POJO_CLASS_NAME_PREFIX + "SomeBean", TypeNameResolver.resolveJavaClassName("SomeBean"));
+	public void nonPredefinedEntityTypeCanBeResolved() {
+		assertEquals(ENTITY_CLASS_NAME_PREFIX + "SomeBean", TypeNameResolver.resolveEnityClassName("SomeBean"));
 	}
 
 	private String getExpressionClassNamePart(String expression) {

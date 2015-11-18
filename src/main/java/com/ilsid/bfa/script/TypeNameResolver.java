@@ -22,7 +22,7 @@ public class TypeNameResolver {
 
 	private static final String GENERATED_ACTION_PACKAGE = GENERATED_ROOT_PACKAGE + "action.";
 
-	private static final String GENERATED_POJO_PACKAGE = GENERATED_ROOT_PACKAGE + "type.";
+	private static final String GENERATED_ENTITY_PACKAGE = GENERATED_ROOT_PACKAGE + "entity.";
 
 	private static final String EXPRESSION_PREFIX = "$$";
 
@@ -43,13 +43,13 @@ public class TypeNameResolver {
 		predefinedTypes.put("Decimal", "Double");
 	}
 
-	public static String resolveJavaClassName(String typeName) {
+	public static String resolveEnityClassName(String typeName) {
 		String predefinedType = predefinedTypes.get(typeName);
 		if (predefinedType != null) {
 			return predefinedType;
 		}
 
-		return GENERATED_POJO_PACKAGE + typeName;
+		return GENERATED_ENTITY_PACKAGE + typeName;
 	}
 
 	public static String resolveScriptClassName(String scriptName) {

@@ -351,7 +351,7 @@ public class ClassCompiler {
 			// Variables are saved in the script context for the further
 			// expressions parsing stage
 			try {
-				String javaType = TypeNameResolver.resolveJavaClassName(varType);
+				String javaType = TypeNameResolver.resolveEnityClassName(varType);
 				if (varAnnotation.scope() == Var.Scope.LOCAL) {
 					scriptContext.addLocalVar(varName, javaType);
 				} else {

@@ -52,7 +52,7 @@ public class DynamicClassLoader extends ClassLoader {
 	 * @see {@link DynamicClassLoader#reloadClasses()}
 	 */
 	// TODO: Check the performance impact caused by the synchronization block usage. The synchronization is required
-	// here because of onClassUpdate() logic.
+	// here because of reloadClasses() logic.
 	public static DynamicClassLoader getInstance() {
 		synchronized (CLASSES_RELOAD_LOCK) {
 			return instance;

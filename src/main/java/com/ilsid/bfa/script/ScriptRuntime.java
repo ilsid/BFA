@@ -2,7 +2,7 @@ package com.ilsid.bfa.script;
 
 import javax.inject.Inject;
 
-import com.ilsid.bfa.persistence.BFAClassLoader;
+import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 
@@ -55,7 +55,7 @@ public class ScriptRuntime {
 		String scriptClassName = TypeNameResolver.resolveScriptClassName(scriptName);
 		Class<Script> scriptClass;
 		try {
-			scriptClass = (Class<Script>) BFAClassLoader.getInstance().loadClass(scriptClassName);
+			scriptClass = (Class<Script>) DynamicClassLoader.getInstance().loadClass(scriptClassName);
 		} catch (ClassNotFoundException e) {
 			throw new ScriptException(String.format("The script [%s] is not found in the repository", scriptName), e);
 		} catch (ClassCastException e) {

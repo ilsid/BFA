@@ -21,7 +21,7 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.LoggingConfigurator;
-import com.ilsid.bfa.persistence.BFAClassLoader;
+import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
@@ -208,7 +208,7 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 				protected void configureServlets() {
 					bind(CodeRepository.class).to(FSCodeRepository.class);
 
-					requestStaticInjection(BFAClassLoader.class);
+					requestStaticInjection(DynamicClassLoader.class);
 
 					Map<String, String> webConfig = new HashMap<>();
 					// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping

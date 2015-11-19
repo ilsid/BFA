@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import com.ilsid.bfa.common.NumberUtil;
-import com.ilsid.bfa.persistence.BFAClassLoader;
+import com.ilsid.bfa.persistence.DynamicClassLoader;
 
 /**
  * Parses a scripting expression and returns a corresponding Java source code.
@@ -465,9 +465,7 @@ public class ScriptExpressionParser {
 		private static Class<?> resolveClass(String name) {
 			Class<?> clazz;
 			try {
-				// TODO: test custom class loader after implementation
-				// completion
-				clazz = Class.forName(name, true, BFAClassLoader.getInstance());
+				clazz = DynamicClassLoader.getInstance().loadClass(name);
 			} catch (ClassNotFoundException e) {
 				return null;
 			}

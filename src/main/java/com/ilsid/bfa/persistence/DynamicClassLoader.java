@@ -11,49 +11,49 @@ import com.ilsid.bfa.script.TypeNameResolver;
 
 /**
  * The class loader for the generated classes. Supports the reloading of the already loaded generated classes. </br>
- * {@link BFAClassLoader#getInstance()} must always be used to avoid runtime exceptions </br>
+ * {@link DynamicClassLoader#getInstance()} must always be used to avoid runtime exceptions </br>
  * </br>
- * <code>Class<?> clazz = BFAClassLoader.getInstance().loadClass(className);</code> </br>
+ * <code>Class<?> clazz = DynamicClassLoader.getInstance().loadClass(className);</code> </br>
  * </br>
  * The below code is <b>incorrect</b> </br>
  * </br>
  * <code>
- * BFAClassLoader loader = BFAClassLoader.getInstance();
+ * DynamicClassLoader loader = DynamicClassLoader.getInstance();
  * </br>
  * Class<?> clazz = loader.loadClass(className);
  * </code> </br>
  * </br>
  * The latter code may lead to the throwing of {@link IllegalStateException} in case when another thread has been
- * already called {@link BFAClassLoader#reloadClasses()}.
+ * already called {@link DynamicClassLoader#reloadClasses()}.
  * 
  * @author illia.sydorovych
  *
  */
-public class BFAClassLoader extends ClassLoader {
+public class DynamicClassLoader extends ClassLoader {
 
 	private static ConcurrentHashMap<String, Class<?>> cache = new ConcurrentHashMap<>();
 
-	private static BFAClassLoader instance = new BFAClassLoader();
+	private static DynamicClassLoader instance = new DynamicClassLoader();
 
 	private static final Object CLASSES_RELOAD_LOCK = new Object();
 
 	private static CodeRepository repository;
 
-	private BFAClassLoader() {
+	private DynamicClassLoader() {
 		super(Thread.currentThread().getContextClassLoader());
 	}
 
 	/**
 	 * Returns the actual loader that loads the classes with {@link TypeNameResolver#GENERATED_CLASSES_PACKAGE} package
 	 * from the specified code repository. All other classes are loaded by the context class loader of the current
-	 * thread. This method returns new loader instance after {@link BFAClassLoader#reloadClasses()} invocation.
+	 * thread. This method returns new loader instance after {@link DynamicClassLoader#reloadClasses()} invocation.
 	 * 
 	 * @return the class loader for the generated classes
-	 * @see {@link BFAClassLoader#reloadClasses()}
+	 * @see {@link DynamicClassLoader#reloadClasses()}
 	 */
 	// TODO: Check the performance impact caused by the synchronization block usage. The synchronization is required
 	// here because of onClassUpdate() logic.
-	public static BFAClassLoader getInstance() {
+	public static DynamicClassLoader getInstance() {
 		synchronized (CLASSES_RELOAD_LOCK) {
 			return instance;
 		}
@@ -70,7 +70,7 @@ public class BFAClassLoader extends ClassLoader {
 	 *             if the class with the given name can't be found
 	 * @throws IllegalStateException
 	 *             if this method is invoked for the obsolete class loader instance. It may happen if this method was
-	 *             called not via {@link BFAClassLoader#getInstance()}, but via the object reference
+	 *             called not via {@link DynamicClassLoader#getInstance()}, but via the object reference
 	 */
 	@Override
 	public Class<?> loadClass(String className) throws ClassNotFoundException, IllegalStateException {
@@ -114,13 +114,13 @@ public class BFAClassLoader extends ClassLoader {
 	}
 
 	/**
-	 * New {@link BFAClassLoader} instance is created. All classes that have been loaded by the old class loader are
+	 * New {@link DynamicClassLoader} instance is created. All classes that have been loaded by the old class loader are
 	 * reloaded by the new one and are put into the cache. The old classes are removed from the cache.
-	 * {@link BFAClassLoader#getInstance()} will return this new instance.
+	 * {@link DynamicClassLoader#getInstance()} will return this new instance.
 	 */
 	public static void reloadClasses() {
 		synchronized (CLASSES_RELOAD_LOCK) {
-			instance = new BFAClassLoader();
+			instance = new DynamicClassLoader();
 
 			// Force reloading of all cached classes
 			Set<String> cachedClassNames = new HashSet<>(cache.keySet());

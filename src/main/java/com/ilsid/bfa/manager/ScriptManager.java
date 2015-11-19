@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.common.ClassNameUtil;
-import com.ilsid.bfa.persistence.BFAClassLoader;
+import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
@@ -83,7 +83,7 @@ public class ScriptManager {
 			throw new ManagementException(String.format("Failed to update the script [%s]", scriptName), e);
 		}
 
-		BFAClassLoader.reloadClasses();
+		DynamicClassLoader.reloadClasses();
 	}
 
 	/**

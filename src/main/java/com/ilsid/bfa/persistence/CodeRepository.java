@@ -5,12 +5,11 @@ import java.util.Map;
 import com.ilsid.bfa.ConfigurationException;
 
 /**
- * Represents a code repository.
+ * The code repository facade.
  * 
  * @author illia.sydorovych
  *
  */
-// TODO: complete javadocs
 public interface CodeRepository {
 
 	/**

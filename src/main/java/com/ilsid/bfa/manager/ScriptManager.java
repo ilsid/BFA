@@ -3,15 +3,13 @@ package com.ilsid.bfa.manager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.common.ClassNameUtil;
-import com.ilsid.bfa.persistence.ClassUpdateListener;
+import com.ilsid.bfa.persistence.BFAClassLoader;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
@@ -31,8 +29,6 @@ import com.ilsid.bfa.script.TypeNameResolver;
 public class ScriptManager {
 
 	private CodeRepository repository;
-
-	private List<ClassUpdateListener> classUpdateListeners;
 
 	/**
 	 * Creates new script in the repository. The script belongs to the Default Group.
@@ -61,8 +57,7 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Updates the existing script in the repository. The script is searched in the Default Group. Invokes the
-	 * registered class update listeners, if any.
+	 * Updates the existing script in the repository. The script is searched in the Default Group.
 	 * 
 	 * @param scriptName
 	 *            the name of the script to update
@@ -88,11 +83,7 @@ public class ScriptManager {
 			throw new ManagementException(String.format("Failed to update the script [%s]", scriptName), e);
 		}
 
-		if (classUpdateListeners != null) {
-			for (ClassUpdateListener listener : classUpdateListeners) {
-				listener.onClassUpdate(compilationUnit.scriptClassName);
-			}
-		}
+		BFAClassLoader.reloadClasses();
 	}
 
 	/**
@@ -125,6 +116,10 @@ public class ScriptManager {
 		return scriptBody;
 	}
 
+	public void createEntity(String entityName, String entityBody) throws ManagementException {
+
+	}
+
 	/**
 	 * Defines a code repository implementation.
 	 * 
@@ -134,20 +129,6 @@ public class ScriptManager {
 	@Inject
 	public void setRepository(CodeRepository repository) {
 		this.repository = repository;
-	}
-
-	/**
-	 * Adds the class update listener.
-	 * 
-	 * @param listener
-	 *            the class update listener
-	 * @see {@link ClassUpdateListener}
-	 */
-	public void addClassUpdateListener(ClassUpdateListener listener) {
-		if (classUpdateListeners == null) {
-			classUpdateListeners = new LinkedList<>();
-		}
-		classUpdateListeners.add(listener);
 	}
 
 	private void saveScript(ScriptCompilationUnit compilationUnit, String scriptBody) throws ManagementException {

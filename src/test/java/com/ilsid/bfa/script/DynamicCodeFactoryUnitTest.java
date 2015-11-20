@@ -63,7 +63,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void expressionClassNameIsPrependedWithScriptName() throws Exception {
-		assertEquals(SCRIPT_ROOT_PACKAGE + "somescript.SomeScript$$2_Mns_1",
+		assertEquals(SCRIPT_ROOT_PACKAGE + "some_x20_script.Some_x20_Script$$2_Mns_1",
 				getInvocation("Some Script", "2 - 1").getClass().getName());
 	}
 
@@ -114,8 +114,8 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void expressionClassLoadingFailsIfRespositoryDefinedAndNoClassExists() throws Exception {
 		exceptionRule.expect(DynamicCodeException.class);
-		exceptionRule.expectMessage(
-				"Class [" + SCRIPT_ROOT_PACKAGE + "nonexistentscript.NonExistentScript$$DummyExpr] does not exist in the repository");
+		exceptionRule.expectMessage("Class [" + SCRIPT_ROOT_PACKAGE
+				+ "nonexistentscript.NonExistentScript$$DummyExpr] does not exist in the repository");
 
 		defineRepository();
 		DynamicCodeFactory.getInvocation("NonExistentScript", "DummyExpr", null);
@@ -185,7 +185,7 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 				return 0;
 			}
 		};
-		
+
 		DynamicCodeFactory.setRepository(repository);
 	}
 

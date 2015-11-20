@@ -74,12 +74,12 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		File scriptDir = new File(
-				FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script001");
+				FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script_x20_001");
 
 		assertTrue(scriptDir.isDirectory());
 		assertEquals(5, scriptDir.list().length);
-		assertFilesExist(scriptDir.getPath(), new String[] { "Script001.class", "Script001.src", "Script001$$2.class",
-				"Script001$$1.class", "Script001$$Var1_Mns_Var2.class" });
+		assertFilesExist(scriptDir.getPath(), new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
+				"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class" });
 	}
 
 	@Test

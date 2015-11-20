@@ -21,17 +21,18 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void generatedClassNameDoesNotContainSpaces() {
-		assertEquals("AB", getScriptClassName("A B"));
-		assertEquals("AB", getScriptClassName(" AB "));
-		assertEquals("ABC", getScriptClassName(" A B C "));
+		assertEquals("A_x20_B", getScriptClassName("A B"));
+		assertEquals("_x20_AB_x20_", getScriptClassName(" AB "));
+		assertEquals("_x20_A_x20_B_x20_C_x20_", getScriptClassName(" A B C "));
+		assertEquals(SCRIPT_CLASS_NAME_PREFIX + "a_x20_b.A_x20_B", TypeNameResolver.resolveScriptClassName("A B"));
 
 		assertEquals("AB", getExpressionClassNamePart("A B"));
 		assertEquals("AB", getExpressionClassNamePart(" AB "));
 		assertEquals("ABC", getExpressionClassNamePart(" A B C "));
 
-		assertEquals("AB", getActionClassName("A B"));
-		assertEquals("AB", getActionClassName(" AB "));
-		assertEquals("ABC", getActionClassName(" A B C "));
+		assertEquals("A_x20_B", getActionClassName("A B"));
+		assertEquals("_x20_AB_x20_", getActionClassName(" AB "));
+		assertEquals("_x20_A_x20_B_x20_C_x20_", getActionClassName(" A B C "));
 	}
 
 	@Test
@@ -52,50 +53,50 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 	@Test
 	public void generatedClassNameContainsReplacedMinusSign() {
 		assertEquals("A_Mns_B", getScriptClassName("A-B"));
-		assertEquals("A_Mns_B", getScriptClassName("A - B"));
+		assertEquals("A_x20__Mns__x20_B", getScriptClassName("A - B"));
 
 		assertEquals("A_Mns_B", getExpressionClassNamePart("A-B"));
 		assertEquals("A_Mns_B", getExpressionClassNamePart("A - B"));
 
 		assertEquals("A_Mns_B", getActionClassName("A-B"));
-		assertEquals("A_Mns_B", getActionClassName("A - B"));
+		assertEquals("A_x20__Mns__x20_B", getActionClassName("A - B"));
 
 	}
 
 	@Test
 	public void generatedClassNameContainsReplacedPlusSign() {
 		assertEquals("A_Pls_B", getScriptClassName("A+B"));
-		assertEquals("A_Pls_B", getScriptClassName("A + B"));
+		assertEquals("A_x20__Pls__x20_B", getScriptClassName("A + B"));
 
 		assertEquals("A_Pls_B", getExpressionClassNamePart("A+B"));
 		assertEquals("A_Pls_B", getExpressionClassNamePart("A + B"));
 
 		assertEquals("A_Pls_B", getActionClassName("A+B"));
-		assertEquals("A_Pls_B", getActionClassName("A + B"));
+		assertEquals("A_x20__Pls__x20_B", getActionClassName("A + B"));
 	}
 
 	@Test
 	public void generatedClassNameContainsReplacedMultiplySign() {
 		assertEquals("A_Mlt_B", getScriptClassName("A*B"));
-		assertEquals("A_Mlt_B", getScriptClassName("A * B"));
+		assertEquals("A_x20__Mlt__x20_B", getScriptClassName("A * B"));
 
 		assertEquals("A_Mlt_B", getExpressionClassNamePart("A*B"));
 		assertEquals("A_Mlt_B", getExpressionClassNamePart("A * B"));
 
 		assertEquals("A_Mlt_B", getActionClassName("A*B"));
-		assertEquals("A_Mlt_B", getActionClassName("A * B"));
+		assertEquals("A_x20__Mlt__x20_B", getActionClassName("A * B"));
 	}
 
 	@Test
 	public void generatedClassNameContainsReplacedDivisionSign() {
 		assertEquals("A_Div_B", getScriptClassName("A/B"));
-		assertEquals("A_Div_B", getScriptClassName("A / B"));
+		assertEquals("A_x20__Div__x20_B", getScriptClassName("A / B"));
 
 		assertEquals("A_Div_B", getExpressionClassNamePart("A/B"));
 		assertEquals("A_Div_B", getExpressionClassNamePart("A / B"));
 
 		assertEquals("A_Div_B", getActionClassName("A/B"));
-		assertEquals("A_Div_B", getActionClassName("A / B"));
+		assertEquals("A_x20__Div__x20_B", getActionClassName("A / B"));
 	}
 
 	@Test
@@ -135,6 +136,5 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		return className.substring(ACTION_CLASS_NAME_PREFIX.length());
 	}
-
 
 }

@@ -19,6 +19,10 @@ public class TypeNameResolver {
 
 	private static final String GENERATED_SCRIPT_DEFAULT_GROUP_PACKAGE = GENERATED_SCRIPT_ROOT_PACKAGE
 			+ "default_group.";
+	
+	private static final String EMPTY = "";
+	
+	private static final String BLANK_CODE = "_x20_";
 
 	private static final String GENERATED_ACTION_PACKAGE = GENERATED_ROOT_PACKAGE + "action.";
 
@@ -53,22 +57,22 @@ public class TypeNameResolver {
 	}
 
 	public static String resolveScriptClassName(String scriptName) {
-		final String simpleClassName = generateSimpleClassName(scriptName);
+		final String simpleClassName = generateSimpleClassName(scriptName, BLANK_CODE);
 		return generateScriptPackageName(simpleClassName) + simpleClassName;
 	}
 
 	public static String resolveExpressionClassName(String scriptName, String expression) {
-		final String scriptSimpleClassName = generateSimpleClassName(scriptName);
+		final String scriptSimpleClassName = generateSimpleClassName(scriptName, BLANK_CODE);
 		return generateScriptPackageName(scriptSimpleClassName) + scriptSimpleClassName + EXPRESSION_PREFIX
-				+ generateSimpleClassName(expression);
+				+ generateSimpleClassName(expression, EMPTY);
 	}
 
 	public static String resolveActionClassName(String actionName) {
-		return GENERATED_ACTION_PACKAGE + generateSimpleClassName(actionName);
+		return GENERATED_ACTION_PACKAGE + generateSimpleClassName(actionName, BLANK_CODE);
 	}
 
-	private static String generateSimpleClassName(String expression) {
-		String expr = expression.replaceAll("\\s", "");
+	private static String generateSimpleClassName(String expression, String blankReplacement) {
+		String expr = expression.replaceAll("\\s", blankReplacement);
 		for (String smb : replaceableSymbols.keySet()) {
 			expr = expr.replace(smb, replaceableSymbols.get(smb));
 		}

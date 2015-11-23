@@ -3,15 +3,21 @@ package com.ilsid.bfa.script;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jmock.Expectations;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.IOHelper;
+import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.DynamicClassLoader;
+import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
 
 import javassist.ByteArrayClassPath;
 import javassist.ClassPath;
@@ -37,6 +43,19 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	private static final String SCRIPT_PACKAGE = "com.ilsid.bfa.generated.script.default_group";
 
 	private ScriptContext mockContext;
+
+	@BeforeClass
+	@SuppressWarnings("serial")
+	public static void beforeClass() throws Exception {
+		CodeRepository repository = new FSCodeRepository();
+		repository.setConfiguration(new HashMap<String, String>() {
+			{
+				put("bfa.persistence.fs.root_dir", TestConstants.TEST_RESOURCES_DIR + "/code_repository");
+			}
+		});
+
+		DynamicClassLoader.setRepository(repository);
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -251,6 +270,95 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		compileScriptExpressions("TestScript33", "two-invalid-expressions-script.txt");
 	}
 
+	@Test
+	public void entityWithSingleFieldOfPredefinedTypeCanBeCompiledToBytecode() throws Exception {
+		String className = "com.ilsid.bfa.test.generated.entity.Entity01";
+		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className, "java.lang.Integer testField");
+		Class<?> clazz = loadFromBytecode(className, byteCode);
+
+		assertEquals(1, clazz.getFields().length);
+		assertSame(Integer.class, clazz.getField("testField").getType());
+	}
+
+	@Test
+	public void entityWithSeveralFieldsOfPredefinedTypeCanBeCompiledToBytecode() throws Exception {
+		String className = "com.ilsid.bfa.test.generated.entity.Entity02";
+		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className,
+				"java.lang.Integer testField1; java.lang.Double testField2; java.lang.Integer testField3");
+		Class<?> clazz = loadFromBytecode(className, byteCode);
+
+		assertEquals(3, clazz.getFields().length);
+		assertSame(Integer.class, clazz.getField("testField1").getType());
+		assertSame(Double.class, clazz.getField("testField2").getType());
+		assertSame(Integer.class, clazz.getField("testField3").getType());
+	}
+
+	@Test
+	public void entityWithSingleFieldOfGeneratedTypeCanBeCompiledToBytecode() throws Exception {
+		String className = "com.ilsid.bfa.test.generated.entity.Entity03";
+		String fieldTypeName = "com.ilsid.bfa.generated.compilertest.GeneratedContract";
+
+		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className, fieldTypeName + " contract");
+		Class<?> clazz = loadFromBytecode(className, byteCode);
+
+		assertEquals(1, clazz.getFields().length);
+		assertEquals(fieldTypeName, clazz.getField("contract").getType().getName());
+	}
+
+	@Test
+	public void entityWithTwoFieldsOfSameGeneratedTypeCanBeCompiledToBytecode() throws Exception {
+		String className = "com.ilsid.bfa.test.generated.entity.Entity04";
+		String fieldTypeName = "com.ilsid.bfa.generated.compilertest.GeneratedContract";
+
+		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className,
+				fieldTypeName + " contract1;" + fieldTypeName + " contract2;");
+		Class<?> clazz = loadFromBytecode(className, byteCode);
+
+		assertEquals(2, clazz.getFields().length);
+		assertEquals(fieldTypeName, clazz.getField("contract1").getType().getName());
+		assertEquals(fieldTypeName, clazz.getField("contract2").getType().getName());
+	}
+
+	@Test
+	public void entityWithMultipleFieldsOfGeneratedTypesCanBeCompiledToBytecode() throws Exception {
+		String className = "com.ilsid.bfa.test.generated.entity.Entity05";
+		String fieldTypeName1 = "com.ilsid.bfa.generated.compilertest.GeneratedContract";
+		String fieldTypeName2 = "com.ilsid.bfa.generated.compilertest.AnotherGeneratedContract";
+
+		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className,
+				fieldTypeName1 + " contract1;" + fieldTypeName2 + " contract2;");
+		Class<?> clazz = loadFromBytecode(className, byteCode);
+
+		assertEquals(2, clazz.getFields().length);
+		assertEquals(fieldTypeName1, clazz.getField("contract1").getType().getName());
+		assertEquals(fieldTypeName2, clazz.getField("contract2").getType().getName());
+	}
+
+	@Test
+	public void entityWithFieldsOfPredefinedAndGeneratedTypesCanBeCompiledToBytecode() throws Exception {
+		String className = "com.ilsid.bfa.test.generated.entity.Entity06";
+		String fieldTypeName1 = "com.ilsid.bfa.generated.compilertest.GeneratedContract";
+		String fieldTypeName2 = "java.lang.Integer";
+
+		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className,
+				fieldTypeName1 + " contract;" + fieldTypeName2 + " days;");
+		Class<?> clazz = loadFromBytecode(className, byteCode);
+
+		assertEquals(2, clazz.getFields().length);
+		assertEquals(fieldTypeName1, clazz.getField("contract").getType().getName());
+		assertEquals(fieldTypeName2, clazz.getField("days").getType().getName());
+	}
+
+	@Test
+	public void entityWithInvalidBodyCanNotBeCompiled() throws Exception {
+		exceptionRule.expect(ClassCompilationException.class);
+		exceptionRule.expectMessage(
+				"Compilation of Entity [com.ilsid.bfa.test.generated.entity.Entity07] failed. Expression [java.lang.Integer field2 field3] is invalid");
+
+		String className = "com.ilsid.bfa.test.generated.entity.Entity07";
+		ClassCompiler.compileEntityToBytecode(className, "java.lang.Double field1; java.lang.Integer field2 field3;");
+	}
+
 	@SuppressWarnings("unused")
 	private void compileScript(String className) throws Exception {
 		Class<?> clazz = ClassCompiler.compileScript(className, IOHelper.loadScript("declarations-only-script.txt"));
@@ -291,8 +399,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	private Expectations getScriptExpectations() throws Exception {
 		return new Expectations() {
 			{
-				oneOf(mockContext).addLocalVar("Var1", "Integer");
-				oneOf(mockContext).addLocalVar("Var2", "Double");
+				oneOf(mockContext).addLocalVar("Var1", "java.lang.Integer");
+				oneOf(mockContext).addLocalVar("Var2", "java.lang.Double");
 			}
 		};
 	}

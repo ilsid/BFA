@@ -21,6 +21,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.ilsid.bfa.common.ExceptionUtil;
+import com.ilsid.bfa.persistence.DynamicClassLoader;
 
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
@@ -90,7 +91,7 @@ public class ClassCompiler {
 	 * @throws ClassCompilationException
 	 *             in case of compilation failure
 	 */
-	public static byte[] compileInvocationToBytecode(String className, String expression)
+	public static synchronized byte[] compileInvocationToBytecode(String className, String expression)
 			throws ClassCompilationException {
 		byte[] result;
 
@@ -138,12 +139,13 @@ public class ClassCompiler {
 	 * @param className
 	 *            class name
 	 * @param scriptBody
-	 *            java source code (implementation)
+	 *            java source code (the contents of {@link Script#doExecute()} method)
 	 * @return a byte code for {@link Script} descendant
 	 * @throws ClassCompilationException
 	 *             in case of compilation failure
 	 */
-	public static byte[] compileScriptToBytecode(String className, String scriptBody) throws ClassCompilationException {
+	public static synchronized byte[] compileScriptToBytecode(String className, String scriptBody)
+			throws ClassCompilationException {
 		byte[] result;
 
 		try {
@@ -153,6 +155,84 @@ public class ClassCompiler {
 
 			throw new ClassCompilationException(
 					String.format("Compilation of Script [%s] to byte code failed", className), e);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Compiles a byte code for an entity using the specified class name and body. The source code to compile will have
+	 * the following format: </br>
+	 * </br>
+	 * <code>
+	 * &lt;className&gt; {
+	 * </br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;
+	 * &lt;fields defined in entityBody&gt;
+	 * </br>
+	 * }  
+	 * </code> </br>
+	 * </br>
+	 * The following entity body format is expected:</br>
+	 * </br>
+	 * <code>type name[;type name[;type name[...]]]</code> </br>
+	 * </br>
+	 * The entity body example: </br>
+	 * </br>
+	 * <code>Integer Days;Integer ProlongDays;Double MonthlyFee</code>
+	 * 
+	 * @param className
+	 *            class name
+	 * @param entityBody
+	 *            java source code.
+	 * 
+	 * @return the entity byte code
+	 * @throws ClassCompilationException
+	 *             in case of compilation failure
+	 */
+	public static synchronized byte[] compileEntityToBytecode(String className, String entityBody)
+			throws ClassCompilationException {
+		byte[] result;
+		ClassPool classPool = getClassPool();
+		CtClass clazz = classPool.makeClass(className);
+
+		List<ClassPath> generatedTypesClassPath = new LinkedList<>();
+		try {
+			String[] fieldExpressions = entityBody.split(";");
+			for (String fieldExpr : fieldExpressions) {
+				String trimmedExpr = fieldExpr.trim();
+				String[] exprParts = trimmedExpr.split("\\s+");
+				if (exprParts.length != 2) {
+					throw new ClassCompilationException(String.format(
+							"Compilation of Entity [%s] failed. Expression [%s] is invalid", className, trimmedExpr));
+				}
+				String typeName = exprParts[0];
+				String fieldName = exprParts[1];
+
+				// If the entity's field type is generated itself, then the corresponding class needs to be loaded and
+				// added to the class pool before the entity compilation
+				if (typeName.startsWith(TypeNameResolver.GENERATED_CLASSES_PACKAGE)) {
+					Class<?> generatedClass = DynamicClassLoader.getInstance().loadClass(typeName);
+					ClassPath cpEntry = new ClassClassPath(generatedClass);
+					generatedTypesClassPath.add(cpEntry);
+					classPool.appendClassPath(cpEntry);
+				}
+
+				CtClass typeClass = classPool.get(typeName);
+				CtField field = new CtField(typeClass, fieldName, clazz);
+				field.setModifiers(Modifier.PUBLIC);
+				clazz.addField(field);
+			}
+
+			result = toBytecode(clazz);
+
+			for (ClassPath cpEntry : generatedTypesClassPath) {
+				classPool.removeClassPath(cpEntry);
+			}
+
+		} catch (NotFoundException | CannotCompileException | IOException | ClassNotFoundException
+				| IllegalStateException e) {
+			throw new ClassCompilationException(String.format("Compilation of Entity [%s] failed", className), e);
 		}
 
 		return result;

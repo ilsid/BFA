@@ -111,14 +111,14 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	
 	@Test
 	public void singleIntegerVariableCanBeParsed() throws Exception {
-		createContext(new Variable("Var1", "Integer", 3));
+		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertOutput("Var1", 
 				"return Integer.valueOf(((Integer)scriptContext.getLocalVar(\"Var1\").getValue()).intValue());");
 	}
 
 	@Test
 	public void arithmeticsWithTwoIntegerVariablesCanBeParsed() throws Exception {
-		createContext(new Variable("Var1", "Integer", 3), new Variable("Var2", "Integer", 1));
+		createContext(new Variable("Var1", "java.lang.Integer", 3), new Variable("Var2", "java.lang.Integer", 1));
 		assertOutput("Var1 - Var2", 
 				"return Integer.valueOf(((Integer)scriptContext.getLocalVar(\"Var1\").getValue()).intValue()"
 						+ " - ((Integer)scriptContext.getLocalVar(\"Var2\").getValue()).intValue());");
@@ -127,8 +127,8 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void arithmeticsWithThreeIntegerVariablesCanBeParsed() throws Exception {
-		createContext(new Variable("Var1", "Integer", 3), new Variable("Var2", "Integer", 1),
-				new Variable("Var3", "Integer", 2));
+		createContext(new Variable("Var1", "java.lang.Integer", 3), new Variable("Var2", "java.lang.Integer", 1),
+				new Variable("Var3", "java.lang.Integer", 2));
 		// System.out.println(invoke(input, output));
 		assertOutput("Var1 - Var2 + Var3", 
 				"return Integer.valueOf(((Integer)scriptContext.getLocalVar(\"Var1\").getValue()).intValue()"
@@ -137,48 +137,48 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	
 	@Test
 	public void arithmeticsWithIntegerVariableAndIntegerPrimitiveCanBeParsed() throws Exception {
-		createContext(new Variable("Var1", "Integer", 3));
+		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertOutput("Var1 - 1", 
 				"return Integer.valueOf(((Integer)scriptContext.getLocalVar(\"Var1\").getValue()).intValue() - 1);");
 	}
 	
 	@Test
 	public void lastIntegerVariableOperandIsNotAllowed() {
-		createContext(new Variable("Var1", "Integer", 3));
+		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertException("Var1 +", "Could not parse expression [Var1 +]: Unexpected operand [+] at the end");
 	}
 	
 	@Test
 	public void arithmeticsWithIntegerVariableAndDoublePrimitivesIsNotAllowed() {
-		createContext(new Variable("Var1", "Integer", 3));
+		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertException("Var1 - 1.0",
 				"Could not parse expression [Var1 - 1.0]: Integer value or variable is expected after operand [-], but was [1.0]");
 	}
 
 	@Test
 	public void arithmeticsWithIntegerVariableAndNonNumericIsNotAllowed() {
-		createContext(new Variable("Var1", "Integer", 3));
+		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertException("Var1 - a",
 				"Could not parse expression [Var1 - a]: Integer value or variable is expected after operand [-], but was [a]");
 	}
 
 	@Test
 	public void consequentIntegerVariablesWoOperandsAreNotAllowed() {
-		createContext(new Variable("Var1", "Integer", 3), new Variable("Var2", "Integer", 1));
+		createContext(new Variable("Var1", "java.lang.Integer", 3), new Variable("Var2", "java.lang.Integer", 1));
 		assertException("Var1 Var2",
 				"Could not parse expression [Var1 Var2]: One of the operands [+-/*] is expected after [Var1], but was [Var2]");
 	}
 	
 	@Test
 	public void singleDoubleVariableCanBeParsed() throws Exception {
-		createContext(new Variable("Var1", "Double", 3.0));
+		createContext(new Variable("Var1", "java.lang.Double", 3.0));
 		assertOutput("Var1", 
 				"return Double.valueOf(((Double)scriptContext.getLocalVar(\"Var1\").getValue()).doubleValue());");
 	}
 
 	@Test
 	public void arithmeticsWithTwoDoubleVariablesCanBeParsed() throws Exception {
-		createContext(new Variable("Var1", "Double", 3.0), new Variable("Var2", "Double", 1.0));
+		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0));
 		assertOutput("Var1 - Var2", 
 				"return Double.valueOf(((Double)scriptContext.getLocalVar(\"Var1\").getValue()).doubleValue()"
 						+ " - ((Double)scriptContext.getLocalVar(\"Var2\").getValue()).doubleValue());");
@@ -187,8 +187,8 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void arithmeticsWithThreeDoubleVariablesCanBeParsed() throws Exception {
-		createContext(new Variable("Var1", "Double", 3.0), new Variable("Var2", "Double", 1.0),
-				new Variable("Var3", "Double", 2.0));
+		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0),
+				new Variable("Var3", "java.lang.Double", 2.0));
 		// System.out.println(invoke(input, output));
 		assertOutput("Var1 - Var2 + Var3", 
 				"return Double.valueOf(((Double)scriptContext.getLocalVar(\"Var1\").getValue()).doubleValue()"
@@ -197,34 +197,34 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	
 	@Test
 	public void arithmeticsWithDoubleVariableAndDoublePrimitiveCanBeParsed() throws Exception {
-		createContext(new Variable("Var1", "Double", 3));
+		createContext(new Variable("Var1", "java.lang.Double", 3));
 		assertOutput("Var1 - 1.0", 
 				"return Double.valueOf(((Double)scriptContext.getLocalVar(\"Var1\").getValue()).doubleValue() - 1.0);");
 	}
 	
 	@Test
 	public void lastDoubleVariableOperandIsNotAllowed() {
-		createContext(new Variable("Var1", "Double", 3.0));
+		createContext(new Variable("Var1", "java.lang.Double", 3.0));
 		assertException("Var1 +", "Could not parse expression [Var1 +]: Unexpected operand [+] at the end");
 	}
 	
 	@Test
 	public void arithmeticsWithDoubleVariableAndIntegerPrimitivesIsNotAllowed() {
-		createContext(new Variable("Var1", "Double", 3.0));
+		createContext(new Variable("Var1", "java.lang.Double", 3.0));
 		assertException("Var1 - 1",
 				"Could not parse expression [Var1 - 1]: Decimal value or variable is expected after operand [-], but was [1]");
 	}
 
 	@Test
 	public void arithmeticsWithDoubleVariableAndNonNumericIsNotAllowed() {
-		createContext(new Variable("Var1", "Double", 3));
+		createContext(new Variable("Var1", "java.lang.Double", 3));
 		assertException("Var1 - a",
 				"Could not parse expression [Var1 - a]: Decimal value or variable is expected after operand [-], but was [a]");
 	}
 
 	@Test
 	public void consequentDoubleVariablesWoOperandsAreNotAllowed() {
-		createContext(new Variable("Var1", "Double", 3.0), new Variable("Var2", "Double", 1.0));
+		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0));
 		assertException("Var1 Var2",
 				"Could not parse expression [Var1 Var2]: One of the operands [+-/*] is expected after [Var1], but was [Var2]");
 	}
@@ -260,7 +260,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void arithmeticsWithIntegerFieldAndIntegerPrimitiveCanBeParsed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
-					new Variable("PrepaidDays", "Integer", 30));
+					new Variable("PrepaidDays", "java.lang.Integer", 30));
 		
 		assertOutput("Contract.Days - PrepaidDays", 
 				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).Days.intValue()" 
@@ -316,7 +316,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void arithmeticsWithDoubleFieldAndDoublePrimitiveCanBeParsed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
-					new Variable("PrepaidAmount", "Double", 30.0));
+					new Variable("PrepaidAmount", "java.lang.Double", 30.0));
 		
 		assertOutput("Contract.MonthlyFee - PrepaidAmount", 
 				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).MonthlyFee.doubleValue()" 

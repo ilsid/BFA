@@ -81,8 +81,8 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 	public void scriptWithDeclarationsOnlyCanBeInvoked() throws Exception {
 		verifyScript("01", "declarations-only-script.txt", new Expectations() {
 			{
-				oneOf(mockContext).addLocalVar("Var1", "Integer");
-				oneOf(mockContext).addLocalVar("Var2", "Double");
+				oneOf(mockContext).addLocalVar("Var1", "java.lang.Integer");
+				oneOf(mockContext).addLocalVar("Var2", "java.lang.Double");
 			}
 		});
 	}
@@ -93,8 +93,8 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 
 		verifyScript(scriptName, "set-local-vars-script.txt", new Expectations() {
 			{
-				oneOf(mockContext).addLocalVar("Var1", "Integer");
-				oneOf(mockContext).addLocalVar("Var2", "Double");
+				oneOf(mockContext).addLocalVar("Var1", "java.lang.Integer");
+				oneOf(mockContext).addLocalVar("Var2", "java.lang.Double");
 				exactly(2).of(mockContext).getScriptName();
 				will(returnValue(scriptName));
 				oneOf(mockContext).updateLocalVar("Var1", 1);

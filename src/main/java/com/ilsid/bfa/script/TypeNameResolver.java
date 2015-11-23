@@ -5,28 +5,31 @@ import java.util.Map;
 
 //TODO: write javadocs
 public class TypeNameResolver {
-	
+
 	/**
 	 * The root package for all generated classes.
 	 */
 	public static final String GENERATED_CLASSES_PACKAGE = "com.ilsid.bfa.generated";
 
 	private static final char DOT = '.';
-	
+
 	private static final String GENERATED_ROOT_PACKAGE = GENERATED_CLASSES_PACKAGE + DOT;
 
 	private static final String GENERATED_SCRIPT_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "script.";
 
 	private static final String GENERATED_SCRIPT_DEFAULT_GROUP_PACKAGE = GENERATED_SCRIPT_ROOT_PACKAGE
 			+ "default_group.";
-	
+
 	private static final String EMPTY = "";
-	
+
 	private static final String BLANK_CODE = "_x20_";
 
 	private static final String GENERATED_ACTION_PACKAGE = GENERATED_ROOT_PACKAGE + "action.";
 
-	private static final String GENERATED_ENTITY_PACKAGE = GENERATED_ROOT_PACKAGE + "entity.";
+	private static final String GENERATED_ENTITY_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "entity.";
+
+	private static final String GENERATED_ENTITY_DEFAULT_GROUP_PACKAGE = GENERATED_ENTITY_ROOT_PACKAGE
+			+ "default_group.";
 
 	private static final String EXPRESSION_PREFIX = "$$";
 
@@ -43,17 +46,17 @@ public class TypeNameResolver {
 	}
 
 	static {
-		predefinedTypes.put("Number", "Integer");
-		predefinedTypes.put("Decimal", "Double");
+		predefinedTypes.put("Number", "java.lang.Integer");
+		predefinedTypes.put("Decimal", "java.lang.Double");
 	}
 
-	public static String resolveEnityClassName(String typeName) {
-		String predefinedType = predefinedTypes.get(typeName);
+	public static String resolveEnityClassName(String entityName) {
+		String predefinedType = predefinedTypes.get(entityName);
 		if (predefinedType != null) {
 			return predefinedType;
 		}
 
-		return GENERATED_ENTITY_PACKAGE + typeName;
+		return GENERATED_ENTITY_DEFAULT_GROUP_PACKAGE + entityName;
 	}
 
 	public static String resolveScriptClassName(String scriptName) {

@@ -12,7 +12,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	private static final String ACTION_CLASS_NAME_PREFIX = BASE_PACKAGE + "action.";
 
-	private static final String ENTITY_CLASS_NAME_PREFIX = BASE_PACKAGE + "entity.";
+	private static final String ENTITY_CLASS_NAME_PREFIX = BASE_PACKAGE + "entity.default_group.";
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
 
@@ -101,12 +101,12 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void predefinedNumberTypeCanBeResolved() {
-		assertEquals("Integer", TypeNameResolver.resolveEnityClassName("Number"));
+		assertEquals("java.lang.Integer", TypeNameResolver.resolveEnityClassName("Number"));
 	}
 
 	@Test
 	public void predefinedDecimalTypeCanBeResolved() {
-		assertEquals("Double", TypeNameResolver.resolveEnityClassName("Decimal"));
+		assertEquals("java.lang.Double", TypeNameResolver.resolveEnityClassName("Decimal"));
 	}
 
 	@Test

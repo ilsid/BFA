@@ -450,7 +450,7 @@ public class ScriptExpressionParser {
 				return false;
 			}
 
-			if (var.getJavaType().equals(varType.getSimpleName())) {
+			if (var.getJavaType().equals(varType.getName())) {
 				return true;
 			} else {
 				return false;

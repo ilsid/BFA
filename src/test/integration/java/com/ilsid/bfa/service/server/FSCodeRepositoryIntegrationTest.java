@@ -12,7 +12,7 @@ import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.LoggingConfigurator;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
 
-public class FSCodeRepositoryIntegrationTest extends RESTServiceIntegrationTestCase {
+public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegrationTestCase {
 
 	private static final String LOGGING_CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/log4j.xml";
 

@@ -1,6 +1,5 @@
 package com.ilsid.bfa.service.server;
 
-import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -10,7 +9,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.ilsid.bfa.manager.ManagementException;
-import com.ilsid.bfa.manager.ScriptManager;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ScriptAdminParams;
 
@@ -22,9 +20,7 @@ import com.ilsid.bfa.service.dto.ScriptAdminParams;
  */
 @Path(Paths.SCRIPT_SERVICE_ADMIN_ROOT)
 // FIXME: Handle non-default script groups
-public class ScriptAdminResource {
-
-	private ScriptManager scriptManager;
+public class ScriptAdminResource extends AbstractAdminResource {
 
 	/**
 	 * Creates the script and saves it in the code repository. If the script's group is not specified, it is created
@@ -46,8 +42,9 @@ public class ScriptAdminResource {
 	@Path(Paths.SCRIPT_CREATE_OPERATION)
 	public Response create(ScriptAdminParams script) {
 		try {
+			validateNonNullNameAndBody(script);
 			scriptManager.createScript(script.getName(), script.getBody());
-		} catch (ManagementException e) {
+		} catch (IllegalArgumentException | ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_CREATE_SERVICE, e);
 		}
 
@@ -74,8 +71,9 @@ public class ScriptAdminResource {
 	@Path(Paths.SCRIPT_UPDATE_OPERATION)
 	public Response update(ScriptAdminParams script) {
 		try {
+			validateNonNullNameAndBody(script);
 			scriptManager.updateScript(script.getName(), script.getBody());
-		} catch (ManagementException e) {
+		} catch (IllegalArgumentException | ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_UPDATE_SERVICE, e);
 		}
 
@@ -103,17 +101,13 @@ public class ScriptAdminResource {
 	public Response getSource(ScriptAdminParams script) {
 		String scriptSource;
 		try {
+			validateNonNullName(script);
 			scriptSource = scriptManager.getScriptSourceCode(script.getName());
-		} catch (ManagementException e) {
+		} catch (IllegalArgumentException | ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_GET_SOURCE_SERVICE, e);
 		}
 
 		return Response.status(Status.OK).entity(scriptSource).build();
-	}
-
-	@Inject
-	public void setScriptManager(ScriptManager scriptManager) {
-		this.scriptManager = scriptManager;
 	}
 
 }

@@ -14,6 +14,10 @@ public class ResourceException extends WebApplicationException {
 
 	private String message;
 
+	public ResourceException(String message) {
+		this.message = message;
+	}
+
 	public ResourceException(String message, Throwable e) {
 		super(e);
 		this.message = message;

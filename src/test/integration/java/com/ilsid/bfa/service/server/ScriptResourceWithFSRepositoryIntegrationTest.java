@@ -26,6 +26,7 @@ import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
 import com.ilsid.bfa.service.common.Paths;
+import com.ilsid.bfa.service.dto.EntityAdminParams;
 import com.ilsid.bfa.service.dto.RuntimeStatus;
 import com.ilsid.bfa.service.dto.RuntimeStatusType;
 import com.ilsid.bfa.service.dto.ScriptAdminParams;
@@ -42,6 +43,8 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 	private static final String LOGGING_CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/log4j.xml";
 
 	private static final String GENERATED_SCRIPT_ROOT_PATH = "com/ilsid/bfa/generated/script/default_group";
+
+	private static final String GENERATED_ENTITY_ROOT_PATH = "com/ilsid/bfa/generated/entity/default_group";
 
 	private static final File CODE_REPOSITORY_DIR = new File(FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH);
 
@@ -73,13 +76,13 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
-		File scriptDir = new File(
-				FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script_x20_001");
+		File scriptDir = new File(FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH
+				+ "/script_x20_001");
 
 		assertTrue(scriptDir.isDirectory());
 		assertEquals(5, scriptDir.list().length);
-		assertFilesExist(scriptDir.getPath(), new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
-				"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class" });
+		assertFilesExist(scriptDir.getPath(), new String[] { "Script_x20_001.class", "Script_x20_001.src",
+				"Script_x20_001$$2.class", "Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class" });
 	}
 
 	@Test
@@ -95,6 +98,29 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 		assertFalse(new File(
 				FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script002")
 						.exists());
+	}
+
+	@Test
+	public void scriptWithoutNameIsNotSavedInFileSystem() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams(null,
+				IOHelper.loadScript("two-invalid-expressions-script.txt"));
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertTrue(response.getEntity(String.class).startsWith("The name must be defined"));
+	}
+
+	@Test
+	public void scriptWithoutBodyIsNotSavedInFileSystem() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams("Script 002", null);
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertTrue(response.getEntity(String.class).startsWith("The body must be defined"));
 	}
 
 	@Test
@@ -185,6 +211,24 @@ public class ScriptResourceWithFSRepositoryIntegrationTest extends RESTServiceIn
 		RuntimeStatus status = response.getEntity(RuntimeStatus.class);
 		assertTrue(status.getRuntimeId() > 0);
 		assertEquals(RuntimeStatusType.COMPLETED, status.getStatusType());
+	}
+
+	@Test
+	public void validEntityIsCompiledAndItsSourceAndClassIsSavedInFileSystem() {
+		WebResource webResource = getWebResource(Paths.ENTITY_CREATE_SERVICE);
+		EntityAdminParams entity = new EntityAdminParams("Entity001",
+				"java.lang.Integer field1; java.lang.Double field2");
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		File entityDir = new File(
+				FSRepositoryApplicationConfig.CODE_REPOSITORY_PATH + "/" + GENERATED_ENTITY_ROOT_PATH);
+
+		assertTrue(entityDir.isDirectory());
+		assertEquals(2, entityDir.list().length);
+		assertFilesExist(entityDir.getPath(), new String[] { "Entity001.class", "Entity001.src" });
 	}
 
 	private void assertFilesExist(String dirPath, String[] fileNames) {

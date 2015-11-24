@@ -10,6 +10,8 @@ public final class Paths {
 
 	public final static String SCRIPT_SERVICE_ROOT = "script";
 
+	public final static String ENTITY_SERVICE_ROOT = "entity";
+
 	/*
 	 * Script Administration
 	 */
@@ -47,5 +49,15 @@ public final class Paths {
 
 	public final static String SCRIPT_GET_STATUS_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/"
 			+ SCRIPT_GET_STATUS_OPERATION;
+
+	/*
+	 * Entity Administration
+	 */
+
+	public final static String ENTITY_SERVICE_ADMIN_ROOT = ENTITY_SERVICE_ROOT + "/admin";
+
+	public final static String ENTITY_CREATE_OPERATION = "create";
+
+	public final static String ENTITY_CREATE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + ENTITY_CREATE_OPERATION;
 
 }

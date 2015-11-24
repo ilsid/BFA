@@ -40,7 +40,7 @@ public class ScriptManager {
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
-	 *             <li>if the script with such name already exist in the repository within the Default Group</li>
+	 *             <li>if the script with such name already exists in the repository within the Default Group</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
@@ -69,7 +69,6 @@ public class ScriptManager {
 	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
-	 * @see {@link ScriptManager#addClassUpdateListener(ClassUpdateListener)}
 	 */
 	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
@@ -116,8 +115,43 @@ public class ScriptManager {
 		return scriptBody;
 	}
 
+	/**
+	 * Creates new entity in the repository. The entity belongs to the Default Group.</br>
+	 * The following entity body format is expected:</br>
+	 * </br>
+	 * <code>type name[;type name[;type name[...]]]</code> </br>
+	 * </br>
+	 * The entity body example: </br>
+	 * </br>
+	 * <code>Integer Days;Integer ProlongDays;Double MonthlyFee</code>
+	 * 
+	 * @param entityName
+	 *            entity name
+	 * @param entityBody
+	 *            entity body
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if the entity body format is not valid</li>
+	 *             <li>if the entity with such name already exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
 	public void createEntity(String entityName, String entityBody) throws ManagementException {
+		validateEntityBody(entityName, entityBody);
 
+		String className = TypeNameResolver.resolveEnityClassName(entityName);
+		byte[] byteCode;
+		try {
+			byteCode = ClassCompiler.compileEntityToBytecode(className, entityBody);
+		} catch (ClassCompilationException e) {
+			throw new ManagementException(String.format("Compilation of the entity [%s] failed", entityName), e);
+		}
+
+		try {
+			repository.save(className, byteCode, entityBody);
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to create the entity [%s]", entityName), e);
+		}
 	}
 
 	/**
@@ -192,6 +226,18 @@ public class ScriptManager {
 		result.scriptExpressions = expressions;
 
 		return result;
+	}
+
+	private void validateEntityBody(String entityName, String entityBody) throws ManagementException {
+		String[] fieldExpressions = entityBody.split(";");
+		for (String fieldExpr : fieldExpressions) {
+			String trimmedExpr = fieldExpr.trim();
+			String[] exprParts = trimmedExpr.split("\\s+");
+			if (exprParts.length != 2) {
+				throw new ManagementException(
+						String.format("The entity [%s] contains invalid expression [%s]", entityName, trimmedExpr));
+			}
+		}
 	}
 
 	private void startTransaction() throws PersistenceException {

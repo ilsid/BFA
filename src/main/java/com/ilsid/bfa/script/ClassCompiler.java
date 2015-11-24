@@ -179,7 +179,7 @@ public class ClassCompiler {
 	 * </br>
 	 * The entity body example: </br>
 	 * </br>
-	 * <code>Integer Days;Integer ProlongDays;Double MonthlyFee</code>
+	 * <code>java.lang.Integer Days;java.lang.Integer ProlongDays;java.lang.Double MonthlyFee</code>
 	 * 
 	 * @param className
 	 *            class name

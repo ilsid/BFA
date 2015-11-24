@@ -123,7 +123,7 @@ public class ScriptManager {
 	 * </br>
 	 * The entity body example: </br>
 	 * </br>
-	 * <code>Integer Days;Integer ProlongDays;Double MonthlyFee</code>
+	 * <code>Numeric Days;Numeric ProlongDays;Decimal MonthlyFee</code>
 	 * 
 	 * @param entityName
 	 *            entity name
@@ -137,12 +137,12 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void createEntity(String entityName, String entityBody) throws ManagementException {
-		validateEntityBody(entityName, entityBody);
+		String bodyJavaCode = validateAndTransformEntityBody(entityName, entityBody);
 
 		String className = TypeNameResolver.resolveEnityClassName(entityName);
 		byte[] byteCode;
 		try {
-			byteCode = ClassCompiler.compileEntityToBytecode(className, entityBody);
+			byteCode = ClassCompiler.compileEntityToBytecode(className, bodyJavaCode);
 		} catch (ClassCompilationException e) {
 			throw new ManagementException(String.format("Compilation of the entity [%s] failed", entityName), e);
 		}
@@ -228,8 +228,9 @@ public class ScriptManager {
 		return result;
 	}
 
-	private void validateEntityBody(String entityName, String entityBody) throws ManagementException {
+	private String validateAndTransformEntityBody(String entityName, String entityBody) throws ManagementException {
 		String[] fieldExpressions = entityBody.split(";");
+		StringBuilder javaCode = new StringBuilder();
 		for (String fieldExpr : fieldExpressions) {
 			String trimmedExpr = fieldExpr.trim();
 			String[] exprParts = trimmedExpr.split("\\s+");
@@ -237,7 +238,11 @@ public class ScriptManager {
 				throw new ManagementException(
 						String.format("The entity [%s] contains invalid expression [%s]", entityName, trimmedExpr));
 			}
+			String javaType = TypeNameResolver.resolveEnityClassName(exprParts[0]);
+			javaCode.append(javaType).append(" ").append(exprParts[1]).append(";");
 		}
+
+		return javaCode.toString();
 	}
 
 	private void startTransaction() throws PersistenceException {

@@ -48,6 +48,10 @@ public abstract class BaseUnitTestCase {
 	protected void assertNull(Object object) {
 		Assert.assertNull(object);
 	}
+	
+	protected void assertNotNull(Object object) {
+		Assert.assertNotNull(object);
+	}
 
 	protected void assertTrue(boolean condition) {
 		Assert.assertTrue(condition);

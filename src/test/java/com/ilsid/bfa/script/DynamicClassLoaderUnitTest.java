@@ -72,4 +72,27 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 		intialInstance.loadClass(className);
 	}
 
+	@Test
+	public void bytecodeForClassFromDynamicPackageCanBeLoaded() throws Exception {
+		String className = "com.ilsid.bfa.generated.classloadertest.AnotherFooContract";
+		assertNotNull(DynamicClassLoader.getInstance().loadByteCode(className));
+	}
+
+	@Test
+	public void bytecodeForNonExistingClassFromDynamicPackageCanNotBeLoaded() throws Exception {
+		String className = "com.ilsid.bfa.generated.classloadertest.NonExistingFooContract";
+
+		exceptionRule.expect(ClassNotFoundException.class);
+		exceptionRule.expectMessage(
+				"Class [com.ilsid.bfa.generated.classloadertest.NonExistingFooContract] is not found in the repository");
+
+		DynamicClassLoader.getInstance().loadByteCode(className);
+	}
+
+	@Test
+	public void bytecodeForClassFromStaticPackageIsNotLoaded() throws Exception {
+		String className = "com.ilsid.bfa.test.types.ContractForCustomClassloaderTesting";
+		assertNull(DynamicClassLoader.getInstance().loadByteCode(className));
+	}
+
 }

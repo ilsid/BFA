@@ -20,6 +20,7 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 
@@ -209,11 +210,11 @@ public class ClassCompiler {
 				String typeName = exprParts[0];
 				String fieldName = exprParts[1];
 
-				// If the entity's field type is generated itself, then the corresponding class needs to be loaded and
-				// added to the class pool before the entity compilation
-				if (typeName.startsWith(TypeNameResolver.GENERATED_CLASSES_PACKAGE)) {
-					Class<?> generatedClass = DynamicClassLoader.getInstance().loadClass(typeName);
-					ClassPath cpEntry = new ClassClassPath(generatedClass);
+				// If the entity's field type is generated itself, then the corresponding class byte code needs to be
+				// loaded and added to the class pool before the entity compilation
+				if (typeName.startsWith(ClassNameUtil.GENERATED_CLASSES_PACKAGE)) {
+					byte[] typeByteCode = DynamicClassLoader.getInstance().loadByteCode(typeName);
+					ClassPath cpEntry = new ByteArrayClassPath(typeName, typeByteCode);
 					generatedTypesClassPath.add(cpEntry);
 					classPool.appendClassPath(cpEntry);
 				}
@@ -226,13 +227,16 @@ public class ClassCompiler {
 
 			result = toBytecode(clazz);
 
+		} catch (NotFoundException | CannotCompileException | IOException | ClassNotFoundException
+				| IllegalStateException e) {
+
+			throw new ClassCompilationException(String.format("Compilation of Entity [%s] failed", className), e);
+
+		} finally {
+
 			for (ClassPath cpEntry : generatedTypesClassPath) {
 				classPool.removeClassPath(cpEntry);
 			}
-
-		} catch (NotFoundException | CannotCompileException | IOException | ClassNotFoundException
-				| IllegalStateException e) {
-			throw new ClassCompilationException(String.format("Compilation of Entity [%s] failed", className), e);
 		}
 
 		return result;

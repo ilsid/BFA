@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Inject;
 
 import com.ilsid.bfa.BFAError;
-import com.ilsid.bfa.script.TypeNameResolver;
+import com.ilsid.bfa.common.ClassNameUtil;
 
 /**
  * The class loader for the generated classes. Supports the reloading of the already loaded generated classes. </br>
@@ -61,7 +61,8 @@ public class DynamicClassLoader extends ClassLoader {
 
 	/**
 	 * Loads the class with {@link TypeNameResolver#GENERATED_CLASSES_PACKAGE} package from the specified code
-	 * repository. All other classes are loaded by the context class loader of the current thread.
+	 * repository. If the class has been already loaded, it is got from the loader's cache. All other classes are loaded
+	 * by the context class loader of the current thread.
 	 * 
 	 * @param className
 	 *            the name of class to load
@@ -74,26 +75,15 @@ public class DynamicClassLoader extends ClassLoader {
 	 */
 	@Override
 	public Class<?> loadClass(String className) throws ClassNotFoundException, IllegalStateException {
-		if (this != instance) {
-			throw new IllegalStateException("Obsolete class loader has been invoked");
-		}
+		validateInstance();
 
-		if (className.startsWith(TypeNameResolver.GENERATED_CLASSES_PACKAGE)) {
+		if (className.startsWith(ClassNameUtil.GENERATED_CLASSES_PACKAGE)) {
 			Class<?> clazz = cache.get(className);
 			if (clazz != null) {
 				return clazz;
 			}
 
-			byte[] byteCode;
-			try {
-				byteCode = repository.load(className);
-			} catch (PersistenceException e) {
-				throw new BFAError(String.format("Failed to load the class [%s] from the repository"), e);
-			}
-
-			if (byteCode == null) {
-				throw new ClassNotFoundException(String.format("Class [%s] is not found in the repository", className));
-			}
+			byte[] byteCode = loadClassByteCode(className);
 
 			Class<?> alreadyInCacheClass = cache.get(className);
 			if (alreadyInCacheClass == null) {
@@ -111,6 +101,29 @@ public class DynamicClassLoader extends ClassLoader {
 		}
 
 		return super.loadClass(className);
+	}
+
+	/**
+	 * Loads the byte code for classes with {@link TypeNameResolver#GENERATED_CLASSES_PACKAGE} package from the
+	 * specified code repository. Return <code>null</code> for all other classes.
+	 * 
+	 * @param className
+	 *            the class name
+	 * @return the byte code for the generated classes or <code>null</code> for all other classes
+	 * @throws ClassNotFoundException
+	 *             if the generated class with the given named does not exist in the repository
+	 * @throws IllegalStateException
+	 *             if this method is invoked for the obsolete class loader instance. It may happen if this method was
+	 *             called not via {@link DynamicClassLoader#getInstance()}, but via the object reference
+	 */
+	public byte[] loadByteCode(String className) throws ClassNotFoundException, IllegalStateException {
+		validateInstance();
+
+		if (className.startsWith(ClassNameUtil.GENERATED_CLASSES_PACKAGE)) {
+			return loadClassByteCode(className);
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -146,6 +159,27 @@ public class DynamicClassLoader extends ClassLoader {
 	@Inject
 	public static void setRepository(CodeRepository codeRespository) {
 		repository = codeRespository;
+	}
+
+	private void validateInstance() throws IllegalStateException {
+		if (this != instance) {
+			throw new IllegalStateException("Obsolete class loader has been invoked");
+		}
+	}
+
+	private static byte[] loadClassByteCode(String className) throws ClassNotFoundException {
+		byte[] byteCode;
+		try {
+			byteCode = repository.load(className);
+		} catch (PersistenceException e) {
+			throw new BFAError(String.format("Failed to load the class [%s] from the repository"), e);
+		}
+
+		if (byteCode == null) {
+			throw new ClassNotFoundException(String.format("Class [%s] is not found in the repository", className));
+		}
+
+		return byteCode;
 	}
 
 }

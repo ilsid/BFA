@@ -3,17 +3,14 @@ package com.ilsid.bfa.script;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ilsid.bfa.common.ClassNameUtil;
+
 //TODO: write javadocs
 public class TypeNameResolver {
 
-	/**
-	 * The root package for all generated classes.
-	 */
-	public static final String GENERATED_CLASSES_PACKAGE = "com.ilsid.bfa.generated";
-
 	private static final char DOT = '.';
 
-	private static final String GENERATED_ROOT_PACKAGE = GENERATED_CLASSES_PACKAGE + DOT;
+	private static final String GENERATED_ROOT_PACKAGE = ClassNameUtil.GENERATED_CLASSES_PACKAGE + DOT;
 
 	private static final String GENERATED_SCRIPT_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "script.";
 

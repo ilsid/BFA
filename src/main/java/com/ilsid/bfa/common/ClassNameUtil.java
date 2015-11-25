@@ -9,6 +9,11 @@ import java.io.File;
  *
  */
 public class ClassNameUtil {
+	
+	/**
+	 * The root package for all generated classes.
+	 */
+	public static final String GENERATED_CLASSES_PACKAGE = "com.ilsid.bfa.generated";
 
 	private static final char DOT = '.';
 

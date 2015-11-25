@@ -54,6 +54,12 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		File entityDir = ENTITY_REPOSITORY_DIR;
+
+		assertTrue(entityDir.isDirectory());
+		assertEquals(3, entityDir.list().length);
+		assertFilesExist(entityDir.getPath(), new String[] { "Entity003.class", "Entity003.src" });
 	}
 
 	@Test

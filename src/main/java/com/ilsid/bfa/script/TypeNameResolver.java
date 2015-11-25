@@ -47,7 +47,7 @@ public class TypeNameResolver {
 		predefinedTypes.put("Decimal", "java.lang.Double");
 	}
 
-	public static String resolveEnityClassName(String entityName) {
+	public static String resolveEntityClassName(String entityName) {
 		String predefinedType = predefinedTypes.get(entityName);
 		if (predefinedType != null) {
 			return predefinedType;

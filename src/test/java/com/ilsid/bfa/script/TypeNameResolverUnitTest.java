@@ -101,17 +101,17 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void predefinedNumberTypeCanBeResolved() {
-		assertEquals("java.lang.Integer", TypeNameResolver.resolveEnityClassName("Number"));
+		assertEquals("java.lang.Integer", TypeNameResolver.resolveEntityClassName("Number"));
 	}
 
 	@Test
 	public void predefinedDecimalTypeCanBeResolved() {
-		assertEquals("java.lang.Double", TypeNameResolver.resolveEnityClassName("Decimal"));
+		assertEquals("java.lang.Double", TypeNameResolver.resolveEntityClassName("Decimal"));
 	}
 
 	@Test
 	public void nonPredefinedEntityTypeCanBeResolved() {
-		assertEquals(ENTITY_CLASS_NAME_PREFIX + "SomeBean", TypeNameResolver.resolveEnityClassName("SomeBean"));
+		assertEquals(ENTITY_CLASS_NAME_PREFIX + "SomeBean", TypeNameResolver.resolveEntityClassName("SomeBean"));
 	}
 
 	private String getExpressionClassNamePart(String expression) {

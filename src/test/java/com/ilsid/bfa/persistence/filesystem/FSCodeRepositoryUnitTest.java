@@ -23,6 +23,9 @@ import com.ilsid.bfa.persistence.PersistenceException;
 
 public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 
+	private static final File CODE_REPOSITORY_SOURCE_DIR = new File(
+			TestConstants.TEST_RESOURCES_DIR + "/code_repository");
+
 	private static final String SCRIPT_SOURCE_FILE_NAME = "single-expression-script.txt";
 
 	private final static String ROOT_DIR_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_class_repository";
@@ -181,7 +184,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void sourceCodeForExistingScriptCanBeLoaded() throws Exception {
-		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + "/code_repository"), ROOT_DIR);
+		createCodeRepository();
 
 		String scriptSource = repository
 				.loadSourceCode("com.ilsid.bfa.generated.script.default_group.script001.Script001");
@@ -198,18 +201,70 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void byteCodeForExistingScriptCanBeLoaded() throws Exception {
-		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + "/code_repository"), ROOT_DIR);
+		createCodeRepository();
 
 		byte[] byteCode = repository.load("com.ilsid.bfa.generated.script.default_group.script001.Script001");
 		byte[] expectedByteCode = IOHelper.loadClass(TestConstants.TEST_RESOURCES_DIR
 				+ "/code_repository/com/ilsid/bfa/generated/script/default_group/script001", "Script001.class");
-		
+
 		assertTrue(Arrays.equals(expectedByteCode, byteCode));
 	}
-	
+
 	@Test
 	public void noByteCodeIsLoadedforNonExistentScript() throws Exception {
 		assertNull(repository.load("some.nonexistent.script.Script001"));
+	}
+
+	@Test
+	public void classAndItsSourceCanBeDeleted() throws Exception {
+		createCodeRepository();
+
+		String className = "com.ilsid.bfa.generated.script.default_group.script001.Script001";
+		String filePrefix = ROOT_DIR_PATH + "/" + className.replace('.', '/');
+		File classFile = new File(filePrefix + ".class");
+		File sourceFile = new File(filePrefix + ".src");
+		assertTrue(classFile.exists());
+		assertTrue(sourceFile.exists());
+
+		int deletedCount = repository.deleteClass(className);
+		assertEquals(2, deletedCount);
+		assertFalse(classFile.exists());
+		assertFalse(classFile.exists());
+	}
+
+	@Test
+	public void classWithoutSourceCanBeDeleted() throws Exception {
+		createCodeRepository();
+
+		String className = "com.ilsid.bfa.generated.script.default_group.script001.Script001$$1";
+		String filePrefix = ROOT_DIR_PATH + "/" + className.replace('.', '/');
+		File classFile = new File(filePrefix + ".class");
+		File sourceFile = new File(filePrefix + ".src");
+		assertTrue(classFile.exists());
+		assertFalse(sourceFile.exists());
+
+		int deletedCount = repository.deleteClass(className);
+		assertEquals(1, deletedCount);
+		assertFalse(classFile.exists());
+	}
+
+	@Test
+	public void nonExistingClassIsNotDeletedSilently() throws Exception {
+		createCodeRepository();
+
+		String className = "com.ilsid.bfa.generated.script.default_group.script001.SomeNonExistingScript";
+		String filePrefix = ROOT_DIR_PATH + "/" + className.replace('.', '/');
+		File classFile = new File(filePrefix + ".class");
+		File sourceFile = new File(filePrefix + ".src");
+		assertFalse(classFile.exists());
+		assertFalse(sourceFile.exists());
+
+		int deletedCount = repository.deleteClass(className);
+		assertEquals(0, deletedCount);
+	}
+
+	private void createCodeRepository() throws Exception {
+		FileUtils.copyDirectory(CODE_REPOSITORY_SOURCE_DIR, ROOT_DIR);
 	}
 
 	private void saveClassAndSource() throws Exception {

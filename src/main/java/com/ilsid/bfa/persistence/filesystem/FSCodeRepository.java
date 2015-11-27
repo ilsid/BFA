@@ -34,7 +34,7 @@ public class FSCodeRepository implements CodeRepository {
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
 	private static final String SOURCE_FILE_EXTENSION = ".src";
-	
+
 	private AtomicLong runtimeId = new AtomicLong(System.currentTimeMillis());
 
 	private String rootDir;
@@ -117,6 +117,28 @@ public class FSCodeRepository implements CodeRepository {
 
 		return filesCnt;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see com.ilsid.bfa.persistence.CodeRepository#deleteClass(java.lang.String)
+	 */
+	@Override
+	public int deleteClass(String className) throws PersistenceException {
+		String filePathPrefix = rootDir + File.separatorChar + className.replace(DOT, File.separatorChar);
+		File classFile = new File(filePathPrefix + CLASS_FILE_EXTENSION);
+		File sourceFile = new File(filePathPrefix + SOURCE_FILE_EXTENSION);
+
+		int filesCnt = 0;
+
+		if (deleteFileIfExists(classFile)) {
+			filesCnt++;
+			if (deleteFileIfExists(sourceFile)) {
+				filesCnt++;
+			}
+		}
+
+		return filesCnt;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -159,7 +181,7 @@ public class FSCodeRepository implements CodeRepository {
 	public long getNextRuntimeId() throws PersistenceException {
 		return runtimeId.incrementAndGet();
 	}
-	
+
 	/**
 	 * Returns {@link FSTransactionManager} instance.
 	 * 
@@ -229,6 +251,19 @@ public class FSCodeRepository implements CodeRepository {
 
 	private String getClassDirectoryPath(String className) {
 		return rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
+	}
+
+	private boolean deleteFileIfExists(File file) throws PersistenceException {
+		if (file.exists() && file.isFile()) {
+			try {
+				FileUtils.forceDelete(file);
+			} catch (IOException e) {
+				throw new PersistenceException(String.format("Failed to delete file [%s]", file.getName()), e);
+			}
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }

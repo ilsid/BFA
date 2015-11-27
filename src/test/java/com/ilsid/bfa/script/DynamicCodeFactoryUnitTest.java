@@ -184,6 +184,10 @@ public class DynamicCodeFactoryUnitTest extends BaseUnitTestCase {
 			public long getNextRuntimeId() throws PersistenceException {
 				return 0;
 			}
+
+			public int deleteClass(String className) throws PersistenceException {
+				return 0;
+			}
 		};
 
 		DynamicCodeFactory.setRepository(repository);

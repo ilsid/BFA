@@ -70,6 +70,23 @@ public interface CodeRepository {
 	int deletePackage(String packageName) throws PersistenceException;
 
 	/**
+	 * Deletes the class and its source, if any.
+	 * 
+	 * @param className
+	 *            the name of class to delete
+	 * @return a number of deleted objects
+	 *         <ul>
+	 *         <li><code>0</code> is returned, if the class with the given name does not exist</li>
+	 *         <li><code>1</code> is returned if the class with the given name was deleted, but no corresponding source
+	 *         was found</li>
+	 *         <li><code>2</code> is returned if both class and source were deleted</li>
+	 *         </ul>
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	int deleteClass(String className) throws PersistenceException;
+
+	/**
 	 * Loads the source code for the script defined by the given class name. The source code means here the variable
 	 * part only (the script body).
 	 * 

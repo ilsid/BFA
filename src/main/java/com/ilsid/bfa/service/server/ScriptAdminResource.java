@@ -31,6 +31,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 * @return the {@link Status#OK} response.
 	 * @throws ResourceException
 	 *             <ul>
+	 *             <li>if the script's name or body are not specified</li>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
 	 *             <li>if the script with the specified name already exist in the specified group</li>
 	 *             <li>in case of the repository access failure</li>
@@ -60,6 +61,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 * @return the {@link Status#OK} response.
 	 * @throws ResourceException
 	 *             <ul>
+	 *             <li>if the script's name or body are not specified</li>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
 	 *             <li>if the script with the specified name does not exist in the the specified group</li>
 	 *             <li>in case of the repository access failure</li>
@@ -89,6 +91,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 * @return the response containing the script's source code (as plain text)
 	 * @throws ResourceException
 	 *             <ul>
+	 *             <li>if the script's name is not specified</li>
 	 *             <li>if the script with the specified name does not exist in the specified group</li>
 	 *             <li>in case of the repository access failure</li>
 	 *             </ul>

@@ -96,7 +96,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
 				"ScriptToUpdate$$3.class", "ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var3.class" });
 
-		String actualScriptBody = IOHelper.loadScript(scriptDir.getPath(), "ScriptToUpdate.src");
+		String actualScriptBody = IOHelper.loadFileContents(scriptDir.getPath(), "ScriptToUpdate.src");
 		assertEquals(updatedScriptBody, actualScriptBody);
 	}
 
@@ -124,7 +124,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
-		String expectedSource = IOHelper.loadScript(
+		String expectedSource = IOHelper.loadFileContents(
 				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/scripttoread", "ScriptToRead.src");
 
 		assertEquals(expectedSource, response.getEntity(String.class));

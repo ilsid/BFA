@@ -188,7 +188,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 
 		String scriptSource = repository
 				.loadSourceCode("com.ilsid.bfa.generated.script.default_group.script001.Script001");
-		String expectedSource = IOHelper.loadScript(TestConstants.TEST_RESOURCES_DIR
+		String expectedSource = IOHelper.loadFileContents(TestConstants.TEST_RESOURCES_DIR
 				+ "/code_repository/com/ilsid/bfa/generated/script/default_group/script001", "Script001.src");
 
 		assertEquals(expectedSource, scriptSource);

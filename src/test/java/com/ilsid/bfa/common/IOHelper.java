@@ -23,7 +23,7 @@ public class IOHelper {
 		return result;
 	}
 	
-	public static String loadScript(String dir, String fileName) throws Exception {
+	public static String loadFileContents(String dir, String fileName) throws Exception {
 		String result;
 		try (InputStream is = new FileInputStream(new File(dir + "/" + fileName));) {
 			result = IOUtils.toString(is);

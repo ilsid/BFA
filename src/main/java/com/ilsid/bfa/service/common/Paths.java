@@ -58,6 +58,15 @@ public final class Paths {
 
 	public final static String ENTITY_CREATE_OPERATION = "create";
 
+	public final static String ENTITY_UPDATE_OPERATION = "update";
+
+	public final static String ENTITY_GET_SOURCE_OPERATION = "getSource";
+
 	public final static String ENTITY_CREATE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + ENTITY_CREATE_OPERATION;
+
+	public final static String ENTITY_UPDATE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + ENTITY_UPDATE_OPERATION;
+
+	public final static String ENTITY_GET_SOURCE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/"
+			+ ENTITY_GET_SOURCE_OPERATION;
 
 }

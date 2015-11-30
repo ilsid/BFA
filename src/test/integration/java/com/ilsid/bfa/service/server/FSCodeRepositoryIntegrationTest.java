@@ -14,7 +14,7 @@ import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
 
 public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegrationTestCase {
 
-	private static final String LOGGING_CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/log4j.xml";
+	private static final String LOGGING_CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/test-log4j.xml";
 
 	protected static final String CODE_REPOSITORY_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_code_repository";
 

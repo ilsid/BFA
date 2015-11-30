@@ -103,6 +103,7 @@
 	<properties>
 		<integrationTestsSrcDir>src/test/integration</integrationTestsSrcDir>
 		<integrationTestsOutputDir>target/integration-test-classes</integrationTestsOutputDir>
+		<logsDir>bfaLogs</logsDir>
 	</properties>
 
 	<build>
@@ -132,17 +133,6 @@
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>2.18.1</version>
 				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-failsafe-plugin</artifactId>
-					<version>2.19</version>
-					<configuration>
-						<testClassesDirectory>${integrationTestsOutputDir}</testClassesDirectory>
-						<reportsDirectory>${integrationTestsOutputDir}/failsafe-reports</reportsDirectory>
-						<test>**/*IntegrationTest.java</test>
-						<redirectTestOutputToFile>true</redirectTestOutputToFile>
-					</configuration>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 		<plugins>
@@ -159,6 +149,18 @@
 						<configuration>
 							<tasks>
 								<mkdir dir="${integrationTestsOutputDir}" />
+							</tasks>
+						</configuration>
+					</execution>
+					<execution>
+						<id>delete-logs</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<delete dir="${logsDir}" />
 							</tasks>
 						</configuration>
 					</execution>
@@ -202,12 +204,38 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
+				<artifactId>maven-surefire-plugin</artifactId>
 				<executions>
 					<execution>
+						<id>run-integration-tests</id>
+						<phase>integration-test</phase>
 						<goals>
-							<goal>integration-test</goal>
+							<goal>test</goal>
 						</goals>
+						<configuration>
+							<testClassesDirectory>${integrationTestsOutputDir}</testClassesDirectory>
+							<reportsDirectory>${integrationTestsOutputDir}/test-reports</reportsDirectory>
+							<test>**/*IntegrationTest.java</test>
+							<redirectTestOutputToFile>true</redirectTestOutputToFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>delete-logs-dir</id>
+						<phase>integration-test</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<delete dir="${logsDir}" />
+							</tasks>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

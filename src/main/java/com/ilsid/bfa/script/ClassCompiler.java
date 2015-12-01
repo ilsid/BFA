@@ -413,7 +413,7 @@ public class ClassCompiler {
 					for (Annotation[] annotations : parentMethod.getParameterAnnotations()) {
 						for (Annotation a : annotations) {
 							if (a.annotationType() == ExprParam.class) {
-								processExpression(methodParams[paramIdx], visitorContext);
+								processExpression(methodParams[paramIdx], visitorContext, ((ExprParam) a).compile());
 							}
 						}
 						paramIdx++;
@@ -446,7 +446,8 @@ public class ClassCompiler {
 			}
 		}
 
-		private void processExpression(Expression expression, MethodCallVisitorContext visitorContext) {
+		private void processExpression(Expression expression, MethodCallVisitorContext visitorContext,
+				boolean compilationIsNeeded) {
 			if (StringLiteralExpr.class.isInstance(expression)) {
 				String scriptExpr = ((StringLiteralExpr) expression).getValue();
 				String javaExpr;
@@ -463,14 +464,14 @@ public class ClassCompiler {
 					}
 
 					javaExpr = visitorContext.parser.parse(scriptExpr);
-					byteCode = compileInvocationToBytecode(className, javaExpr);
+					if (compilationIsNeeded) {
+						byteCode = compileInvocationToBytecode(className, javaExpr);
+						CompilationBlock cb = new CompilationBlock(className, byteCode, javaExpr);
+						expressions.put(className, cb);
+					}
 				} catch (DynamicCodeException | ClassCompilationException e) {
 					visitorContext.exceptions.add(e);
-					return;
 				}
-
-				CompilationBlock cb = new CompilationBlock(className, byteCode, javaExpr);
-				expressions.put(className, cb);
 			}
 		}
 

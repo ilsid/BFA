@@ -15,4 +15,9 @@ import java.lang.annotation.Target;
 @Retention(value = RetentionPolicy.RUNTIME)
 public @interface ExprParam {
 
+	/**
+	 * Defines whether an expression should be compiled.
+	 */
+	boolean compile() default true;
+
 }

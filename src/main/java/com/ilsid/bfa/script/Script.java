@@ -7,7 +7,7 @@ public abstract class Script implements Executable<Void> {
 	private ScriptContext scriptContext;
 
 	private GlobalContext runtimeContext;
-	
+
 	private long runtimeId;
 
 	protected abstract void doExecute() throws ScriptException;
@@ -43,7 +43,7 @@ public abstract class Script implements Executable<Void> {
 		scriptContext.addLocalVar(name, TypeNameResolver.resolveEntityClassName(type), getValue(initValue));
 	}
 
-	public void SetLocalVar(String name, @ExprParam Object expr) throws ScriptException {
+	public void SetLocalVar(@ExprParam(compile = false) String name, @ExprParam Object expr) throws ScriptException {
 		scriptContext.updateLocalVar(name, getValue(expr));
 	}
 
@@ -111,7 +111,7 @@ public abstract class Script implements Executable<Void> {
 		public ActionResult SetLocalVar(String name) throws ScriptException;
 
 	}
-	
+
 	public long getRuntimeId() {
 		return runtimeId;
 	}

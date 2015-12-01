@@ -258,6 +258,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
 		msg.append("Compilation of expressions in script [TestScript33] failed").append(StringUtils.LF);
+		msg.append("Could not parse expression [Var55]: Unexpected token [Var55]").append(StringUtils.LF);
+		msg.append("   Caused by: Unexpected token [Var55]").append(StringUtils.LF);
 		msg.append(
 				"Could not parse expression [Var1 - Var33]: Integer value or variable is expected after operand [-], but was [Var33]")
 				.append(StringUtils.LF);
@@ -267,7 +269,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		msg.append("   Caused by: Unexpected token [abc]").append(StringUtils.LF);
 		exceptionRule.expectMessage(msg.toString());
 
-		compileScriptExpressions("TestScript33", "two-invalid-expressions-script.txt");
+		compileScriptExpressions("TestScript33", "three-invalid-expressions-script.txt");
 	}
 
 	@Test

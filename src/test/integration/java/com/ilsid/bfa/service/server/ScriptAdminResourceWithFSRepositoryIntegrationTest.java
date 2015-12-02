@@ -39,7 +39,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	public void invalidScriptIsNotSavedInFileSystem() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams("Script 002",
-				IOHelper.loadScript("two-invalid-expressions-script.txt"));
+				IOHelper.loadScript("three-invalid-expressions-script.txt"));
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
@@ -52,7 +52,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	public void scriptWithoutNameIsNotSavedInFileSystem() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams(null,
-				IOHelper.loadScript("two-invalid-expressions-script.txt"));
+				IOHelper.loadScript("three-invalid-expressions-script.txt"));
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 

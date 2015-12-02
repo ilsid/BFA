@@ -9,7 +9,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.EntityAdminParams;
@@ -48,7 +47,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	public void validEntityWithFieldOfGeneratedTypeIsCompiledAndItsSourceAndClassIsSavedInFileSystem()
 			throws Exception {
 		// Copy the generated class Contract to the code repository
-		copyFileToRepository("Contract.class");
+		copyEntityToRepository("Contract.class");
 
 		WebResource webResource = getWebResource(Paths.ENTITY_CREATE_SERVICE);
 		// The entity contains the generated class Contract
@@ -83,8 +82,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void validEntityAndItsSourceIsUpdatedInFileSystem() throws Exception {
-		copyFileToRepository("EntityToUpdate.class");
-		copyFileToRepository("EntityToUpdate.src");
+		copyEntityToRepository("EntityToUpdate.class");
+		copyEntityToRepository("EntityToUpdate.src");
 
 		String initialEntityBody = IOHelper.loadFileContents(ENTITY_REPOSITORY_DIR_PATH, "EntityToUpdate.src");
 		assertEquals("Number field1; Decimal field2", initialEntityBody);
@@ -117,8 +116,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void sourceCodeForExistingEntityIsLoaded() throws Exception {
-		copyFileToRepository("EntityToRead.class");
-		copyFileToRepository("EntityToRead.src");
+		copyEntityToRepository("EntityToRead.class");
+		copyEntityToRepository("EntityToRead.src");
 
 		WebResource webResource = getWebResource(Paths.ENTITY_GET_SOURCE_SERVICE);
 		EntityAdminParams entity = new EntityAdminParams();
@@ -141,12 +140,6 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
 		assertEquals("The entity [NonExistingEntity] does not exist in the repository",
 				response.getEntity(String.class));
-	}
-
-	private void copyFileToRepository(String fileName) throws Exception {
-		String entitySourceDir = "/integration_tests/to_copy/com/ilsid/bfa/generated/entity/default_group";
-		FileUtils.copyFileToDirectory(new File(TestConstants.TEST_RESOURCES_DIR + entitySourceDir + "/" + fileName),
-				new File(ENTITY_REPOSITORY_DIR_PATH));
 	}
 
 }

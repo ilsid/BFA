@@ -458,12 +458,13 @@ public class ClassCompiler {
 					className = TypeNameResolver.resolveExpressionClassName(visitorContext.scriptShortClassName,
 							scriptExpr);
 
-					// Skip compilation of the same expression
+					// Skip parsing and compilation of the same expression
 					if (expressions.containsKey(className)) {
 						return;
 					}
 
 					javaExpr = visitorContext.parser.parse(scriptExpr);
+
 					if (compilationIsNeeded) {
 						byteCode = compileInvocationToBytecode(className, javaExpr);
 						CompilationBlock cb = new CompilationBlock(className, byteCode, javaExpr);

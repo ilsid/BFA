@@ -1,0 +1,4 @@
+DeclareLocalVar("Var1", "Number");
+
+// Two expressions: "Var1" and "1". The second expression is compiled only.  
+SetLocalVar("Var1", "1");

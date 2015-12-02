@@ -200,6 +200,17 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "declarations-only-script.txt");
 		assertEquals(0, expressions.length);
 	}
+	
+	@Test
+	public void nothingIsCompiledInScriptWithNoExpressions2() throws Exception {
+		// The script contains two expressions, but only one expression is compiled
+		CompilationBlock[] expressions = compileScriptExpressions("TestScript77", "one-noncompiled-expression-script.txt");
+
+		assertEquals(1, expressions.length);
+		
+		String exprName = expressions[0].getClassName();
+		assertExpressionShortClassName("TestScript77$$1", exprName);
+	}
 
 	@Test
 	public void onlyUniqueScriptExpressionsAreCompiled() throws Exception {

@@ -1,5 +1,7 @@
 package com.ilsid.bfa.script;
 
+import com.ilsid.bfa.persistence.DynamicClassLoader;
+
 /**
  * ValueExpression that represents some scripting source code.
  * 
@@ -37,11 +39,13 @@ public class ScriptExpression implements ValueExpression<Object> {
 			return value;
 		}
 
+		String invocationClassName = TypeNameResolver.resolveExpressionClassName(scriptContext.getScriptName(), input);
 		DynamicCodeInvocation invocation;
 		try {
-			invocation = DynamicCodeFactory.getInvocation(scriptContext.getScriptName(), input,
-					new ScriptExpressionParser(scriptContext));
-		} catch (DynamicCodeException e) {
+			Class<?> invocationClazz = DynamicClassLoader.getInstance().loadClass(invocationClassName);
+			invocation = (DynamicCodeInvocation) invocationClazz.newInstance();
+		} catch (ClassNotFoundException | IllegalStateException | InstantiationException | IllegalAccessException
+				| ClassCastException e) {
 			throw new ScriptException("Failed to get a value from the expression [" + input + "]", e);
 		}
 

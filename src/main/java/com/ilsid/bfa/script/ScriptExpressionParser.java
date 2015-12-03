@@ -34,15 +34,15 @@ public class ScriptExpressionParser {
 	 * @param scriptExpression
 	 *            scripting expression
 	 * @return Java source code
-	 * @throws DynamicCodeException
+	 * @throws ParsingException
 	 *             in case of the parsing failure
 	 */
-	public String parse(String scriptExpression) throws DynamicCodeException {
+	public String parse(String scriptExpression) throws ParsingException {
 		ParsingMachine parsingMachine = new ParsingMachine(scriptExpression, scriptContext);
 		try {
 			parsingMachine.process();
-		} catch (ParsingException e) {
-			throw new DynamicCodeException("Could not parse expression [" + scriptExpression + "]: " + e.getMessage(),
+		} catch (ParsingStateException e) {
+			throw new ParsingException("Could not parse expression [" + scriptExpression + "]: " + e.getMessage(),
 					e);
 		}
 
@@ -50,13 +50,13 @@ public class ScriptExpressionParser {
 	}
 
 	@SuppressWarnings("serial")
-	private static class ParsingException extends ScriptException {
+	private static class ParsingStateException extends ScriptException {
 
-		public ParsingException(String message, Throwable cause) {
+		public ParsingStateException(String message, Throwable cause) {
 			super(message, cause);
 		}
 
-		public ParsingException(String message) {
+		public ParsingStateException(String message) {
 			super(message);
 		}
 
@@ -64,13 +64,13 @@ public class ScriptExpressionParser {
 
 	private interface ParsingState {
 
-		void processToken(ParsingMachine context) throws ParsingException;
+		void processToken(ParsingMachine context) throws ParsingStateException;
 
 	}
 
 	private class StartState implements ParsingState {
 
-		public void processToken(ParsingMachine context) throws ParsingException {
+		public void processToken(ParsingMachine context) throws ParsingStateException {
 			String token = context.getNextToken();
 			StringBuilder javaExpression = context.getJavaExpression();
 			javaExpression.append("return");
@@ -106,7 +106,7 @@ public class ScriptExpressionParser {
 				javaExpression.append(dblFieldExpr);
 				context.setState(context.DOUBLE_STATE);
 			} else {
-				throw new ParsingException("Unexpected token [" + token + "]");
+				throw new ParsingStateException("Unexpected token [" + token + "]");
 			}
 
 			context.process();
@@ -116,7 +116,7 @@ public class ScriptExpressionParser {
 
 	private class EndState implements ParsingState {
 
-		public void processToken(ParsingMachine context) throws ParsingException {
+		public void processToken(ParsingMachine context) throws ParsingStateException {
 			context.getJavaExpression().append(";");
 		}
 
@@ -124,7 +124,7 @@ public class ScriptExpressionParser {
 
 	private abstract class NumericState implements ParsingState {
 
-		public void processToken(ParsingMachine context) throws ParsingException {
+		public void processToken(ParsingMachine context) throws ParsingStateException {
 			StringBuilder javaExpression = context.getJavaExpression();
 
 			if (context.hasNextToken()) {
@@ -133,7 +133,7 @@ public class ScriptExpressionParser {
 					javaExpression.append(" ").append(token);
 					context.setState(getNextState(context));
 				} else {
-					throw new ParsingException("One of the operands [" + ParsingUtil.OPERANDS + "] is expected after ["
+					throw new ParsingStateException("One of the operands [" + ParsingUtil.OPERANDS + "] is expected after ["
 							+ context.getCurrentToken() + "], but was [" + token + "]");
 				}
 			} else {
@@ -150,7 +150,7 @@ public class ScriptExpressionParser {
 
 	private abstract class OperandState implements ParsingState {
 
-		public void processToken(ParsingMachine context) throws ParsingException {
+		public void processToken(ParsingMachine context) throws ParsingStateException {
 			StringBuilder javaExpression = context.getJavaExpression();
 			ParsingUtil.FieldInfo fldInfo = new ParsingUtil.FieldInfo();
 
@@ -166,7 +166,7 @@ public class ScriptExpressionParser {
 							fldInfo.fieldName);
 					javaExpression.append(" ").append(intFieldExpr);
 				} else {
-					throw new ParsingException(getTypeName() + " value or variable is expected after operand ["
+					throw new ParsingStateException(getTypeName() + " value or variable is expected after operand ["
 							+ context.getCurrentToken() + "], but was [" + token + "]");
 				}
 				if (context.hasNextToken()) {
@@ -177,7 +177,7 @@ public class ScriptExpressionParser {
 				}
 				context.process();
 			} else {
-				throw new ParsingException("Unexpected operand [" + context.getCurrentToken() + "] at the end");
+				throw new ParsingStateException("Unexpected operand [" + context.getCurrentToken() + "] at the end");
 			}
 
 		}
@@ -354,7 +354,7 @@ public class ScriptExpressionParser {
 			return scriptContext;
 		}
 
-		public void process() throws ParsingException {
+		public void process() throws ParsingStateException {
 			if (index > -1) {
 				currentToken = tokens[index];
 			}

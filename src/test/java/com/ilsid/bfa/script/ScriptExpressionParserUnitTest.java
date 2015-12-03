@@ -352,8 +352,8 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	private void assertException(String input, String expectedMsg) {
 		try {
 			parser.parse(input);
-			fail(DynamicCodeException.class.getName() + " is expected");
-		} catch (DynamicCodeException e) {
+			fail(ParsingException.class.getName() + " is expected");
+		} catch (ParsingException e) {
 			assertEquals(expectedMsg, e.getMessage());
 		}
 	}

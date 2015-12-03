@@ -492,7 +492,7 @@ public class ClassCompiler {
 						CompilationBlock cb = new CompilationBlock(className, byteCode, javaExpr);
 						expressions.put(className, cb);
 					}
-				} catch (DynamicCodeException | ClassCompilationException e) {
+				} catch (ParsingException | ClassCompilationException e) {
 					visitorContext.exceptions.add(e);
 				}
 			}

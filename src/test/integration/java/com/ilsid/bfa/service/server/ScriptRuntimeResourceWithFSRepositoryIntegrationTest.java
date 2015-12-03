@@ -16,9 +16,20 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 
 	@Test
 	public void validScriptIsRun() throws Exception {
+		verifyScriptCanBeRun("ScriptToRead");
+	}
+
+	@Test
+	public void validScriptWithGeneratedEntityIsRun() throws Exception {
+		// The script depends on Contract entity
+		copyEntityFileToRepository("Contract.class");
+		verifyScriptCanBeRun("Single Entity Script");
+	}
+
+	private void verifyScriptCanBeRun(String scriptName) throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_RUN_SERVICE);
 		ScriptRuntimeParams script = new ScriptRuntimeParams();
-		script.setName("ScriptToRead");
+		script.setName(scriptName);
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 

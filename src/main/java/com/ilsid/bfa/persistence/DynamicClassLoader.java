@@ -1,5 +1,12 @@
 package com.ilsid.bfa.persistence;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +38,12 @@ import com.ilsid.bfa.common.ClassNameUtil;
  */
 public class DynamicClassLoader extends ClassLoader {
 
+	private static final String URL_PREFIX = "byte:///";
+
+	private static final String CLASS_FILE_EXTENSION = ".class";
+
+	private static final String GENERATED_CLASSES_DIR = ClassNameUtil.GENERATED_CLASSES_PACKAGE.replace('.', '/');
+
 	private static ConcurrentHashMap<String, Class<?>> cache = new ConcurrentHashMap<>();
 
 	private static DynamicClassLoader instance = new DynamicClassLoader();
@@ -58,6 +71,26 @@ public class DynamicClassLoader extends ClassLoader {
 			return instance;
 		}
 	}
+
+	/**
+	 * Provides URL for a generated class.
+	 * 
+	 * @return URL for a resource name that represents a generated class (belonging to
+	 *         {@link TypeNameResolver#GENERATED_CLASSES_PACKAGE} package) or <code>null</code> otherwise
+	 */
+	@Override
+	protected URL findResource(String name) {
+		if (name.startsWith(GENERATED_CLASSES_DIR) && name.endsWith(CLASS_FILE_EXTENSION)) {
+			String urlSpec = URL_PREFIX + name;
+			try {
+				return new URL(null, urlSpec, new ByteArrayHandler());
+			} catch (MalformedURLException e) {
+				throw new IllegalArgumentException("The URL is malformed: " + urlSpec, e);
+			}
+		}
+
+		return null;
+	};
 
 	/**
 	 * Loads the class with {@link TypeNameResolver#GENERATED_CLASSES_PACKAGE} package from the specified code
@@ -180,6 +213,34 @@ public class DynamicClassLoader extends ClassLoader {
 		}
 
 		return byteCode;
+	}
+
+	private class ByteArrayHandler extends URLStreamHandler {
+		@Override
+		protected URLConnection openConnection(URL u) throws IOException {
+			return new ByteArrayUrlConnection(u);
+		}
+	}
+
+	private class ByteArrayUrlConnection extends URLConnection {
+		public ByteArrayUrlConnection(URL url) {
+			super(url);
+		}
+
+		@Override
+		public void connect() throws IOException {
+		}
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+			String path = url.getPath();
+			final String className = path.substring(1, path.length() - CLASS_FILE_EXTENSION.length()).replace('/', '.');
+			try {
+				return new ByteArrayInputStream(loadClassByteCode(className));
+			} catch (ClassNotFoundException e) {
+				throw new IOException(String.format("Failed to load a byte code for the class [%s]", className));
+			}
+		}
 	}
 
 }

@@ -54,7 +54,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 		}
 	}
 	
-	protected void copyEntityToRepository(String fileName) throws Exception {
+	protected void copyEntityFileToRepository(String fileName) throws Exception {
 		String entitySourceDir = "/integration_tests/to_copy/com/ilsid/bfa/generated/entity/default_group";
 		FileUtils.copyFileToDirectory(new File(TestConstants.TEST_RESOURCES_DIR + entitySourceDir + "/" + fileName),
 				new File(ENTITY_REPOSITORY_DIR_PATH));

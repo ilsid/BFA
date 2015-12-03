@@ -47,7 +47,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	public void validEntityWithFieldOfGeneratedTypeIsCompiledAndItsSourceAndClassIsSavedInFileSystem()
 			throws Exception {
 		// Copy the generated class Contract to the code repository
-		copyEntityToRepository("Contract.class");
+		copyEntityFileToRepository("Contract.class");
 
 		WebResource webResource = getWebResource(Paths.ENTITY_CREATE_SERVICE);
 		// The entity contains the generated class Contract
@@ -82,8 +82,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void validEntityAndItsSourceIsUpdatedInFileSystem() throws Exception {
-		copyEntityToRepository("EntityToUpdate.class");
-		copyEntityToRepository("EntityToUpdate.src");
+		copyEntityFileToRepository("EntityToUpdate.class");
+		copyEntityFileToRepository("EntityToUpdate.src");
 
 		String initialEntityBody = IOHelper.loadFileContents(ENTITY_REPOSITORY_DIR_PATH, "EntityToUpdate.src");
 		assertEquals("Number field1; Decimal field2", initialEntityBody);
@@ -116,8 +116,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void sourceCodeForExistingEntityIsLoaded() throws Exception {
-		copyEntityToRepository("EntityToRead.class");
-		copyEntityToRepository("EntityToRead.src");
+		copyEntityFileToRepository("EntityToRead.class");
+		copyEntityFileToRepository("EntityToRead.src");
 
 		WebResource webResource = getWebResource(Paths.ENTITY_GET_SOURCE_SERVICE);
 		EntityAdminParams entity = new EntityAdminParams();

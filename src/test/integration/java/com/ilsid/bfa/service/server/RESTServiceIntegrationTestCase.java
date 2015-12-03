@@ -18,10 +18,12 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.ilsid.bfa.BFAError;
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.RepositoryConfig;
+import com.ilsid.bfa.script.ScriptLogger;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -46,7 +48,7 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 	private static Server server;
 
 	private static Client client;
-	
+
 	protected WebResource getWebResource(String path) {
 		return client.resource(rootURL + path);
 	}
@@ -84,21 +86,21 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 	private static String getRootURL() {
 		return LOCALHOST_URL + ":" + serverPort + CONTEXT_ROOT + "/";
 	}
-	
+
 	protected static class TestApplicationConfig extends GuiceServletContextListener {
 
 		private static final String LOGGER_NAME = "test_logger";
 
 		private final Class<? extends CodeRepository> repositoryClass;
-		
+
 		private final Map<String, String> repositoryConfig;
-		
+
 		public TestApplicationConfig(Class<? extends CodeRepository> repositoryClass,
 				Map<String, String> repositoryConfig) {
 			this.repositoryClass = repositoryClass;
 			this.repositoryConfig = repositoryConfig;
 		}
-		
+
 		@Override
 		protected Injector getInjector() {
 			return Guice.createInjector(new JerseyServletModule() {
@@ -109,6 +111,13 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 					requestStaticInjection(DynamicClassLoader.class);
 
+					final String compilerClassName = "com.ilsid.bfa.script.ClassCompiler";
+					try {
+						requestStaticInjection(DynamicClassLoader.getInstance().loadClass(compilerClassName));
+					} catch (ClassNotFoundException | IllegalStateException e) {
+						throw new BFAError(String.format("Failed to load [%s] class", compilerClassName), e);
+					}
+
 					Map<String, String> webConfig = new HashMap<>();
 					// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping
 					webConfig.put(PackagesResourceConfig.PROPERTY_PACKAGES,
@@ -117,7 +126,7 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 					serve("/*").with(GuiceContainer.class, webConfig);
 				}
-				
+
 				@Provides
 				@RepositoryConfig
 				protected Map<String, String> provideRepositoryConfiguration() {
@@ -126,7 +135,13 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 				@Provides
 				@WebAppLogger
-				protected Logger provideLogger() {
+				protected Logger provideWebAppLogger() {
+					return LoggerFactory.getLogger(LOGGER_NAME);
+				}
+
+				@Provides
+				@ScriptLogger
+				protected Logger provideScriptLogger() {
 					return LoggerFactory.getLogger(LOGGER_NAME);
 				}
 			});

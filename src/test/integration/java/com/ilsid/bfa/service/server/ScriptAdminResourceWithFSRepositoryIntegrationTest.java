@@ -36,6 +36,27 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
+	public void validScriptWithGeneratedEntityIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem()
+			throws Exception {
+		copyEntityFileToRepository("Contract.class");
+		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams("Entity Script",
+				IOHelper.loadScript("single-entity-script.txt"));
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/entity_x20_script");
+
+		assertTrue(scriptDir.isDirectory());
+		assertEquals(5, scriptDir.list().length);
+		assertFilesExist(scriptDir.getPath(),
+				new String[] { "Entity_x20_Script.class", "Entity_x20_Script.src", "Entity_x20_Script$$2.class",
+						"Entity_x20_Script$$1.class", "Entity_x20_Script$$Var1_dt_Days_Mns_Var2.class" });
+	}
+
+	@Test
 	public void invalidScriptIsNotSavedInFileSystem() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams("Script 002",

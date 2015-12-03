@@ -10,7 +10,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
@@ -20,7 +23,6 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 
@@ -33,6 +35,7 @@ import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
+import javassist.LoaderClassPath;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
@@ -44,9 +47,13 @@ import javassist.NotFoundException;
  */
 public class ClassCompiler {
 
+	private static final String EXPRESSION_ERROR_MESSAGE_TEMPLATE = "Failed to compile the expression in the script [{}]";
+
 	private static final CtClass[] NO_ARGS = {};
 
 	private static final ClassPool classPool;
+
+	private static Logger logger;
 
 	static {
 		// TODO: non-default class pool may be needed here
@@ -197,7 +204,11 @@ public class ClassCompiler {
 		ClassPool classPool = getClassPool();
 		CtClass clazz = classPool.makeClass(className);
 
-		List<ClassPath> generatedTypesClassPath = new LinkedList<>();
+		// Dynamic class loader is needed in case when the entity's field types are generated itself. In this case,
+		// this loader must be used to resolve dependencies
+		final LoaderClassPath dynamicClassPath = new LoaderClassPath(DynamicClassLoader.getInstance());
+		classPool.appendClassPath(dynamicClassPath);
+
 		try {
 			String[] fieldExpressions = entityBody.split(";");
 			for (String fieldExpr : fieldExpressions) {
@@ -210,15 +221,6 @@ public class ClassCompiler {
 				String typeName = exprParts[0];
 				String fieldName = exprParts[1];
 
-				// If the entity's field type is generated itself, then the corresponding class byte code needs to be
-				// loaded and added to the class pool before the entity compilation
-				if (typeName.startsWith(ClassNameUtil.GENERATED_CLASSES_PACKAGE)) {
-					byte[] typeByteCode = DynamicClassLoader.getInstance().loadByteCode(typeName);
-					ClassPath cpEntry = new ByteArrayClassPath(typeName, typeByteCode);
-					generatedTypesClassPath.add(cpEntry);
-					classPool.appendClassPath(cpEntry);
-				}
-
 				CtClass typeClass = classPool.get(typeName);
 				CtField field = new CtField(typeClass, fieldName, clazz);
 				field.setModifiers(Modifier.PUBLIC);
@@ -227,16 +229,12 @@ public class ClassCompiler {
 
 			result = toBytecode(clazz);
 
-		} catch (NotFoundException | CannotCompileException | IOException | ClassNotFoundException
-				| IllegalStateException e) {
+		} catch (NotFoundException | CannotCompileException | IOException | IllegalStateException e) {
 
 			throw new ClassCompilationException(String.format("Compilation of Entity [%s] failed", className), e);
 
 		} finally {
-
-			for (ClassPath cpEntry : generatedTypesClassPath) {
-				classPool.removeClassPath(cpEntry);
-			}
+			classPool.removeClassPath(dynamicClassPath);
 		}
 
 		return result;
@@ -300,11 +298,28 @@ public class ClassCompiler {
 
 		List<Exception> exceptions = methodCallContext.exceptions;
 		if (!exceptions.isEmpty()) {
+			if (logger != null) {
+				for (Exception e : exceptions) {
+					logger.error(EXPRESSION_ERROR_MESSAGE_TEMPLATE, classDeclarationVisitor.shortClassName, e);
+				}
+			}
+
 			throw new ClassCompilationException(String.format("Compilation of expressions in script [%s] failed",
-					classDeclarationVisitor.shortClassName) + StringUtils.LF + mergeMessages(exceptions));
+					classDeclarationVisitor.shortClassName) + StringUtils.LF + mergeErrorMessages(exceptions));
 		}
 
 		return methodCallContext.compiledExpressions.values();
+	}
+
+	/**
+	 * Defines the logger implementation.
+	 * 
+	 * @param loggerImpl
+	 *            the logger instance
+	 */
+	@Inject
+	public static void setLogger(@ScriptLogger Logger loggerImpl) {
+		logger = loggerImpl;
 	}
 
 	private static ClassPool getClassPool() {
@@ -331,9 +346,16 @@ public class ClassCompiler {
 		method.setBody("scriptContext = $1;");
 		clazz.addMethod(method);
 
-		method = new CtMethod(classPool.get(Object.class.getName()), "invoke", NO_ARGS, clazz);
-		method.setBody(expression);
-		clazz.addMethod(method);
+		// Dynamic class loader is needed in case when the expression refers to the generated types
+		final LoaderClassPath dynamicClassPath = new LoaderClassPath(DynamicClassLoader.getInstance());
+		classPool.appendClassPath(dynamicClassPath);
+		try {
+			method = new CtMethod(classPool.get(Object.class.getName()), "invoke", NO_ARGS, clazz);
+			method.setBody(expression);
+			clazz.addMethod(method);
+		} finally {
+			classPool.removeClassPath(dynamicClassPath);
+		}
 
 		return clazz;
 	}
@@ -371,7 +393,7 @@ public class ClassCompiler {
 		return result;
 	}
 
-	private static String mergeMessages(List<Exception> exceptions) {
+	private static String mergeErrorMessages(List<Exception> exceptions) {
 		StringBuilder messages = new StringBuilder();
 		for (Exception e : exceptions) {
 			messages.append(ExceptionUtil.getExceptionMessageChain(e)).append(StringUtils.LF);

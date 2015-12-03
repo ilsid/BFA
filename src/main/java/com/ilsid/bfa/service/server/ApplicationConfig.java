@@ -14,6 +14,8 @@ import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
+import com.ilsid.bfa.script.ClassCompiler;
+import com.ilsid.bfa.script.ScriptLogger;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.guice.JerseyServletModule;
@@ -39,6 +41,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 				bind(CodeRepository.class).to(FSCodeRepository.class);
 				
 				requestStaticInjection(DynamicClassLoader.class);
+				requestStaticInjection(ClassCompiler.class);
 
 				Map<String, String> webConfig = new HashMap<>();
 				// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping
@@ -63,6 +66,12 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			@Provides
 			@WebAppLogger
 			protected Logger provideLogger() {
+				return LoggerFactory.getLogger("error_logger");
+			}
+			
+			@Provides
+			@ScriptLogger
+			protected Logger provideScriptLogger() {
 				return LoggerFactory.getLogger("error_logger");
 			}
 		});

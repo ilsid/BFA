@@ -238,7 +238,7 @@ public class DynamicClassLoader extends ClassLoader {
 			try {
 				return new ByteArrayInputStream(loadClassByteCode(className));
 			} catch (ClassNotFoundException e) {
-				throw new IOException(String.format("Failed to load a byte code for the class [%s]", className));
+				throw new IOException(String.format("Failed to load a byte code for the class [%s]", className), e);
 			}
 		}
 	}

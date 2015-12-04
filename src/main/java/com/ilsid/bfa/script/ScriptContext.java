@@ -112,7 +112,7 @@ public class ScriptContext {
 			field.setAccessible(true);
 			field.set(target, value);
 		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			throw new IllegalArgumentException(
+			throw new IllegalStateException(
 					String.format("Failed to set the field [%s] for [%s] instance", fieldName, target.getClass()), e);
 		}
 	}

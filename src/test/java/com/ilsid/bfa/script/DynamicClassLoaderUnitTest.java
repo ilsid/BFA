@@ -46,57 +46,33 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void classFromGeneratedPackageCanBeReloaded() throws Exception {
+	public void classFromGeneratedPackageCanBeReloadedByNewLoaderInstance() throws Exception {
 		String className = "com.ilsid.bfa.generated.classloadertest.AnotherFooContract";
 
-		DynamicClassLoader intialLoader = DynamicClassLoader.getInstance();
-		Class<?> initialClass = intialLoader.loadClass(className);
+		DynamicClassLoader initialLoader = DynamicClassLoader.getInstance();
+		Class<?> initialClass = initialLoader.loadClass(className);
 
 		DynamicClassLoader.reloadClasses();
 		ClassLoader nextLoader = DynamicClassLoader.getInstance();
 		Class<?> reloadedClass = nextLoader.loadClass(className);
 
-		assertFalse(intialLoader == nextLoader);
+		assertFalse(initialLoader == nextLoader);
+		assertFalse(initialClass == reloadedClass);
+	}
+	
+	@Test
+	public void classFromGeneratedPackageCanBeReloadedBySameLoaderInstance() throws Exception {
+		String className = "com.ilsid.bfa.generated.classloadertest.YetAnotherFooContract";
+
+		DynamicClassLoader loader = DynamicClassLoader.getInstance();
+		Class<?> initialClass = loader.loadClass(className);
+
+		DynamicClassLoader.reloadClasses();
+		Class<?> reloadedClass = loader.loadClass(className);
+
 		assertFalse(initialClass == reloadedClass);
 	}
 
-	@Test
-	public void referenceToObsoleteLoaderIsProhibited() throws Exception {
-		exceptionRule.expect(IllegalStateException.class);
-		exceptionRule.expectMessage("Obsolete class loader has been invoked");
-
-		String className = "com.ilsid.bfa.generated.classloadertest.YetAnotherFooContract";
-
-		DynamicClassLoader intialInstance = DynamicClassLoader.getInstance();
-		intialInstance.loadClass(className);
-		DynamicClassLoader.reloadClasses();
-		// the reference to the initial instance becomes obsolete after the classes reloading
-		intialInstance.loadClass(className);
-	}
-
-	@Test
-	public void bytecodeForClassFromDynamicPackageCanBeLoaded() throws Exception {
-		String className = "com.ilsid.bfa.generated.classloadertest.AnotherFooContract";
-		assertNotNull(DynamicClassLoader.getInstance().loadByteCode(className));
-	}
-
-	@Test
-	public void bytecodeForNonExistingClassFromDynamicPackageCanNotBeLoaded() throws Exception {
-		String className = "com.ilsid.bfa.generated.classloadertest.NonExistingFooContract";
-
-		exceptionRule.expect(ClassNotFoundException.class);
-		exceptionRule.expectMessage(
-				"Class [com.ilsid.bfa.generated.classloadertest.NonExistingFooContract] is not found in the repository");
-
-		DynamicClassLoader.getInstance().loadByteCode(className);
-	}
-
-	@Test
-	public void bytecodeForClassFromStaticPackageIsNotLoaded() throws Exception {
-		String className = "com.ilsid.bfa.test.types.ContractForCustomClassloaderTesting";
-		assertNull(DynamicClassLoader.getInstance().loadByteCode(className));
-	}
-	
 	@Test
 	public void classFromGeneratedPackageCanBeObtainedAsByteArrayResource() throws Exception {
 		String classPath = "com/ilsid/bfa/generated/classloadertest/OneMoreFooContract.class";

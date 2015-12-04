@@ -26,10 +26,8 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 
-import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
-import javassist.ClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
@@ -297,14 +295,6 @@ public class ClassCompiler {
 		clazz.addMethod(method);
 
 		return clazz;
-	}
-
-	private static Class<?> toClass(CtClass clazz) throws CannotCompileException {
-		// TODO: Here, a custom class loader may be needed if deploying on
-		// application server
-		Class<?> result = clazz.toClass();
-		clazz.detach();
-		return result;
 	}
 
 	private static byte[] toBytecode(CtClass clazz) throws CannotCompileException, IOException {

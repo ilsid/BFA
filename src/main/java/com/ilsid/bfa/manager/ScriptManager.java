@@ -251,7 +251,7 @@ public class ScriptManager {
 		byte[] scriptByteCode;
 		Collection<CompilationBlock> expressions;
 		try {
-			scriptByteCode = ClassCompiler.compileScriptToBytecode(scriptClassName, scriptBody);
+			scriptByteCode = ClassCompiler.compileScript(scriptClassName, scriptBody);
 
 			String scriptShortClassName = ClassNameUtil.getShortClassName(scriptClassName);
 			try (InputStream scriptSourceCode = IOUtils
@@ -296,7 +296,7 @@ public class ScriptManager {
 
 		byte[] byteCode;
 		try {
-			byteCode = ClassCompiler.compileEntityToBytecode(className, bodyJavaCode);
+			byteCode = ClassCompiler.compileEntity(className, bodyJavaCode);
 		} catch (ClassCompilationException e) {
 			throw new ManagementException(String.format("Compilation of the entity [%s] failed", entityName), e);
 		}

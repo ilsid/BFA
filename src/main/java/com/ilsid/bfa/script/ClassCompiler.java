@@ -62,33 +62,6 @@ public class ClassCompiler {
 	}
 
 	/**
-	 * Compiles class that implements {@link DynamicCodeInvocation} interface.
-	 * 
-	 * @param className
-	 *            class name
-	 * @param expression
-	 *            java source code (implementation)
-	 * @return {@link DynamicCodeInvocation} implementation
-	 * @throws ClassCompilationException
-	 *             in case of compilation failure
-	 */
-	public static Class<?> compileInvocation(String className, String expression) throws ClassCompilationException {
-		Class<?> result;
-
-		try {
-			CtClass clazz = buildInvocationClass(className, expression);
-			result = toClass(clazz);
-		} catch (NotFoundException | CannotCompileException e) {
-			throw new ClassCompilationException(
-					String.format("Compilation of Invocation class failed. Class [%s]. ValueExpression [%s]", className,
-							expression),
-					e);
-		}
-
-		return result;
-	}
-
-	/**
 	 * Compiles a byte code for a class that implements {@link DynamicCodeInvocation} interface.
 	 * 
 	 * @param className
@@ -99,7 +72,7 @@ public class ClassCompiler {
 	 * @throws ClassCompilationException
 	 *             in case of compilation failure
 	 */
-	public static synchronized byte[] compileInvocationToBytecode(String className, String expression)
+	public static synchronized byte[] compileInvocation(String className, String expression)
 			throws ClassCompilationException {
 		byte[] result;
 
@@ -117,31 +90,6 @@ public class ClassCompiler {
 	}
 
 	/**
-	 * Compiles class that extends {@link Script} class.
-	 * 
-	 * @param className
-	 *            class name
-	 * @param scriptBody
-	 *            java source code (implementation)
-	 * @return {@link Script} descendant
-	 * @throws ClassCompilationException
-	 *             in case of compilation failure
-	 */
-	public static Class<?> compileScript(String className, String scriptBody) throws ClassCompilationException {
-		Class<?> result;
-
-		try {
-			CtClass clazz = buildScriptClass(className, scriptBody);
-			result = toClass(clazz);
-		} catch (NotFoundException | CannotCompileException | IOException e) {
-
-			throw new ClassCompilationException(String.format("Compilation of Script class [%s] failed", className), e);
-		}
-
-		return result;
-	}
-
-	/**
 	 * Compiles a byte code for a class that extends {@link Script} class.
 	 * 
 	 * @param className
@@ -152,7 +100,7 @@ public class ClassCompiler {
 	 * @throws ClassCompilationException
 	 *             in case of compilation failure
 	 */
-	public static synchronized byte[] compileScriptToBytecode(String className, String scriptBody)
+	public static synchronized byte[] compileScript(String className, String scriptBody)
 			throws ClassCompilationException {
 		byte[] result;
 
@@ -198,7 +146,7 @@ public class ClassCompiler {
 	 * @throws ClassCompilationException
 	 *             in case of compilation failure
 	 */
-	public static synchronized byte[] compileEntityToBytecode(String className, String entityBody)
+	public static synchronized byte[] compileEntity(String className, String entityBody)
 			throws ClassCompilationException {
 		byte[] result;
 		ClassPool classPool = getClassPool();
@@ -235,34 +183,6 @@ public class ClassCompiler {
 
 		} finally {
 			classPool.removeClassPath(dynamicClassPath);
-		}
-
-		return result;
-	}
-
-	/**
-	 * Creates {@link Class} object from the given byte code.
-	 * 
-	 * @param className
-	 *            class name
-	 * @param byteCode
-	 *            byte code
-	 * @return {@link Class} object
-	 * @throws ClassCompilationException
-	 *             in case of compilation failure
-	 */
-	public static Class<?> loadFromBytecode(String className, byte[] byteCode) throws ClassCompilationException {
-		ClassPath classPathEntry = new ByteArrayClassPath(className, byteCode);
-		ClassPool classPool = getClassPool();
-		classPool.appendClassPath(classPathEntry);
-		Class<?> result;
-		try {
-			CtClass clazz = classPool.get(className);
-			result = toClass(clazz);
-			classPool.removeClassPath(classPathEntry);
-		} catch (NotFoundException | CannotCompileException e) {
-			throw new ClassCompilationException(String.format("Failed to create class %s from byte code", className),
-					e);
 		}
 
 		return result;
@@ -488,7 +408,7 @@ public class ClassCompiler {
 					javaExpr = visitorContext.parser.parse(scriptExpr);
 
 					if (compilationIsNeeded) {
-						byteCode = compileInvocationToBytecode(className, javaExpr);
+						byteCode = compileInvocation(className, javaExpr);
 						CompilationBlock cb = new CompilationBlock(className, byteCode, javaExpr);
 						expressions.put(className, cb);
 					}

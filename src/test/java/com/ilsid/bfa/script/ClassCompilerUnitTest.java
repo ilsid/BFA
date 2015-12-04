@@ -1,7 +1,6 @@
 package com.ilsid.bfa.script;
 
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -30,15 +29,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private static final String TEST_INVOCATION_CLASS_NAME = "com.ilsid.bfa.test.generated.TestInvocation";
 
-	private static final String TEST_INVOCATION_CLASS_NAME_2 = "com.ilsid.bfa.test.generated.TestInvocation2";
-
-	private static final String TEST_INVOCATION_CLASS_NAME_3 = "com.ilsid.bfa.test.generated.TestInvocation3";
-
 	private static final String TEST_SCRIPT_CLASS_NAME = "com.ilsid.bfa.test.generated.TestScript";
-
-	private static final String TEST_SCRIPT_CLASS_NAME_2 = "com.ilsid.bfa.test.generated.TestScript2";
-
-	private static final String TEST_SCRIPT_CLASS_NAME_3 = "com.ilsid.bfa.test.generated.TestScript3";
 
 	private static final String SCRIPT_PACKAGE = "com.ilsid.bfa.generated.script.default_group";
 
@@ -63,120 +54,45 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void invocationCanBeCompiled() throws Exception {
-		Class<DynamicCodeInvocation> clazz = (Class<DynamicCodeInvocation>) ClassCompiler
-				.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
-
-		DynamicCodeInvocation instance = clazz.newInstance();
-		assertEquals(new Integer(1), instance.invoke());
-	}
-
-	@Test
-	@SuppressWarnings("unused")
-	public void invocationWithSameNameCanNotBeCompiledTwice() throws Exception {
-		// Note, we must use unique class name in this test to avoid conflicts
-		// with classes already loaded into JVM by other tests.
-		exceptionRule.expect(ClassCompilationException.class);
-		exceptionRule.expectMessage(
-				"Compilation of Invocation class failed. Class [com.ilsid.bfa.test.generated.TestInvocation2]. ValueExpression [return Integer.valueOf(2 - 1);]");
-
-		Class<?> clazz;
-		clazz = ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME_2, TEST_INVOCATION_EXPRESSION);
-		clazz = ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME_2, TEST_INVOCATION_EXPRESSION);
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
 	public void scriptCanBeCompiled() throws Exception {
 		String body = IOHelper.loadScript("declarations-only-script.txt");
-		Class<Script> clazz = (Class<Script>) ClassCompiler.compileScript(TEST_SCRIPT_CLASS_NAME, body);
-		Script script = clazz.newInstance();
+		byte[] byteCode = ClassCompiler.compileScript(TEST_SCRIPT_CLASS_NAME, body);
+		Script script = (Script) loadFromBytecode(TEST_SCRIPT_CLASS_NAME, byteCode).newInstance();
 		setInaccessibleParentField(script, "scriptContext", mockContext);
 		checking(getScriptExpectations());
 		script.execute();
 	}
 
 	@Test
-	public void scriptWithSameNameCanNotBeCompiledTwice() throws Exception {
-		exceptionRule.expect(ClassCompilationException.class);
-		exceptionRule.expectMessage("Compilation of Script class [com.ilsid.bfa.test.generated.TestScript2] failed");
-
-		// Note, we must use unique class name in this test to avoid conflicts
-		// with classes already loaded into JVM by other tests.
-		compileScript(TEST_SCRIPT_CLASS_NAME_2);
-		compileScript(TEST_SCRIPT_CLASS_NAME_2);
-	}
-
-	@Test
-	public void scriptCanBeCompiledToBytecode() throws Exception {
-		String body = IOHelper.loadScript("declarations-only-script.txt");
-		byte[] byteCode = ClassCompiler.compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3, body);
-		Script script = (Script) loadFromBytecode(TEST_SCRIPT_CLASS_NAME_3, byteCode).newInstance();
-		setInaccessibleParentField(script, "scriptContext", mockContext);
-		checking(getScriptExpectations());
-		script.execute();
-	}
-
-	@Test
-	public void scriptWithSameNameCanBeCompiledToBytecodeMultipleTimes() {
+	public void scriptWithSameNameCanBeCompiledMultipleTimes() {
 		try {
-			compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3);
-			compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3);
-			compileScriptToBytecode(TEST_SCRIPT_CLASS_NAME_3);
+			compileScript(TEST_SCRIPT_CLASS_NAME);
+			compileScript(TEST_SCRIPT_CLASS_NAME);
+			compileScript(TEST_SCRIPT_CLASS_NAME);
 		} catch (Exception e) {
 			failCausedByUnexpectedException(e);
 		}
 	}
 
 	@Test
-	public void invocationCanBeCompiledToBytecode() throws Exception {
-		byte[] byteCode = ClassCompiler.compileInvocationToBytecode(TEST_INVOCATION_CLASS_NAME_3,
+	public void invocationCanBeCompiled() throws Exception {
+		byte[] byteCode = ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME,
 				TEST_INVOCATION_EXPRESSION);
 
-		DynamicCodeInvocation instance = (DynamicCodeInvocation) loadFromBytecode(TEST_INVOCATION_CLASS_NAME_3,
+		DynamicCodeInvocation instance = (DynamicCodeInvocation) loadFromBytecode(TEST_INVOCATION_CLASS_NAME,
 				byteCode).newInstance();
 		assertEquals(new Integer(1), instance.invoke());
 	}
 
 	@Test
-	public void invocationWithSameNameCanBeCompiledToBytecodeMultipleTimes() {
+	public void invocationWithSameNameCanBeCompiledMultipleTimes() {
 		try {
-			ClassCompiler.compileInvocationToBytecode(TEST_INVOCATION_CLASS_NAME_3, TEST_INVOCATION_EXPRESSION);
-			ClassCompiler.compileInvocationToBytecode(TEST_INVOCATION_CLASS_NAME_3, TEST_INVOCATION_EXPRESSION);
-			ClassCompiler.compileInvocationToBytecode(TEST_INVOCATION_CLASS_NAME_3, TEST_INVOCATION_EXPRESSION);
+			ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
+			ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
+			ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
 		} catch (ClassCompilationException e) {
 			failCausedByUnexpectedException(e);
 		}
-	}
-
-	@Test
-	public void classCanBeLoadedFromBytecode() throws Exception {
-		byte[] byteCode = IOHelper.loadClass("DummyClass.class");
-
-		Class<?> dummyClass = ClassCompiler.loadFromBytecode("com.ilsid.bfa.test.types.DummyClass", byteCode);
-		Object dummy = dummyClass.newInstance();
-
-		assertNull(invokeMethod(dummy, "getValue"));
-		String value = "some value";
-		invokeMethod(dummy, "setValue", value);
-		assertEquals(value, invokeMethod(dummy, "getValue"));
-	}
-
-	@Test
-	@SuppressWarnings("unused")
-	public void classCanNotBeLoadedTwiceFromBytecode() throws Exception {
-		exceptionRule.expect(ClassCompilationException.class);
-		exceptionRule.expectMessage("Failed to create class com.ilsid.bfa.test.types.DummyClass2 from byte code");
-
-		byte[] byteCode = IOHelper.loadClass("DummyClass2.class");
-
-		Class<?> dummyClass;
-		// Note, we must use unique class name in this test to avoid conflicts
-		// with classes already loaded into JVM by other tests.
-		String className = "com.ilsid.bfa.test.types.DummyClass2";
-		dummyClass = ClassCompiler.loadFromBytecode(className, byteCode);
-		dummyClass = ClassCompiler.loadFromBytecode(className, byteCode);
 	}
 
 	@Test
@@ -202,7 +118,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 	
 	@Test
-	public void nothingIsCompiledInScriptWithNoExpressions2() throws Exception {
+	public void expressionMarkedAsNonCompiledIsNotCompiled() throws Exception {
 		// The script contains two expressions, but only one expression is compiled
 		CompilationBlock[] expressions = compileScriptExpressions("TestScript77", "one-noncompiled-expression-script.txt");
 
@@ -284,9 +200,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void entityWithSingleFieldOfPredefinedTypeCanBeCompiledToBytecode() throws Exception {
+	public void entityWithSingleFieldOfPredefinedTypeCanBeCompiled() throws Exception {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity01";
-		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className, "java.lang.Integer testField");
+		byte[] byteCode = ClassCompiler.compileEntity(className, "java.lang.Integer testField");
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
 		assertEquals(1, clazz.getFields().length);
@@ -294,9 +210,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void entityWithSeveralFieldsOfPredefinedTypeCanBeCompiledToBytecode() throws Exception {
+	public void entityWithSeveralFieldsOfPredefinedTypeCanBeCompiled() throws Exception {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity02";
-		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className,
+		byte[] byteCode = ClassCompiler.compileEntity(className,
 				"java.lang.Integer testField1; java.lang.Double testField2; java.lang.Integer testField3");
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
@@ -307,11 +223,11 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void entityWithSingleFieldOfGeneratedTypeCanBeCompiledToBytecode() throws Exception {
+	public void entityWithSingleFieldOfGeneratedTypeCanBeCompiled() throws Exception {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity03";
 		String fieldTypeName = "com.ilsid.bfa.generated.compilertest.GeneratedContract";
 
-		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className, fieldTypeName + " contract");
+		byte[] byteCode = ClassCompiler.compileEntity(className, fieldTypeName + " contract");
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
 		assertEquals(1, clazz.getFields().length);
@@ -319,11 +235,11 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void entityWithTwoFieldsOfSameGeneratedTypeCanBeCompiledToBytecode() throws Exception {
+	public void entityWithTwoFieldsOfSameGeneratedTypeCanBeCompiled() throws Exception {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity04";
 		String fieldTypeName = "com.ilsid.bfa.generated.compilertest.GeneratedContract";
 
-		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className,
+		byte[] byteCode = ClassCompiler.compileEntity(className,
 				fieldTypeName + " contract1;" + fieldTypeName + " contract2;");
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
@@ -333,12 +249,12 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void entityWithMultipleFieldsOfGeneratedTypesCanBeCompiledToBytecode() throws Exception {
+	public void entityWithMultipleFieldsOfGeneratedTypesCanBeCompiled() throws Exception {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity05";
 		String fieldTypeName1 = "com.ilsid.bfa.generated.compilertest.GeneratedContract";
 		String fieldTypeName2 = "com.ilsid.bfa.generated.compilertest.AnotherGeneratedContract";
 
-		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className,
+		byte[] byteCode = ClassCompiler.compileEntity(className,
 				fieldTypeName1 + " contract1;" + fieldTypeName2 + " contract2;");
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
@@ -348,12 +264,12 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void entityWithFieldsOfPredefinedAndGeneratedTypesCanBeCompiledToBytecode() throws Exception {
+	public void entityWithFieldsOfPredefinedAndGeneratedTypesCanBeCompiled() throws Exception {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity06";
 		String fieldTypeName1 = "com.ilsid.bfa.generated.compilertest.GeneratedContract";
 		String fieldTypeName2 = "java.lang.Integer";
 
-		byte[] byteCode = ClassCompiler.compileEntityToBytecode(className,
+		byte[] byteCode = ClassCompiler.compileEntity(className,
 				fieldTypeName1 + " contract;" + fieldTypeName2 + " days;");
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
@@ -369,28 +285,13 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 				"Compilation of Entity [com.ilsid.bfa.test.generated.entity.Entity07] failed. Expression [java.lang.Integer field2 field3] is invalid");
 
 		String className = "com.ilsid.bfa.test.generated.entity.Entity07";
-		ClassCompiler.compileEntityToBytecode(className, "java.lang.Double field1; java.lang.Integer field2 field3;");
+		ClassCompiler.compileEntity(className, "java.lang.Double field1; java.lang.Integer field2 field3;");
 	}
 
 	@SuppressWarnings("unused")
 	private void compileScript(String className) throws Exception {
-		Class<?> clazz = ClassCompiler.compileScript(className, IOHelper.loadScript("declarations-only-script.txt"));
-	}
-
-	@SuppressWarnings("unused")
-	private void compileScriptToBytecode(String className) throws Exception {
-		byte[] byteCode = ClassCompiler.compileScriptToBytecode(className,
+		byte[] byteCode = ClassCompiler.compileScript(className,
 				IOHelper.loadScript("declarations-only-script.txt"));
-	}
-
-	private String invokeMethod(Object target, String name) throws Exception {
-		Method method = target.getClass().getDeclaredMethod(name);
-		return (String) method.invoke(target);
-	}
-
-	private void invokeMethod(Object target, String name, String value) throws Exception {
-		Method method = target.getClass().getDeclaredMethod(name, String.class);
-		method.invoke(target, value);
 	}
 
 	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {

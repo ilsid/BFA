@@ -33,7 +33,8 @@ public class ScriptRuntime {
 		Script script = createInstance(scriptName);
 		long runtimeId = generatedRuntimeId(scriptName);
 		script.setRuntimeId(runtimeId);
-
+		script.setRuntime(this);
+		
 		script.execute();
 
 		return runtimeId;

@@ -7,8 +7,10 @@ public abstract class Script implements Executable<Void> {
 	private ScriptContext scriptContext;
 
 	private GlobalContext runtimeContext;
+	
+	private ScriptRuntime runtime;
 
-	private long runtimeId;
+	private long runtimeId = -1;
 
 	protected abstract void doExecute() throws ScriptException;
 
@@ -93,9 +95,9 @@ public abstract class Script implements Executable<Void> {
 	}
 
 	public void SubFlow(String name) throws ScriptException {
-		// FIXME
-		Script subFlow = null;
-		subFlow.execute();
+		//TODO: pass input parameters
+		//TODO: maybe some parent info is needed
+		runtime.runScript(name);
 	}
 
 	public ValueExpression<Boolean> AsBoolean(String input) {
@@ -118,6 +120,10 @@ public abstract class Script implements Executable<Void> {
 
 	public void setRuntimeId(long runtimeId) {
 		this.runtimeId = runtimeId;
+	}
+	
+	void setRuntime(ScriptRuntime runtime) {
+		this.runtime = runtime;
 	}
 
 	private ValueExpression<?> toExpression(Object expr) throws ScriptException {

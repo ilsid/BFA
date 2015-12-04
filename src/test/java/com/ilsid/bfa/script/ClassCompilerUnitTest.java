@@ -2,7 +2,6 @@ package com.ilsid.bfa.script;
 
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -12,11 +11,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.IOHelper;
-import com.ilsid.bfa.persistence.CodeRepository;
-import com.ilsid.bfa.persistence.DynamicClassLoader;
-import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
 
 import javassist.ByteArrayClassPath;
 import javassist.ClassPath;
@@ -36,16 +31,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	private ScriptContext mockContext;
 
 	@BeforeClass
-	@SuppressWarnings("serial")
 	public static void beforeClass() throws Exception {
-		CodeRepository repository = new FSCodeRepository();
-		repository.setConfiguration(new HashMap<String, String>() {
-			{
-				put("bfa.persistence.fs.root_dir", TestConstants.TEST_RESOURCES_DIR + "/code_repository");
-			}
-		});
-
-		DynamicClassLoader.setRepository(repository);
+		CodeRepositoryInitializer.init();
 	}
 
 	@Before

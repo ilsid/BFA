@@ -1,0 +1,5 @@
+DeclareLocalVar("Var1", "Number");
+DeclareLocalVar("Var2", "Decimal");
+
+// com.ilsid.bfa.generated.script.default_group.script001.Script001 class is expected in the code repository
+SubFlow("Script001");

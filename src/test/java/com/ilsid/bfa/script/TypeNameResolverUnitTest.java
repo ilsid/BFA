@@ -10,8 +10,6 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	private static final String SCRIPT_CLASS_NAME_PREFIX = BASE_PACKAGE + "script.default_group.";
 
-	private static final String ACTION_CLASS_NAME_PREFIX = BASE_PACKAGE + "action.";
-
 	private static final String ENTITY_CLASS_NAME_PREFIX = BASE_PACKAGE + "entity.default_group.";
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
@@ -29,10 +27,6 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 		assertEquals("AB", getExpressionClassNamePart("A B"));
 		assertEquals("AB", getExpressionClassNamePart(" AB "));
 		assertEquals("ABC", getExpressionClassNamePart(" A B C "));
-
-		assertEquals("A_x20_B", getActionClassName("A B"));
-		assertEquals("_x20_AB_x20_", getActionClassName(" AB "));
-		assertEquals("_x20_A_x20_B_x20_C_x20_", getActionClassName(" A B C "));
 	}
 
 	@Test
@@ -44,10 +38,6 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 		assertEquals("A_dt_B", getExpressionClassNamePart("A.B"));
 		assertEquals("_dt_AB_dt_", getExpressionClassNamePart(".AB."));
 		assertEquals("_dt_A_dt_B_dt_C_dt_", getExpressionClassNamePart(".A.B.C."));
-
-		assertEquals("A_dt_B", getActionClassName("A.B"));
-		assertEquals("_dt_AB_dt_", getActionClassName(".AB."));
-		assertEquals("_dt_A_dt_B_dt_C_dt_", getActionClassName(".A.B.C."));
 	}
 
 	@Test
@@ -57,10 +47,6 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Mns_B", getExpressionClassNamePart("A-B"));
 		assertEquals("A_Mns_B", getExpressionClassNamePart("A - B"));
-
-		assertEquals("A_Mns_B", getActionClassName("A-B"));
-		assertEquals("A_x20__Mns__x20_B", getActionClassName("A - B"));
-
 	}
 
 	@Test
@@ -70,9 +56,6 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Pls_B", getExpressionClassNamePart("A+B"));
 		assertEquals("A_Pls_B", getExpressionClassNamePart("A + B"));
-
-		assertEquals("A_Pls_B", getActionClassName("A+B"));
-		assertEquals("A_x20__Pls__x20_B", getActionClassName("A + B"));
 	}
 
 	@Test
@@ -82,9 +65,6 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Mlt_B", getExpressionClassNamePart("A*B"));
 		assertEquals("A_Mlt_B", getExpressionClassNamePart("A * B"));
-
-		assertEquals("A_Mlt_B", getActionClassName("A*B"));
-		assertEquals("A_x20__Mlt__x20_B", getActionClassName("A * B"));
 	}
 
 	@Test
@@ -94,9 +74,6 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Div_B", getExpressionClassNamePart("A/B"));
 		assertEquals("A_Div_B", getExpressionClassNamePart("A / B"));
-
-		assertEquals("A_Div_B", getActionClassName("A/B"));
-		assertEquals("A_x20__Div__x20_B", getActionClassName("A / B"));
 	}
 
 	@Test
@@ -128,13 +105,6 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 		assertTrue(className.startsWith(scriptPackage));
 
 		return className.substring(scriptPackage.length());
-	}
-
-	private String getActionClassName(String scriptName) {
-		String className = TypeNameResolver.resolveActionClassName(scriptName);
-		assertTrue(className.startsWith(ACTION_CLASS_NAME_PREFIX));
-
-		return className.substring(ACTION_CLASS_NAME_PREFIX.length());
 	}
 
 }

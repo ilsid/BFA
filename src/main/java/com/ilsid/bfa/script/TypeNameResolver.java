@@ -21,8 +21,6 @@ public class TypeNameResolver {
 
 	private static final String BLANK_CODE = "_x20_";
 
-	private static final String GENERATED_ACTION_PACKAGE = GENERATED_ROOT_PACKAGE + "action.";
-
 	private static final String GENERATED_ENTITY_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "entity.";
 
 	private static final String GENERATED_ENTITY_DEFAULT_GROUP_PACKAGE = GENERATED_ENTITY_ROOT_PACKAGE
@@ -65,10 +63,6 @@ public class TypeNameResolver {
 		final String scriptSimpleClassName = generateSimpleClassName(scriptName, BLANK_CODE);
 		return generateScriptPackageName(scriptSimpleClassName) + scriptSimpleClassName + EXPRESSION_PREFIX
 				+ generateSimpleClassName(expression, EMPTY);
-	}
-
-	public static String resolveActionClassName(String actionName) {
-		return GENERATED_ACTION_PACKAGE + generateSimpleClassName(actionName, BLANK_CODE);
 	}
 
 	private static String generateSimpleClassName(String expression, String blankReplacement) {

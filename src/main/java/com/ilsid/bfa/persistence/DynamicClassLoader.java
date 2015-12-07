@@ -8,6 +8,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +33,7 @@ public class DynamicClassLoader extends ClassLoader {
 
 	private static final String GENERATED_CLASSES_DIR = ClassNameUtil.GENERATED_CLASSES_PACKAGE.replace('.', '/');
 
-	private static ConcurrentHashMap<String, Class<?>> cache = new ConcurrentHashMap<>();
+	private static Map<String, Class<?>> cache = new ConcurrentHashMap<>();
 
 	private static DynamicClassLoader instance = new DynamicClassLoader();
 

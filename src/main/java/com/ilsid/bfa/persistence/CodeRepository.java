@@ -1,8 +1,6 @@
 package com.ilsid.bfa.persistence;
 
-import java.util.Map;
-
-import com.ilsid.bfa.ConfigurationException;
+import com.ilsid.bfa.Configurable;
 
 /**
  * The code repository facade.
@@ -10,7 +8,7 @@ import com.ilsid.bfa.ConfigurationException;
  * @author illia.sydorovych
  *
  */
-public interface CodeRepository {
+public interface CodeRepository extends Configurable {
 
 	/**
 	 * Loads a byte code for a given class name.
@@ -113,14 +111,5 @@ public interface CodeRepository {
 	 * @return a transaction manager for this repository
 	 */
 	TransactionManager getTransactionManager();
-
-	/**
-	 * Defines a configuration specific to this repository
-	 * 
-	 * @param config
-	 *            a repository configuration
-	 * @throws ConfigurationException
-	 *             if the passed configuration is not valid for this repository
-	 */
-	void setConfiguration(Map<String, String> config) throws ConfigurationException;
+	
 }

@@ -11,9 +11,9 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
-import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.RepositoryConfig;
-import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
+import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ScriptLogger;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -29,7 +29,7 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
  * @author illia.sydorovych
  *
  */
-// FIXME: remove hardcoded config and CodeRepository implementation
+// FIXME: remove hardcoded config and ScriptingRepository implementation
 public class ApplicationConfig extends GuiceServletContextListener {
 
 	@Override
@@ -38,7 +38,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 
 			@Override
 			protected void configureServlets() {
-				bind(CodeRepository.class).to(FSCodeRepository.class);
+				bind(ScriptingRepository.class).to(FilesystemScriptingRepository.class);
 				
 				requestStaticInjection(DynamicClassLoader.class);
 				requestStaticInjection(ClassCompiler.class);

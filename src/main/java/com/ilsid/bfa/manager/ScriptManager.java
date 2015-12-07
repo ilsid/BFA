@@ -10,7 +10,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
-import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
 import com.ilsid.bfa.script.ClassCompilationException;
@@ -28,7 +28,7 @@ import com.ilsid.bfa.script.TypeNameResolver;
 // TODO: write unit tests
 public class ScriptManager {
 
-	private CodeRepository repository;
+	private ScriptingRepository repository;
 
 	/**
 	 * Creates new script in the repository. The script belongs to the Default Group.
@@ -207,7 +207,7 @@ public class ScriptManager {
 	 *            a code repository
 	 */
 	@Inject
-	public void setRepository(CodeRepository repository) {
+	public void setRepository(ScriptingRepository repository) {
 		this.repository = repository;
 	}
 

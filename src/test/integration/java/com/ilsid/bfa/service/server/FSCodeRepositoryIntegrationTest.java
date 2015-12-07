@@ -10,7 +10,7 @@ import org.junit.BeforeClass;
 
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.LoggingConfigurator;
-import com.ilsid.bfa.persistence.filesystem.FSCodeRepository;
+import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
 
 public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegrationTestCase {
 
@@ -38,7 +38,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 		Map<String, String> repositoryConfig = new HashMap<>();
 		repositoryConfig.put("bfa.persistence.fs.root_dir", CODE_REPOSITORY_PATH);
 
-		startWebServer(new TestApplicationConfig(FSCodeRepository.class, repositoryConfig));
+		startWebServer(new TestApplicationConfig(FilesystemScriptingRepository.class, repositoryConfig));
 	}
 
 	@AfterClass

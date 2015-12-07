@@ -18,7 +18,7 @@ import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.CompileHelper;
 import com.ilsid.bfa.common.IOHelper;
-import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 
 public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
@@ -41,7 +41,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 
 	private final static File ROOT_DIR = new File(ROOT_DIR_PATH);
 
-	private CodeRepository repository = new FSCodeRepository();
+	private ScriptingRepository repository = new FilesystemScriptingRepository();
 
 	@Before
 	@SuppressWarnings("serial")
@@ -101,7 +101,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 		exceptionRule.expect(ConfigurationException.class);
 		exceptionRule.expectMessage("Required [bfa.persistence.fs.root_dir] property not found");
 
-		CodeRepository rep = new FSCodeRepository();
+		ScriptingRepository rep = new FilesystemScriptingRepository();
 		rep.setConfiguration(new HashMap<String, String>());
 	}
 
@@ -112,7 +112,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 		exceptionRule.expectMessage(
 				"[src/test/resources/non-existent-dir] value defined by [bfa.persistence.fs.root_dir] property is not a directory");
 
-		CodeRepository rep = new FSCodeRepository();
+		ScriptingRepository rep = new FilesystemScriptingRepository();
 		rep.setConfiguration(new HashMap<String, String>() {
 			{
 				put("bfa.persistence.fs.root_dir", "src/test/resources/non-existent-dir");
@@ -279,7 +279,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 		exceptionRule.expect(IllegalStateException.class);
 		exceptionRule.expectMessage("Root directory is not set");
 
-		repository = new FSCodeRepository();
+		repository = new FilesystemScriptingRepository();
 	}
 
 	private void saveClass(boolean saveSource) throws Exception {

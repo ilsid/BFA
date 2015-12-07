@@ -39,7 +39,7 @@ public class DynamicClassLoader extends ClassLoader {
 
 	private static final Object RELOAD_LOCK = new Object();
 
-	private static CodeRepository repository;
+	private static ScriptingRepository repository;
 
 	private DynamicClassLoader() {
 		super(Thread.currentThread().getContextClassLoader());
@@ -117,12 +117,12 @@ public class DynamicClassLoader extends ClassLoader {
 	/**
 	 * Defines the code repository implementation.
 	 * 
-	 * @param codeRespository
+	 * @param codeRepository
 	 *            the code repository
 	 */
 	@Inject
-	public static void setRepository(CodeRepository codeRespository) {
-		repository = codeRespository;
+	public static void setRepository(ScriptingRepository codeRepository) {
+		repository = codeRepository;
 	}
 
 	private URL doFindResource(String name) {

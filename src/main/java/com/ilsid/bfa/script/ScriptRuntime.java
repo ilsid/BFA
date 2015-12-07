@@ -3,7 +3,7 @@ package com.ilsid.bfa.script;
 import javax.inject.Inject;
 
 import com.ilsid.bfa.persistence.DynamicClassLoader;
-import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 
 /**
@@ -15,7 +15,7 @@ import com.ilsid.bfa.persistence.PersistenceException;
 // TODO: support for group name and input params is needed
 public class ScriptRuntime {
 
-	private CodeRepository repository;
+	private ScriptingRepository repository;
 
 	/**
 	 * Runs the script with the given name. The script is searched in the Default Group.
@@ -47,7 +47,7 @@ public class ScriptRuntime {
 	 *            a code repository
 	 */
 	@Inject
-	public void setRepository(CodeRepository repository) {
+	public void setRepository(ScriptingRepository repository) {
 		this.repository = repository;
 	}
 

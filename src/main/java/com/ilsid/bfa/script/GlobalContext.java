@@ -1,6 +1,6 @@
 package com.ilsid.bfa.script;
 
-import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 
 //TODO: Complete implementation
 //TODO: Put javadocs
@@ -8,7 +8,7 @@ public class GlobalContext {
 	
 	private static final GlobalContext instance = new GlobalContext();
 	
-	private CodeRepository codeRepository;
+	private ScriptingRepository codeRepository;
 	
 	GlobalContext() {
 	}
@@ -29,11 +29,11 @@ public class GlobalContext {
 
 	}
 	
-	public CodeRepository getCodeRepository() {
+	public ScriptingRepository getCodeRepository() {
 		return codeRepository;
 	}
 
-	void setCodeRepository(CodeRepository codeRepository) {
+	void setCodeRepository(ScriptingRepository codeRepository) {
 		this.codeRepository = codeRepository;
 	}
 	

@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
-import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 
 public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
@@ -17,7 +17,7 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 	@BeforeClass
 	@SuppressWarnings("serial")
 	public static void beforeClass() throws Exception {
-		CodeRepository repository = new com.ilsid.bfa.persistence.filesystem.FSCodeRepository();
+		ScriptingRepository repository = new com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository();
 		repository.setConfiguration(new HashMap<String, String>() {
 			{
 				put("bfa.persistence.fs.root_dir", TestConstants.TEST_RESOURCES_DIR + "/code_repository");

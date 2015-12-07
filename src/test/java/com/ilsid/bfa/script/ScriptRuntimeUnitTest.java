@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 
 public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	
@@ -12,7 +12,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	
 	@Before
 	public void setUp() throws Exception {
-		CodeRepository repository = CodeRepositoryInitializer.init();
+		ScriptingRepository repository = CodeRepositoryInitializer.init();
 		runtime = new ScriptRuntime();
 		runtime.setRepository(repository);
 	}

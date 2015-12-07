@@ -3,12 +3,12 @@ package com.ilsid.bfa.persistence;
 import com.ilsid.bfa.Configurable;
 
 /**
- * The code repository facade.
+ * Provides access to the scripting code repository.
  * 
  * @author illia.sydorovych
  *
  */
-public interface CodeRepository extends Configurable {
+public interface ScriptingRepository extends Configurable {
 
 	/**
 	 * Loads a byte code for a given class name.

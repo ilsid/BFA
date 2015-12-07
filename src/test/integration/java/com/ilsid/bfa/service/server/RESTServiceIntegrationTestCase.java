@@ -18,11 +18,11 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.GuiceServletContextListener;
-import com.ilsid.bfa.BFAError;
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.persistence.CodeRepository;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.RepositoryConfig;
+import com.ilsid.bfa.persistence.ScriptingRepository;
+import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ScriptLogger;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
@@ -91,11 +91,11 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 		private static final String LOGGER_NAME = "test_logger";
 
-		private final Class<? extends CodeRepository> repositoryClass;
+		private final Class<? extends ScriptingRepository> repositoryClass;
 
 		private final Map<String, String> repositoryConfig;
 
-		public TestApplicationConfig(Class<? extends CodeRepository> repositoryClass,
+		public TestApplicationConfig(Class<? extends ScriptingRepository> repositoryClass,
 				Map<String, String> repositoryConfig) {
 			this.repositoryClass = repositoryClass;
 			this.repositoryConfig = repositoryConfig;
@@ -107,16 +107,10 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 				@Override
 				protected void configureServlets() {
-					bind(CodeRepository.class).to(repositoryClass);
+					bind(ScriptingRepository.class).to(repositoryClass);
 
 					requestStaticInjection(DynamicClassLoader.class);
-
-					final String compilerClassName = "com.ilsid.bfa.script.ClassCompiler";
-					try {
-						requestStaticInjection(DynamicClassLoader.getInstance().loadClass(compilerClassName));
-					} catch (ClassNotFoundException | IllegalStateException e) {
-						throw new BFAError(String.format("Failed to load [%s] class", compilerClassName), e);
-					}
+					requestStaticInjection(ClassCompiler.class);
 
 					Map<String, String> webConfig = new HashMap<>();
 					// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping

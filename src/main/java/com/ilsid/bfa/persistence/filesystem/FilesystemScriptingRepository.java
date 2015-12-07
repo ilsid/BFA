@@ -4,19 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.ClassNameUtil;
-import com.ilsid.bfa.persistence.CodeRepository;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
-import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.TransactionManager;
 
 /**
@@ -25,11 +20,9 @@ import com.ilsid.bfa.persistence.TransactionManager;
  * @author illia.sydorovych
  *
  */
-public class FSCodeRepository implements CodeRepository {
+public class FilesystemScriptingRepository extends ConfigurableRepository implements ScriptingRepository {
 
 	private static final char DOT = '.';
-
-	private static final String CONFIG_PROP_ROOT_DIR_NAME = "bfa.persistence.fs.root_dir";
 
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
@@ -37,12 +30,10 @@ public class FSCodeRepository implements CodeRepository {
 
 	private AtomicLong runtimeId = new AtomicLong(System.currentTimeMillis());
 
-	private String rootDir;
-
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.CodeRepository#load(java.lang.String)
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#load(java.lang.String)
 	 */
 	@Override
 	public byte[] load(String className) throws PersistenceException {
@@ -76,7 +67,7 @@ public class FSCodeRepository implements CodeRepository {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.CodeRepository#save(java.lang.String, byte[], java.lang.String)
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#save(java.lang.String, byte[], java.lang.String)
 	 */
 	@Override
 	public void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
@@ -86,7 +77,7 @@ public class FSCodeRepository implements CodeRepository {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.CodeRepository#save(java.lang.String, byte[])
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#save(java.lang.String, byte[])
 	 */
 	@Override
 	public void save(String className, byte[] byteCode) throws PersistenceException {
@@ -96,7 +87,7 @@ public class FSCodeRepository implements CodeRepository {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.CodeRepository#delete(java.lang.String)
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#delete(java.lang.String)
 	 */
 	@Override
 	public int deletePackage(String packageName) throws PersistenceException {
@@ -117,10 +108,11 @@ public class FSCodeRepository implements CodeRepository {
 
 		return filesCnt;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
-	 * @see com.ilsid.bfa.persistence.CodeRepository#deleteClass(java.lang.String)
+	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#deleteClass(java.lang.String)
 	 */
 	@Override
 	public int deleteClass(String className) throws PersistenceException {
@@ -143,7 +135,7 @@ public class FSCodeRepository implements CodeRepository {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.CodeRepository#loadSourceCode(java.lang.String)
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadSourceCode(java.lang.String)
 	 */
 	@Override
 	public String loadSourceCode(String className) throws PersistenceException {
@@ -175,7 +167,7 @@ public class FSCodeRepository implements CodeRepository {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.CodeRepository#getNextRuntimeId()
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#getNextRuntimeId()
 	 */
 	@Override
 	public long getNextRuntimeId() throws PersistenceException {
@@ -190,19 +182,6 @@ public class FSCodeRepository implements CodeRepository {
 	@Override
 	public TransactionManager getTransactionManager() {
 		return FSTransactionManager.getInstance();
-	}
-
-	@Inject
-	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
-		rootDir = config.get(CONFIG_PROP_ROOT_DIR_NAME);
-		if (rootDir == null) {
-			throw new ConfigurationException("Required [" + CONFIG_PROP_ROOT_DIR_NAME + "] property not found");
-		}
-
-		if (!new File(rootDir).isDirectory()) {
-			throw new ConfigurationException("[" + rootDir + "] value defined by [" + CONFIG_PROP_ROOT_DIR_NAME
-					+ "] property is not a directory");
-		}
 	}
 
 	private void doSave(String className, byte[] byteCode, String sourceCode) throws PersistenceException {

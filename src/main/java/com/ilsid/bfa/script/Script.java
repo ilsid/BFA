@@ -2,7 +2,7 @@ package com.ilsid.bfa.script;
 
 //TODO: complete implementation
 //TODO: complete javadocs
-public abstract class Script implements Executable<Void> {
+public abstract class Script {
 
 	private ScriptContext scriptContext;
 
@@ -19,9 +19,8 @@ public abstract class Script implements Executable<Void> {
 		scriptContext.setScriptName(this.getClass().getSimpleName());
 	}
 
-	public Void execute() throws ScriptException {
+	public void execute() throws ScriptException {
 		doExecute();
-		return null;
 	}
 
 	public void setRuntimeContext(GlobalContext runtimeContext) {

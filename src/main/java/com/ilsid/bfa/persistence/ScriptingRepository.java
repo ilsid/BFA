@@ -3,7 +3,7 @@ package com.ilsid.bfa.persistence;
 import com.ilsid.bfa.Configurable;
 
 /**
- * Provides access to the scripting code repository.
+ * The scripting code repository.
  * 
  * @author illia.sydorovych
  *

@@ -15,7 +15,7 @@ import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
 
 /**
- * The code repository based on the file system.
+ * The scripting repository based on the file system.
  * 
  * @author illia.sydorovych
  *

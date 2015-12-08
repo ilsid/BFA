@@ -1,6 +1,8 @@
 package com.ilsid.bfa.common;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Provides the routines for the class names processing.
@@ -9,13 +11,25 @@ import java.io.File;
  *
  */
 public class ClassNameUtil {
-	
+
 	/**
 	 * The root package for all generated classes.
 	 */
 	public static final String GENERATED_CLASSES_PACKAGE = "com.ilsid.bfa.generated";
+	
+	public static final String BLANK_CODE = "_x20_";
 
 	private static final char DOT = '.';
+
+	private static final Map<String, String> replaceableSymbols = new HashMap<>();
+
+	static {
+		replaceableSymbols.put("-", "_Mns_");
+		replaceableSymbols.put("+", "_Pls_");
+		replaceableSymbols.put("*", "_Mlt_");
+		replaceableSymbols.put("/", "_Div_");
+		replaceableSymbols.put(".", "_dt_");
+	}
 
 	/**
 	 * Returns directories string from the given class name. For example, the method returns the string
@@ -52,6 +66,24 @@ public class ClassNameUtil {
 	public static String getPackageName(String className) {
 		int lastDotIdx = className.lastIndexOf('.');
 		return className.substring(0, lastDotIdx);
+	}
+
+	/**
+	 * Generates a simple class name (without a package) for the given expression.
+	 * 
+	 * @param expression
+	 *            the expression to generate a class name
+	 * @param blankReplacement
+	 *            a string that replaces blank symbols in the given expression
+	 * @return a class name
+	 */
+	public static String generateSimpleClassName(String expression, String blankReplacement) {
+		String expr = expression.replaceAll("\\s", blankReplacement);
+		for (String smb : replaceableSymbols.keySet()) {
+			expr = expr.replace(smb, replaceableSymbols.get(smb));
+		}
+
+		return expr;
 	}
 
 }

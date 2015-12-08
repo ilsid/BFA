@@ -1,5 +1,8 @@
 package com.ilsid.bfa.script;
 
+import com.ilsid.bfa.action.Action;
+import com.ilsid.bfa.action.ActionException;
+
 //TODO: complete implementation
 //TODO: complete javadocs
 public abstract class Script {
@@ -7,7 +10,7 @@ public abstract class Script {
 	private ScriptContext scriptContext;
 
 	private GlobalContext runtimeContext;
-	
+
 	private ScriptRuntime runtime;
 
 	private long runtimeId = -1;
@@ -85,17 +88,27 @@ public abstract class Script {
 
 	public ActionResult Action(String name, @ExprParam Object... params) throws ScriptException {
 		// FIXME
-		Action action = null;
+		Action action = resolveAction(name);
 		action.setInputParameters(params);
-		Object[] result = action.execute();
+		Object[] result;
+		try {
+			result = action.execute();
+		} catch (ActionException e) {
+			throw new ScriptException(String.format("Execution of the action [%s] failed", name), e);
+		}
 		ActionResult actionResult = new ActionResultImpl(result);
 
 		return actionResult;
 	}
 
+	private Action resolveAction(String name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public void SubFlow(String name) throws ScriptException {
-		//TODO: pass input parameters
-		//TODO: maybe some parent info is needed
+		// TODO: pass input parameters
+		// TODO: maybe some parent info is needed
 		runtime.runScript(name);
 	}
 
@@ -120,7 +133,7 @@ public abstract class Script {
 	public void setRuntimeId(long runtimeId) {
 		this.runtimeId = runtimeId;
 	}
-	
+
 	void setRuntime(ScriptRuntime runtime) {
 		this.runtime = runtime;
 	}

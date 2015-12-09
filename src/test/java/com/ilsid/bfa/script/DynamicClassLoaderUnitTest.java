@@ -20,7 +20,7 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 		ScriptingRepository repository = new com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository();
 		repository.setConfiguration(new HashMap<String, String>() {
 			{
-				put("bfa.persistence.fs.root_dir", TestConstants.TEST_RESOURCES_DIR + "/code_repository");
+				put("bfa.persistence.fs.root_dir", TestConstants.CODE_REPOSITORY_DIR);
 			}
 		});
 

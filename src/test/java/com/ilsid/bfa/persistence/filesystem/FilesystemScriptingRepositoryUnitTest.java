@@ -23,8 +23,7 @@ import com.ilsid.bfa.persistence.PersistenceException;
 
 public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
-	private static final File CODE_REPOSITORY_SOURCE_DIR = new File(
-			TestConstants.TEST_RESOURCES_DIR + "/code_repository");
+	private static final File CODE_REPOSITORY_SOURCE_DIR = new File(TestConstants.CODE_REPOSITORY_DIR);
 
 	private static final String SCRIPT_SOURCE_FILE_NAME = "single-expression-script.txt";
 

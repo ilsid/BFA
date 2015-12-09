@@ -14,8 +14,6 @@ import com.ilsid.bfa.action.persistence.ActionRepository;
 
 public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 
-	private final static String ROOT_DIR_PATH = TestConstants.TEST_RESOURCES_DIR + "/code_repository";
-	
 	private static final String EXISTING_ACTION_NAME = "Reserve Amount";
 
 	private static final String NON_EXISTING_ACTION_NAME = "Non Existing Action";
@@ -27,7 +25,7 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 	public void setUp() throws Exception {
 		repository.setConfiguration(new HashMap<String, String>() {
 			{
-				put("bfa.persistence.fs.root_dir", ROOT_DIR_PATH);
+				put("bfa.persistence.fs.root_dir", TestConstants.CODE_REPOSITORY_DIR);
 			}
 		});
 	}
@@ -47,11 +45,12 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		List<URL> urls = repository.getDependencies(EXISTING_ACTION_NAME);
 
 		assertEquals(3, urls.size());
-		assertTrue(urls.contains(toURL(new File(ROOT_DIR_PATH + "/action/default_group/Reserve_x20_Amount/classes/"))));
+		assertTrue(urls.contains(toURL(
+				new File(TestConstants.CODE_REPOSITORY_DIR + "/action/default_group/Reserve_x20_Amount/classes/"))));
+		assertTrue(urls.contains(toURL(new File(TestConstants.CODE_REPOSITORY_DIR
+				+ "/action/default_group/Reserve_x20_Amount/lib/commons-collections-3.2.1.jar"))));
 		assertTrue(urls.contains(toURL(new File(
-				ROOT_DIR_PATH + "/action/default_group/Reserve_x20_Amount/lib/commons-collections-3.2.1.jar"))));
-		assertTrue(urls.contains(
-				toURL(new File(ROOT_DIR_PATH + "/action/default_group/Reserve_x20_Amount/lib/mail-1.4.1.jar"))));
+				TestConstants.CODE_REPOSITORY_DIR + "/action/default_group/Reserve_x20_Amount/lib/mail-1.4.1.jar"))));
 	}
 
 	@Test

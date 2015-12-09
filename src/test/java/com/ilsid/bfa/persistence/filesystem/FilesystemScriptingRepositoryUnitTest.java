@@ -21,7 +21,7 @@ import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
 
-public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
+public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 	private static final File CODE_REPOSITORY_SOURCE_DIR = new File(
 			TestConstants.TEST_RESOURCES_DIR + "/code_repository");
@@ -31,7 +31,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 	private final static String ROOT_DIR_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_class_repository";
 
 	private final static String SCRIPT_CLASS_NAME = CompileHelper.GENERATED_SCRIPT_PACKAGE
-			+ FSCodeRepositoryUnitTest.class.getSimpleName() + "Script01";
+			+ FilesystemScriptingRepositoryUnitTest.class.getSimpleName() + "Script01";
 
 	private final static String PATH_WO_EXTENSION = ROOT_DIR_PATH + "/" + SCRIPT_CLASS_NAME.replace('.', '/');
 
@@ -124,7 +124,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 	public void classOnlySaveFailsIfClassWithSuchNameAlreadyExists() throws Exception {
 		exceptionRule.expect(PersistenceException.class);
 		exceptionRule.expectMessage(
-				"Class [com.ilsid.bfa.generated.script.FSCodeRepositoryUnitTestScript01] already exists in directory src/test/resources/__tmp_class_repository");
+				"Class [com.ilsid.bfa.generated.script.FilesystemScriptingRepositoryUnitTestScript01] already exists in directory src/test/resources/__tmp_class_repository");
 
 		saveClass();
 		saveClass();
@@ -134,7 +134,7 @@ public class FSCodeRepositoryUnitTest extends BaseUnitTestCase {
 	public void classAndSourceSaveFailsIfClassWithSuchNameAlreadyExists() throws Exception {
 		exceptionRule.expect(PersistenceException.class);
 		exceptionRule.expectMessage(
-				"Class [com.ilsid.bfa.generated.script.FSCodeRepositoryUnitTestScript01] already exists in directory src/test/resources/__tmp_class_repository");
+				"Class [com.ilsid.bfa.generated.script.FilesystemScriptingRepositoryUnitTestScript01] already exists in directory src/test/resources/__tmp_class_repository");
 
 		saveClassAndSource();
 		saveClassAndSource();

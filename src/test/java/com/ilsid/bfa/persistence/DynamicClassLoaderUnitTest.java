@@ -1,4 +1,4 @@
-package com.ilsid.bfa.script;
+package com.ilsid.bfa.persistence;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -9,8 +9,6 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
-import com.ilsid.bfa.persistence.ScriptingRepository;
-import com.ilsid.bfa.persistence.DynamicClassLoader;
 
 public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 
@@ -59,7 +57,7 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 		assertFalse(initialLoader == nextLoader);
 		assertFalse(initialClass == reloadedClass);
 	}
-	
+
 	@Test
 	public void classFromGeneratedPackageCanBeReloadedBySameLoaderInstance() throws Exception {
 		String className = "com.ilsid.bfa.generated.classloadertest.YetAnotherFooContract";
@@ -77,15 +75,15 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 	public void classFromGeneratedPackageCanBeObtainedAsByteArrayResource() throws Exception {
 		String classPath = "com/ilsid/bfa/generated/classloadertest/OneMoreFooContract.class";
 		InputStream is = DynamicClassLoader.getInstance().getResourceAsStream(classPath);
-		
+
 		assertSame(ByteArrayInputStream.class, is.getClass());
 	}
-	
+
 	@Test
 	public void classFromStaticPackageCanNotBeObtainedAsByteArrayResource() throws Exception {
 		String classPath = "com/ilsid/bfa/test/types/ContractForCustomClassloaderTesting.class";
 		InputStream is = DynamicClassLoader.getInstance().getResourceAsStream(classPath);
-		
+
 		assertFalse(is.getClass() == ByteArrayInputStream.class);
 	}
 

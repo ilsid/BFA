@@ -1,39 +1,82 @@
 package com.ilsid.bfa.action.persistence;
 
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
+import org.slf4j.Logger;
+
 import com.ilsid.bfa.action.Action;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.PersistenceLogger;
 
 /**
- * The class loader that is used for the loading of the particular {@link Action} dependencies including the action
- * implementation, action related classes and action third-party classes.
+ * This is the class loader intended for the loading of the particular {@link Action} dependencies including the action
+ * implementation, action related classes and action third-party classes. Supports the classes reloading (hot
+ * re-deploy).
  * 
  * @author illia.sydorovych
  *
  */
-// FIXME: class reloading is not implemented
 public class ActionClassLoader extends ClassLoader {
 
-	private ClassLoader actionClassesLoader;
+	private static Map<String, ActionClassLoader> loaders = new ConcurrentHashMap<>();
 
-	private ActionRepository repository;
+	private static ActionRepository repository;
+
+	private static Logger logger;
+
+	private URLClassLoader actionClassesLoader;
 
 	private String actionName;
 
+	ActionClassLoader(String actionName) {
+		super(Thread.currentThread().getContextClassLoader());
+		this.actionName = actionName;
+	}
+
 	/**
-	 * Creates an instance for an action with the given name.
+	 * Provides a loader for the action with the given name.
 	 * 
 	 * @param actionName
 	 *            action name
+	 * @return a class loader instance
 	 */
-	public ActionClassLoader(String actionName) {
-		super(Thread.currentThread().getContextClassLoader());
-		this.actionName = actionName;
+	public static ClassLoader getLoader(String actionName) {
+		synchronized (actionName.intern()) {
+			ActionClassLoader loader = loaders.get(actionName);
+			if (loader == null) {
+				loader = new ActionClassLoader(actionName);
+				loaders.put(actionName, loader);
+			}
+
+			return loader;
+		}
+	}
+
+	/**
+	 * Reloads classes related to the given action. Implicitly creates new action loader. The consequent invocation of
+	 * {@linkplain #getLoader(String)} will return this new loader. Does nothing if the action with the given name has
+	 * been never loaded before.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @see #getLoader(String)
+	 */
+	public static void reload(String actionName) {
+		synchronized (actionName.intern()) {
+			ActionClassLoader loader = loaders.get(actionName);
+			if (loader != null) {
+				loader.close();
+				loader = new ActionClassLoader(actionName);
+				loaders.put(actionName, loader);
+			}
+		}
 	}
 
 	/**
@@ -50,8 +93,10 @@ public class ActionClassLoader extends ClassLoader {
 	 */
 	@Override
 	public Class<?> loadClass(String className) throws ClassNotFoundException {
-		if (actionClassesLoader == null) {
-			initActionClassesLoader();
+		synchronized (this) {
+			if (actionClassesLoader == null) {
+				initActionClassesLoader();
+			}
 		}
 
 		return actionClassesLoader.loadClass(className);
@@ -64,8 +109,33 @@ public class ActionClassLoader extends ClassLoader {
 	 *            the code repository
 	 */
 	@Inject
-	public void setRepository(ActionRepository repository) {
-		this.repository = repository;
+	public static void setRepository(ActionRepository codeRepository) {
+		repository = codeRepository;
+	}
+
+	/**
+	 * Defines the logger implementation.
+	 * 
+	 * @param loggerImpl
+	 *            the logger instance
+	 */
+	@Inject
+	public static void setLogger(@PersistenceLogger Logger loggerImpl) {
+		logger = loggerImpl;
+	}
+
+	void close() {
+		if (actionClassesLoader != null) {
+			try {
+				actionClassesLoader.close();
+			} catch (IOException e) {
+				if (logger != null) {
+					logger.warn(String.format("Failed to close the class loader for the action [%s]", actionName), e);
+				} else {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	private void initActionClassesLoader() {

@@ -12,7 +12,7 @@ import com.ilsid.bfa.persistence.PersistenceException;
  * @author illia.sydorovych
  *
  */
-// Handle non-default action groups
+// TODO: Handle non-default action groups
 public interface ActionRepository extends Configurable {
 
 	/**
@@ -28,8 +28,8 @@ public interface ActionRepository extends Configurable {
 	String getImplementationClassName(String actionName) throws PersistenceException;
 
 	/**
-	 * Returns an array of action dependencies. Each URL represents a jar file or classes directory that the given
-	 * action depends on.
+	 * Returns a list of action dependencies. Each URL represents a jar file or classes directory that the given action
+	 * depends on.
 	 * 
 	 * @param actionName
 	 *            action name

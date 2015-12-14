@@ -2,6 +2,7 @@ package com.ilsid.bfa.script;
 
 import javax.inject.Inject;
 
+import com.ilsid.bfa.action.persistence.ActionLocator;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
@@ -16,6 +17,8 @@ import com.ilsid.bfa.persistence.PersistenceException;
 public class ScriptRuntime {
 
 	private ScriptingRepository repository;
+
+	private ActionLocator actionLocator;
 
 	/**
 	 * Runs the script with the given name. The script is searched in the Default Group.
@@ -34,7 +37,8 @@ public class ScriptRuntime {
 		long runtimeId = generatedRuntimeId(scriptName);
 		script.setRuntimeId(runtimeId);
 		script.setRuntime(this);
-		
+		script.setActionLocator(actionLocator);
+
 		script.execute();
 
 		return runtimeId;
@@ -49,6 +53,17 @@ public class ScriptRuntime {
 	@Inject
 	public void setRepository(ScriptingRepository repository) {
 		this.repository = repository;
+	}
+
+	/**
+	 * Defines the action locator.
+	 * 
+	 * @param actionLocator
+	 *            action locator instance
+	 */
+	@Inject
+	public void setActionLocator(ActionLocator actionLocator) {
+		this.actionLocator = actionLocator;
 	}
 
 	@SuppressWarnings("unchecked")

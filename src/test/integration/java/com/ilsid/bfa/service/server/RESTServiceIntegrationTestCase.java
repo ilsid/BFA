@@ -19,7 +19,11 @@ import com.google.inject.Provides;
 import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.action.persistence.ActionClassLoader;
+import com.ilsid.bfa.action.persistence.ActionRepository;
+import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
+import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.script.ClassCompiler;
@@ -108,8 +112,10 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 				@Override
 				protected void configureServlets() {
 					bind(ScriptingRepository.class).to(repositoryClass);
+					bind(ActionRepository.class).to(FilesystemActionRepository.class);
 
 					requestStaticInjection(DynamicClassLoader.class);
+					requestStaticInjection(ActionClassLoader.class);
 					requestStaticInjection(ClassCompiler.class);
 
 					Map<String, String> webConfig = new HashMap<>();
@@ -138,6 +144,13 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 				protected Logger provideScriptLogger() {
 					return LoggerFactory.getLogger(LOGGER_NAME);
 				}
+
+				@Provides
+				@PersistenceLogger
+				protected Logger providePersistenceLogger() {
+					return LoggerFactory.getLogger(LOGGER_NAME);
+				}
+
 			});
 		}
 

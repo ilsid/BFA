@@ -19,7 +19,17 @@
         <param name="Threshold" value="ERROR"/>
         <param name="File" value="&logDir;/error.log"/>
         <param name="MaxFileSize" value="5MB"/>
-        <param name="Append" value="false"/>
+        <param name="Append" value="true"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="[%d{DATE}] [%c] [%t] [%p]%n %m %n %n"/>
+        </layout>
+    </appender>
+    
+     <appender name="INFOS" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="INFO"/>
+        <param name="File" value="&logDir;/info.log"/>
+        <param name="MaxFileSize" value="5MB"/>
+        <param name="Append" value="true"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="[%d{DATE}] [%c] [%t] [%p]%n %m %n %n"/>
         </layout>
@@ -30,8 +40,14 @@
         <appender-ref ref="ERRORS"/>
         <appender-ref ref="STDERR"/>
     </logger>
+    
+     <logger name="info_logger">
+        <level value="INFO"/>
+        <appender-ref ref="INFOS"/>
+        <appender-ref ref="STDERR"/>
+    </logger>
 
     <root>
-        <level value="WARN"/>
+        <level value="INFO"/>
     </root>
 </log4j:configuration>

@@ -2,6 +2,7 @@ package com.ilsid.bfa.script;
 
 import com.ilsid.bfa.action.Action;
 import com.ilsid.bfa.action.ActionException;
+import com.ilsid.bfa.action.persistence.ActionLocator;
 
 //TODO: complete implementation
 //TODO: complete javadocs
@@ -14,6 +15,8 @@ public abstract class Script {
 	private ScriptRuntime runtime;
 
 	private long runtimeId = -1;
+
+	private ActionLocator actionLocator;
 
 	protected abstract void doExecute() throws ScriptException;
 
@@ -86,10 +89,26 @@ public abstract class Script {
 		return condition.isTrue();
 	}
 
+	public void SubFlow(String name) throws ScriptException {
+		// TODO: pass input parameters
+		// TODO: maybe some parent info is needed
+		runtime.runScript(name);
+	}
+	
+	public ActionResult Action(String name) throws ScriptException {
+		return Action(name, new Object[] {});
+	}
+
 	public ActionResult Action(String name, @ExprParam Object... params) throws ScriptException {
-		// FIXME
-		Action action = resolveAction(name);
+		Action action;
+		try {
+			action = actionLocator.lookup(name);
+		} catch (ActionException e) {
+			throw new ScriptException(String.format("Lookup of the action [%s] failed", name), e);
+		}
+
 		action.setInputParameters(params);
+
 		Object[] result;
 		try {
 			result = action.execute();
@@ -101,17 +120,6 @@ public abstract class Script {
 		return actionResult;
 	}
 
-	private Action resolveAction(String name) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void SubFlow(String name) throws ScriptException {
-		// TODO: pass input parameters
-		// TODO: maybe some parent info is needed
-		runtime.runScript(name);
-	}
-
 	public ValueExpression<Boolean> AsBoolean(String input) {
 		return new BooleanExpression(input);
 	}
@@ -120,18 +128,22 @@ public abstract class Script {
 		return new StringLiteralExpression(input);
 	}
 
-	public interface ActionResult {
-
-		public ActionResult SetLocalVar(String name) throws ScriptException;
-
-	}
-
 	public long getRuntimeId() {
 		return runtimeId;
 	}
 
 	public void setRuntimeId(long runtimeId) {
 		this.runtimeId = runtimeId;
+	}
+
+	public void setActionLocator(ActionLocator actionResolver) {
+		this.actionLocator = actionResolver;
+	}
+	
+	public interface ActionResult {
+
+		public ActionResult SetLocalVar(String name) throws ScriptException;
+
 	}
 
 	void setRuntime(ScriptRuntime runtime) {
@@ -163,7 +175,7 @@ public abstract class Script {
 
 		private int index;
 
-		public ActionResultImpl(Object[] input) {
+		ActionResultImpl(Object[] input) {
 			this.input = input;
 			size = input.length;
 		}

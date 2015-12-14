@@ -19,7 +19,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	protected static final String CODE_REPOSITORY_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_code_repository";
 
 	protected static final File CODE_REPOSITORY_DIR = new File(CODE_REPOSITORY_PATH);
-	
+
 	protected static final String GENERATED_ENTITY_ROOT_PATH = "com/ilsid/bfa/generated/entity/default_group";
 
 	protected static final String ENTITY_REPOSITORY_DIR_PATH = CODE_REPOSITORY_PATH + "/" + GENERATED_ENTITY_ROOT_PATH;
@@ -53,12 +53,15 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 			assertTrue("Expected file [" + filePath + "] does not exist", new File(filePath).exists());
 		}
 	}
-	
+
 	protected void copyEntityFileToRepository(String fileName) throws Exception {
 		String entitySourceDir = "/integration_tests/to_copy/com/ilsid/bfa/generated/entity/default_group";
 		FileUtils.copyFileToDirectory(new File(TestConstants.TEST_RESOURCES_DIR + entitySourceDir + "/" + fileName),
 				new File(ENTITY_REPOSITORY_DIR_PATH));
 	}
 
+	protected void copyDirectoryToRepository(String sourceDir, String destDir) throws Exception {
+		FileUtils.copyDirectory(new File(sourceDir), new File(CODE_REPOSITORY_PATH + "/" + destDir));
+	}
 
 }

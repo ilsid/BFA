@@ -10,9 +10,13 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.ilsid.bfa.action.persistence.ActionClassLoader;
+import com.ilsid.bfa.action.persistence.ActionRepository;
+import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
-import com.ilsid.bfa.persistence.ScriptingRepository;
+import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ScriptLogger;
@@ -29,8 +33,12 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
  * @author illia.sydorovych
  *
  */
-// FIXME: remove hardcoded config and ScriptingRepository implementation
+// FIXME: remove hardcoded config and Repository implementations
 public class ApplicationConfig extends GuiceServletContextListener {
+
+	private static final String INFO_LOGGER_NAME = "info_logger";
+	
+	private static final String ERROR_LOGGER_NAME = "error_logger";
 
 	@Override
 	protected Injector getInjector() {
@@ -39,8 +47,10 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			@Override
 			protected void configureServlets() {
 				bind(ScriptingRepository.class).to(FilesystemScriptingRepository.class);
-				
+				bind(ActionRepository.class).to(FilesystemActionRepository.class);
+
 				requestStaticInjection(DynamicClassLoader.class);
+				requestStaticInjection(ActionClassLoader.class);
 				requestStaticInjection(ClassCompiler.class);
 
 				Map<String, String> webConfig = new HashMap<>();
@@ -51,8 +61,6 @@ public class ApplicationConfig extends GuiceServletContextListener {
 
 				serve("/*").with(GuiceContainer.class, webConfig);
 			}
-			
-			
 
 			@Provides
 			@RepositoryConfig
@@ -62,17 +70,23 @@ public class ApplicationConfig extends GuiceServletContextListener {
 
 				return result;
 			}
-			
+
 			@Provides
 			@WebAppLogger
-			protected Logger provideLogger() {
-				return LoggerFactory.getLogger("error_logger");
+			protected Logger provideWebAppLogger() {
+				return LoggerFactory.getLogger(ERROR_LOGGER_NAME);
 			}
-			
+
 			@Provides
 			@ScriptLogger
 			protected Logger provideScriptLogger() {
-				return LoggerFactory.getLogger("error_logger");
+				return LoggerFactory.getLogger(ERROR_LOGGER_NAME);
+			}
+
+			@Provides
+			@PersistenceLogger
+			protected Logger providePersistenceLogger() {
+				return LoggerFactory.getLogger(INFO_LOGGER_NAME);
 			}
 		});
 	}

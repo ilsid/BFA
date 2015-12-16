@@ -1,9 +1,7 @@
 package com.ilsid.bfa.script;
 
-import java.io.InputStream;
 import java.util.Collection;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jmock.Expectations;
 import org.junit.Before;
@@ -63,11 +61,10 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void invocationCanBeCompiled() throws Exception {
-		byte[] byteCode = ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME,
-				TEST_INVOCATION_EXPRESSION);
+		byte[] byteCode = ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
 
-		DynamicCodeInvocation instance = (DynamicCodeInvocation) loadFromBytecode(TEST_INVOCATION_CLASS_NAME,
-				byteCode).newInstance();
+		DynamicCodeInvocation instance = (DynamicCodeInvocation) loadFromBytecode(TEST_INVOCATION_CLASS_NAME, byteCode)
+				.newInstance();
 		assertEquals(new Integer(1), instance.invoke());
 	}
 
@@ -103,14 +100,15 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "declarations-only-script.txt");
 		assertEquals(0, expressions.length);
 	}
-	
+
 	@Test
 	public void expressionMarkedAsNonCompiledIsNotCompiled() throws Exception {
 		// The script contains two expressions, but only one expression is compiled
-		CompilationBlock[] expressions = compileScriptExpressions("TestScript77", "one-noncompiled-expression-script.txt");
+		CompilationBlock[] expressions = compileScriptExpressions("TestScript77",
+				"one-noncompiled-expression-script.txt");
 
 		assertEquals(1, expressions.length);
-		
+
 		String exprName = expressions[0].getClassName();
 		assertExpressionShortClassName("TestScript77$$1", exprName);
 	}
@@ -184,6 +182,22 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		exceptionRule.expectMessage(msg.toString());
 
 		compileScriptExpressions("TestScript33", "three-invalid-expressions-script.txt");
+	}
+
+	@Test
+	public void scriptWithActionCanBeCompiled() throws Exception {
+		final String scriptName = "single-action-with-params-script.txt";
+		
+		compileScript(TEST_SCRIPT_CLASS_NAME + "WithAction", scriptName);
+		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithAction",
+				scriptName);
+
+		assertEquals(4, expressions.length);
+
+		assertExpressionShortClassName("TestScriptWithAction$$3", expressions[0].getClassName());
+		assertExpressionShortClassName("TestScriptWithAction$$5_dt_4", expressions[1].getClassName());
+		assertExpressionShortClassName("TestScriptWithAction$$Var1", expressions[2].getClassName());
+		assertExpressionShortClassName("TestScriptWithAction$$Var2", expressions[3].getClassName());
 	}
 
 	@Test
@@ -277,8 +291,12 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@SuppressWarnings("unused")
 	private void compileScript(String className) throws Exception {
-		byte[] byteCode = ClassCompiler.compileScript(className,
-				IOHelper.loadScript("declarations-only-script.txt"));
+		byte[] byteCode = ClassCompiler.compileScript(className, IOHelper.loadScript("declarations-only-script.txt"));
+	}
+
+	@SuppressWarnings("unused")
+	private void compileScript(String className, String fileName) throws Exception {
+		byte[] byteCode = ClassCompiler.compileScript(className, IOHelper.loadScript(fileName));
 	}
 
 	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
@@ -286,8 +304,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		String sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, shortClassName.toLowerCase(),
 				shortClassName, body);
 
-		InputStream scriptSource = IOUtils.toInputStream(sourceCode.toString(), "UTF-8");
-		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(scriptSource);
+		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(sourceCode);
 
 		return expressions.toArray(new CompilationBlock[] {});
 	}

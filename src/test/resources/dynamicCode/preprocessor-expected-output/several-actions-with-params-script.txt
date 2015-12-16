@@ -1,0 +1,13 @@
+DeclareLocalVar("Var1", "Number", "3"); 
+DeclareLocalVar("Var2", "Decimal", "5.4");
+DeclareLocalVar("Var3", "Number");
+DeclareLocalVar("Var4", "Decimal");
+DeclareLocalVar("Var5", "Decimal");
+
+Action("Some Action 1", new Object[] {  "Var1", "Var2" }).SetLocalVar("Var3");
+
+Action("Some Action 33", new Object[] {  "Var3" }).SetLocalVar("Var4").SetLocalVar("Var5");
+
+if (Equal("Var1 - Var3", "1")) {
+	Action("Some Action 2", new Object[] {  "Var2" });
+}

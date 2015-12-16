@@ -14,17 +14,28 @@ import com.ilsid.bfa.action.ActionException;
 
 public class WriteSystemProperty implements Action {
 
+	private Object[] params;
+
 	@SuppressWarnings("unused")
 	public Object[] execute() throws ActionException {
 		Collection<?> collection = CollectionUtils.EMPTY_COLLECTION;
 		Address address = new InternetAddress();
 
-		System.setProperty("test.action.sys.property", "Test Action Value");
+		String value = "Test Action Value";
+		if (params.length > 0) {
+			value = value + " " + params[0];
+		}
+		if (params.length > 1) {
+			value = value + " " + params[1];
+		}
+
+		System.setProperty("test.action.sys.property", value);
 
 		return new Object[] { new ResultProvider().getResult() };
 	}
 
 	public void setInputParameters(Object[] params) {
+		this.params = params;
 	}
 
 }

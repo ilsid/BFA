@@ -94,7 +94,7 @@ public abstract class Script {
 		// TODO: maybe some parent info is needed
 		runtime.runScript(name);
 	}
-	
+
 	public ActionResult Action(String name) throws ScriptException {
 		return Action(name, new Object[] {});
 	}
@@ -139,10 +139,10 @@ public abstract class Script {
 	public void setActionLocator(ActionLocator actionResolver) {
 		this.actionLocator = actionResolver;
 	}
-	
+
 	public interface ActionResult {
 
-		public ActionResult SetLocalVar(String name) throws ScriptException;
+		public ActionResult SetLocalVar(@ExprParam(compile = false) String name) throws ScriptException;
 
 	}
 

@@ -1,17 +1,13 @@
 package com.ilsid.bfa.manager;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 
 import javax.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
-
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
-import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.TransactionManager;
 import com.ilsid.bfa.script.ClassCompilationException;
 import com.ilsid.bfa.script.ClassCompiler;
@@ -254,13 +250,11 @@ public class ScriptManager {
 			scriptByteCode = ClassCompiler.compileScript(scriptClassName, scriptBody);
 
 			String scriptShortClassName = ClassNameUtil.getShortClassName(scriptClassName);
-			try (InputStream scriptSourceCode = IOUtils
-					.toInputStream(String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
-							scriptShortClassName.toLowerCase(), scriptShortClassName, scriptBody));) {
-				expressions = ClassCompiler.compileScriptExpressions(scriptSourceCode);
-			}
+			final String scriptSourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
+					scriptShortClassName.toLowerCase(), scriptShortClassName, scriptBody);
 
-		} catch (ClassCompilationException | IOException e) {
+			expressions = ClassCompiler.compileScriptExpressions(scriptSourceCode);
+		} catch (ClassCompilationException e) {
 			throw new ManagementException(String.format("Compilation of the script [%s] failed", scriptName), e);
 		}
 

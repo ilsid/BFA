@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -12,13 +13,16 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.expr.ArrayCreationExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
@@ -54,7 +58,6 @@ public class ClassCompiler {
 	private static Logger logger;
 
 	static {
-		// TODO: non-default class pool may be needed here
 		classPool = ClassPool.getDefault();
 		classPool.appendClassPath(new ClassClassPath(CompilerConstants.SCRIPT_CLASS));
 	}
@@ -197,13 +200,19 @@ public class ClassCompiler {
 	 * @throws IllegalArgumentException
 	 *             in case of invalid source code
 	 */
-	public static Collection<CompilationBlock> compileScriptExpressions(InputStream scriptSourceCode)
+	public static Collection<CompilationBlock> compileScriptExpressions(String scriptSourceCode)
 			throws ClassCompilationException, IllegalArgumentException {
 		CompilationUnit compilationUnit;
+
 		try {
-			compilationUnit = JavaParser.parse(scriptSourceCode);
+			try (InputStream scriptSource = IOUtils
+					.toInputStream(ScriptSourcePreprocessor.processVarargs(scriptSourceCode));) {
+				compilationUnit = JavaParser.parse(scriptSource);
+			}
 		} catch (ParseException e) {
 			throw new IllegalArgumentException("Invalid script source code", e);
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to convert script source code into input stream", e);
 		}
 
 		ClassDeclarationVisitor classDeclarationVisitor = new ClassDeclarationVisitor();
@@ -290,7 +299,9 @@ public class ClassCompiler {
 
 		CtMethod method = new CtMethod(CtClass.voidType, "doExecute", NO_ARGS, clazz);
 		method.setModifiers(Modifier.PROTECTED);
-		String body = "{" + StringUtils.LF + scriptBody + StringUtils.LF + "}";
+
+		String compilableScriptBody = ScriptSourcePreprocessor.processVarargs(scriptBody);
+		String body = "{" + StringUtils.LF + compilableScriptBody + StringUtils.LF + "}";
 		method.setBody(body);
 		clazz.addMethod(method);
 
@@ -329,8 +340,14 @@ public class ClassCompiler {
 
 		@Override
 		public void visit(MethodCallExpr m, MethodCallVisitorContext visitorContext) {
+			for (Node child : m.getChildrenNodes()) {
+				child.accept(this, visitorContext);
+			}
+
 			Expression[] methodParams = m.getArgs().toArray(new Expression[] {});
-			Method[] parentMethods = CompilerConstants.SCRIPT_CLASS.getMethods();
+			List<Method> parentMethods = new LinkedList<>();
+			parentMethods.addAll(Arrays.asList(Script.class.getMethods()));
+			parentMethods.addAll(Arrays.asList(Script.ActionResult.class.getMethods()));
 
 			for (Method parentMethod : parentMethods) {
 				if (m.getName().equals(parentMethod.getName())
@@ -353,6 +370,7 @@ public class ClassCompiler {
 					break;
 				}
 			}
+
 		}
 
 		private void processVariableDeclaration(Expression[] methodParams, Var varAnnotation,
@@ -378,7 +396,7 @@ public class ClassCompiler {
 			}
 		}
 
-		private void processExpression(Expression expression, MethodCallVisitorContext visitorContext,
+		private void processExpression(Node expression, MethodCallVisitorContext visitorContext,
 				boolean compilationIsNeeded) {
 			if (StringLiteralExpr.class.isInstance(expression)) {
 				String scriptExpr = ((StringLiteralExpr) expression).getValue();
@@ -404,6 +422,15 @@ public class ClassCompiler {
 					}
 				} catch (ParsingException | ClassCompilationException e) {
 					visitorContext.exceptions.add(e);
+				}
+			} else if (ArrayCreationExpr.class.isInstance(expression)) {
+				// This is a case for varargs that have been replaced with explicit array statement
+				for (Node childNode : expression.getChildrenNodes()) {
+					for (Node grandChildNode : childNode.getChildrenNodes()) {
+						// The string literals with method parameter values are the grand-children of "Create Array"
+						// expression
+						processExpression(grandChildNode, visitorContext, true);
+					}
 				}
 			}
 		}

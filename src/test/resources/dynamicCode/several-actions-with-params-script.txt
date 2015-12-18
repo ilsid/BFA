@@ -11,3 +11,9 @@ Action("Some Action 33", "Var3").SetLocalVar("Var4").SetLocalVar("Var5");
 if (Equal("Var1 - Var3", "1")) {
 	Action("Some Action 2", "Var2");
 }
+
+if (Equal("Var1 - Var3", "2")) {
+	Action("Some Action 3", "Var2");
+} else if (Equal("Var1 - Var3", "5")) {
+	Action("Some Action 4", "Var2"); Action("Some Action 5", "Var3");
+}

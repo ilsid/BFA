@@ -1,0 +1,6 @@
+DeclareLocalVar("Var1", "Number", "3"); 
+DeclareLocalVar("Var2", "Decimal", "5.4");
+DeclareLocalVar("Var3", "Number");
+
+Action("Write System Property", "Var1", "Var2").SetLocalVar("Var3");
+

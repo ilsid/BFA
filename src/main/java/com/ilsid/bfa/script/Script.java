@@ -106,8 +106,13 @@ public abstract class Script {
 		} catch (ActionException e) {
 			throw new ScriptException(String.format("Lookup of the action [%s] failed", name), e);
 		}
+		
+		Object[] paramValues = new Object[params.length];
+		for (int i = 0; i < params.length; i++) {
+			paramValues[i] = getValue(params[i]);
+		}
 
-		action.setInputParameters(params);
+		action.setInputParameters(paramValues);
 
 		Object[] result;
 		try {
@@ -166,6 +171,10 @@ public abstract class Script {
 		Object result = toExpression(expr).getValue();
 		return result;
 	}
+	
+	private void setLocalVarValue(String name, Object value) throws ScriptException {
+		scriptContext.updateLocalVar(name, value);
+	}
 
 	private class ActionResultImpl implements ActionResult {
 
@@ -184,7 +193,7 @@ public abstract class Script {
 			if (index == size) {
 				throw new ScriptException("No more elements found in action result");
 			}
-			Script.this.SetLocalVar(name, input[index++]);
+			Script.this.setLocalVarValue(name, input[index++]);
 
 			return this;
 		}

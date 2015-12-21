@@ -1,0 +1,8 @@
+// Input vars are expected from parent script
+DeclareInputVar("Var1", "Number"); 
+DeclareInputVar("Var2", "Decimal");
+
+DeclareLocalVar("Var3", "Number");
+
+Action("Write System Property", "Var1", "Var2").SetLocalVar("Var3");
+

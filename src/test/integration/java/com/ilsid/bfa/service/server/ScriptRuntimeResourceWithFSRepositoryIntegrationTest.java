@@ -20,7 +20,7 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 	private static final String ACTION_NAME = "Write System Property";
 
 	private static final String TEST_SYSTEM_PROP_NAME = "test.action.sys.property";
-	
+
 	private static final String ACTION_DIR = "action/default_group/Write_x20_System_x20_Property";
 
 	@After
@@ -58,11 +58,24 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 	public void validScriptWithSingleParametrizedActionIsRun() throws Exception {
 		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
 
-		// The script is run "Write System Property" action that sets "test.action.sys.property" system property
+		// The script invokes "Write System Property" action that sets "test.action.sys.property" system property
 		assertNull(System.getProperty(TEST_SYSTEM_PROP_NAME));
 		verifyScriptCanBeRun("Single Action With Params Script");
 		// "Write System Property" accepts two parameters. Their values are 3 and 5.4. The values are appended to the
 		// initial system property value "Test Action Value".
+		assertEquals("Test Action Value 3 5.4", System.getProperty(TEST_SYSTEM_PROP_NAME));
+	}
+
+	@Test
+	public void validScriptWithSingleParametrizedSubflowIsRun() throws Exception {
+		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
+
+		// The sub-flow script invokes "Write System Property" action that sets "test.action.sys.property" system
+		// property
+		assertNull(System.getProperty(TEST_SYSTEM_PROP_NAME));
+		verifyScriptCanBeRun("Single Subflow With Params Script");
+		// "Write System Property" accepts two parameters from input vars (passed by parent script). Their values are 3
+		// and 5.4. The values are appended to the initial system property value "Test Action Value".
 		assertEquals("Test Action Value 3 5.4", System.getProperty(TEST_SYSTEM_PROP_NAME));
 	}
 

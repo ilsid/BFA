@@ -10,9 +10,10 @@ public class ScriptSourcePreprocessorUnitTest extends BaseUnitTestCase {
 	@Test
 	public void varargsAreReplacedWithArrayExpressions() throws Exception {
 		String result = ScriptSourcePreprocessor
-				.processVarargs(IOHelper.loadScript("several-actions-with-params-script.txt"));
+				.processVarargs(IOHelper.loadScript("several-actions-and-subflows-with-params-script.txt"));
 
-		assertEquals(IOHelper.loadScript("preprocessor-expected-output/several-actions-with-params-script.txt"),
+		assertEquals(
+				IOHelper.loadScript("preprocessor-expected-output/several-actions-and-subflows-with-params-script.txt"),
 				result);
 	}
 

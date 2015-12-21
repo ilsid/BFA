@@ -25,8 +25,8 @@ class ScriptSourcePreprocessor {
 
 	private static final String OBJECT_ARRAY_TEMPLATE = " new Object[] { %s }";
 
-	private static final Pattern ACTION_WITH_PARAMS_PATTERN = Pattern.compile(".*(Action\\(.+?,.+?\\)).*",
-			Pattern.DOTALL);
+	private static final Pattern ACTION_OR_SUBFLOW_WITH_PARAMS_PATTERN = Pattern
+			.compile(".*(Action\\(.+?,.+?\\)|SubFlow\\(.+?,.+?\\)).*", Pattern.DOTALL);
 
 	/**
 	 * This is a work-around for Javassist limitation. Javassist does not support Java <i>varargs</i>. Calls of
@@ -53,7 +53,7 @@ class ScriptSourcePreprocessor {
 		StringBuilder output = new StringBuilder();
 
 		for (String expr : expressions) {
-			Matcher matcher = ACTION_WITH_PARAMS_PATTERN.matcher(expr);
+			Matcher matcher = ACTION_OR_SUBFLOW_WITH_PARAMS_PATTERN.matcher(expr);
 			if (matcher.matches()) {
 				String actionExpr = matcher.group(1);
 				int offset = expr.indexOf(actionExpr);

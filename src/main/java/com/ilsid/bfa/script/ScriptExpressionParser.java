@@ -377,13 +377,13 @@ public class ScriptExpressionParser {
 
 		private static final String RP = ")";
 
-		private static final String INTEGER_VAR_EXPR_TEMPLATE = "((Integer)scriptContext.getLocalVar(\"%s\").getValue()).intValue()";
+		private static final String INTEGER_VAR_EXPR_TEMPLATE = "((Integer)scriptContext.getVar(\"%s\").getValue()).intValue()";
 
-		private static final String INTEGER_FLD_EXPR_TEMPLATE = "((%s)scriptContext.getLocalVar(\"%s\").getValue()).%s.intValue()";
+		private static final String INTEGER_FLD_EXPR_TEMPLATE = "((%s)scriptContext.getVar(\"%s\").getValue()).%s.intValue()";
 
-		private static final String DOUBLE_VAR_EXPR_TEMPLATE = "((Double)scriptContext.getLocalVar(\"%s\").getValue()).doubleValue()";
+		private static final String DOUBLE_VAR_EXPR_TEMPLATE = "((Double)scriptContext.getVar(\"%s\").getValue()).doubleValue()";
 
-		private static final String DOUBLE_FLD_EXPR_TEMPLATE = "((%s)scriptContext.getLocalVar(\"%s\").getValue()).%s.doubleValue()";
+		private static final String DOUBLE_FLD_EXPR_TEMPLATE = "((%s)scriptContext.getVar(\"%s\").getValue()).%s.doubleValue()";
 
 		private static final String INTEGER_TYPE_ALIAS = "Integer";
 
@@ -419,7 +419,7 @@ public class ScriptExpressionParser {
 			String varName = parts[0];
 
 			if (isVariable(varName, context)) {
-				Variable var = context.getLocalVar(varName);
+				Variable var = context.getVar(varName);
 				Class<?> varClass = resolveClass(var.getJavaType());
 				String fieldName = parts[1];
 				if (varClass != null && isPublicField(varClass, fieldName, fieldType)) {
@@ -436,7 +436,7 @@ public class ScriptExpressionParser {
 
 		private static boolean isVariable(String token, ScriptContext context) {
 			return !Character.isDigit(token.charAt(0)) && StringUtils.isAlphanumeric(token)
-					&& (context.getLocalVar(token) != null);
+					&& (context.getVar(token) != null);
 		}
 
 		private static boolean isVariable(String token, ScriptContext context, Class<?> varType) {
@@ -445,7 +445,7 @@ public class ScriptExpressionParser {
 				return false;
 			}
 
-			Variable var = context.getLocalVar(token);
+			Variable var = context.getVar(token);
 			if (var == null) {
 				return false;
 			}

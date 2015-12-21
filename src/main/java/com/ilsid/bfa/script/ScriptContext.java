@@ -42,14 +42,19 @@ public class ScriptContext {
 	}
 
 	/**
-	 * Returns local variable by name.
+	 * Returns the local or the input variable by name.
 	 * 
 	 * @param name
 	 *            variable name
 	 * @return variable instance or <code>null</code> if variable with such name does not exist
 	 */
-	public Variable getLocalVar(String name) {
-		return localVars.get(name);
+	public Variable getVar(String name) {
+		final Variable localVar = localVars.get(name);
+		if (localVar == null) {
+			return inputVars.get(name);
+		} else {
+			return localVar;
+		}
 	}
 
 	/**

@@ -113,15 +113,15 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void singleIntegerVariableCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertOutput("Var1", 
-				"return Integer.valueOf(((Integer)scriptContext.getLocalVar(\"Var1\").getValue()).intValue());");
+				"return Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue());");
 	}
 
 	@Test
 	public void arithmeticsWithTwoIntegerVariablesCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Integer", 3), new Variable("Var2", "java.lang.Integer", 1));
 		assertOutput("Var1 - Var2", 
-				"return Integer.valueOf(((Integer)scriptContext.getLocalVar(\"Var1\").getValue()).intValue()"
-						+ " - ((Integer)scriptContext.getLocalVar(\"Var2\").getValue()).intValue());");
+				"return Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue()"
+						+ " - ((Integer)scriptContext.getVar(\"Var2\").getValue()).intValue());");
 
 	}
 
@@ -131,15 +131,15 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 				new Variable("Var3", "java.lang.Integer", 2));
 		// System.out.println(invoke(input, output));
 		assertOutput("Var1 - Var2 + Var3", 
-				"return Integer.valueOf(((Integer)scriptContext.getLocalVar(\"Var1\").getValue()).intValue()"
-				+ " - ((Integer)scriptContext.getLocalVar(\"Var2\").getValue()).intValue() + ((Integer)scriptContext.getLocalVar(\"Var3\").getValue()).intValue());");
+				"return Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue()"
+				+ " - ((Integer)scriptContext.getVar(\"Var2\").getValue()).intValue() + ((Integer)scriptContext.getVar(\"Var3\").getValue()).intValue());");
 	}
 	
 	@Test
 	public void arithmeticsWithIntegerVariableAndIntegerPrimitiveCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertOutput("Var1 - 1", 
-				"return Integer.valueOf(((Integer)scriptContext.getLocalVar(\"Var1\").getValue()).intValue() - 1);");
+				"return Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue() - 1);");
 	}
 	
 	@Test
@@ -173,15 +173,15 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void singleDoubleVariableCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0));
 		assertOutput("Var1", 
-				"return Double.valueOf(((Double)scriptContext.getLocalVar(\"Var1\").getValue()).doubleValue());");
+				"return Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue());");
 	}
 
 	@Test
 	public void arithmeticsWithTwoDoubleVariablesCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0));
 		assertOutput("Var1 - Var2", 
-				"return Double.valueOf(((Double)scriptContext.getLocalVar(\"Var1\").getValue()).doubleValue()"
-						+ " - ((Double)scriptContext.getLocalVar(\"Var2\").getValue()).doubleValue());");
+				"return Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue()"
+						+ " - ((Double)scriptContext.getVar(\"Var2\").getValue()).doubleValue());");
 
 	}
 
@@ -191,15 +191,15 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 				new Variable("Var3", "java.lang.Double", 2.0));
 		// System.out.println(invoke(input, output));
 		assertOutput("Var1 - Var2 + Var3", 
-				"return Double.valueOf(((Double)scriptContext.getLocalVar(\"Var1\").getValue()).doubleValue()"
-				+ " - ((Double)scriptContext.getLocalVar(\"Var2\").getValue()).doubleValue() + ((Double)scriptContext.getLocalVar(\"Var3\").getValue()).doubleValue());");
+				"return Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue()"
+				+ " - ((Double)scriptContext.getVar(\"Var2\").getValue()).doubleValue() + ((Double)scriptContext.getVar(\"Var3\").getValue()).doubleValue());");
 	}
 	
 	@Test
 	public void arithmeticsWithDoubleVariableAndDoublePrimitiveCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Double", 3));
 		assertOutput("Var1 - 1.0", 
-				"return Double.valueOf(((Double)scriptContext.getLocalVar(\"Var1\").getValue()).doubleValue() - 1.0);");
+				"return Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue() - 1.0);");
 	}
 	
 	@Test
@@ -233,7 +233,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void singleIntegerFieldCanBeParsed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
 		assertOutput("Contract.Days", 
-				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).Days.intValue());");
+				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue());");
 	}
 	
 	@Test
@@ -242,8 +242,8 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 					new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
 		
 		assertOutput("Contract.Days - Subscriber.PrepaidDays", 
-				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).Days.intValue()"
-						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getLocalVar(\"Subscriber\").getValue()).PrepaidDays.intValue());");
+				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue()"
+						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidDays.intValue());");
 	}
 
 	@Test
@@ -252,9 +252,9 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 					new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
 	
 		assertOutput("Contract.Days + Contract.ProlongDays - Subscriber.PrepaidDays", 
-				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).Days.intValue()"
-						+ " + ((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).ProlongDays.intValue()" 
-						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getLocalVar(\"Subscriber\").getValue()).PrepaidDays.intValue());");
+				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue()"
+						+ " + ((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).ProlongDays.intValue()" 
+						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidDays.intValue());");
 	}
 	
 	@Test
@@ -263,8 +263,8 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 					new Variable("PrepaidDays", "java.lang.Integer", 30));
 		
 		assertOutput("Contract.Days - PrepaidDays", 
-				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).Days.intValue()" 
-						+ " - ((Integer)scriptContext.getLocalVar(\"PrepaidDays\").getValue()).intValue());");
+				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue()" 
+						+ " - ((Integer)scriptContext.getVar(\"PrepaidDays\").getValue()).intValue());");
 						
 	}
 	
@@ -273,7 +273,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
 		
 		assertOutput("Contract.Days - 1", 
-				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).Days.intValue() - 1);");
+				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue() - 1);");
 	}
 	
 	@Test
@@ -289,7 +289,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void singleDoubleFieldCanBeParsed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
 		assertOutput("Contract.MonthlyFee", 
-				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).MonthlyFee.doubleValue());");
+				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue());");
 	}
 	
 	@Test
@@ -298,8 +298,8 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 					new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
 		
 		assertOutput("Contract.MonthlyFee - Subscriber.PrepaidAmount", 
-				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).MonthlyFee.doubleValue()"
-						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getLocalVar(\"Subscriber\").getValue()).PrepaidAmount.doubleValue());");
+				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue()"
+						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidAmount.doubleValue());");
 	}
 
 	@Test
@@ -308,9 +308,9 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 					new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
 	
 		assertOutput("Contract.MonthlyFee - Subscriber.PrepaidAmount + Subscriber.PrepaidReserved", 
-				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).MonthlyFee.doubleValue()"
-						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getLocalVar(\"Subscriber\").getValue()).PrepaidAmount.doubleValue()" 
-						+ " + ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getLocalVar(\"Subscriber\").getValue()).PrepaidReserved.doubleValue());");
+				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue()"
+						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidAmount.doubleValue()" 
+						+ " + ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidReserved.doubleValue());");
 	}
 	
 	@Test
@@ -319,8 +319,8 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 					new Variable("PrepaidAmount", "java.lang.Double", 30.0));
 		
 		assertOutput("Contract.MonthlyFee - PrepaidAmount", 
-				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).MonthlyFee.doubleValue()" 
-						+ " - ((Double)scriptContext.getLocalVar(\"PrepaidAmount\").getValue()).doubleValue());");
+				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue()" 
+						+ " - ((Double)scriptContext.getVar(\"PrepaidAmount\").getValue()).doubleValue());");
 	}
 	
 	@Test
@@ -328,7 +328,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
 		
 		assertOutput("Contract.MonthlyFee - 1.0", 
-				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getLocalVar(\"Contract\").getValue()).MonthlyFee.doubleValue() - 1.0);");
+				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue() - 1.0);");
 	}
 	
 	@Test
@@ -339,7 +339,6 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 				"Could not parse expression [Contract.NonExistentField - 1.0]: Unexpected token [Contract.NonExistentField]");
 	}
 
-	
 	private void createContext(final Variable... vars) {
 		context = ScriptContextUtil.createContext(vars);
 		parser = new ScriptExpressionParser(context);

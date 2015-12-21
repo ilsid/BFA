@@ -155,7 +155,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	public void errorDetailsAreProvidedIfScriptContainsInvalidExpression() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
-		msg.append("Compilation of expressions in script [TestScript33] failed").append(StringUtils.LF);
+		msg.append("Compilation of the script [TestScript33] failed").append(StringUtils.LF);
 		msg.append(
 				"Could not parse expression [Var1 - Var33]: Integer value or variable is expected after operand [-], but was [Var33]")
 				.append(StringUtils.LF);
@@ -169,7 +169,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	public void errorDetailsAreProvidedIfScriptContainsMultipleInvalidExpressions() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
-		msg.append("Compilation of expressions in script [TestScript33] failed").append(StringUtils.LF);
+		msg.append("Compilation of the script [TestScript33] failed").append(StringUtils.LF);
 		msg.append("Could not parse expression [Var55]: Unexpected token [Var55]").append(StringUtils.LF);
 		msg.append("   Caused by: Unexpected token [Var55]").append(StringUtils.LF);
 		msg.append(
@@ -187,10 +187,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	@Test
 	public void scriptWithActionCanBeCompiled() throws Exception {
 		final String scriptName = "single-action-with-params-script.txt";
-		
+
 		compileScript(TEST_SCRIPT_CLASS_NAME + "WithAction", scriptName);
-		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithAction",
-				scriptName);
+		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithAction", scriptName);
 
 		assertEquals(4, expressions.length);
 
@@ -198,6 +197,19 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		assertExpressionShortClassName("TestScriptWithAction$$5_dt_4", expressions[1].getClassName());
 		assertExpressionShortClassName("TestScriptWithAction$$Var1", expressions[2].getClassName());
 		assertExpressionShortClassName("TestScriptWithAction$$Var2", expressions[3].getClassName());
+	}
+
+	@Test
+	public void errorDetailsAreProvidedIfScriptContainsDuplicatedInputAndLocalVars() throws Exception {
+		exceptionRule.expect(ClassCompilationException.class);
+		StringBuilder msg = new StringBuilder();
+		msg.append("Compilation of the script [TestScriptDuplicatedInputAndLocalVars] failed")
+				.append(StringUtils.LF);
+		msg.append("Input variable with name [Var1] has been already declared");
+		exceptionRule.expectMessage(msg.toString());
+
+		compileScriptExpressions(TEST_SCRIPT_CLASS_NAME + "DuplicatedInputAndLocalVars",
+				"duplicated-input-and-local-vars-script.txt");
 	}
 
 	@Test

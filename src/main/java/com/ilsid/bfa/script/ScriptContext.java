@@ -122,9 +122,9 @@ public class ScriptContext {
 
 	private void checkVarNameUniqueness(String name) throws ScriptException {
 		if (localVars.containsKey(name)) {
-			throw new ScriptException("Local variable with name [" + name + "] is already declared");
+			throw new ScriptException("Local variable with name [" + name + "] has been already declared");
 		} else if (inputVars.containsKey(name)) {
-			throw new ScriptException("Input variable with name [" + name + "] is already declared");
+			throw new ScriptException("Input variable with name [" + name + "] has been already declared");
 		}
 	}
 

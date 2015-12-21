@@ -231,7 +231,7 @@ public class ClassCompiler {
 				}
 			}
 
-			throw new ClassCompilationException(String.format("Compilation of expressions in script [%s] failed",
+			throw new ClassCompilationException(String.format("Compilation of the script [%s] failed",
 					classDeclarationVisitor.shortClassName) + StringUtils.LF + mergeErrorMessages(exceptions));
 		}
 

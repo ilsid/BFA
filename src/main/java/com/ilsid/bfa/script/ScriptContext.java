@@ -15,31 +15,17 @@ import com.ilsid.bfa.persistence.DynamicClassLoader;
 // TODO: complete javadocs
 public class ScriptContext {
 
-	private GlobalContext runtimeContext;
-
 	private Map<String, Variable> inputVars = new HashMap<>();
 
 	private Map<String, Variable> localVars = new HashMap<>();
 
 	private String scriptName;
 
-	public ScriptContext() {
-	}
-
-	/**
-	 * Creates new instance.
-	 * 
-	 * @param runtimeContext
-	 *            a runtime context shared between all scripts.
-	 */
-	public ScriptContext(GlobalContext runtimeContext) {
-		this.runtimeContext = runtimeContext;
-	}
-
-	public void addInputVar(String name, String javaType) throws ScriptException {
+	public void addInputVar(String name, String javaType, Object value) throws ScriptException {
 		// FIXME: validate name format
+		// FIXME: validate value type
 		checkVarNameUniqueness(name);
-		inputVars.put(name, new Variable(name, javaType, runtimeContext.getInputVar(name)));
+		inputVars.put(name, new Variable(name, javaType, value));
 	}
 
 	public void addLocalVar(String name, String javaType) throws ScriptException {

@@ -389,7 +389,7 @@ public class ClassCompiler {
 				if (varAnnotation.scope() == Var.Scope.LOCAL) {
 					scriptContext.addLocalVar(varName, javaType);
 				} else {
-					scriptContext.addInputVar(varName, javaType);
+					scriptContext.addInputVar(varName, javaType, null);
 				}
 			} catch (ScriptException e) {
 				visitorContext.exceptions.add(e);

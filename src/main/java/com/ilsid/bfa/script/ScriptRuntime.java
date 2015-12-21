@@ -16,6 +16,8 @@ import com.ilsid.bfa.persistence.PersistenceException;
 // TODO: support for group name and input params is needed
 public class ScriptRuntime {
 
+	private static final Object[] EMPTY_PARAMS = new Object[] {};
+
 	private ScriptingRepository repository;
 
 	private ActionLocator actionLocator;
@@ -30,14 +32,35 @@ public class ScriptRuntime {
 	 *             <ul>
 	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
 	 *             <li>in case of any repository access issues</li>
+	 *             <li>in case of the script runtime failure</li>
 	 *             </ul>
 	 */
 	public long runScript(String scriptName) throws ScriptException {
+		return runScript(scriptName, EMPTY_PARAMS);
+	}
+
+	/**
+	 * Runs the script with the given name and input parameters. The script is searched in the Default Group.
+	 * 
+	 * @param scriptName
+	 *            the script name
+	 * @param params
+	 *            input parameters
+	 * @return the script runtime identifier
+	 * @throws ScriptException
+	 *             <ul>
+	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             <li>in case of the script runtime failure</li>
+	 *             </ul>
+	 */
+	public long runScript(String scriptName, Object... params) throws ScriptException {
 		Script script = createInstance(scriptName);
 		long runtimeId = generatedRuntimeId(scriptName);
 		script.setRuntimeId(runtimeId);
 		script.setRuntime(this);
 		script.setActionLocator(actionLocator);
+		script.setInputParameters(params);
 
 		script.execute();
 

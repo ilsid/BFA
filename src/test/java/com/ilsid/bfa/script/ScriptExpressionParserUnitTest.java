@@ -17,7 +17,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		context = new ScriptContext(null);
+		context = new ScriptContext();
 		context.setScriptName("TestScript");
 		parser = new ScriptExpressionParser(context);
 	}

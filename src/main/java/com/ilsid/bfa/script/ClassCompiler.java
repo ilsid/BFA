@@ -82,7 +82,7 @@ public class ClassCompiler {
 			result = toBytecode(clazz);
 		} catch (NotFoundException | CannotCompileException | IOException e) {
 			throw new ClassCompilationException(
-					String.format("Compilation of Invocation to byte code failed. Class [%s]. ValueExpression [%s]",
+					String.format("Compilation of Invocation failed. Class [%s]. ValueExpression [%s]",
 							className, expression),
 					e);
 		}
@@ -111,7 +111,7 @@ public class ClassCompiler {
 		} catch (NotFoundException | CannotCompileException | IOException e) {
 
 			throw new ClassCompilationException(
-					String.format("Compilation of Script [%s] to byte code failed", className), e);
+					String.format("Compilation of Script [%s] failed", className), e);
 		}
 
 		return result;

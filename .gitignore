@@ -5,3 +5,4 @@
 .project
 /testLogs/*
 /bfaLogs/*
+/src/main/webapp/script/dojo

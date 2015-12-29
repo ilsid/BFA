@@ -7,10 +7,12 @@ package com.ilsid.bfa.service.common;
  *
  */
 public final class Paths {
+	
+	public final static String SERVICE_ROOT = "service";
 
-	public final static String SCRIPT_SERVICE_ROOT = "script";
+	public final static String SCRIPT_SERVICE_ROOT = SERVICE_ROOT + "/script";
 
-	public final static String ENTITY_SERVICE_ROOT = "entity";
+	public final static String ENTITY_SERVICE_ROOT = SERVICE_ROOT + "/entity";
 
 	/*
 	 * Script Administration

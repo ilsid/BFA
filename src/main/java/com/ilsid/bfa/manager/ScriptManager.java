@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.ScriptingRepository;
@@ -26,14 +27,8 @@ import com.ilsid.bfa.script.TypeNameResolver;
 // TODO: write unit tests
 public class ScriptManager {
 
-	private static final String METADATA_ITEM_TITLE = "title";
-
-	private static final String METADATA_ITEM_NAME = "name";
-	
-	private static final String METADATA_ITEM_TYPE = "type";
-	
 	private static final String METADATA_VALUE_SCRIPT_TYPE = "SCRIPT";
-	
+
 	private ScriptingRepository repository;
 
 	/**
@@ -240,12 +235,12 @@ public class ScriptManager {
 	private void saveScriptMetadata(ScriptCompilationUnit compilationUnit, String scriptTitle)
 			throws PersistenceException {
 		Map<String, String> metaData = new LinkedHashMap<>();
-		metaData.put(METADATA_ITEM_TYPE, METADATA_VALUE_SCRIPT_TYPE);
-		metaData.put(METADATA_ITEM_NAME, compilationUnit.scriptName);
+		metaData.put(Metadata.TYPE, METADATA_VALUE_SCRIPT_TYPE);
+		metaData.put(Metadata.NAME, compilationUnit.scriptName);
 		if (scriptTitle != null) {
-			metaData.put(METADATA_ITEM_TITLE, scriptTitle);
+			metaData.put(Metadata.TITLE, scriptTitle);
 		} else {
-			metaData.put(METADATA_ITEM_TITLE, compilationUnit.scriptName);
+			metaData.put(Metadata.TITLE, compilationUnit.scriptName);
 		}
 
 		repository.saveMetadata(compilationUnit.scriptClassName, metaData);

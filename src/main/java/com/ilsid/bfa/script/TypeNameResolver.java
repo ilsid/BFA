@@ -12,10 +12,8 @@ public class TypeNameResolver {
 
 	private static final String GENERATED_ROOT_PACKAGE = ClassNameUtil.GENERATED_CLASSES_PACKAGE + DOT;
 
-	private static final String GENERATED_SCRIPT_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "script.";
-
-	private static final String GENERATED_SCRIPT_DEFAULT_GROUP_PACKAGE = GENERATED_SCRIPT_ROOT_PACKAGE
-			+ "default_group.";
+	private static final String GENERATED_SCRIPT_DEFAULT_GROUP_PACKAGE = ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE
+			+ DOT;
 
 	private static final String EMPTY = "";
 

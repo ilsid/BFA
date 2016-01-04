@@ -18,6 +18,7 @@ import org.junit.Test;
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.TestConstants;
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.CompileHelper;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.persistence.PersistenceException;
@@ -59,6 +60,14 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	@After
 	public void tearDown() throws IOException {
 		FileUtils.forceDelete(ROOT_DIR);
+	}
+
+	@Test
+	public void defaultScripGroupMetadataFileExists() throws Exception {
+		String metaData = IOHelper.loadFileContents(
+				ROOT_DIR_PATH + "/" + ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE.replace('.', '/'), "meta");
+
+		assertEquals("{\"type\":\"SCRIPT_GROUP\",\"name\":\"default_group\",\"title\":\"Default Group\"}", metaData);
 	}
 
 	@Test
@@ -321,13 +330,13 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 			repository.save(SCRIPT_CLASS_NAME, byteCode);
 		}
 	}
-	
+
 	private Map<String, String> createMetadata() {
 		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put("type", "SCRIPT");
 		metaData.put("name", "Script001");
 		metaData.put("title", "Script 001");
-		
+
 		return metaData;
 	}
 

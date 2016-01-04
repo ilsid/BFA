@@ -17,6 +17,16 @@ public class ClassNameUtil {
 	 */
 	public static final String GENERATED_CLASSES_PACKAGE = "com.ilsid.bfa.generated";
 	
+	/**
+	 * The root package for the generated scripts.
+	 */
+	public static final String GENERATED_SCRIPTS_ROOT_PACKAGE = GENERATED_CLASSES_PACKAGE + ".script";
+
+	/**
+	 * The default group package for the generated scripts.
+	 */
+	public static final String GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE = GENERATED_SCRIPTS_ROOT_PACKAGE + ".default_group";
+
 	public static final String BLANK_CODE = "_x20_";
 
 	private static final char DOT = '.';

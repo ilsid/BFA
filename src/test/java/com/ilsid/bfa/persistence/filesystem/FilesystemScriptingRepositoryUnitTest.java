@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -18,8 +20,8 @@ import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.CompileHelper;
 import com.ilsid.bfa.common.IOHelper;
-import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 
 public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
@@ -262,6 +264,34 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(0, deletedCount);
 	}
 
+	@Test
+	public void metadataForExistingClassCanBeSaved() throws Exception {
+		createCodeRepository();
+
+		String className = "com.ilsid.bfa.generated.script.default_group.script001.Script001";
+
+		boolean result = repository.saveMetadata(className, createMetadata());
+		assertTrue(result);
+
+		String savedMetadata = IOHelper.loadFileContents(
+				ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/'),
+				"meta");
+
+		assertEquals("{\"type\":\"SCRIPT\",\"name\":\"Script001\",\"title\":\"Script 001\"}", savedMetadata);
+	}
+
+	@Test
+	public void metadataForNonExistingClassCanNotBeSaved() throws Exception {
+		createCodeRepository();
+
+		String className = "com.ilsid.bfa.generated.script.default_group.script001.SomeNonExistingScript";
+
+		boolean result = repository.saveMetadata(className, createMetadata());
+		assertFalse(result);
+		assertFalse(new File(ROOT_DIR_PATH + "/"
+				+ "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/') + "/meta").exists());
+	}
+
 	private void createCodeRepository() throws Exception {
 		FileUtils.copyDirectory(CODE_REPOSITORY_SOURCE_DIR, ROOT_DIR);
 	}
@@ -290,6 +320,15 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		} else {
 			repository.save(SCRIPT_CLASS_NAME, byteCode);
 		}
+	}
+	
+	private Map<String, String> createMetadata() {
+		Map<String, String> metaData = new LinkedHashMap<>();
+		metaData.put("type", "SCRIPT");
+		metaData.put("name", "Script001");
+		metaData.put("title", "Script 001");
+		
+		return metaData;
 	}
 
 }

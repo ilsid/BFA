@@ -1,6 +1,8 @@
 package com.ilsid.bfa.manager;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -24,6 +26,14 @@ import com.ilsid.bfa.script.TypeNameResolver;
 // TODO: write unit tests
 public class ScriptManager {
 
+	private static final String METADATA_ITEM_TITLE = "title";
+
+	private static final String METADATA_ITEM_NAME = "name";
+	
+	private static final String METADATA_ITEM_TYPE = "type";
+	
+	private static final String METADATA_VALUE_SCRIPT_TYPE = "SCRIPT";
+	
 	private ScriptingRepository repository;
 
 	/**
@@ -33,6 +43,8 @@ public class ScriptManager {
 	 *            script name
 	 * @param scriptBody
 	 *            script body
+	 * @param scriptTitle
+	 *            script title
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
@@ -40,11 +52,12 @@ public class ScriptManager {
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
-	public void createScript(String scriptName, String scriptBody) throws ManagementException {
+	public void createScript(String scriptName, String scriptBody, String scriptTitle) throws ManagementException {
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
 			saveScript(compilationUnit, scriptBody);
+			saveScriptMetadata(compilationUnit, scriptTitle);
 			commitTransaction();
 		} catch (PersistenceException e) {
 			rollbackTransaction();
@@ -59,6 +72,8 @@ public class ScriptManager {
 	 *            the name of the script to update
 	 * @param scriptBody
 	 *            the modified script body
+	 * @param scriptTitle
+	 *            script title
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
@@ -66,12 +81,13 @@ public class ScriptManager {
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
-	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
+	public void updateScript(String scriptName, String scriptBody, String scriptTitle) throws ManagementException {
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
 			deleteScript(scriptName);
 			saveScript(compilationUnit, scriptBody);
+			saveScriptMetadata(compilationUnit, scriptTitle);
 			commitTransaction();
 		} catch (PersistenceException e) {
 			rollbackTransaction();
@@ -219,6 +235,20 @@ public class ScriptManager {
 			throw new ManagementException(
 					String.format("Failed to persist the script [%s]", compilationUnit.scriptName), e);
 		}
+	}
+
+	private void saveScriptMetadata(ScriptCompilationUnit compilationUnit, String scriptTitle)
+			throws PersistenceException {
+		Map<String, String> metaData = new LinkedHashMap<>();
+		metaData.put(METADATA_ITEM_TYPE, METADATA_VALUE_SCRIPT_TYPE);
+		metaData.put(METADATA_ITEM_NAME, compilationUnit.scriptName);
+		if (scriptTitle != null) {
+			metaData.put(METADATA_ITEM_TITLE, scriptTitle);
+		} else {
+			metaData.put(METADATA_ITEM_TITLE, compilationUnit.scriptName);
+		}
+
+		repository.saveMetadata(compilationUnit.scriptClassName, metaData);
 	}
 
 	private void deleteScript(String scriptName) throws ManagementException {

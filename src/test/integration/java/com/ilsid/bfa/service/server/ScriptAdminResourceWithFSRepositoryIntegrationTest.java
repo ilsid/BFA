@@ -30,9 +30,9 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script_x20_001");
 
 		assertTrue(scriptDir.isDirectory());
-		assertEquals(5, scriptDir.list().length);
+		assertEquals(6, scriptDir.list().length);
 		assertFilesExist(scriptDir.getPath(), new String[] { "Script_x20_001.class", "Script_x20_001.src",
-				"Script_x20_001$$2.class", "Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class" });
+				"Script_x20_001$$2.class", "Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class", "meta" });
 	}
 
 	@Test
@@ -50,10 +50,10 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/entity_x20_script");
 
 		assertTrue(scriptDir.isDirectory());
-		assertEquals(5, scriptDir.list().length);
+		assertEquals(6, scriptDir.list().length);
 		assertFilesExist(scriptDir.getPath(),
 				new String[] { "Entity_x20_Script.class", "Entity_x20_Script.src", "Entity_x20_Script$$2.class",
-						"Entity_x20_Script$$1.class", "Entity_x20_Script$$Var1_dt_Days_Mns_Var2.class" });
+						"Entity_x20_Script$$1.class", "Entity_x20_Script$$Var1_dt_Days_Mns_Var2.class", "meta" });
 	}
 
 	@Test
@@ -109,13 +109,13 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		assertTrue(scriptDir.isDirectory());
-		assertEquals(6, scriptDir.list().length);
+		assertEquals(7, scriptDir.list().length);
 		// Additional ScriptToUpdate$$3.class is persisted, as the expression "1" (that was duplicated) is replaced with
 		// new expression "3".
 		// ScriptToUpdate$$Var1_Mns_Var2.class is replaced with ScriptToUpdate$$Var1_Mns_Var3.class, as Var2 is replaced
 		// with Var3 in "duplicated-expression-script-upd.txt" script
 		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
-				"ScriptToUpdate$$3.class", "ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var3.class" });
+				"ScriptToUpdate$$3.class", "ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var3.class", "meta" });
 
 		String actualScriptBody = IOHelper.loadFileContents(scriptDir.getPath(), "ScriptToUpdate.src");
 		assertEquals(updatedScriptBody, actualScriptBody);

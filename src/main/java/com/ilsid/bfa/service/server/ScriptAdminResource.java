@@ -44,7 +44,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	public Response create(ScriptAdminParams script) {
 		try {
 			validateNonNullNameAndBody(script);
-			scriptManager.createScript(script.getName(), script.getBody());
+			scriptManager.createScript(script.getName(), script.getBody(), script.getTitle());
 		} catch (IllegalArgumentException | ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_CREATE_SERVICE, e);
 		}
@@ -74,7 +74,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	public Response update(ScriptAdminParams script) {
 		try {
 			validateNonNullNameAndBody(script);
-			scriptManager.updateScript(script.getName(), script.getBody());
+			scriptManager.updateScript(script.getName(), script.getBody(), script.getTitle());
 		} catch (IllegalArgumentException | ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_UPDATE_SERVICE, e);
 		}

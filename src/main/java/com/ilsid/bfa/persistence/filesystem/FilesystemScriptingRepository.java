@@ -4,14 +4,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import com.ilsid.bfa.common.ClassNameUtil;
-import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.TransactionManager;
 
 /**
@@ -21,6 +23,8 @@ import com.ilsid.bfa.persistence.TransactionManager;
  *
  */
 public class FilesystemScriptingRepository extends ConfigurableRepository implements ScriptingRepository {
+
+	private static final String META_FILE_NAME = "meta";
 
 	private static final char DOT = '.';
 
@@ -87,6 +91,31 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#saveMetadata(java.lang.String,
+	 * com.ilsid.bfa.persistence.Metadata)
+	 */
+	public boolean saveMetadata(String className, Map<String, String> metaData) throws PersistenceException {
+		File classDir = new File(getClassDirectoryPath(className));
+		File classFile = new File(getFilePathPrefix(className) + CLASS_FILE_EXTENSION);
+
+		if (classDir.exists() && classFile.exists()) {
+			try {
+				String json = new ObjectMapper().writeValueAsString(metaData);
+				FileUtils.writeStringToFile(new File(classDir + File.separator + META_FILE_NAME), json);
+			} catch (IOException e) {
+				throw new PersistenceException(
+						String.format("Failed to save the meta-data for the class [%s]", className), e);
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#delete(java.lang.String)
 	 */
 	@Override
@@ -116,7 +145,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 */
 	@Override
 	public int deleteClass(String className) throws PersistenceException {
-		String filePathPrefix = rootDir + File.separatorChar + className.replace(DOT, File.separatorChar);
+		String filePathPrefix = getFilePathPrefix(className);
 		File classFile = new File(filePathPrefix + CLASS_FILE_EXTENSION);
 		File sourceFile = new File(filePathPrefix + SOURCE_FILE_EXTENSION);
 
@@ -230,6 +259,10 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 
 	private String getClassDirectoryPath(String className) {
 		return rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
+	}
+
+	private String getFilePathPrefix(String className) {
+		return rootDir + File.separatorChar + className.replace(DOT, File.separatorChar);
 	}
 
 	private boolean deleteFileIfExists(File file) throws PersistenceException {

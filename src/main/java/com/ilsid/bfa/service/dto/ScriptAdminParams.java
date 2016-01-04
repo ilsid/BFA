@@ -10,8 +10,8 @@ public class ScriptAdminParams extends TypeAdminParams {
 		super(name, body);
 	}
 
-	public ScriptAdminParams(String name, String body, String group) {
-		super(name, body, group);
+	public ScriptAdminParams(String name, String body, String title) {
+		super(name, body, title);
 	}
 
 }

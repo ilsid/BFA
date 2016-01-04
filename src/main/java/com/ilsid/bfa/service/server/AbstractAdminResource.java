@@ -22,6 +22,9 @@ public abstract class AbstractAdminResource {
 		if (params.getBody() == null) {
 			throw new IllegalArgumentException("The body must be defined");
 		}
+		if (params.getTitle() == null) {
+			throw new IllegalArgumentException("The title must be defined");
+		}
 	}
 	
 	protected void validateNonNullName(TypeAdminParams params) {

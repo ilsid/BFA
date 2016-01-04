@@ -1,5 +1,7 @@
 package com.ilsid.bfa.persistence;
 
+import java.util.Map;
+
 import com.ilsid.bfa.Configurable;
 
 /**
@@ -54,6 +56,21 @@ public interface ScriptingRepository extends Configurable {
 	 *             </ul>
 	 */
 	void save(String className, byte[] byteCode) throws PersistenceException;
+
+	/**
+	 * Saves the meta-data for the given class. Overwrites the existing meta-data, if any.
+	 * 
+	 * @param className
+	 *            class name
+	 * @param metaData
+	 *            meta-data
+	 * @return <code>true</code> if the meta-data was saved and <code>false</code> otherwise because the
+	 *         class with the given name does not exist
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 * 
+	 */
+	boolean saveMetadata(String className, Map<String, String> metaData) throws PersistenceException;
 
 	/**
 	 * Deletes all classes under the specified package.
@@ -111,5 +128,5 @@ public interface ScriptingRepository extends Configurable {
 	 * @return a transaction manager for this repository
 	 */
 	TransactionManager getTransactionManager();
-	
+
 }

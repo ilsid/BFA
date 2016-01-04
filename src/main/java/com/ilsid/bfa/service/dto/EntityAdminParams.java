@@ -10,8 +10,8 @@ public class EntityAdminParams extends TypeAdminParams {
 		super(name, body);
 	}
 
-	public EntityAdminParams(String name, String body, String group) {
-		super(name, body, group);
+	public EntityAdminParams(String name, String body, String title) {
+		super(name, body, title);
 	}
 
 }

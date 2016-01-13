@@ -1,5 +1,6 @@
 package com.ilsid.bfa.persistence;
 
+import java.util.List;
 import java.util.Map;
 
 import com.ilsid.bfa.Configurable;
@@ -64,8 +65,8 @@ public interface ScriptingRepository extends Configurable {
 	 *            class name
 	 * @param metaData
 	 *            meta-data
-	 * @return <code>true</code> if the meta-data was saved and <code>false</code> otherwise because the
-	 *         class with the given name does not exist
+	 * @return <code>true</code> if the meta-data was saved and <code>false</code> otherwise because the class with the
+	 *         given name does not exist
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 * 
@@ -120,7 +121,39 @@ public interface ScriptingRepository extends Configurable {
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
+	// FIXME: move from repository API
 	long getNextRuntimeId() throws PersistenceException;
+
+	/**
+	 * Loads meta-data holders for top-level groups.
+	 * 
+	 * @return a list of meta-data holders or an empty list, if no top-level groups found
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	List<Map<String, String>> loadGroupMetadatas() throws PersistenceException;
+
+	/**
+	 * Loads meta-data holders for sub-groups.
+	 * 
+	 * @param groupName
+	 *            parent group name
+	 * @return a list of meta-data holders or an empty list, if no sub-groups found or such parent group does not exist
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	List<Map<String, String>> loadSubGroupMetadatas(String groupName) throws PersistenceException;
+
+	/**
+	 * Loads a meta-data for each script in the specified group.
+	 * 
+	 * @param groupName
+	 *            a group name
+	 * @return a list of meta-data holders or an empty list, if no scripts found or such group does not exist
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	List<Map<String, String>> loadScriptMetadatas(String groupName) throws PersistenceException;
 
 	/**
 	 * Returns a proper {@link TransactionManager} instance for this code repository.

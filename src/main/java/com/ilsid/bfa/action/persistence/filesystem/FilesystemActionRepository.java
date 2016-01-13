@@ -85,7 +85,7 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	}
 
 	private String getActionDir(String actionName) {
-		return rootDir + DEFAULT_ACTION_ROOT_DIR
+		return rootDirPath + DEFAULT_ACTION_ROOT_DIR
 				+ ClassNameUtil.generateSimpleClassName(actionName, ClassNameUtil.BLANK_CODE);
 	}
 

@@ -16,7 +16,7 @@ public class ClassNameUtil {
 	 * The root package for all generated classes.
 	 */
 	public static final String GENERATED_CLASSES_PACKAGE = "com.ilsid.bfa.generated";
-	
+
 	/**
 	 * The root package for the generated scripts.
 	 */
@@ -25,7 +25,13 @@ public class ClassNameUtil {
 	/**
 	 * The default group package for the generated scripts.
 	 */
-	public static final String GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE = GENERATED_SCRIPTS_ROOT_PACKAGE + ".default_group";
+	public static final String GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE = GENERATED_SCRIPTS_ROOT_PACKAGE
+			+ ".default_group";
+
+	/**
+	 * Meta-data file name.
+	 */
+	public static final String METADATA_FILE_NAME = "meta.data";
 
 	public static final String BLANK_CODE = "_x20_";
 

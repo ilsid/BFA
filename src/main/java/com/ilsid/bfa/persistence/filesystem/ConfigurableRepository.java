@@ -11,17 +11,27 @@ import org.apache.commons.io.FileUtils;
 import com.ilsid.bfa.Configurable;
 import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 
 public abstract class ConfigurableRepository implements Configurable {
 
 	private static final String CONFIG_PROP_ROOT_DIR_NAME = "bfa.persistence.fs.root_dir";
 
-	private static final String METADATA_DEFAULT_SCRIPT_GROUP_JSON = "{\"type\":\"SCRIPT_GROUP\",\"name\":\"default_group\",\"title\":\"Default Group\"}";
+	private static final String METADATA_DEFAULT_SCRIPT_GROUP_JSON;
 
-	private static final String METADATA_FILE_NAME = "meta";
+	protected String rootDirPath;
 
-	protected String rootDir;
+	protected File scriptsRootDir;
+
+	static {
+		StringBuilder json = new StringBuilder();
+		json.append("{\"").append(Metadata.TYPE).append("\":\"").append(Metadata.SCRIPT_GROUP_TYPE).append("\",\"")
+				.append(Metadata.NAME).append("\":\"").append(Metadata.DEFAULT_GROUP_NAME).append("\",\"")
+				.append(Metadata.TITLE).append("\":\"").append(Metadata.DEFAULT_GROUP_TITLE).append("\"}");
+
+		METADATA_DEFAULT_SCRIPT_GROUP_JSON = json.toString();
+	}
 
 	/**
 	 * Defines the configuration for the file system repository.
@@ -35,28 +45,32 @@ public abstract class ConfigurableRepository implements Configurable {
 	@Override
 	@Inject
 	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
-		rootDir = config.get(CONFIG_PROP_ROOT_DIR_NAME);
-		if (rootDir == null) {
+		rootDirPath = config.get(CONFIG_PROP_ROOT_DIR_NAME);
+		if (rootDirPath == null) {
 			throw new ConfigurationException("Required [" + CONFIG_PROP_ROOT_DIR_NAME + "] property not found");
 		}
 
-		if (!new File(rootDir).isDirectory()) {
-			throw new ConfigurationException("[" + rootDir + "] value defined by [" + CONFIG_PROP_ROOT_DIR_NAME
+		if (!new File(rootDirPath).isDirectory()) {
+			throw new ConfigurationException("[" + rootDirPath + "] value defined by [" + CONFIG_PROP_ROOT_DIR_NAME
 					+ "] property is not a directory");
 		}
 
 		initRepository();
+
+		scriptsRootDir = new File(rootDirPath + File.separator
+				+ ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE.replace('.', File.separatorChar));
 	}
 
 	private void initRepository() throws ConfigurationException {
-		File scriptsDefaultGroupDir = new File(rootDir + File.separator
+		File scriptsDefaultGroupDir = new File(rootDirPath + File.separator
 				+ ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE.replace('.', File.separatorChar));
 
 		if (!scriptsDefaultGroupDir.exists()) {
 			try {
 				FileUtils.forceMkdir(scriptsDefaultGroupDir);
 
-				File metadaFile = new File(scriptsDefaultGroupDir.getPath() + File.separator + METADATA_FILE_NAME);
+				File metadaFile = new File(
+						scriptsDefaultGroupDir.getPath() + File.separator + ClassNameUtil.METADATA_FILE_NAME);
 				FileUtils.writeStringToFile(metadaFile, METADATA_DEFAULT_SCRIPT_GROUP_JSON);
 			} catch (IOException e) {
 				throw new ConfigurationException(String.format(

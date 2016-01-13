@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -21,6 +22,7 @@ import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.CompileHelper;
 import com.ilsid.bfa.common.IOHelper;
+import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 
@@ -65,7 +67,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void defaultScripGroupMetadataFileExists() throws Exception {
 		String metaData = IOHelper.loadFileContents(
-				ROOT_DIR_PATH + "/" + ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE.replace('.', '/'), "meta");
+				ROOT_DIR_PATH + "/" + ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE.replace('.', '/'),
+				ClassNameUtil.METADATA_FILE_NAME);
 
 		assertEquals("{\"type\":\"SCRIPT_GROUP\",\"name\":\"default_group\",\"title\":\"Default Group\"}", metaData);
 	}
@@ -284,7 +287,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		String savedMetadata = IOHelper.loadFileContents(
 				ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/'),
-				"meta");
+				ClassNameUtil.METADATA_FILE_NAME);
 
 		assertEquals("{\"type\":\"SCRIPT\",\"name\":\"Script001\",\"title\":\"Script 001\"}", savedMetadata);
 	}
@@ -297,8 +300,21 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		boolean result = repository.saveMetadata(className, createMetadata());
 		assertFalse(result);
-		assertFalse(new File(ROOT_DIR_PATH + "/"
-				+ "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/') + "/meta").exists());
+		assertFalse(new File(
+				ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/') + "/"
+						+ ClassNameUtil.METADATA_FILE_NAME).exists());
+	}
+
+	@Test
+	public void metadataForDefaultScriptGroupCanBeLoaded() throws Exception {
+		List<Map<String, String>> metaDatas = repository.loadGroupMetadatas();
+
+		assertEquals(1, metaDatas.size());
+		final Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));
+		assertEquals(Metadata.DEFAULT_GROUP_TITLE, metaData.get(Metadata.TITLE));
 	}
 
 	private void createCodeRepository() throws Exception {

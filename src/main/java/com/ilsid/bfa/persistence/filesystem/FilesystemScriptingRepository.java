@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -12,6 +14,7 @@ import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.TransactionManager;
@@ -24,8 +27,6 @@ import com.ilsid.bfa.persistence.TransactionManager;
  */
 public class FilesystemScriptingRepository extends ConfigurableRepository implements ScriptingRepository {
 
-	private static final String META_FILE_NAME = "meta";
-
 	private static final char DOT = '.';
 
 	private static final String CLASS_FILE_EXTENSION = ".class";
@@ -33,7 +34,9 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	private static final String SOURCE_FILE_EXTENSION = ".src";
 
 	private AtomicLong runtimeId = new AtomicLong(System.currentTimeMillis());
-
+	
+	private ObjectMapper jsonMapper = new ObjectMapper();
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -100,8 +103,9 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 
 		if (classDir.exists() && classFile.exists()) {
 			try {
-				String json = new ObjectMapper().writeValueAsString(metaData);
-				FileUtils.writeStringToFile(new File(classDir + File.separator + META_FILE_NAME), json);
+				String json = jsonMapper.writeValueAsString(metaData);
+				FileUtils.writeStringToFile(new File(classDir + File.separator + ClassNameUtil.METADATA_FILE_NAME),
+						json);
 			} catch (IOException e) {
 				throw new PersistenceException(
 						String.format("Failed to save the meta-data for the class [%s]", className), e);
@@ -120,7 +124,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 */
 	@Override
 	public int deletePackage(String packageName) throws PersistenceException {
-		final String dirPath = rootDir + File.separatorChar + packageName.replace(DOT, File.separatorChar);
+		final String dirPath = rootDirPath + File.separatorChar + packageName.replace(DOT, File.separatorChar);
 		File packageDir = new File(dirPath);
 
 		if (!packageDir.isDirectory()) {
@@ -203,6 +207,46 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		return runtimeId.incrementAndGet();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadGroupMetadatas()
+	 */
+	public List<Map<String, String>> loadGroupMetadatas() throws PersistenceException {
+		List<Map<String, String>> result = new LinkedList<>();
+		File[] children = scriptsRootDir.listFiles();
+		for (int i = 0; i < children.length; i++) {
+			File metaFile = new File(children[i].getPath() + File.separator + ClassNameUtil.METADATA_FILE_NAME);
+			if (metaFile.exists()) {
+				Map<String, String> metaData = loadContents(metaFile);
+				String type = metaData.get(Metadata.TYPE);
+				if (Metadata.SCRIPT_GROUP_TYPE.equals(type)) {
+					result.add(metaData);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadSubGroupMetadatas(java.lang.String)
+	 */
+	public List<Map<String, String>> loadSubGroupMetadatas(String groupName) throws PersistenceException {
+		throw new RuntimeException("not implemented");
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#getScripts(java.lang.String)
+	 */
+	public List<Map<String, String>> loadScriptMetadatas(String group) {
+		throw new RuntimeException("not implemented");
+	}
+
 	/**
 	 * Returns {@link FSTransactionManager} instance.
 	 * 
@@ -214,7 +258,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	}
 
 	private void doSave(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
-		if (rootDir == null) {
+		if (rootDirPath == null) {
 			throw new IllegalStateException("Root directory is not set");
 		}
 
@@ -226,7 +270,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		try {
 			if (classFile.exists()) {
 				throw new PersistenceException(
-						String.format("Class [%s] already exists in directory %s", className, rootDir));
+						String.format("Class [%s] already exists in directory %s", className, rootDirPath));
 			}
 
 			File dirs = new File(fileClassDir);
@@ -235,14 +279,14 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			}
 		} catch (SecurityException e) {
 			throw new PersistenceException(String
-					.format("Failed to save class [%s]. Permission denied. Root directory: %s", className, rootDir), e);
+					.format("Failed to save class [%s]. Permission denied. Root directory: %s", className, rootDirPath), e);
 		}
 
 		try {
 			FileUtils.writeByteArrayToFile(classFile, byteCode);
 		} catch (IOException e) {
 			throw new PersistenceException(
-					String.format("Failed to save class [%s] in directory %s", className, rootDir), e);
+					String.format("Failed to save class [%s] in directory %s", className, rootDirPath), e);
 		}
 
 		if (sourceCode != null) {
@@ -252,17 +296,17 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 				FileUtils.writeStringToFile(sourceFile, sourceCode, "UTF-8");
 			} catch (IOException e) {
 				throw new PersistenceException(String
-						.format("Failed to save a source code for class [%s] in directory %s", className, rootDir), e);
+						.format("Failed to save a source code for class [%s] in directory %s", className, rootDirPath), e);
 			}
 		}
 	}
 
 	private String getClassDirectoryPath(String className) {
-		return rootDir + File.separatorChar + ClassNameUtil.getDirs(className);
+		return rootDirPath + File.separatorChar + ClassNameUtil.getDirs(className);
 	}
 
 	private String getFilePathPrefix(String className) {
-		return rootDir + File.separatorChar + className.replace(DOT, File.separatorChar);
+		return rootDirPath + File.separatorChar + className.replace(DOT, File.separatorChar);
 	}
 
 	private boolean deleteFileIfExists(File file) throws PersistenceException {
@@ -276,6 +320,17 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		} else {
 			return false;
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Map<String, String> loadContents(File metaFile) throws PersistenceException {
+		Map<String, String> result;
+		try {
+			result = jsonMapper.readValue(metaFile, Map.class);
+		} catch (IOException e) {
+			throw new PersistenceException("Failed to read meta-data", e);
+		}
+		return result;
 	}
 
 }

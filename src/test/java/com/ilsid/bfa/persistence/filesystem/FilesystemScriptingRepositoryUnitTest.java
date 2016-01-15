@@ -289,19 +289,19 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 				ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/'),
 				ClassNameUtil.METADATA_FILE_NAME);
 
-		assertEquals("{\"type\":\"SCRIPT\",\"name\":\"Script001\",\"title\":\"Script 001\"}", savedMetadata);
+		assertEquals("{\"type\":\"SCRIPT\",\"name\":\"Test_Script_001\",\"title\":\"Test Script 001\"}", savedMetadata);
 	}
 
 	@Test
 	public void metadataForNonExistingClassCanNotBeSaved() throws Exception {
 		createCodeRepository();
 
-		String className = "com.ilsid.bfa.generated.script.default_group.script001.SomeNonExistingScript";
+		String className = "com.ilsid.bfa.generated.script.default_group.somenonexistingscript.SomeNonExistingScript";
 
 		boolean result = repository.saveMetadata(className, createMetadata());
 		assertFalse(result);
 		assertFalse(new File(
-				ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/') + "/"
+				ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.script.default_group.somenonexistingscript".replace('.', '/') + "/"
 						+ ClassNameUtil.METADATA_FILE_NAME).exists());
 	}
 
@@ -315,6 +315,26 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));
 		assertEquals(Metadata.DEFAULT_GROUP_TITLE, metaData.get(Metadata.TITLE));
+	}
+	
+	@Test
+	public void metadataForScriptsInExistingGroupCanBeLoaded() throws Exception {
+		createCodeRepository();
+		
+		List<Map<String, String>> metaDatas = repository.loadScriptMetadatas(Metadata.DEFAULT_GROUP_NAME);
+
+		assertEquals(2, metaDatas.size());
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Script001", metaData.get(Metadata.NAME));
+		assertEquals("Script 001", metaData.get(Metadata.TITLE));
+		
+		metaData = metaDatas.get(1);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("SingleSubflowScript", metaData.get(Metadata.NAME));
+		assertEquals("Single Subflow Script", metaData.get(Metadata.TITLE));
 	}
 
 	private void createCodeRepository() throws Exception {
@@ -350,8 +370,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	private Map<String, String> createMetadata() {
 		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put("type", "SCRIPT");
-		metaData.put("name", "Script001");
-		metaData.put("title", "Script 001");
+		metaData.put("name", "Test_Script_001");
+		metaData.put("title", "Test Script 001");
 
 		return metaData;
 	}

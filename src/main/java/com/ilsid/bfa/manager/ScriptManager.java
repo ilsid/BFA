@@ -2,6 +2,7 @@ package com.ilsid.bfa.manager;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -205,6 +206,52 @@ public class ScriptManager {
 		}
 
 		return body;
+	}
+
+	/**
+	 * Loads meta-data items for all top-level script groups.
+	 * 
+	 * @return a list of meta-data items
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if no top-level groups exist in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public List<Map<String, String>> getTopLevelGroupMetadatas() throws ManagementException {
+		List<Map<String, String>> result;
+		try {
+			result = repository.loadGroupMetadatas();
+		} catch (PersistenceException e) {
+			throw new ManagementException("Failed to load the info for top-level script groups", e);
+		}
+
+		if (result.isEmpty()) {
+			throw new ManagementException("No top-level script groups found");
+		}
+
+		return result;
+	}
+
+	/**
+	 * Loads meta-data items for scripts in the specified group.
+	 * 
+	 * @param groupName
+	 *            a group name
+	 * @return a list of meta-data items or an empty list, if no scripts found or such group does not exist
+	 * @throws ManagementException
+	 *             in case of any repository access issues
+	 */
+	public List<Map<String, String>> getScriptMetadatas(String groupName) throws ManagementException {
+		List<Map<String, String>> result;
+		try {
+			result = repository.loadScriptMetadatas(groupName);
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to load the scripts info from [%s] group", groupName),
+					e);
+		}
+
+		return result;
 	}
 
 	/**

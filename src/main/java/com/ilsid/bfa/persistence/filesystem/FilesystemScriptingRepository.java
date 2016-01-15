@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,10 +35,12 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 
 	private static final String SOURCE_FILE_EXTENSION = ".src";
 
+	private static final FileNamesComparator FILE_NAMES_COMPARATOR = new FileNamesComparator();
+
 	private AtomicLong runtimeId = new AtomicLong(System.currentTimeMillis());
-	
+
 	private ObjectMapper jsonMapper = new ObjectMapper();
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -214,17 +218,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 */
 	public List<Map<String, String>> loadGroupMetadatas() throws PersistenceException {
 		List<Map<String, String>> result = new LinkedList<>();
-		File[] children = scriptsRootDir.listFiles();
-		for (int i = 0; i < children.length; i++) {
-			File metaFile = new File(children[i].getPath() + File.separator + ClassNameUtil.METADATA_FILE_NAME);
-			if (metaFile.exists()) {
-				Map<String, String> metaData = loadContents(metaFile);
-				String type = metaData.get(Metadata.TYPE);
-				if (Metadata.SCRIPT_GROUP_TYPE.equals(type)) {
-					result.add(metaData);
-				}
-			}
-		}
+		collectMetadatas(scriptsRootDir, Metadata.SCRIPT_GROUP_TYPE, result);
 
 		return result;
 	}
@@ -243,8 +237,17 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 * 
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#getScripts(java.lang.String)
 	 */
-	public List<Map<String, String>> loadScriptMetadatas(String group) {
-		throw new RuntimeException("not implemented");
+	public List<Map<String, String>> loadScriptMetadatas(String groupName) throws PersistenceException {
+		List<Map<String, String>> result = new LinkedList<>();
+		File groupDir = new File(scriptsRootDir.getPath() + File.separator
+				+ groupName.replace(ClassNameUtil.GROUP_SEPARATOR, File.separator));
+
+		if (!groupDir.isDirectory()) {
+			return result;
+		}
+		collectMetadatas(groupDir, Metadata.SCRIPT_TYPE, result);
+
+		return result;
 	}
 
 	/**
@@ -278,8 +281,8 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 				dirs.mkdirs();
 			}
 		} catch (SecurityException e) {
-			throw new PersistenceException(String
-					.format("Failed to save class [%s]. Permission denied. Root directory: %s", className, rootDirPath), e);
+			throw new PersistenceException(String.format(
+					"Failed to save class [%s]. Permission denied. Root directory: %s", className, rootDirPath), e);
 		}
 
 		try {
@@ -295,8 +298,8 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			try {
 				FileUtils.writeStringToFile(sourceFile, sourceCode, "UTF-8");
 			} catch (IOException e) {
-				throw new PersistenceException(String
-						.format("Failed to save a source code for class [%s] in directory %s", className, rootDirPath), e);
+				throw new PersistenceException(String.format(
+						"Failed to save a source code for class [%s] in directory %s", className, rootDirPath), e);
 			}
 		}
 	}
@@ -321,7 +324,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			return false;
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private Map<String, String> loadContents(File metaFile) throws PersistenceException {
 		Map<String, String> result;
@@ -331,6 +334,31 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			throw new PersistenceException("Failed to read meta-data", e);
 		}
 		return result;
+	}
+
+	private void collectMetadatas(File dir, String typeCriteria, List<Map<String, String>> result)
+			throws PersistenceException {
+		File[] children = dir.listFiles();
+		Arrays.sort(children, FILE_NAMES_COMPARATOR);
+
+		for (int i = 0; i < children.length; i++) {
+			File metaFile = new File(children[i].getPath() + File.separator + ClassNameUtil.METADATA_FILE_NAME);
+			if (metaFile.exists()) {
+				Map<String, String> metaData = loadContents(metaFile);
+				String type = metaData.get(Metadata.TYPE);
+				if (typeCriteria.equals(type)) {
+					result.add(metaData);
+				}
+			}
+		}
+	}
+
+	private static class FileNamesComparator implements Comparator<File> {
+
+		public int compare(File f1, File f2) {
+			return f1.getName().compareTo(f2.getName());
+		}
+
 	}
 
 }

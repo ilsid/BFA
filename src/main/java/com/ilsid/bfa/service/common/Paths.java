@@ -7,7 +7,7 @@ package com.ilsid.bfa.service.common;
  *
  */
 public final class Paths {
-	
+
 	public final static String SERVICE_ROOT = "service";
 
 	public final static String SCRIPT_SERVICE_ROOT = SERVICE_ROOT + "/script";
@@ -26,12 +26,21 @@ public final class Paths {
 
 	public final static String SCRIPT_GET_SOURCE_OPERATION = "getSource";
 
+	public final static String SCRIPT_GET_GROUPS_OPERATION = "getGroups";
+
+	public final static String SCRIPT_GET_ITEMS_OPERATION = "getItems";
+
 	public final static String SCRIPT_CREATE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + SCRIPT_CREATE_OPERATION;
 
 	public final static String SCRIPT_UPDATE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + SCRIPT_UPDATE_OPERATION;
 
 	public final static String SCRIPT_GET_SOURCE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/"
 			+ SCRIPT_GET_SOURCE_OPERATION;
+
+	public final static String SCRIPT_GET_GROUPS_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/"
+			+ SCRIPT_GET_GROUPS_OPERATION;
+
+	public final static String SCRIPT_GET_ITEMS_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + SCRIPT_GET_ITEMS_OPERATION;
 
 	/*
 	 * Script Runtime

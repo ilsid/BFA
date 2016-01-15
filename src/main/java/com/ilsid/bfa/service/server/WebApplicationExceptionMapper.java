@@ -30,13 +30,13 @@ public class WebApplicationExceptionMapper implements ExceptionMapper<ResourceEx
 	 * @return {@link Status#INTERNAL_SERVER_ERROR} response
 	 */
 	public Response toResponse(ResourceException exception) {
-		Throwable actualException = exception.getCause();
+		Throwable actualException = exception.hasCause() ? exception.getCause() : exception;
 		if (logger != null) {
-			logger.error(ERROR_MESSAGE_TEMPLATE, exception.getMessage(), actualException);
+			logger.error(ERROR_MESSAGE_TEMPLATE, exception.getPath(), actualException);
 		}
 
-		return Response.status(Status.INTERNAL_SERVER_ERROR)
-				.entity(ExceptionUtil.getExceptionMessageChain(actualException)).build();
+		return Response.status(exception.getStatus()).entity(ExceptionUtil.getExceptionMessageChain(actualException))
+				.build();
 
 	}
 

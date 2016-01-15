@@ -1,6 +1,8 @@
 package com.ilsid.bfa.service.server;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
@@ -9,6 +11,7 @@ import org.junit.Test;
 
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
+import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ScriptAdminParams;
 import com.sun.jersey.api.client.ClientResponse;
@@ -81,7 +84,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class).startsWith("The name must be defined"));
 	}
 
@@ -92,7 +95,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class).startsWith("The body must be defined"));
 	}
 
@@ -100,13 +103,15 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	public void validScriptAndItsSourceIsUpdatedInFileSystem() throws Exception {
 		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/scripttoupdate");
 
-		assertEquals(5, scriptDir.list().length);
-		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
-				"ScriptToUpdate$$2.class", "ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var2.class" });
+		assertEquals(6, scriptDir.list().length);
+		assertFilesExist(scriptDir.getPath(),
+				new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src", "ScriptToUpdate$$2.class",
+						"ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var2.class",
+						ClassNameUtil.METADATA_FILE_NAME });
 
 		WebResource webResource = getWebResource(Paths.SCRIPT_UPDATE_SERVICE);
 		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script-upd.txt");
-		ScriptAdminParams script = new ScriptAdminParams("ScriptToUpdate", updatedScriptBody);
+		ScriptAdminParams script = new ScriptAdminParams("ScriptToUpdate", updatedScriptBody, "Script to Update");
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
@@ -168,6 +173,59 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class)
 				.startsWith("The script [NonExistentScript] does not exist in the repository"));
+	}
+
+	@Test
+	public void topLevelScriptGroupsAreLoaded() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_GROUPS_SERVICE);
+		ClientResponse response = webResource.get(ClientResponse.class);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		@SuppressWarnings("unchecked")
+		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
+		assertEquals(1, metaDatas.size());
+
+		final Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));
+		assertEquals(Metadata.DEFAULT_GROUP_TITLE, metaData.get(Metadata.TITLE));
+	}
+
+	@Test
+	public void scriptItemsWithDefinedMetadataAreLoaded() {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_ITEMS_SERVICE);
+		ClientResponse response = webResource.queryParam("group", Metadata.DEFAULT_GROUP_NAME)
+				.get(ClientResponse.class);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		@SuppressWarnings("unchecked")
+		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
+
+		assertEquals(4, metaDatas.size());
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("ScriptToRead", metaData.get(Metadata.NAME));
+		assertEquals("Script to Read", metaData.get(Metadata.TITLE));
+
+		metaData = metaDatas.get(1);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("ScriptToUpdate", metaData.get(Metadata.NAME));
+		assertEquals("Script to Update", metaData.get(Metadata.TITLE));
+
+		metaData = metaDatas.get(2);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("single_action_script", metaData.get(Metadata.NAME));
+		assertEquals("Single Action Script", metaData.get(Metadata.TITLE));
+
+		metaData = metaDatas.get(3);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Single Entity Script", metaData.get(Metadata.NAME));
+		assertEquals("Single Entity Script", metaData.get(Metadata.TITLE));
 	}
 
 }

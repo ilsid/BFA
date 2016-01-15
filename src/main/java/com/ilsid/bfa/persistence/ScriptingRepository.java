@@ -125,16 +125,16 @@ public interface ScriptingRepository extends Configurable {
 	long getNextRuntimeId() throws PersistenceException;
 
 	/**
-	 * Loads meta-data holders for top-level groups.
+	 * Loads meta-data items for top-level groups.
 	 * 
-	 * @return a list of meta-data holders or an empty list, if no top-level groups found
+	 * @return a list of meta-data items or an empty list, if no top-level groups found
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
 	List<Map<String, String>> loadGroupMetadatas() throws PersistenceException;
 
 	/**
-	 * Loads meta-data holders for sub-groups.
+	 * Loads meta-data items for sub-groups.
 	 * 
 	 * @param groupName
 	 *            parent group name
@@ -149,7 +149,7 @@ public interface ScriptingRepository extends Configurable {
 	 * 
 	 * @param groupName
 	 *            a group name
-	 * @return a list of meta-data holders or an empty list, if no scripts found or such group does not exist
+	 * @return a list of meta-data items or an empty list, if no scripts found or such group does not exist
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */

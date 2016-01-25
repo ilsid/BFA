@@ -186,10 +186,11 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(1, metaDatas.size());
 
 		final Map<String, String> metaData = metaDatas.get(0);
-		assertEquals(3, metaData.keySet().size());
+		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));
 		assertEquals(Metadata.DEFAULT_GROUP_TITLE, metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
 	}
 
 	@Test
@@ -204,28 +205,32 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertEquals(4, metaDatas.size());
 		Map<String, String> metaData = metaDatas.get(0);
-		assertEquals(3, metaData.keySet().size());
+		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("ScriptToRead", metaData.get(Metadata.NAME));
 		assertEquals("Script to Read", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
 		metaData = metaDatas.get(1);
-		assertEquals(3, metaData.keySet().size());
+		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("ScriptToUpdate", metaData.get(Metadata.NAME));
 		assertEquals("Script to Update", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
 		metaData = metaDatas.get(2);
-		assertEquals(3, metaData.keySet().size());
+		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("single_action_script", metaData.get(Metadata.NAME));
 		assertEquals("Single Action Script", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
 		metaData = metaDatas.get(3);
-		assertEquals(3, metaData.keySet().size());
+		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("Single Entity Script", metaData.get(Metadata.NAME));
 		assertEquals("Single Entity Script", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 	}
 
 }

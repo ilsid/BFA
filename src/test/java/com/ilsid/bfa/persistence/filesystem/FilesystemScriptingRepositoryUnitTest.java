@@ -311,10 +311,11 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		assertEquals(1, metaDatas.size());
 		final Map<String, String> metaData = metaDatas.get(0);
-		assertEquals(3, metaData.keySet().size());
+		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));
 		assertEquals(Metadata.DEFAULT_GROUP_TITLE, metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
 	}
 	
 	@Test
@@ -325,16 +326,18 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		assertEquals(2, metaDatas.size());
 		Map<String, String> metaData = metaDatas.get(0);
-		assertEquals(3, metaData.keySet().size());
+		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("Script001", metaData.get(Metadata.NAME));
 		assertEquals("Script 001", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 		
 		metaData = metaDatas.get(1);
-		assertEquals(3, metaData.keySet().size());
+		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("SingleSubflowScript", metaData.get(Metadata.NAME));
 		assertEquals("Single Subflow Script", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 	}
 
 	private void createCodeRepository() throws Exception {

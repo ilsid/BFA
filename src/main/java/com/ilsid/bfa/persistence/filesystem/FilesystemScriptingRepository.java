@@ -218,7 +218,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 */
 	public List<Map<String, String>> loadGroupMetadatas() throws PersistenceException {
 		List<Map<String, String>> result = new LinkedList<>();
-		collectMetadatas(scriptsRootDir, Metadata.SCRIPT_GROUP_TYPE, result);
+		collectMetadatas(scriptsRootDir, Metadata.SCRIPT_GROUP_TYPE, Metadata.ROOT_PARENT_NAME, result);
 
 		return result;
 	}
@@ -245,7 +245,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		if (!groupDir.isDirectory()) {
 			return result;
 		}
-		collectMetadatas(groupDir, Metadata.SCRIPT_TYPE, result);
+		collectMetadatas(groupDir, Metadata.SCRIPT_TYPE, groupName, result);
 
 		return result;
 	}
@@ -336,7 +336,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		return result;
 	}
 
-	private void collectMetadatas(File dir, String typeCriteria, List<Map<String, String>> result)
+	private void collectMetadatas(File dir, String typeCriteria, String parentName, List<Map<String, String>> result)
 			throws PersistenceException {
 		File[] children = dir.listFiles();
 		Arrays.sort(children, FILE_NAMES_COMPARATOR);
@@ -347,6 +347,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 				Map<String, String> metaData = loadContents(metaFile);
 				String type = metaData.get(Metadata.TYPE);
 				if (typeCriteria.equals(type)) {
+					metaData.put(Metadata.PARENT, parentName);
 					result.add(metaData);
 				}
 			}

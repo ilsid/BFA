@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ScriptAdminParams;
@@ -121,40 +122,13 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	}
 
 	/**
-	 * Loads meta-data objects for the scripting groups under the given parent group. If the parent group name is
-	 * <code>null</code> then meta-data objects for top-level groups are returned.
-	 * 
-	 * @param groupName
-	 *            name of the parent group or <code>null</code>
-	 * @return a list of meta-data objects. Each object is represented by <{@link Map} instance.
-	 * @throws ResourceException
-	 *             <ul>
-	 *             <li>if no parent group with the given name exists</li>
-	 *             <li>if parent group name is <code>null</code> and no top-level groups exist</li>
-	 *             <li>in case of the repository access failure</li>
-	 *             </ul>
-	 * @see WebApplicationExceptionMapper
-	 */
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path(Paths.SCRIPT_GET_GROUPS_OPERATION)
-	public Response getGroups(@QueryParam("parent") String groupName) {
-		List<Map<String, String>> metas;
-		try {
-			metas = scriptManager.getTopLevelGroupMetadatas();
-		} catch (ManagementException e) {
-			throw new ResourceException(Paths.SCRIPT_GET_GROUPS_SERVICE, e);
-		}
-
-		return Response.status(Status.OK).entity(metas).build();
-	}
-
-	/**
-	 * Loads meta-data items for the scripts in the given group.
+	 * Loads meta-data items for the members of the given group. The members can be scripts or/and script groups. If
+	 * <code>groupName</code> parameter equals {@link Metadata#ROOT_PARENT_NAME} then top-level group items are
+	 * loaded.
 	 * 
 	 * @param groupName
 	 *            name of the group
-	 * @return a list of meta-data items or an empty list, if no scripts found or such group does not exist. Each item
+	 * @return a list of meta-data items or an empty list, if no members found or such group does not exist. Each item
 	 *         is represented by <{@link Map} instance.
 	 * @throws ResourceException
 	 *             <ul>
@@ -170,7 +144,11 @@ public class ScriptAdminResource extends AbstractAdminResource {
 		validateNonNullParameter(Paths.SCRIPT_GET_ITEMS_SERVICE, GROUP_PARAM_NAME, groupName);
 		List<Map<String, String>> metas;
 		try {
-			metas = scriptManager.getScriptMetadatas(groupName);
+			if (groupName.equals(Metadata.ROOT_PARENT_NAME)) {
+				metas = scriptManager.getTopLevelGroupMetadatas();
+			} else {
+				metas = scriptManager.getScriptMetadatas(groupName);
+			}
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_GET_ITEMS_SERVICE, e);
 		}

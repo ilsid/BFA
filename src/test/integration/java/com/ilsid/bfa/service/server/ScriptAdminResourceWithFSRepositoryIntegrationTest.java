@@ -177,8 +177,8 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void topLevelScriptGroupsAreLoaded() throws Exception {
-		WebResource webResource = getWebResource(Paths.SCRIPT_GET_GROUPS_SERVICE);
-		ClientResponse response = webResource.get(ClientResponse.class);
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_ITEMS_SERVICE);
+		ClientResponse response = webResource.queryParam("group", Metadata.ROOT_PARENT_NAME).get(ClientResponse.class);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		@SuppressWarnings("unchecked")

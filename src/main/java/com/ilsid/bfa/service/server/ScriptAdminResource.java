@@ -147,7 +147,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 			if (groupName.equals(Metadata.ROOT_PARENT_NAME)) {
 				metas = scriptManager.getTopLevelGroupMetadatas();
 			} else {
-				metas = scriptManager.getScriptMetadatas(groupName);
+				metas = scriptManager.getChildrenMetadatas(groupName);
 			}
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_GET_ITEMS_SERVICE, e);

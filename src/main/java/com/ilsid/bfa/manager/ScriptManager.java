@@ -234,20 +234,22 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Loads meta-data items for scripts in the specified group.
+	 * Loads meta-data items for sub-groups and scripts in the specified group.
 	 * 
 	 * @param groupName
 	 *            a group name
-	 * @return a list of meta-data items or an empty list, if no scripts found or such group does not exist
+	 * @return a list of meta-data items or an empty list, if no sub-groups and scripts found or such group does not
+	 *         exist
 	 * @throws ManagementException
 	 *             in case of any repository access issues
 	 */
-	public List<Map<String, String>> getScriptMetadatas(String groupName) throws ManagementException {
+	public List<Map<String, String>> getChildrenMetadatas(String groupName) throws ManagementException {
 		List<Map<String, String>> result;
 		try {
-			result = repository.loadScriptMetadatas(groupName);
+			result = repository.loadSubGroupMetadatas(groupName);
+			result.addAll(repository.loadScriptMetadatas(groupName));
 		} catch (PersistenceException e) {
-			throw new ManagementException(String.format("Failed to load the scripts info from [%s] group", groupName),
+			throw new ManagementException(String.format("Failed to load child items info from [%s] group", groupName),
 					e);
 		}
 

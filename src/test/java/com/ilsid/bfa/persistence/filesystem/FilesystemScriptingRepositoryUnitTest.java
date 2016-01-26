@@ -300,9 +300,9 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		boolean result = repository.saveMetadata(className, createMetadata());
 		assertFalse(result);
-		assertFalse(new File(
-				ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.script.default_group.somenonexistingscript".replace('.', '/') + "/"
-						+ ClassNameUtil.METADATA_FILE_NAME).exists());
+		assertFalse(new File(ROOT_DIR_PATH + "/"
+				+ "com.ilsid.bfa.generated.script.default_group.somenonexistingscript".replace('.', '/') + "/"
+				+ ClassNameUtil.METADATA_FILE_NAME).exists());
 	}
 
 	@Test
@@ -317,11 +317,11 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(Metadata.DEFAULT_GROUP_TITLE, metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
 	}
-	
+
 	@Test
 	public void metadataForScriptsInExistingGroupCanBeLoaded() throws Exception {
 		createCodeRepository();
-		
+
 		List<Map<String, String>> metaDatas = repository.loadScriptMetadatas(Metadata.DEFAULT_GROUP_NAME);
 
 		assertEquals(2, metaDatas.size());
@@ -331,13 +331,64 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals("Script001", metaData.get(Metadata.NAME));
 		assertEquals("Script 001", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
-		
+
 		metaData = metaDatas.get(1);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("SingleSubflowScript", metaData.get(Metadata.NAME));
 		assertEquals("Single Subflow Script", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
+	}
+
+	@Test
+	public void metadataForScriptsInNonExistingGroupIsNotLoaded() throws Exception {
+		createCodeRepository();
+		assertEquals(0, repository.loadScriptMetadatas("some_non_existing_group").size());
+	}
+
+	@Test
+	public void metadataForSubGroupsInExistingGroupCanBeLoaded() throws Exception {
+		createCodeRepository();
+
+		final String groupName = "custom_group_001";
+		List<Map<String, String>> metaDatas = repository.loadSubGroupMetadatas(groupName);
+
+		assertEquals(2, metaDatas.size());
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("custom_subgroup_001", metaData.get(Metadata.NAME));
+		assertEquals("Custom Sub-Group 001", metaData.get(Metadata.TITLE));
+		assertEquals(groupName, metaData.get(Metadata.PARENT));
+
+		metaData = metaDatas.get(1);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("custom_subgroup_002", metaData.get(Metadata.NAME));
+		assertEquals("Custom Sub-Group 002", metaData.get(Metadata.TITLE));
+		assertEquals(groupName, metaData.get(Metadata.PARENT));
+	}
+	
+	@Test
+	public void metadataForSubGroupsInNonExistingGroupIsNotLoaded() throws Exception {
+		createCodeRepository();
+		assertEquals(0, repository.loadSubGroupMetadatas("some_non_existing_group").size());
+	}
+
+	@Test
+	public void metadataForSubGroupsInExistingSubGroupCanBeLoaded() throws Exception {
+		createCodeRepository();
+
+		final String groupName = "custom_group_001::custom_subgroup_001";
+		List<Map<String, String>> metaDatas = repository.loadSubGroupMetadatas(groupName);
+
+		assertEquals(1, metaDatas.size());
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("custom_subgroup_001-001", metaData.get(Metadata.NAME));
+		assertEquals("Custom Sub-Group 001-001", metaData.get(Metadata.TITLE));
+		assertEquals(groupName, metaData.get(Metadata.PARENT));
 	}
 
 	private void createCodeRepository() throws Exception {

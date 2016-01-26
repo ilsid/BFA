@@ -229,7 +229,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadSubGroupMetadatas(java.lang.String)
 	 */
 	public List<Map<String, String>> loadSubGroupMetadatas(String groupName) throws PersistenceException {
-		throw new RuntimeException("not implemented");
+		return loadMetadataItems(groupName, Metadata.SCRIPT_GROUP_TYPE);
 	}
 
 	/*
@@ -238,16 +238,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#getScripts(java.lang.String)
 	 */
 	public List<Map<String, String>> loadScriptMetadatas(String groupName) throws PersistenceException {
-		List<Map<String, String>> result = new LinkedList<>();
-		File groupDir = new File(scriptsRootDir.getPath() + File.separator
-				+ groupName.replace(ClassNameUtil.GROUP_SEPARATOR, File.separator));
-
-		if (!groupDir.isDirectory()) {
-			return result;
-		}
-		collectMetadatas(groupDir, Metadata.SCRIPT_TYPE, groupName, result);
-
-		return result;
+		return loadMetadataItems(groupName, Metadata.SCRIPT_TYPE);
 	}
 
 	/**
@@ -352,6 +343,19 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 				}
 			}
 		}
+	}
+
+	private List<Map<String, String>> loadMetadataItems(String groupName, String itemType) throws PersistenceException {
+		List<Map<String, String>> result = new LinkedList<>();
+		File groupDir = new File(scriptsRootDir.getPath() + File.separator
+				+ groupName.replace(ClassNameUtil.GROUP_SEPARATOR, File.separator));
+
+		if (!groupDir.isDirectory()) {
+			return result;
+		}
+		collectMetadatas(groupDir, itemType, groupName, result);
+
+		return result;
 	}
 
 	private static class FileNamesComparator implements Comparator<File> {

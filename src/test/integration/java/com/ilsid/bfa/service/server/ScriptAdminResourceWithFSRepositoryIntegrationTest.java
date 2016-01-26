@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.ilsid.bfa.common.ClassNameUtil;
@@ -39,6 +40,8 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
 						"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class",
 						ClassNameUtil.METADATA_FILE_NAME });
+		
+		FileUtils.forceDelete(scriptDir);
 	}
 
 	@Test
@@ -194,7 +197,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
-	public void scriptItemsWithDefinedMetadataAreLoaded() {
+	public void subGroupAndScriptItemsWithDefinedMetadataAreLoaded() {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_ITEMS_SERVICE);
 		ClientResponse response = webResource.queryParam("group", Metadata.DEFAULT_GROUP_NAME)
 				.get(ClientResponse.class);
@@ -202,30 +205,38 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		@SuppressWarnings("unchecked")
 		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
+		System.out.println(metaDatas);
 
-		assertEquals(4, metaDatas.size());
+		assertEquals(5, metaDatas.size());
 		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("sub_group_001", metaData.get(Metadata.NAME));
+		assertEquals("Sub-Group 001", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
+
+		metaData = metaDatas.get(1);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("ScriptToRead", metaData.get(Metadata.NAME));
 		assertEquals("Script to Read", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
-		metaData = metaDatas.get(1);
+		metaData = metaDatas.get(2);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("ScriptToUpdate", metaData.get(Metadata.NAME));
 		assertEquals("Script to Update", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
-		metaData = metaDatas.get(2);
+		metaData = metaDatas.get(3);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("single_action_script", metaData.get(Metadata.NAME));
 		assertEquals("Single Action Script", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
-		metaData = metaDatas.get(3);
+		metaData = metaDatas.get(4);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("Single Entity Script", metaData.get(Metadata.NAME));

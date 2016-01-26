@@ -12,9 +12,6 @@ public class TypeNameResolver {
 
 	private static final String GENERATED_ROOT_PACKAGE = ClassNameUtil.GENERATED_CLASSES_PACKAGE + DOT;
 
-	private static final String GENERATED_SCRIPT_DEFAULT_GROUP_PACKAGE = ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE
-			+ DOT;
-
 	private static final String EMPTY = "";
 
 	private static final String GENERATED_ENTITY_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "entity.";
@@ -41,19 +38,28 @@ public class TypeNameResolver {
 	}
 
 	public static String resolveScriptClassName(String scriptName) {
-		final String simpleClassName = ClassNameUtil.generateSimpleClassName(scriptName, ClassNameUtil.BLANK_CODE);
-		return generateScriptPackageName(simpleClassName) + simpleClassName;
+		int classSeparatorIndex = scriptName.lastIndexOf(ClassNameUtil.GROUP_SEPARATOR);
+
+		String actualScriptName;
+		String scriptGroupName;
+		if (classSeparatorIndex > 0) {
+			actualScriptName = scriptName.substring(classSeparatorIndex + ClassNameUtil.GROUP_SEPARATOR.length());
+			scriptGroupName = scriptName.substring(0, classSeparatorIndex);
+		} else {
+			actualScriptName = scriptName;
+			scriptGroupName = ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
+		}
+
+		final String simpleClassName = ClassNameUtil.generateSimpleClassName(actualScriptName,
+				ClassNameUtil.BLANK_CODE);
+
+		return ClassNameUtil.generatePackageName(scriptGroupName) + DOT + simpleClassName.toLowerCase() + DOT
+				+ simpleClassName;
 	}
 
 	public static String resolveExpressionClassName(String scriptName, String expression) {
-		final String scriptSimpleClassName = ClassNameUtil.generateSimpleClassName(scriptName,
-				ClassNameUtil.BLANK_CODE);
-		return generateScriptPackageName(scriptSimpleClassName) + scriptSimpleClassName + EXPRESSION_PREFIX
+		return resolveScriptClassName(scriptName) + EXPRESSION_PREFIX
 				+ ClassNameUtil.generateSimpleClassName(expression, EMPTY);
-	}
-
-	private static String generateScriptPackageName(String simpleScriptClassName) {
-		return GENERATED_SCRIPT_DEFAULT_GROUP_PACKAGE + simpleScriptClassName.toLowerCase() + DOT;
 	}
 
 }

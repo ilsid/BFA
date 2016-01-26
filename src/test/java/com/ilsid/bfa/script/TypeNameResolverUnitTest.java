@@ -91,6 +91,25 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 		assertEquals(ENTITY_CLASS_NAME_PREFIX + "SomeBean", TypeNameResolver.resolveEntityClassName("SomeBean"));
 	}
 
+	@Test
+	public void classNameIsGeneratedForScriptWithExplicitSimpleGroup() {
+		assertEquals("com.ilsid.bfa.generated.script.group_x20_01.script_x20_01.Script_x20_01",
+				TypeNameResolver.resolveScriptClassName("Group 01::Script 01"));
+
+		assertEquals("com.ilsid.bfa.generated.script.group_x20_01.script_x20_01.Script_x20_01$$SomeExpression",
+				TypeNameResolver.resolveExpressionClassName("Group 01::Script 01", "Some Expression"));
+	}
+
+	@Test
+	public void classNameIsGeneratedForScriptWithExplicitComplexGroup() {
+		assertEquals("com.ilsid.bfa.generated.script.group_01.group_x20_01-02.script_x20_01.Script_x20_01",
+				TypeNameResolver.resolveScriptClassName("Group_01::Group 01-02::Script 01"));
+
+		assertEquals(
+				"com.ilsid.bfa.generated.script.group_01.group_x20_01-02.script_x20_01.Script_x20_01$$SomeExpression",
+				TypeNameResolver.resolveExpressionClassName("Group_01::Group 01-02::Script 01", "Some Expression"));
+	}
+
 	private String getExpressionClassNamePart(String expression) {
 		String className = TypeNameResolver.resolveExpressionClassName(TEST_SCRIPT_NAME, expression);
 		assertTrue(className.startsWith(EXPRESSION_CLASS_NAME_PREFIX));

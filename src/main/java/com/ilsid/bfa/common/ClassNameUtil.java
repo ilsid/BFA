@@ -21,6 +21,11 @@ public class ClassNameUtil {
 	 * The root package for the generated scripts.
 	 */
 	public static final String GENERATED_SCRIPTS_ROOT_PACKAGE = GENERATED_CLASSES_PACKAGE + ".script";
+	
+	/**
+	 * The default group sub-package for the generated scripts.
+	 */
+	public static final String DEFAULT_GROUP_SUBPACKAGE = "default_group";
 
 	/**
 	 * The default group package for the generated scripts.
@@ -46,14 +51,26 @@ public class ClassNameUtil {
 
 	private static final char DOT = '.';
 
-	private static final Map<String, String> replaceableSymbols = new HashMap<>();
+	private static final String DOT_STR = ".";
+
+	private static final String GENERATED_SCRIPTS_ROOT_PACKAGE_WITH_DOT = GENERATED_SCRIPTS_ROOT_PACKAGE + DOT;
+
+	private static final Map<String, String> replaceablePackageSymbols;
+
+	private static final Map<String, String> replaceableClassSymbols;
 
 	static {
-		replaceableSymbols.put("-", "_Mns_");
-		replaceableSymbols.put("+", "_Pls_");
-		replaceableSymbols.put("*", "_Mlt_");
-		replaceableSymbols.put("/", "_Div_");
-		replaceableSymbols.put(".", "_dt_");
+		replaceablePackageSymbols = new HashMap<>();
+
+		replaceablePackageSymbols.put("+", "_Pls_");
+		replaceablePackageSymbols.put("*", "_Mlt_");
+		replaceablePackageSymbols.put("/", "_Div_");
+		replaceablePackageSymbols.put(".", "_dt_");
+	}
+
+	static {
+		replaceableClassSymbols = new HashMap<>(replaceablePackageSymbols);
+		replaceableClassSymbols.put("-", "_Mns_");
 	}
 
 	/**
@@ -104,11 +121,28 @@ public class ClassNameUtil {
 	 */
 	public static String generateSimpleClassName(String expression, String blankReplacement) {
 		String expr = expression.replaceAll("\\s", blankReplacement);
-		for (String smb : replaceableSymbols.keySet()) {
-			expr = expr.replace(smb, replaceableSymbols.get(smb));
+		for (String smb : replaceableClassSymbols.keySet()) {
+			expr = expr.replace(smb, replaceableClassSymbols.get(smb));
 		}
 
 		return expr;
+	}
+
+	/**
+	 * Generates a full package name for the given expression. The expression is treated as a simple group like
+	 * <i>some_group</i> or a complex group like <i>grand_parent_group::parent_group::some_group</i>.
+	 * 
+	 * @param expression
+	 *            the expression to generate a full package name
+	 * @return a full package name
+	 */
+	public static String generatePackageName(String expression) {
+		String expr = expression.replaceAll("\\s", BLANK_CODE);
+		for (String smb : replaceablePackageSymbols.keySet()) {
+			expr = expr.replace(smb, replaceablePackageSymbols.get(smb));
+		}
+
+		return GENERATED_SCRIPTS_ROOT_PACKAGE_WITH_DOT + expr.replaceAll(GROUP_SEPARATOR, DOT_STR).toLowerCase();
 	}
 
 }

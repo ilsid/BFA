@@ -205,7 +205,6 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		@SuppressWarnings("unchecked")
 		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
-		System.out.println(metaDatas);
 
 		assertEquals(5, metaDatas.size());
 		Map<String, String> metaData = metaDatas.get(0);

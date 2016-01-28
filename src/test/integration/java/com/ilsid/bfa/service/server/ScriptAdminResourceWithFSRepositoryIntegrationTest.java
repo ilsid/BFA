@@ -28,47 +28,14 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void validScriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
-		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
-		ScriptAdminParams script = new ScriptAdminParams("Script 001",
-				IOHelper.loadScript("duplicated-expression-script.txt"));
-
-		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
-
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-
-		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script_x20_001");
-
-		assertTrue(scriptDir.isDirectory());
-		assertEquals(6, scriptDir.list().length);
-		assertFilesExist(scriptDir.getPath(),
-				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
-						"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class",
-						ClassNameUtil.METADATA_FILE_NAME });
-
-		FileUtils.forceDelete(scriptDir);
+		scriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem("Script 001",
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script_x20_001");
 	}
 
 	@Test
 	public void validScriptInNonDefaultGroupIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
-		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
-		ScriptAdminParams script = new ScriptAdminParams("Custom Group 01::Script 001",
-				IOHelper.loadScript("duplicated-expression-script.txt"));
-
-		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
-
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-
-		File scriptDir = new File(
+		scriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem("Custom Group 01::Script 001",
 				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/script_x20_001");
-
-		assertTrue(scriptDir.isDirectory());
-		assertEquals(6, scriptDir.list().length);
-		assertFilesExist(scriptDir.getPath(),
-				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
-						"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class",
-						ClassNameUtil.METADATA_FILE_NAME });
-
-		FileUtils.forceDelete(scriptDir);
 	}
 
 	@Test
@@ -223,7 +190,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals("Custom Group 01", metaData.get(Metadata.NAME));
 		assertEquals("Custom Group 01", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
-		
+
 		metaData = metaDatas.get(1);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
@@ -277,6 +244,29 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals("Single Entity Script", metaData.get(Metadata.NAME));
 		assertEquals("Single Entity Script", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
+	}
+
+	private void scriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem(String scriptName,
+			String expectedScriptPath) throws Exception {
+
+		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams(scriptName,
+				IOHelper.loadScript("duplicated-expression-script.txt"));
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		File scriptDir = new File(expectedScriptPath);
+
+		assertTrue(scriptDir.isDirectory());
+		assertEquals(6, scriptDir.list().length);
+		assertFilesExist(scriptDir.getPath(),
+				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
+						"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class",
+						ClassNameUtil.METADATA_FILE_NAME });
+
+		FileUtils.forceDelete(scriptDir);
 	}
 
 }

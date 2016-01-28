@@ -74,6 +74,21 @@ public interface ScriptingRepository extends Configurable {
 	boolean saveMetadata(String className, Map<String, String> metaData) throws PersistenceException;
 
 	/**
+	 * Saves new package.
+	 * 
+	 * @param packageName
+	 *            the package name
+	 * @param metaData
+	 *            the package meta-data
+	 * @throws PersistenceException
+	 *             <ul>
+	 *             <li>if the package with the given name already exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	void savePackage(String packageName, Map<String, String> metaData) throws PersistenceException;
+
+	/**
 	 * Deletes all classes under the specified package.
 	 * 
 	 * @param packageName
@@ -125,35 +140,37 @@ public interface ScriptingRepository extends Configurable {
 	long getNextRuntimeId() throws PersistenceException;
 
 	/**
-	 * Loads meta-data items for top-level groups.
+	 * Loads meta-data items for top-level packages.
 	 * 
-	 * @return a list of meta-data items or an empty list, if no top-level groups found
+	 * @return a list of meta-data items or an empty list, if no top-level packages found
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
-	List<Map<String, String>> loadGroupMetadatas() throws PersistenceException;
+	List<Map<String, String>> loadMetadataForTopLevelPackages() throws PersistenceException;
 
 	/**
-	 * Loads meta-data items for sub-groups.
+	 * Loads meta-data items for child packages.
 	 * 
-	 * @param groupName
-	 *            parent group name
-	 * @return a list of meta-data holders or an empty list, if no sub-groups found or such parent group does not exist
+	 * @param packageName
+	 *            parent package name
+	 * @return a list of meta-data items or an empty list, if no child packages found or such parent package does not
+	 *         exist
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
-	List<Map<String, String>> loadSubGroupMetadatas(String groupName) throws PersistenceException;
+	List<Map<String, String>> loadMetadataForChildPackages(String packageName) throws PersistenceException;
 
 	/**
-	 * Loads a meta-data for each script in the specified group.
+	 * Loads meta-data for the package.
 	 * 
-	 * @param groupName
-	 *            a group name
-	 * @return a list of meta-data items or an empty list, if no scripts found or such group does not exist
+	 * @param packageName
+	 *            package name
+	 * @return the meta-data for the given package or <code>null</code> if such package does not exist or it has no the
+	 *         corresponding meta-data
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
-	List<Map<String, String>> loadScriptMetadatas(String groupName) throws PersistenceException;
+	Map<String, String> loadMetadataForPackage(String packageName) throws PersistenceException;
 
 	/**
 	 * Returns a proper {@link TransactionManager} instance for this code repository.

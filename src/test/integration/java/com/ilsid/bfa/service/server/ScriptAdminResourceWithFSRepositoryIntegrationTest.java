@@ -20,7 +20,11 @@ import com.sun.jersey.api.client.WebResource;
 
 public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRepositoryIntegrationTest {
 
-	private static final String GENERATED_SCRIPT_ROOT_PATH = "com/ilsid/bfa/generated/script/default_group";
+	private static final String GENERATED_SCRIPT_ROOT_PATH = ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE.replace('.',
+			'/');
+
+	private static final String GENERATED_SCRIPT_DEFAULT_GROUP_PATH = ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE
+			.replace('.', '/');
 
 	@Test
 	public void validScriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
@@ -32,7 +36,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
-		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script_x20_001");
+		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script_x20_001");
 
 		assertTrue(scriptDir.isDirectory());
 		assertEquals(6, scriptDir.list().length);
@@ -40,7 +44,30 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
 						"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class",
 						ClassNameUtil.METADATA_FILE_NAME });
-		
+
+		FileUtils.forceDelete(scriptDir);
+	}
+
+	@Test
+	public void validScriptInNonDefaultGroupIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams("Custom Group 01::Script 001",
+				IOHelper.loadScript("duplicated-expression-script.txt"));
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		File scriptDir = new File(
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/script_x20_001");
+
+		assertTrue(scriptDir.isDirectory());
+		assertEquals(6, scriptDir.list().length);
+		assertFilesExist(scriptDir.getPath(),
+				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
+						"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class",
+						ClassNameUtil.METADATA_FILE_NAME });
+
 		FileUtils.forceDelete(scriptDir);
 	}
 
@@ -56,7 +83,8 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
-		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/entity_x20_script");
+		File scriptDir = new File(
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/entity_x20_script");
 
 		assertTrue(scriptDir.isDirectory());
 		assertEquals(6, scriptDir.list().length);
@@ -76,7 +104,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class).startsWith("Compilation of the script [Script 002] failed"));
-		assertFalse(new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/script002").exists());
+		assertFalse(new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script002").exists());
 	}
 
 	@Test
@@ -104,7 +132,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void validScriptAndItsSourceIsUpdatedInFileSystem() throws Exception {
-		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/scripttoupdate");
+		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/scripttoupdate");
 
 		assertEquals(6, scriptDir.list().length);
 		assertFilesExist(scriptDir.getPath(),
@@ -146,7 +174,8 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class)
 				.startsWith("The script [NonExistentScript] does not exist in the repository"));
-		assertFalse(new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/nonexistentscript").exists());
+		assertFalse(new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/nonexistentscript")
+				.exists());
 	}
 
 	@Test
@@ -160,7 +189,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		String expectedSource = IOHelper.loadFileContents(
-				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/scripttoread", "ScriptToRead.src");
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/scripttoread", "ScriptToRead.src");
 
 		assertEquals(expectedSource, response.getEntity(String.class));
 	}
@@ -186,9 +215,16 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		@SuppressWarnings("unchecked")
 		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
-		assertEquals(1, metaDatas.size());
+		assertEquals(2, metaDatas.size());
 
-		final Map<String, String> metaData = metaDatas.get(0);
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Custom Group 01", metaData.get(Metadata.NAME));
+		assertEquals("Custom Group 01", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
+		
+		metaData = metaDatas.get(1);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));
@@ -218,20 +254,20 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("ScriptToRead", metaData.get(Metadata.NAME));
-		assertEquals("Script to Read", metaData.get(Metadata.TITLE));
+		assertEquals("ScriptToRead", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
 		metaData = metaDatas.get(2);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("ScriptToUpdate", metaData.get(Metadata.NAME));
-		assertEquals("Script to Update", metaData.get(Metadata.TITLE));
+		assertEquals("ScriptToUpdate", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
 		metaData = metaDatas.get(3);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
-		assertEquals("single_action_script", metaData.get(Metadata.NAME));
+		assertEquals("Single Action Script", metaData.get(Metadata.NAME));
 		assertEquals("Single Action Script", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 

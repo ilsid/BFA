@@ -38,28 +38,76 @@ public class TypeNameResolver {
 	}
 
 	public static String resolveScriptClassName(String scriptName) {
-		int classSeparatorIndex = scriptName.lastIndexOf(ClassNameUtil.GROUP_SEPARATOR);
+		NameParts scriptNameParts = splitName(scriptName);
 
-		String actualScriptName;
-		String scriptGroupName;
-		if (classSeparatorIndex > 0) {
-			actualScriptName = scriptName.substring(classSeparatorIndex + ClassNameUtil.GROUP_SEPARATOR.length());
-			scriptGroupName = scriptName.substring(0, classSeparatorIndex);
-		} else {
-			actualScriptName = scriptName;
-			scriptGroupName = ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
-		}
-
-		final String simpleClassName = ClassNameUtil.generateSimpleClassName(actualScriptName,
+		final String simpleClassName = ClassNameUtil.generateSimpleClassName(scriptNameParts.getChildName(),
 				ClassNameUtil.BLANK_CODE);
 
-		return ClassNameUtil.generatePackageName(scriptGroupName) + DOT + simpleClassName.toLowerCase() + DOT
-				+ simpleClassName;
+		StringBuilder result = new StringBuilder();
+		result.append(resolveScriptGroupPackageName(scriptNameParts.getParentName())).append(DOT)
+				.append(simpleClassName.toLowerCase()).append(DOT).append(simpleClassName);
+
+		return result.toString();
 	}
 
 	public static String resolveExpressionClassName(String scriptName, String expression) {
-		return resolveScriptClassName(scriptName) + EXPRESSION_PREFIX
-				+ ClassNameUtil.generateSimpleClassName(expression, EMPTY);
+		StringBuilder result = new StringBuilder();
+		result.append(resolveScriptClassName(scriptName)).append(resolveExpressionClassNamePart(expression));
+
+		return result.toString();
+	}
+
+	public static String resolveExpressionClassNamePart(String expression) {
+		return new StringBuilder(EXPRESSION_PREFIX).append(ClassNameUtil.generateSimpleClassName(expression, EMPTY))
+				.toString();
+	}
+
+	public static String resolveScriptGroupPackageName(String groupName) {
+		return ClassNameUtil.generatePackageName(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE, groupName);
+	}
+
+	public static NameParts splitName(String name) {
+		int childSepIdx = name.lastIndexOf(ClassNameUtil.GROUP_SEPARATOR);
+		final int offset = childSepIdx + ClassNameUtil.GROUP_SEPARATOR.length();
+
+		String parentName;
+		String childName;
+		if (childSepIdx > 0 && offset < name.length()) {
+			parentName = name.substring(0, childSepIdx);
+			childName = name.substring(offset);
+		} else {
+			parentName = ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
+			childName = name;
+		}
+
+		NamePartsHolder result = new NamePartsHolder();
+		result.parentName = parentName;
+		result.childName = childName;
+
+		return result;
+	}
+
+	public interface NameParts {
+
+		String getParentName();
+
+		String getChildName();
+	}
+
+	private static class NamePartsHolder implements NameParts {
+
+		String parentName;
+
+		String childName;
+
+		public String getParentName() {
+			return parentName;
+		}
+
+		public String getChildName() {
+			return childName;
+		}
+
 	}
 
 }

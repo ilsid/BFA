@@ -9,6 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
 
 import javassist.ByteArrayClassPath;
@@ -23,6 +24,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	private static final String TEST_INVOCATION_CLASS_NAME = "com.ilsid.bfa.test.generated.TestInvocation";
 
 	private static final String TEST_SCRIPT_CLASS_NAME = "com.ilsid.bfa.test.generated.TestScript";
+	
+	private static final String TEST_SCRIPT_CLASS_SHORT_NAME = "TestScript";
 
 	private static final String SCRIPT_PACKAGE = "com.ilsid.bfa.generated.script.default_group";
 
@@ -203,12 +206,11 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	public void errorDetailsAreProvidedIfScriptContainsDuplicatedInputAndLocalVars() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
-		msg.append("Compilation of the script [TestScriptDuplicatedInputAndLocalVars] failed")
-				.append(StringUtils.LF);
+		msg.append("Compilation of the script [TestScriptDuplicatedInputAndLocalVars] failed").append(StringUtils.LF);
 		msg.append("Input variable with name [Var1] has been already declared");
 		exceptionRule.expectMessage(msg.toString());
 
-		compileScriptExpressions(TEST_SCRIPT_CLASS_NAME + "DuplicatedInputAndLocalVars",
+		compileScriptExpressions(TEST_SCRIPT_CLASS_SHORT_NAME + "DuplicatedInputAndLocalVars",
 				"duplicated-input-and-local-vars-script.txt");
 	}
 
@@ -313,7 +315,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
 		String body = IOHelper.loadScript(fileName);
-		String sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, shortClassName.toLowerCase(),
+		String sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
+				ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE + "." + shortClassName.toLowerCase(),
 				shortClassName, body);
 
 		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(sourceCode);

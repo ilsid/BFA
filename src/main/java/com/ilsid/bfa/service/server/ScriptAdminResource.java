@@ -36,7 +36,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 * 
 	 * @param script
 	 *            the script data. The name and body must be specified
-	 * @return the {@link Status#OK} response.
+	 * @return the {@link Status#OK} response
 	 * @throws ResourceException
 	 *             <ul>
 	 *             <li>if the script's name or body are not specified</li>
@@ -52,7 +52,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	public Response create(ScriptAdminParams script) {
 		validateNonNullNameAndBody(Paths.SCRIPT_CREATE_SERVICE, script);
 		try {
-			scriptManager.createScript(script.getName(), script.getBody(), script.getTitle());
+			scriptManager.createScript(script.getName(), script.getBody());
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_CREATE_SERVICE, e);
 		}
@@ -82,7 +82,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	public Response update(ScriptAdminParams script) {
 		validateNonNullNameAndBody(Paths.SCRIPT_UPDATE_SERVICE, script);
 		try {
-			scriptManager.updateScript(script.getName(), script.getBody(), script.getTitle());
+			scriptManager.updateScript(script.getName(), script.getBody());
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_UPDATE_SERVICE, e);
 		}
@@ -123,8 +123,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 
 	/**
 	 * Loads meta-data items for the members of the given group. The members can be scripts or/and script groups. If
-	 * <code>groupName</code> parameter equals {@link Metadata#ROOT_PARENT_NAME} then top-level group items are
-	 * loaded.
+	 * <code>groupName</code> parameter equals {@link Metadata#ROOT_PARENT_NAME} then top-level group items are loaded.
 	 * 
 	 * @param groupName
 	 *            name of the group
@@ -154,6 +153,38 @@ public class ScriptAdminResource extends AbstractAdminResource {
 		}
 
 		return Response.status(Status.OK).entity(metas).build();
+	}
+
+	/**
+	 * Creates new script group in the code repository. The group name can be simple or complex. The simple group name
+	 * is like <i>My Group</i>. Its parent group is the Default Group. The parent group name can be like <i>Grand Parent
+	 * Group::Parent Group::My Group</i>.
+	 * 
+	 * @param groupName
+	 *            the name of group to create
+	 * @return the {@link Status#OK} response
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the passed group name is <code>null</code></li>
+	 *             <li>if such group already exists in the repository</li>
+	 *             <li>if parent group does not exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.SCRIPT_CREATE_GROUP_OPERATION)
+	public Response createGroup(@QueryParam(GROUP_PARAM_NAME) String groupName) {
+		validateNonNullParameter(Paths.SCRIPT_CREATE_GROUP_OPERATION, GROUP_PARAM_NAME, groupName);
+
+		try {
+			scriptManager.createScriptGroup(groupName);
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.SCRIPT_CREATE_GROUP_OPERATION, e);
+		}
+
+		return Response.status(Status.OK).build();
 	}
 
 }

@@ -21,6 +21,7 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.ArrayCreationExpr;
 import com.github.javaparser.ast.expr.Expression;
@@ -81,10 +82,8 @@ public class ClassCompiler {
 			CtClass clazz = buildInvocationClass(className, expression);
 			result = toBytecode(clazz);
 		} catch (NotFoundException | CannotCompileException | IOException e) {
-			throw new ClassCompilationException(
-					String.format("Compilation of Invocation failed. Class [%s]. ValueExpression [%s]",
-							className, expression),
-					e);
+			throw new ClassCompilationException(String.format(
+					"Compilation of Invocation failed. Class [%s]. ValueExpression [%s]", className, expression), e);
 		}
 
 		return result;
@@ -110,8 +109,7 @@ public class ClassCompiler {
 			result = toBytecode(clazz);
 		} catch (NotFoundException | CannotCompileException | IOException e) {
 
-			throw new ClassCompilationException(
-					String.format("Compilation of Script [%s] failed", className), e);
+			throw new ClassCompilationException(String.format("Compilation of Script [%s] failed", className), e);
 		}
 
 		return result;
@@ -215,10 +213,14 @@ public class ClassCompiler {
 			throw new IllegalStateException("Failed to convert script source code into input stream", e);
 		}
 
+		PackageDeclarationVisitor pkgDeclarationVisitor = new PackageDeclarationVisitor();
+		pkgDeclarationVisitor.visit(compilationUnit, null);
+
 		ClassDeclarationVisitor classDeclarationVisitor = new ClassDeclarationVisitor();
 		classDeclarationVisitor.visit(compilationUnit, null);
 
 		MethodCallVisitorContext methodCallContext = new MethodCallVisitorContext();
+		methodCallContext.packageName = pkgDeclarationVisitor.packageName;
 		methodCallContext.scriptShortClassName = classDeclarationVisitor.shortClassName;
 
 		new MethodCallVisitor().visit(compilationUnit, methodCallContext);
@@ -231,8 +233,9 @@ public class ClassCompiler {
 				}
 			}
 
-			throw new ClassCompilationException(String.format("Compilation of the script [%s] failed",
-					classDeclarationVisitor.shortClassName) + StringUtils.LF + mergeErrorMessages(exceptions));
+			throw new ClassCompilationException(
+					String.format("Compilation of the script [%s] failed", classDeclarationVisitor.shortClassName)
+							+ StringUtils.LF + mergeErrorMessages(exceptions));
 		}
 
 		return methodCallContext.compiledExpressions.values();
@@ -329,6 +332,8 @@ public class ClassCompiler {
 
 		private ScriptExpressionParser parser = new ScriptExpressionParser(scriptContext);
 
+		String packageName;
+
 		String scriptShortClassName;
 
 		List<Exception> exceptions = new LinkedList<>();
@@ -337,6 +342,8 @@ public class ClassCompiler {
 	}
 
 	private static class MethodCallVisitor extends VoidVisitorAdapter<MethodCallVisitorContext> {
+
+		private static final String DOT = ".";
 
 		@Override
 		public void visit(MethodCallExpr m, MethodCallVisitorContext visitorContext) {
@@ -405,8 +412,10 @@ public class ClassCompiler {
 				String className;
 				Map<String, CompilationBlock> expressions = visitorContext.compiledExpressions;
 				try {
-					className = TypeNameResolver.resolveExpressionClassName(visitorContext.scriptShortClassName,
-							scriptExpr);
+					// className = TypeNameResolver.resolveExpressionClassName(visitorContext.packageName, scriptExpr);
+					className = new StringBuilder(visitorContext.packageName).append(DOT)
+							.append(visitorContext.scriptShortClassName)
+							.append(TypeNameResolver.resolveExpressionClassNamePart(scriptExpr)).toString();
 
 					// Skip parsing and compilation of the same expression
 					if (expressions.containsKey(className)) {
@@ -435,6 +444,16 @@ public class ClassCompiler {
 			}
 		}
 
+	}
+
+	private static class PackageDeclarationVisitor extends VoidVisitorAdapter<Void> {
+
+		String packageName;
+
+		@Override
+		public void visit(final PackageDeclaration pkgDeclaration, final Void context) {
+			packageName = pkgDeclaration.getName().toString();
+		}
 	}
 
 	private static class ClassDeclarationVisitor extends VoidVisitorAdapter<Void> {

@@ -35,7 +35,7 @@ public abstract class AbstractAdminResource {
 
 	protected void validateNonNullParameter(String path, String name, Object value) {
 		if (value == null) {
-			throw new ResourceException(path, String.format("%s parameter must be defined", name), Status.BAD_REQUEST);
+			throw new ResourceException(path, String.format("Parameter [%s] must be defined", name), Status.BAD_REQUEST);
 		}
 	}
 

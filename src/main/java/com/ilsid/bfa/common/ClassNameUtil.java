@@ -21,7 +21,7 @@ public class ClassNameUtil {
 	 * The root package for the generated scripts.
 	 */
 	public static final String GENERATED_SCRIPTS_ROOT_PACKAGE = GENERATED_CLASSES_PACKAGE + ".script";
-	
+
 	/**
 	 * The default group sub-package for the generated scripts.
 	 */
@@ -52,8 +52,6 @@ public class ClassNameUtil {
 	private static final char DOT = '.';
 
 	private static final String DOT_STR = ".";
-
-	private static final String GENERATED_SCRIPTS_ROOT_PACKAGE_WITH_DOT = GENERATED_SCRIPTS_ROOT_PACKAGE + DOT;
 
 	private static final Map<String, String> replaceablePackageSymbols;
 
@@ -129,20 +127,27 @@ public class ClassNameUtil {
 	}
 
 	/**
-	 * Generates a full package name for the given expression. The expression is treated as a simple group like
-	 * <i>some_group</i> or a complex group like <i>grand_parent_group::parent_group::some_group</i>.
+	 * Generates a full package name for the given parent package and the expression representing a child package. The
+	 * expression is treated as a simple group like <i>some_group</i> or a complex group like
+	 * <i>grand_parent_group::parent_group::some_group</i>.
 	 * 
+	 * @param parentPackage
+	 *            parent package
 	 * @param expression
 	 *            the expression to generate a full package name
 	 * @return a full package name
 	 */
-	public static String generatePackageName(String expression) {
-		String expr = expression.replaceAll("\\s", BLANK_CODE);
+	public static String generatePackageName(String parentPackage, String expression) {
+		String childPackage = expression.replaceAll("\\s", BLANK_CODE);
 		for (String smb : replaceablePackageSymbols.keySet()) {
-			expr = expr.replace(smb, replaceablePackageSymbols.get(smb));
+			childPackage = childPackage.replace(smb, replaceablePackageSymbols.get(smb));
 		}
+		childPackage = childPackage.replaceAll(GROUP_SEPARATOR, DOT_STR).toLowerCase();
 
-		return GENERATED_SCRIPTS_ROOT_PACKAGE_WITH_DOT + expr.replaceAll(GROUP_SEPARATOR, DOT_STR).toLowerCase();
+		StringBuilder result = new StringBuilder();
+		result.append(parentPackage).append(DOT).append(childPackage);
+
+		return result.toString();
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.ilsid.bfa.manager;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +40,6 @@ public class ScriptManager {
 	 *            script name
 	 * @param scriptBody
 	 *            script body
-	 * @param scriptTitle
-	 *            script title
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
@@ -48,12 +47,14 @@ public class ScriptManager {
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
-	public void createScript(String scriptName, String scriptBody, String scriptTitle) throws ManagementException {
+	public void createScript(String scriptName, String scriptBody) throws ManagementException {
+		checkParentGroupExists(scriptName);
+
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
 			saveScript(compilationUnit, scriptBody);
-			saveScriptMetadata(compilationUnit, scriptTitle);
+			saveScriptMetadata(compilationUnit);
 			commitTransaction();
 		} catch (PersistenceException e) {
 			rollbackTransaction();
@@ -68,8 +69,6 @@ public class ScriptManager {
 	 *            the name of the script to update
 	 * @param scriptBody
 	 *            the modified script body
-	 * @param scriptTitle
-	 *            script title
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
@@ -77,13 +76,15 @@ public class ScriptManager {
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
-	public void updateScript(String scriptName, String scriptBody, String scriptTitle) throws ManagementException {
+	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
+		checkParentGroupExists(scriptName);
+
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
 			deleteScript(scriptName);
 			saveScript(compilationUnit, scriptBody);
-			saveScriptMetadata(compilationUnit, scriptTitle);
+			saveScriptMetadata(compilationUnit);
 			commitTransaction();
 		} catch (PersistenceException e) {
 			rollbackTransaction();
@@ -221,7 +222,7 @@ public class ScriptManager {
 	public List<Map<String, String>> getTopLevelGroupMetadatas() throws ManagementException {
 		List<Map<String, String>> result;
 		try {
-			result = repository.loadGroupMetadatas();
+			result = repository.loadMetadataForTopLevelPackages();
 		} catch (PersistenceException e) {
 			throw new ManagementException("Failed to load the info for top-level script groups", e);
 		}
@@ -229,6 +230,8 @@ public class ScriptManager {
 		if (result.isEmpty()) {
 			throw new ManagementException("No top-level script groups found");
 		}
+
+		addParentInfo(result, Metadata.ROOT_PARENT_NAME);
 
 		return result;
 	}
@@ -245,15 +248,42 @@ public class ScriptManager {
 	 */
 	public List<Map<String, String>> getChildrenMetadatas(String groupName) throws ManagementException {
 		List<Map<String, String>> result;
+		String packageName = TypeNameResolver.resolveScriptGroupPackageName(groupName);
 		try {
-			result = repository.loadSubGroupMetadatas(groupName);
-			result.addAll(repository.loadScriptMetadatas(groupName));
+			result = repository.loadMetadataForChildPackages(packageName);
 		} catch (PersistenceException e) {
-			throw new ManagementException(String.format("Failed to load child items info from [%s] group", groupName),
-					e);
+			throw new ManagementException(
+					String.format("Failed to load child items info from the group [%s]", groupName), e);
+		}
+
+		if (!result.isEmpty()) {
+			addParentInfo(result, groupName);
 		}
 
 		return result;
+	}
+
+	/**
+	 * Creates new script group.
+	 * 
+	 * @param groupName
+	 *            the script group name
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if such group already exists in the repository</li>
+	 *             <li>if parent group does not exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public void createScriptGroup(String groupName) throws ManagementException {
+		checkParentGroupExists(groupName);
+
+		String packageName = TypeNameResolver.resolveScriptGroupPackageName(groupName);
+		try {
+			repository.savePackage(packageName, createScriptGroupMetadata(groupName));
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to create the script group [%s]", groupName), e);
+		}
 	}
 
 	/**
@@ -281,16 +311,11 @@ public class ScriptManager {
 		}
 	}
 
-	private void saveScriptMetadata(ScriptCompilationUnit compilationUnit, String scriptTitle)
-			throws PersistenceException {
+	private void saveScriptMetadata(ScriptCompilationUnit compilationUnit) throws PersistenceException {
 		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put(Metadata.TYPE, METADATA_VALUE_SCRIPT_TYPE);
 		metaData.put(Metadata.NAME, compilationUnit.scriptName);
-		if (scriptTitle != null) {
-			metaData.put(Metadata.TITLE, scriptTitle);
-		} else {
-			metaData.put(Metadata.TITLE, compilationUnit.scriptName);
-		}
+		metaData.put(Metadata.TITLE, TypeNameResolver.splitName(compilationUnit.scriptName).getChildName());
 
 		repository.saveMetadata(compilationUnit.scriptClassName, metaData);
 	}
@@ -325,7 +350,7 @@ public class ScriptManager {
 
 			String scriptShortClassName = ClassNameUtil.getShortClassName(scriptClassName);
 			final String scriptSourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
-					scriptShortClassName.toLowerCase(), scriptShortClassName, scriptBody);
+					ClassNameUtil.getPackageName(scriptClassName), scriptShortClassName, scriptBody);
 
 			expressions = ClassCompiler.compileScriptExpressions(scriptSourceCode);
 		} catch (ClassCompilationException e) {
@@ -402,6 +427,45 @@ public class ScriptManager {
 			throw new ManagementException(
 					String.format("The entity [%s] does not exist in the repository", entityName));
 		}
+	}
+
+	private void addParentInfo(List<Map<String, String>> metaDatas, String parentName) {
+		for (Map<String, String> metaData : metaDatas) {
+			metaData.put(Metadata.PARENT, parentName);
+		}
+	}
+
+	private Map<String, String> createScriptGroupMetadata(String groupName) throws ManagementException {
+		Map<String, String> metaData = new HashMap<>();
+		metaData.put(Metadata.TYPE, Metadata.SCRIPT_GROUP_TYPE);
+		metaData.put(Metadata.NAME, groupName);
+		metaData.put(Metadata.TITLE, TypeNameResolver.splitName(groupName).getChildName());
+
+		return metaData;
+	}
+
+	private void checkParentGroupExists(String name) throws ManagementException {
+		final String parentGroupName = TypeNameResolver.splitName(name).getParentName();
+		String parentPackageName = TypeNameResolver.resolveScriptGroupPackageName(parentGroupName);
+		Map<String, String> parentMetadata;
+		try {
+			parentMetadata = repository.loadMetadataForPackage(parentPackageName);
+		} catch (PersistenceException e) {
+			throw new ManagementException(
+					String.format("Failed to load meta-data for the script group [%s]", parentGroupName), e);
+		}
+
+		if (!isScriptGroup(parentMetadata)) {
+			throw new ManagementException(String.format("No parent script group [%s] exists", parentGroupName));
+		}
+	}
+
+	private boolean isScriptGroup(Map<String, String> meta) {
+		if (meta != null && Metadata.SCRIPT_GROUP_TYPE.equals(meta.get(Metadata.TYPE))) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private void startTransaction() throws PersistenceException {

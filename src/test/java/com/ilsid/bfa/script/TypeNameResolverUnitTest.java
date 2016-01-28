@@ -3,6 +3,8 @@ package com.ilsid.bfa.script;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.Metadata;
 
 public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
@@ -14,8 +16,10 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
 
+	private static final String EXPRESSION_SEPARATOR = "$$";
+
 	private static final String EXPRESSION_CLASS_NAME_PREFIX = SCRIPT_CLASS_NAME_PREFIX + TEST_SCRIPT_NAME.toLowerCase()
-			+ "." + TEST_SCRIPT_NAME + "$$";
+			+ "." + TEST_SCRIPT_NAME + EXPRESSION_SEPARATOR;
 
 	@Test
 	public void generatedClassNameDoesNotContainSpaces() {
@@ -27,6 +31,10 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 		assertEquals("AB", getExpressionClassNamePart("A B"));
 		assertEquals("AB", getExpressionClassNamePart(" AB "));
 		assertEquals("ABC", getExpressionClassNamePart(" A B C "));
+		
+		assertEquals("AB", resolveExpressionClassNamePart("A B"));
+		assertEquals("AB", resolveExpressionClassNamePart(" AB "));
+		assertEquals("ABC", resolveExpressionClassNamePart(" A B C "));
 	}
 
 	@Test
@@ -38,6 +46,10 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 		assertEquals("A_dt_B", getExpressionClassNamePart("A.B"));
 		assertEquals("_dt_AB_dt_", getExpressionClassNamePart(".AB."));
 		assertEquals("_dt_A_dt_B_dt_C_dt_", getExpressionClassNamePart(".A.B.C."));
+		
+		assertEquals("A_dt_B", resolveExpressionClassNamePart("A.B"));
+		assertEquals("_dt_AB_dt_", resolveExpressionClassNamePart(".AB."));
+		assertEquals("_dt_A_dt_B_dt_C_dt_", resolveExpressionClassNamePart(".A.B.C."));
 	}
 
 	@Test
@@ -47,6 +59,9 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Mns_B", getExpressionClassNamePart("A-B"));
 		assertEquals("A_Mns_B", getExpressionClassNamePart("A - B"));
+		
+		assertEquals("A_Mns_B", resolveExpressionClassNamePart("A-B"));
+		assertEquals("A_Mns_B", resolveExpressionClassNamePart("A - B"));
 	}
 
 	@Test
@@ -56,6 +71,9 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Pls_B", getExpressionClassNamePart("A+B"));
 		assertEquals("A_Pls_B", getExpressionClassNamePart("A + B"));
+		
+		assertEquals("A_Pls_B", resolveExpressionClassNamePart("A+B"));
+		assertEquals("A_Pls_B", resolveExpressionClassNamePart("A + B"));
 	}
 
 	@Test
@@ -65,6 +83,9 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Mlt_B", getExpressionClassNamePart("A*B"));
 		assertEquals("A_Mlt_B", getExpressionClassNamePart("A * B"));
+		
+		assertEquals("A_Mlt_B", resolveExpressionClassNamePart("A*B"));
+		assertEquals("A_Mlt_B", resolveExpressionClassNamePart("A * B"));
 	}
 
 	@Test
@@ -74,6 +95,9 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Div_B", getExpressionClassNamePart("A/B"));
 		assertEquals("A_Div_B", getExpressionClassNamePart("A / B"));
+		
+		assertEquals("A_Div_B", resolveExpressionClassNamePart("A/B"));
+		assertEquals("A_Div_B", resolveExpressionClassNamePart("A / B"));
 	}
 
 	@Test
@@ -92,7 +116,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void classNameIsGeneratedForScriptWithExplicitSimpleGroup() {
+	public void classNameForScriptWithExplicitSimpleGroupCanBeResolved() {
 		assertEquals("com.ilsid.bfa.generated.script.group_x20_01.script_x20_01.Script_x20_01",
 				TypeNameResolver.resolveScriptClassName("Group 01::Script 01"));
 
@@ -101,13 +125,46 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void classNameIsGeneratedForScriptWithExplicitComplexGroup() {
+	public void classNameForScriptWithExplicitComplexGroupCanBeResolved() {
 		assertEquals("com.ilsid.bfa.generated.script.group_01.group_x20_01-02.script_x20_01.Script_x20_01",
 				TypeNameResolver.resolveScriptClassName("Group_01::Group 01-02::Script 01"));
 
 		assertEquals(
 				"com.ilsid.bfa.generated.script.group_01.group_x20_01-02.script_x20_01.Script_x20_01$$SomeExpression",
 				TypeNameResolver.resolveExpressionClassName("Group_01::Group 01-02::Script 01", "Some Expression"));
+	}
+
+	@Test
+	public void packageForSimpleScriptGroupCanBeResolved() {
+		assertEquals(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE + ".group_x20_01",
+				TypeNameResolver.resolveScriptGroupPackageName("Group 01"));
+	}
+
+	@Test
+	public void packageForComplexScriptGroupCanBeResolved() {
+		assertEquals(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE + ".group_x20_01.group_x20_01-02",
+				TypeNameResolver.resolveScriptGroupPackageName("Group 01::Group 01-02"));
+	}
+
+	@Test
+	public void simpleNameCanBeSplit() {
+		TypeNameResolver.NameParts parts = TypeNameResolver.splitName("Some Name");
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, parts.getParentName());
+		assertEquals("Some Name", parts.getChildName());
+	}
+
+	@Test
+	public void complexNameWithTwoPartsCanBeSplit() {
+		TypeNameResolver.NameParts parts = TypeNameResolver.splitName("Some Parent::Some Child");
+		assertEquals("Some Parent", parts.getParentName());
+		assertEquals("Some Child", parts.getChildName());
+	}
+
+	@Test
+	public void complexNameWithThreePartsCanBeSplit() {
+		TypeNameResolver.NameParts parts = TypeNameResolver.splitName("Some Grand-Parent::Some Parent::Some Child");
+		assertEquals("Some Grand-Parent::Some Parent", parts.getParentName());
+		assertEquals("Some Child", parts.getChildName());
 	}
 
 	private String getExpressionClassNamePart(String expression) {
@@ -124,6 +181,13 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 		assertTrue(className.startsWith(scriptPackage));
 
 		return className.substring(scriptPackage.length());
+	}
+
+	private String resolveExpressionClassNamePart(String expression) {
+		String classNamePart = TypeNameResolver.resolveExpressionClassNamePart(expression);
+		assertTrue(classNamePart.startsWith(EXPRESSION_SEPARATOR));
+
+		return classNamePart.substring(EXPRESSION_SEPARATOR.length());
 	}
 
 }

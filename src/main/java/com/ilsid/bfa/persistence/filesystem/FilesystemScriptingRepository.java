@@ -108,8 +108,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		if (classDir.exists() && classFile.exists()) {
 			try {
 				String json = jsonMapper.writeValueAsString(metaData);
-				FileUtils.writeStringToFile(new File(classDir + File.separator + ClassNameUtil.METADATA_FILE_NAME),
-						json);
+				FileUtils.writeStringToFile(new File(classDir, ClassNameUtil.METADATA_FILE_NAME), json);
 			} catch (IOException e) {
 				throw new PersistenceException(
 						String.format("Failed to save the meta-data for the class [%s]", className), e);
@@ -124,12 +123,39 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#savePackage(java.lang.String, java.util.Map)
+	 */
+	public void savePackage(String packageName, Map<String, String> metaData) throws PersistenceException {
+		File packageDir = getPackageDir(packageName);
+
+		if (packageDir.exists()) {
+			throw new PersistenceException(String.format("The package [%s] already exists", packageName));
+		}
+
+		try {
+			packageDir.mkdirs();
+		} catch (SecurityException e) {
+			throw new PersistenceException(
+					String.format("Failed to create the package [%s]. Permission denied.", packageName), e);
+		}
+
+		try {
+			String json = jsonMapper.writeValueAsString(metaData);
+			FileUtils.writeStringToFile(new File(packageDir, ClassNameUtil.METADATA_FILE_NAME), json);
+		} catch (IOException e) {
+			throw new PersistenceException(
+					String.format("Failed to save the meta-data for the package [%s]", packageName), e);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#delete(java.lang.String)
 	 */
 	@Override
 	public int deletePackage(String packageName) throws PersistenceException {
-		final String dirPath = rootDirPath + File.separatorChar + packageName.replace(DOT, File.separatorChar);
-		File packageDir = new File(dirPath);
+		File packageDir = getPackageDir(packageName);
 
 		if (!packageDir.isDirectory()) {
 			return 0;
@@ -140,7 +166,8 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		try {
 			FileUtils.forceDelete(packageDir);
 		} catch (IOException e) {
-			throw new PersistenceException(String.format("Failed to delete the package directory [%s]", dirPath), e);
+			throw new PersistenceException(
+					String.format("Failed to delete the package directory [%s]", packageDir.getPath()), e);
 		}
 
 		return filesCnt;
@@ -216,9 +243,9 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 * 
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadGroupMetadatas()
 	 */
-	public List<Map<String, String>> loadGroupMetadatas() throws PersistenceException {
+	public List<Map<String, String>> loadMetadataForTopLevelPackages() throws PersistenceException {
 		List<Map<String, String>> result = new LinkedList<>();
-		collectMetadatas(scriptsRootDir, Metadata.SCRIPT_GROUP_TYPE, Metadata.ROOT_PARENT_NAME, result);
+		collectMetadatas(scriptsRootDir, Metadata.SCRIPT_GROUP_TYPE, result);
 
 		return result;
 	}
@@ -226,19 +253,40 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadSubGroupMetadatas(java.lang.String)
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadMetadataForChildPackages(java.lang.String)
 	 */
-	public List<Map<String, String>> loadSubGroupMetadatas(String groupName) throws PersistenceException {
-		return loadMetadataItems(groupName, Metadata.SCRIPT_GROUP_TYPE);
+	public List<Map<String, String>> loadMetadataForChildPackages(String packageName) throws PersistenceException {
+		List<Map<String, String>> result = new LinkedList<>();
+		File packageDir = getPackageDir(packageName);
+
+		if (!packageDir.isDirectory()) {
+			return result;
+		}
+
+		collectMetadatas(packageDir, Metadata.SCRIPT_GROUP_TYPE, result);
+		collectMetadatas(packageDir, Metadata.SCRIPT_TYPE, result);
+
+		return result;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.ScriptingRepository#getScripts(java.lang.String)
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadMetadataForPackage(java.lang.String)
 	 */
-	public List<Map<String, String>> loadScriptMetadatas(String groupName) throws PersistenceException {
-		return loadMetadataItems(groupName, Metadata.SCRIPT_TYPE);
+	public Map<String, String> loadMetadataForPackage(String packageName) throws PersistenceException {
+		File packageDir = getPackageDir(packageName);
+
+		if (!packageDir.isDirectory()) {
+			return null;
+		}
+		
+		File metaFile = new File(packageDir, ClassNameUtil.METADATA_FILE_NAME);
+		if (metaFile.exists()) {
+			return loadContents(metaFile);
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -327,7 +375,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		return result;
 	}
 
-	private void collectMetadatas(File dir, String typeCriteria, String parentName, List<Map<String, String>> result)
+	private void collectMetadatas(File dir, String typeCriteria, List<Map<String, String>> result)
 			throws PersistenceException {
 		File[] children = dir.listFiles();
 		Arrays.sort(children, FILE_NAMES_COMPARATOR);
@@ -338,24 +386,14 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 				Map<String, String> metaData = loadContents(metaFile);
 				String type = metaData.get(Metadata.TYPE);
 				if (typeCriteria.equals(type)) {
-					metaData.put(Metadata.PARENT, parentName);
 					result.add(metaData);
 				}
 			}
 		}
 	}
 
-	private List<Map<String, String>> loadMetadataItems(String groupName, String itemType) throws PersistenceException {
-		List<Map<String, String>> result = new LinkedList<>();
-		File groupDir = new File(scriptsRootDir.getPath() + File.separator
-				+ groupName.replace(ClassNameUtil.GROUP_SEPARATOR, File.separator));
-
-		if (!groupDir.isDirectory()) {
-			return result;
-		}
-		collectMetadatas(groupDir, itemType, groupName, result);
-
-		return result;
+	private File getPackageDir(String packageName) {
+		return new File(rootDirPath + File.separatorChar + packageName.replace(DOT, File.separatorChar));
 	}
 
 	private static class FileNamesComparator implements Comparator<File> {

@@ -412,7 +412,6 @@ public class ClassCompiler {
 				String className;
 				Map<String, CompilationBlock> expressions = visitorContext.compiledExpressions;
 				try {
-					// className = TypeNameResolver.resolveExpressionClassName(visitorContext.packageName, scriptExpr);
 					className = new StringBuilder(visitorContext.packageName).append(DOT)
 							.append(visitorContext.scriptShortClassName)
 							.append(TypeNameResolver.resolveExpressionClassNamePart(scriptExpr)).toString();

@@ -1,21 +1,96 @@
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Business Flow Automation</title>
-</head>
-<body>
-    <h1 id="greeting">BFA </h1>
-    <script src="script/dojo/dojo.js"
-            data-dojo-config="async: true"></script>
+<meta charset="utf-8">
+<title>Business Flow Automation</title>
 
-    <script>
-        require([
-            'dojo/dom',
-            'dojo/dom-construct'
-        ], function (dom, domConstruct) {
-            var greetingNode = dom.byId('greeting');
-            domConstruct.place('<em> Prototyping...</em>', greetingNode);
-        });
-    </script>
+<link rel="stylesheet" href="script/dijit/themes/claro/claro.css"/>
+<style type="text/css">
+	html, body {
+		width: 100%;
+		height: 100%;
+		margin: 0;
+	}
+</style>
+
+</head>
+<body class="claro">
+
+	<script src="script/dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+	<script>
+		require(["dojo/parser", "dijit/layout/BorderContainer", "dijit/layout/TabContainer", "dijit/layout/AccordionContainer", 
+		         "dijit/layout/ContentPane", "dijit/layout/AccordionPane"]);
+	</script>
+	
+	
+	<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="gutters:true, isLayoutContainer:true" style="width: 100%; height: 100%;">
+		 <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'">
+			<h4 id="greeting">BFA</h4>
+		 </div>
+		 <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'leading', splitter:true" style="width: 20%;">
+			<div id="scriptTree" style="height: 100%;"></div>
+		 </div>
+		 
+		<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props="region:'center', splitter:true, tabStrip:true">
+		  <div data-dojo-type="dijit/layout/ContentPane" title="tab #1">tab pane #1</div>
+		  <div data-dojo-type="dijit/layout/ContentPane" title="tab #2">tab pane #2</div>
+		  <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="closable:true" title="tab #3">tab pane #3</div>
+		</div>
+	</div>
+
+	<script>
+		require([ 'dojo/dom', 'dojo/dom-construct', 'dojo/domReady!' ],
+				function(dom, domConstruct, fx) {
+					var greetingNode = dom.byId('greeting');
+					domConstruct.place('<em> Prototyping...</em>', greetingNode);
+				});
+	</script>
+	
+	<script>
+		require([ 'dojo/request/xhr', 'dojo/dom', 'dojo/dom-construct', 'dojo/_base/array', 
+				'dojo/store/Memory', 'dijit/tree/ObjectStoreModel', 'dijit/Tree', 'dojo/store/Observable', 'dojo/domReady!' ], 
+			function(request, dom, domConstruct, arrayUtil, Memory, ObjectStoreModel, Tree, Observable) {
+			
+				var treeContainer = dom.byId('scriptTree');
+					var rootName = '__root';
+					
+					var treeStore = new Memory({
+						data: [{name: rootName}],
+						idProperty: 'name',
+						
+						getChildren: function(object){
+							return request('service/script/admin/getItems', {
+								headers: { 'Content-Type': 'application/json' },
+								method: 'POST',
+								data: object.name,
+								handleAs: 'json'
+							}).then(function(resp) {
+								return resp;
+							}, function(err) {
+								alert('Server request failed. Please contact support staff');
+							});
+				        }
+				    });
+					treeStore = new Observable(treeStore);
+					
+					var treeModel = new ObjectStoreModel({
+				        store: treeStore,
+						getLabel: function(item){ return item.title; },
+						mayHaveChildren: function(item){ return item.type == 'SCRIPT_GROUP'; },
+				        query: {name: rootName}
+				    });
+					
+					var tree = new Tree({
+				        model: treeModel,
+				        showRoot: false,
+				        openOnClick: true
+				    });
+				    
+				    tree.placeAt(treeContainer);
+				    tree.startup();
+				
+			});
+	</script>
+
+
 </body>
 </html>

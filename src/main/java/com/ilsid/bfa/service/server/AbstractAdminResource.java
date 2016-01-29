@@ -8,6 +8,8 @@ import com.ilsid.bfa.service.dto.TypeAdminParams;
 
 public abstract class AbstractAdminResource {
 
+	private static final String EMPTY = "";
+
 	protected ScriptManager scriptManager;
 
 	@Inject
@@ -15,28 +17,33 @@ public abstract class AbstractAdminResource {
 		this.scriptManager = scriptManager;
 	}
 
-	protected void validateNonNullNameAndBody(String path, TypeAdminParams params) {
-		if (params.getName() == null) {
+	protected void validateNonEmptyNameAndBody(String path, TypeAdminParams params) {
+		if (isEmpty(params.getName())) {
 			throw new ResourceException(path, "The name must be defined", Status.BAD_REQUEST);
 		}
-		if (params.getBody() == null) {
+		if (isEmpty(params.getBody())) {
 			throw new ResourceException(path, "The body must be defined", Status.BAD_REQUEST);
 		}
-		if (params.getTitle() == null) {
+		if (isEmpty(params.getTitle())) {
 			throw new ResourceException(path, "The title must be defined", Status.BAD_REQUEST);
 		}
 	}
 
-	protected void validateNonNullName(String path, TypeAdminParams params) {
-		if (params.getName() == null) {
+	protected void validateNonEmptyName(String path, TypeAdminParams params) {
+		if (isEmpty(params.getName())) {
 			throw new ResourceException(path, "The name must be defined", Status.BAD_REQUEST);
 		}
 	}
 
-	protected void validateNonNullParameter(String path, String name, Object value) {
-		if (value == null) {
-			throw new ResourceException(path, String.format("Parameter [%s] must be defined", name), Status.BAD_REQUEST);
+	protected void validateNonEmptyParameter(String path, String name, Object value) {
+		if (isEmpty(value)) {
+			throw new ResourceException(path, String.format("The value of [%s] must be defined", name),
+					Status.BAD_REQUEST);
 		}
+	}
+
+	private boolean isEmpty(Object value) {
+		return (value == null || EMPTY.equals(value));
 	}
 
 }

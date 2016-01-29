@@ -4,11 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -25,7 +23,6 @@ import com.ilsid.bfa.service.dto.ScriptAdminParams;
  *
  */
 @Path(Paths.SCRIPT_SERVICE_ADMIN_ROOT)
-// FIXME: Handle non-default script groups
 public class ScriptAdminResource extends AbstractAdminResource {
 
 	private final static String GROUP_PARAM_NAME = "group";
@@ -50,7 +47,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_CREATE_OPERATION)
 	public Response create(ScriptAdminParams script) {
-		validateNonNullNameAndBody(Paths.SCRIPT_CREATE_SERVICE, script);
+		validateNonEmptyNameAndBody(Paths.SCRIPT_CREATE_SERVICE, script);
 		try {
 			scriptManager.createScript(script.getName(), script.getBody());
 		} catch (ManagementException e) {
@@ -80,7 +77,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_UPDATE_OPERATION)
 	public Response update(ScriptAdminParams script) {
-		validateNonNullNameAndBody(Paths.SCRIPT_UPDATE_SERVICE, script);
+		validateNonEmptyNameAndBody(Paths.SCRIPT_UPDATE_SERVICE, script);
 		try {
 			scriptManager.updateScript(script.getName(), script.getBody());
 		} catch (ManagementException e) {
@@ -110,7 +107,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@Produces(MediaType.TEXT_PLAIN)
 	@Path(Paths.SCRIPT_GET_SOURCE_OPERATION)
 	public Response getSource(ScriptAdminParams script) {
-		validateNonNullName(Paths.SCRIPT_GET_SOURCE_SERVICE, script);
+		validateNonEmptyName(Paths.SCRIPT_GET_SOURCE_SERVICE, script);
 		String scriptSource;
 		try {
 			scriptSource = scriptManager.getScriptSourceCode(script.getName());
@@ -136,11 +133,12 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 *             </ul>
 	 * @see WebApplicationExceptionMapper
 	 */
-	@GET
+	@POST
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_GET_ITEMS_OPERATION)
-	public Response getItems(@QueryParam(GROUP_PARAM_NAME) String groupName) {
-		validateNonNullParameter(Paths.SCRIPT_GET_ITEMS_SERVICE, GROUP_PARAM_NAME, groupName);
+	public Response getItems(String groupName) {
+		validateNonEmptyParameter(Paths.SCRIPT_GET_ITEMS_SERVICE, GROUP_PARAM_NAME, groupName);
 		List<Map<String, String>> metas;
 		try {
 			if (groupName.equals(Metadata.ROOT_PARENT_NAME)) {
@@ -172,11 +170,12 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 *             </ul>
 	 * @see WebApplicationExceptionMapper
 	 */
-	@GET
+	@POST
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_CREATE_GROUP_OPERATION)
-	public Response createGroup(@QueryParam(GROUP_PARAM_NAME) String groupName) {
-		validateNonNullParameter(Paths.SCRIPT_CREATE_GROUP_OPERATION, GROUP_PARAM_NAME, groupName);
+	public Response createGroup(String groupName) {
+		validateNonEmptyParameter(Paths.SCRIPT_CREATE_GROUP_OPERATION, GROUP_PARAM_NAME, groupName);
 
 		try {
 			scriptManager.createScriptGroup(groupName);

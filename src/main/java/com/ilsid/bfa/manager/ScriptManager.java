@@ -34,7 +34,7 @@ public class ScriptManager {
 	private ScriptingRepository repository;
 
 	/**
-	 * Creates new script in the repository. The script belongs to the Default Group.
+	 * Creates new script in the repository. If no group is defined then the script is to be saved in the Default Group.
 	 * 
 	 * @param scriptName
 	 *            script name
@@ -42,8 +42,9 @@ public class ScriptManager {
 	 *            script body
 	 * @throws ManagementException
 	 *             <ul>
+	 *             <li>if the script's group does not exists in the repository</li>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
-	 *             <li>if the script with such name already exists in the repository within the Default Group</li>
+	 *             <li>if the script with such name already exists within the given group</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
@@ -63,7 +64,8 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Updates the existing script in the repository. The script is searched in the Default Group.
+	 * Updates the existing script in the repository. If no group is defined then the script is searched in the Default
+	 * Group.
 	 * 
 	 * @param scriptName
 	 *            the name of the script to update
@@ -71,8 +73,9 @@ public class ScriptManager {
 	 *            the modified script body
 	 * @throws ManagementException
 	 *             <ul>
+	 *             <li>if the script's group does not exists in the repository</li>
 	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
-	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
+	 *             <li>if the script with such name does not exist in the repository within the given group</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
@@ -95,18 +98,22 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Loads the body of the given script from the repository. The script is searched in the Default Group.
+	 * Loads the body of the given script from the repository. If no group is defined then the script is searched in the
+	 * Default Group.
 	 * 
 	 * @param scriptName
 	 *            the name of the script to load
 	 * @return the script body
 	 * @throws ManagementException
 	 *             <ul>
+	 *             <li>if the script's group does not exists in the repository</li>
 	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
 	public String getScriptSourceCode(String scriptName) throws ManagementException {
+		checkParentGroupExists(scriptName);
+
 		String className = TypeNameResolver.resolveScriptClassName(scriptName);
 		String body;
 		try {

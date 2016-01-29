@@ -43,7 +43,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path(Paths.ENTITY_CREATE_OPERATION)
 	public Response create(EntityAdminParams entity) {
-		validateNonNullNameAndBody(Paths.ENTITY_CREATE_SERVICE, entity);
+		validateNonEmptyNameAndBody(Paths.ENTITY_CREATE_SERVICE, entity);
 		try {
 			scriptManager.createEntity(entity.getName(), entity.getBody());
 		} catch (ManagementException e) {
@@ -73,7 +73,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path(Paths.ENTITY_UPDATE_OPERATION)
 	public Response update(EntityAdminParams entity) {
-		validateNonNullNameAndBody(Paths.ENTITY_UPDATE_SERVICE, entity);
+		validateNonEmptyNameAndBody(Paths.ENTITY_UPDATE_SERVICE, entity);
 		try {
 			scriptManager.updateEntity(entity.getName(), entity.getBody());
 		} catch (ManagementException e) {
@@ -103,7 +103,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 	@Produces(MediaType.TEXT_PLAIN)
 	@Path(Paths.ENTITY_GET_SOURCE_OPERATION)
 	public Response getSource(EntityAdminParams entity) {
-		validateNonNullName(Paths.ENTITY_GET_SOURCE_SERVICE, entity);
+		validateNonEmptyName(Paths.ENTITY_GET_SOURCE_SERVICE, entity);
 		String entitySource;
 		try {
 			entitySource = scriptManager.getEntitySourceCode(entity.getName());

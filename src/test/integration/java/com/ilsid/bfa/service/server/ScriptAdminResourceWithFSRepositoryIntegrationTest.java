@@ -8,6 +8,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.FileUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 import com.ilsid.bfa.common.ClassNameUtil;
@@ -146,7 +147,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
-	public void sourceCodeForExistingScriptIsLoaded() throws Exception {
+	public void sourceCodeForScriptIsLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams();
 		script.setName("ScriptToRead");
@@ -157,6 +158,23 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		String expectedSource = IOHelper.loadFileContents(
 				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/scripttoread", "ScriptToRead.src");
+
+		assertEquals(expectedSource, response.getEntity(String.class));
+	}
+
+	@Test
+	public void sourceCodeForScriptInNonDefaultGroupIsLoaded() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams();
+		script.setName("Custom Group 01::Script 002");
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		String expectedSource = IOHelper.loadFileContents(
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/script_x20_002",
+				"Script_x20_002.src");
 
 		assertEquals(expectedSource, response.getEntity(String.class));
 	}
@@ -177,7 +195,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void topLevelScriptGroupsAreLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_ITEMS_SERVICE);
-		ClientResponse response = webResource.queryParam("group", Metadata.ROOT_PARENT_NAME).get(ClientResponse.class);
+		ClientResponse response = webResource.post(ClientResponse.class, Metadata.ROOT_PARENT_NAME);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		@SuppressWarnings("unchecked")
@@ -202,8 +220,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void subGroupAndScriptItemsWithDefinedMetadataAreLoaded() {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_ITEMS_SERVICE);
-		ClientResponse response = webResource.queryParam("group", Metadata.DEFAULT_GROUP_NAME)
-				.get(ClientResponse.class);
+		ClientResponse response = webResource.post(ClientResponse.class, Metadata.DEFAULT_GROUP_NAME);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		@SuppressWarnings("unchecked")
@@ -246,6 +263,26 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 	}
 
+	@Test
+	public void childMetadataItemsAreNotLoadedIfGroupNameIsNotDefined() {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_ITEMS_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class);
+
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+	}
+
+	@Test
+	public void topLevelScriptGroupCanBeCreated() throws Exception {
+		scriptGroupCanBeCreated("Some Top-Level Group", "Some Top-Level Group",
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/some_x20_top-level_x20_group");
+	}
+
+	@Test
+	public void childScriptGroupCanBeCreated() throws Exception {
+		scriptGroupCanBeCreated("Custom Group 01::Some Child Group", "Some Child Group", CODE_REPOSITORY_PATH + "/"
+				+ GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/some_x20_child_x20_group");
+	}
+
 	private void scriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem(String scriptName,
 			String expectedScriptPath) throws Exception {
 
@@ -267,6 +304,30 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 						ClassNameUtil.METADATA_FILE_NAME });
 
 		FileUtils.forceDelete(scriptDir);
+	}
+
+	private void scriptGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_GROUP_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, groupName);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		final File groupDir = new File(expectedPath);
+		assertTrue(groupDir.isDirectory());
+
+		Map<String, String> metaData = loadContents(new File(groupDir, ClassNameUtil.METADATA_FILE_NAME));
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals(groupName, metaData.get(Metadata.NAME));
+		assertEquals(expectedTitle, metaData.get(Metadata.TITLE));
+
+		FileUtils.forceDelete(groupDir);
+	}
+
+	private Map<String, String> loadContents(File metaFile) throws Exception {
+		@SuppressWarnings("unchecked")
+		Map<String, String> result = new ObjectMapper().readValue(metaFile, Map.class);
+		return result;
 	}
 
 }

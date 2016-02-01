@@ -163,6 +163,23 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
+	public void sourceCodeForScriptFromNonDefaultGroupIsLoaded() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams();
+		script.setName("Custom Group 01::Script 002");
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		String expectedSource = IOHelper.loadFileContents(
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/script_x20_002",
+				"Script_x20_002.src");
+
+		assertEquals(expectedSource, response.getEntity(String.class));
+	}
+
+	@Test
 	public void sourceCodeForScriptInNonDefaultGroupIsLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams();

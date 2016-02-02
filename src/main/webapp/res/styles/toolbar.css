@@ -6,7 +6,7 @@
   text-align: center;
 }
 	
-.toolbarIconDeleteFolderItem {
+.toolbarIconDeleteFolder{
   background-image: url("../icons/delete_folder_16x16.png");
   background-repeat: no-repeat;
   width: 16px;

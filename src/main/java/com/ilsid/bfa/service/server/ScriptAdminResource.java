@@ -155,7 +155,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 
 	/**
 	 * Creates new script group in the code repository. The group name can be simple or complex. The simple group name
-	 * is like <i>My Group</i>. Its parent group is the Default Group. The parent group name can be like <i>Grand Parent
+	 * is like <i>My Group</i>. It is treated as a top-level group. The complex group name can be like <i>Grand Parent
 	 * Group::Parent Group::My Group</i>.
 	 * 
 	 * @param groupName

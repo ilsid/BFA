@@ -70,7 +70,6 @@
 		function onCreateGroupDialog_checkTopLevelClick() {
 			require([ 'dijit/registry'],
 				function(registry) {
-					registry.byId('createGroupDialog_textGroupName').reset();
 					var checkBox = registry.byId('createGroupDialog_checkTopLevel');
 					var tree = registry.byId('scriptsTree');
 					var parentGroupText = registry.byId('createGroupDialog_textParentGroup');
@@ -83,7 +82,7 @@
 				});
 		}
 		
-		function createScriptGroup() {
+		function onCreateGroupDialog_btnOkClick() {
 			require([ 'dijit/registry', 'dojo/request/xhr'],
 				function(registry, request) {
 					var groupText = registry.byId('createGroupDialog_textGroupName');
@@ -92,8 +91,8 @@
 					}
 					
 					var parentGroupName = null;
+					var tree = registry.byId('scriptsTree');
 					if (!registry.byId('createGroupDialog_checkTopLevel').checked) {
-						var tree = registry.byId('scriptsTree');
 						parentGroupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
 					} 
 					
@@ -107,6 +106,8 @@
 							method: 'POST',
 							data: groupName
 						}).then(function(resp){
+							var parentId = parentGroupName != null ? parentGroupName : tree.rootNode.item.name; 
+							tree.refreshChildrenSubTree(parentId);
 							hideDialog('createGroupDialog');
 						}, function(err) {
 							alert('Server request failed. Please contact support staff');
@@ -137,7 +138,7 @@
 			</tr>
 		</table>
 		<div class="dijitDialogPaneActionBar">
-			<button data-dojo-type="dijit/form/Button" type="button" id="createGroupDialog_btnOk" onclick="createScriptGroup();">OK</button>
+			<button data-dojo-type="dijit/form/Button" type="button" id="createGroupDialog_btnOk" onclick="onCreateGroupDialog_btnOkClick();">OK</button>
 			<button data-dojo-type="dijit/form/Button" type="button" id="createGroupDialog_btnCancel" onclick="hideDialog('createGroupDialog');">Cancel</button>
 		</div>
 	</div>
@@ -149,7 +150,7 @@
 	
 	<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="gutters:true, isLayoutContainer:true" style="width: 100%; height: 100%;">
 		 <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'">
-			<h4 id="greeting">BFA</h4>
+			<h4 id="greeting">BFA Prototype</h4>
 		 </div>
 		 <div data-dojo-type="dijit/layout/AccordionContainer" data-dojo-props="region:'leading', splitter:true" style="width: 20%;" id='accordionContainer'>
 			<div data-dojo-type="dijit/layout/AccordionPane" title="Scripts" id="scriptsPane">
@@ -172,14 +173,6 @@
 		</div>
 	</div>
 
-	<script>
-		require([ 'dojo/dom', 'dojo/dom-construct', 'dojo/domReady!' ],
-				function(dom, domConstruct, fx) {
-					var greetingNode = dom.byId('greeting');
-					domConstruct.place('<em> Prototyping...</em>', greetingNode);
-				});
-	</script>
-	
 	<script>
 		require([ 'dojo/request/xhr', 'dojo/dom', 'dojo/store/Memory', 'dijit/tree/ObjectStoreModel', 'dijit/Tree', 'dojo/store/Observable', 
 				'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/Textarea', 'dojo/domReady!' ], 
@@ -210,7 +203,7 @@
 					store: treeStore,
 					getLabel: function(item){ return item.title; },
 					mayHaveChildren: function(item){ return item.type == 'SCRIPT_GROUP'; },
-					query: {name: rootName}
+					query: {name: rootName},
 				});
 				
 				var tree = new Tree({
@@ -218,6 +211,7 @@
 					model: treeModel,
 					showRoot: false,
 					openOnClick: true,
+					rootName: rootName,
 					
 					onDblClick: function(item) {
 						if (this.model.mayHaveChildren(item)) {
@@ -252,6 +246,14 @@
 						}, function(err) {
 							alert('Server request failed. Please contact support staff');
 						});
+					},
+					
+					refreshChildrenSubTree: function(itemId) {
+						//Warning! Depends on internal implementation of Tree and ObjectStoreModel
+						delete this.model.childrenCache[itemId];
+						var node = this._itemNodesMap[itemId][0];
+						delete node._loadDeferred;
+						this._expandNode(node);
 					}
 				});
 				

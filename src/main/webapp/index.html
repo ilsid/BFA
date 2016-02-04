@@ -115,23 +115,57 @@
 				});
 		}
 		
-		function createNewScriptTab() {
-			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea'],
-				function(registry, ContentPane, SimpleTextarea) {
+		function createScriptTab(tabTitle, tabId, textAreaId, textAreaValue) {
+			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
+				'dijit/Toolbar', 'dijit/form/Button', 'dojo/domReady!'],
+				function(registry, ContentPane, SimpleTextarea, Toolbar, Button) {
 					var tabContainer = registry.byId('tabContainer');
+					
 					var tab = new ContentPane({
-						title: 'New Script',
+						id: tabId,
+						title: tabTitle,
 						closable: true,
-						iconClass: 'dijitLeaf'
+						iconClass: 'dijitLeaf',
+						style: 'overflow: auto;'
 					});
+					
+					var isExistingScript = (tabId != undefined);
+					
+					var saveButton = new Button({
+						label: 'Save',
+						showLabel: false,
+						iconClass: 'dijitIconSave',
+						onClick: function() {
+							registry.byId('createScriptDialog').show();
+						}
+					});
+					if (isExistingScript) {
+						// TODO: Support of script update
+						saveButton.set('disabled', true);
+					}
+					saveButton.startup();
+					
+					var toolBar = new Toolbar();
+					toolBar.addChild(saveButton);
+					toolBar.startup();
+				
 					var scriptArea = new SimpleTextarea({
-						className: 'fixedTextArea'
+						id: textAreaId,
+						className: 'fixedTextArea',
 					});
+					if (textAreaValue) {
+						scriptArea.set('value', textAreaValue);
+					}
+					scriptArea.startup();
+					
+					tab.addChild(saveButton);
 					tab.addChild(scriptArea);
+					
 					tabContainer.addChild(tab);
 					tabContainer.selectChild(tab);
-				});
+			});
 		}
+		
 	</script>
 
 	
@@ -160,6 +194,24 @@
 			<button data-dojo-type="dijit/form/Button" type="button" id="createGroupDialog_btnCancel" onclick="hideDialog('createGroupDialog');">Cancel</button>
 		</div>
 	</div>
+	
+	<div data-dojo-type="dijit/Dialog" id="createScriptDialog" title="Save script" style="display: none">
+		<table class="dijitDialogPaneContentArea">
+			<tr>
+				<td><label for="createScriptDialog_textParentGroup">Parent group:</label></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createScriptDialog_textParentGroup" name="createScriptDialog_textParentGroup"></td>
+			</tr>
+			<tr>
+				<td><label for="createScriptDialog_textGroupName">Name:</label></td>
+				<td><input data-dojo-type="dijit/form/ValidationTextBox" id="createScriptDialog_textGroupName" name="createScriptDialog_textGroupName" 
+					required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+			</tr>
+		</table>
+		<div class="dijitDialogPaneActionBar">
+			<button data-dojo-type="dijit/form/Button" type="button" id="createScriptDialog_btnOk">Save</button>
+			<button data-dojo-type="dijit/form/Button" type="button" id="createScriptDialog_btnCancel" onclick="hideDialog('createScriptDialog');">Cancel</button>
+		</div>
+	</div>
 
 	<script>
 		require(["dojo/parser", "dijit/layout/BorderContainer", "dijit/layout/TabContainer", "dijit/layout/AccordionContainer", 
@@ -175,10 +227,12 @@
 				<div id="scriptsToolbar" data-dojo-type="dijit/Toolbar">
 					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
 						onclick="showCreateGroupDialog('scriptsTree', 'SCRIPT_GROUP')">New Group</div>
-					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_newScript" data-dojo-props="iconClass:'dijitLeaf', showLabel:false"
-						onclick="createNewScriptTab()">New Script</div>
-					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false">Delete Group</div>
-					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteScript" data-dojo-props="iconClass:'toolbarIconDeleteItem', showLabel:false">Delete Script</div>
+					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_newScript" data-dojo-props="iconClass:'dijitLeaf', showLabel:false" disabled="true"
+						onclick="createScriptTab('New Script');">New Script</div>
+					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
+						disabled="true">Delete Group</div>
+					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteScript" data-dojo-props="iconClass:'toolbarIconDeleteItem', showLabel:false"
+						disabled="true">Delete Script</div>
 				</div>
 				<div id="scriptsTreeContainer" style="height: 100%;"></div>
 			</div>
@@ -194,8 +248,8 @@
 
 	<script>
 		require([ 'dojo/request/xhr', 'dojo/dom', 'dojo/store/Memory', 'dijit/tree/ObjectStoreModel', 'dijit/Tree', 'dojo/store/Observable', 
-				'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 'dojo/domReady!' ], 
-			function(request, dom, Memory, ObjectStoreModel, Tree, Observable, registry, ContentPane, SimpleTextarea) {
+				'dijit/registry', 'dojo/domReady!' ], 
+			function(request, dom, Memory, ObjectStoreModel, Tree, Observable, registry) {
 			
 				var rootName = '__root';
 				
@@ -228,8 +282,36 @@
 					id: 'scriptsTree',
 					model: treeModel,
 					showRoot: false,
-					openOnClick: true,
+					openOnClick: false,
 					rootName: rootName,
+					
+					onFocus: function() {
+						var btnNewScript = registry.byId('scriptsToolbar_newScript');
+						if (btnNewScript.disabled) {
+							btnNewScript.set('disabled', false);
+						}
+					},
+					
+					onClick: function(item, node) {
+						//Warning! Depends on internal implementation of Tree: _expandNode() function
+						if (this.model.mayHaveChildren(item)) {
+							if (node.isExpanded) {
+								node.collapse();	
+							} else {
+								this._expandNode(node);
+							}
+						}
+						
+						var btnDeleteGroup = registry.byId('scriptsToolbar_deleteGroup');
+						var btnDeleteScript = registry.byId('scriptsToolbar_deleteScript');
+						if (this.model.mayHaveChildren(item)) {
+							btnDeleteGroup.set('disabled', false);
+							btnDeleteScript.set('disabled', true);
+						} else {
+							btnDeleteGroup.set('disabled', true);
+							btnDeleteScript.set('disabled', false);
+						}
+					},
 					
 					onDblClick: function(item) {
 						if (this.model.mayHaveChildren(item)) {
@@ -249,20 +331,7 @@
 							method: 'POST',
 							data: '{"name": "' + item.name + '"}'
 						}).then(function(resp){
-							var tab = new ContentPane({
-								id: tabId,
-								title: item.title,
-								closable: true,
-								iconClass: 'dijitLeaf'
-							});
-							var scriptArea = new SimpleTextarea({
-								id: 'scriptArea_' + item.name,
-								className: 'fixedTextArea',
-								value: resp
-							});
-							tab.addChild(scriptArea);
-							tabContainer.addChild(tab);
-							tabContainer.selectChild(tab);
+							createScriptTab(item.title, tabId, 'scriptArea_' + item.name, resp);
 						}, function(err) {
 							alert('Server request failed. Please contact support staff');
 						});

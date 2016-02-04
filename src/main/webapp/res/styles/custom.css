@@ -13,3 +13,10 @@
   height: 16px;
   text-align: center;
 }
+
+.fixedTextArea{
+  height: 95%; 
+  width:100%; 
+  resize: none; 
+  overflow: scroll; 
+}

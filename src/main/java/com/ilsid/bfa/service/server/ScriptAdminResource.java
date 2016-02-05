@@ -45,6 +45,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_CREATE_OPERATION)
 	public Response create(ScriptAdminParams script) {
 		validateNonEmptyNameAndBody(Paths.SCRIPT_CREATE_SERVICE, script);
@@ -75,6 +76,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.SCRIPT_UPDATE_OPERATION)
 	public Response update(ScriptAdminParams script) {
 		validateNonEmptyNameAndBody(Paths.SCRIPT_UPDATE_SERVICE, script);

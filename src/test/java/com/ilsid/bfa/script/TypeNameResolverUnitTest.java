@@ -126,11 +126,11 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void classNameForScriptWithExplicitComplexGroupCanBeResolved() {
-		assertEquals("com.ilsid.bfa.generated.script.group_01.group_x20_01-02.script_x20_01.Script_x20_01",
+		assertEquals("com.ilsid.bfa.generated.script.group_01.group_x20_01_mns_02.script_x20_01.Script_x20_01",
 				TypeNameResolver.resolveScriptClassName("Group_01::Group 01-02::Script 01"));
 
 		assertEquals(
-				"com.ilsid.bfa.generated.script.group_01.group_x20_01-02.script_x20_01.Script_x20_01$$SomeExpression",
+				"com.ilsid.bfa.generated.script.group_01.group_x20_01_mns_02.script_x20_01.Script_x20_01$$SomeExpression",
 				TypeNameResolver.resolveExpressionClassName("Group_01::Group 01-02::Script 01", "Some Expression"));
 	}
 
@@ -142,7 +142,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void packageForComplexScriptGroupCanBeResolved() {
-		assertEquals(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE + ".group_x20_01.group_x20_01-02",
+		assertEquals(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE + ".group_x20_01.group_x20_01_mns_02",
 				TypeNameResolver.resolveScriptGroupPackageName("Group 01::Group 01-02"));
 	}
 

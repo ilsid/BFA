@@ -291,7 +291,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void topLevelScriptGroupCanBeCreated() throws Exception {
 		scriptGroupCanBeCreated("Some Top-Level Group", "Some Top-Level Group",
-				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/some_x20_top-level_x20_group");
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/some_x20_top_mns_level_x20_group");
 	}
 
 	@Test

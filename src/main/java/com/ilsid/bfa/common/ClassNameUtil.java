@@ -53,22 +53,16 @@ public class ClassNameUtil {
 
 	private static final String DOT_STR = ".";
 
-	private static final Map<String, String> replaceablePackageSymbols;
-
-	private static final Map<String, String> replaceableClassSymbols;
+	private static final Map<String, String> replaceableSymbols;
 
 	static {
-		replaceablePackageSymbols = new HashMap<>();
+		replaceableSymbols = new HashMap<>();
 
-		replaceablePackageSymbols.put("+", "_Pls_");
-		replaceablePackageSymbols.put("*", "_Mlt_");
-		replaceablePackageSymbols.put("/", "_Div_");
-		replaceablePackageSymbols.put(".", "_dt_");
-	}
-
-	static {
-		replaceableClassSymbols = new HashMap<>(replaceablePackageSymbols);
-		replaceableClassSymbols.put("-", "_Mns_");
+		replaceableSymbols.put("+", "_Pls_");
+		replaceableSymbols.put("-", "_Mns_");
+		replaceableSymbols.put("*", "_Mlt_");
+		replaceableSymbols.put("/", "_Div_");
+		replaceableSymbols.put(".", "_dt_");
 	}
 
 	/**
@@ -119,8 +113,8 @@ public class ClassNameUtil {
 	 */
 	public static String generateSimpleClassName(String expression, String blankReplacement) {
 		String expr = expression.replaceAll("\\s", blankReplacement);
-		for (String smb : replaceableClassSymbols.keySet()) {
-			expr = expr.replace(smb, replaceableClassSymbols.get(smb));
+		for (String smb : replaceableSymbols.keySet()) {
+			expr = expr.replace(smb, replaceableSymbols.get(smb));
 		}
 
 		return expr;
@@ -139,8 +133,8 @@ public class ClassNameUtil {
 	 */
 	public static String generatePackageName(String parentPackage, String expression) {
 		String childPackage = expression.replaceAll("\\s", BLANK_CODE);
-		for (String smb : replaceablePackageSymbols.keySet()) {
-			childPackage = childPackage.replace(smb, replaceablePackageSymbols.get(smb));
+		for (String smb : replaceableSymbols.keySet()) {
+			childPackage = childPackage.replace(smb, replaceableSymbols.get(smb));
 		}
 		childPackage = childPackage.replaceAll(GROUP_SEPARATOR, DOT_STR).toLowerCase();
 

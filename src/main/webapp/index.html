@@ -21,6 +21,7 @@
 	
 	<script>
 		// Public functions
+		
 		function getSelectedGroupName(tree, groupType) {
 			var selectedItem = tree.selectedItems[0];
 			
@@ -34,6 +35,10 @@
 			} else {
 				return null;
 			}
+		}
+		
+		function escapeScriptSource(source)  {
+			return source.replace(/"/g,'\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 		}
 		
 		function showCreateGroupDialog(treeId, groupType) {
@@ -57,6 +62,25 @@
 					groupText.set('value', '');
 					groupText.reset();
 					registry.byId('createGroupDialog').show();
+				});
+		}
+		
+		function showCreateScriptDialog() {
+			require([ 'dijit/registry'],
+				function(registry) {
+					var tree = registry.byId('scriptsTree');
+					var selectedGroupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
+					var groupText = registry.byId('createScriptDialog_textGroupName');
+					var scriptText = registry.byId('createScriptDialog_textScriptName');
+					
+					if (selectedGroupName != null) {
+						groupText.set('value', selectedGroupName);
+					} else {
+						groupText.set('value', '');
+					}
+					scriptText.set('value', '');
+					scriptText.reset();
+					registry.byId('createScriptDialog').show();
 				});
 		}
 
@@ -115,6 +139,35 @@
 				});
 		}
 		
+		function onCreateScriptDialog_btnOkClick() {
+			require([ 'dijit/registry', 'dojo/request/xhr'],
+				function(registry, request) {
+					var textScript = registry.byId('createScriptDialog_textScriptName');
+					if (!textScript.isValid()) {
+						return;
+					}
+					
+					var tree = registry.byId('scriptsTree');
+					var groupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
+					// group name can't be null, as script creation is enabled only if some group is selected
+					var scriptName = groupName + '::' + textScript.get('value');
+					
+					var scriptArea = registry.byId('tabContainer').selectedChildWidget.getChildren()[1];
+					var scriptBody = escapeScriptSource(scriptArea.get('value'));
+					
+					request('service/script/admin/create', {
+							headers: { 'Content-Type': 'application/json' },
+							method: 'POST',
+							data: '{"name": "' + scriptName +'", "body": "' + scriptBody + '"}'
+						}).then(function(resp){
+							tree.refreshChildrenSubTree(groupName);
+							hideDialog('createScriptDialog');
+						}, function(err) {
+							alert('Server request failed. Please contact support staff');
+						});
+				});
+		}
+		
 		function createScriptTab(tabTitle, tabId, textAreaId, textAreaValue) {
 			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
 				'dijit/Toolbar', 'dijit/form/Button', 'dojo/domReady!'],
@@ -136,7 +189,7 @@
 						showLabel: false,
 						iconClass: 'dijitIconSave',
 						onClick: function() {
-							registry.byId('createScriptDialog').show();
+							showCreateScriptDialog();
 						}
 					});
 					if (isExistingScript) {
@@ -151,7 +204,7 @@
 				
 					var scriptArea = new SimpleTextarea({
 						id: textAreaId,
-						className: 'fixedTextArea',
+						className: 'fixedTextArea'
 					});
 					if (textAreaValue) {
 						scriptArea.set('value', textAreaValue);
@@ -185,7 +238,8 @@
 					required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
 			</tr>
 			<tr>
-				<td><input data-dojo-type="dijit/form/CheckBox" id="createGroupDialog_checkTopLevel" name="createGroupDialog_checkTopLevel" onclick="onCreateGroupDialog_checkTopLevelClick();" /> 
+				<td><input data-dojo-type="dijit/form/CheckBox" id="createGroupDialog_checkTopLevel" name="createGroupDialog_checkTopLevel" 
+					onclick="onCreateGroupDialog_checkTopLevelClick();" /> 
 					<label for="createGroupDialog_checkTopLevel">Is top-level group</label></td>
 			</tr>
 		</table>
@@ -198,17 +252,17 @@
 	<div data-dojo-type="dijit/Dialog" id="createScriptDialog" title="Save script" style="display: none">
 		<table class="dijitDialogPaneContentArea">
 			<tr>
-				<td><label for="createScriptDialog_textParentGroup">Parent group:</label></td>
-				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createScriptDialog_textParentGroup" name="createScriptDialog_textParentGroup"></td>
+				<td><label for="createScriptDialog_textGroupName">Group:</label></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createScriptDialog_textGroupName" name="createScriptDialog_textGroupName"></td>
 			</tr>
 			<tr>
-				<td><label for="createScriptDialog_textGroupName">Name:</label></td>
-				<td><input data-dojo-type="dijit/form/ValidationTextBox" id="createScriptDialog_textGroupName" name="createScriptDialog_textGroupName" 
+				<td><label for="createScriptDialog_textScriptName">Name:</label></td>
+				<td><input data-dojo-type="dijit/form/ValidationTextBox" id="createScriptDialog_textScriptName" name="createScriptDialog_textScriptName" 
 					required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
 			</tr>
 		</table>
 		<div class="dijitDialogPaneActionBar">
-			<button data-dojo-type="dijit/form/Button" type="button" id="createScriptDialog_btnOk">Save</button>
+			<button data-dojo-type="dijit/form/Button" type="button" id="createScriptDialog_btnOk" onclick="onCreateScriptDialog_btnOkClick();">Save</button>
 			<button data-dojo-type="dijit/form/Button" type="button" id="createScriptDialog_btnCancel" onclick="hideDialog('createScriptDialog');">Cancel</button>
 		</div>
 	</div>

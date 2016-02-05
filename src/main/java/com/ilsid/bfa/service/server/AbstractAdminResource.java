@@ -24,9 +24,6 @@ public abstract class AbstractAdminResource {
 		if (isEmpty(params.getBody())) {
 			throw new ResourceException(path, "The body must be defined", Status.BAD_REQUEST);
 		}
-		if (isEmpty(params.getTitle())) {
-			throw new ResourceException(path, "The title must be defined", Status.BAD_REQUEST);
-		}
 	}
 
 	protected void validateNonEmptyName(String path, TypeAdminParams params) {

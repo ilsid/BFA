@@ -23,6 +23,11 @@ public class ClassNameUtil {
 	public static final String GENERATED_SCRIPTS_ROOT_PACKAGE = GENERATED_CLASSES_PACKAGE + ".script";
 
 	/**
+	 * The root package for the generated entities.
+	 */
+	public static final String GENERATED_ENTITIES_ROOT_PACKAGE = GENERATED_CLASSES_PACKAGE + ".entity";
+
+	/**
 	 * The default group sub-package for the generated scripts.
 	 */
 	public static final String DEFAULT_GROUP_SUBPACKAGE = "default_group";
@@ -30,8 +35,14 @@ public class ClassNameUtil {
 	/**
 	 * The default group package for the generated scripts.
 	 */
-	public static final String GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE = GENERATED_SCRIPTS_ROOT_PACKAGE
-			+ ".default_group";
+	public static final String GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE = GENERATED_SCRIPTS_ROOT_PACKAGE + "."
+			+ DEFAULT_GROUP_SUBPACKAGE;
+
+	/**
+	 * The default group package for the generated entities.
+	 */
+	public static final String GENERATED_ENTITIES_DEFAULT_GROUP_PACKAGE = GENERATED_ENTITIES_ROOT_PACKAGE + "."
+			+ DEFAULT_GROUP_SUBPACKAGE;
 
 	/**
 	 * Meta-data file name.

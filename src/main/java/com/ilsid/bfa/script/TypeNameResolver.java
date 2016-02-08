@@ -10,14 +10,11 @@ public class TypeNameResolver {
 
 	private static final char DOT = '.';
 
-	private static final String GENERATED_ROOT_PACKAGE = ClassNameUtil.GENERATED_CLASSES_PACKAGE + DOT;
-
 	private static final String EMPTY = "";
 
-	private static final String GENERATED_ENTITY_ROOT_PACKAGE = GENERATED_ROOT_PACKAGE + "entity.";
+	private static final String GENERATED_ENTITY_ROOT_PACKAGE = ClassNameUtil.GENERATED_ENTITIES_ROOT_PACKAGE + DOT;
 
-	private static final String GENERATED_ENTITY_DEFAULT_GROUP_PACKAGE = GENERATED_ENTITY_ROOT_PACKAGE
-			+ "default_group.";
+	private static final String GENERATED_ENTITY_DEFAULT_GROUP_PACKAGE = ClassNameUtil.GENERATED_ENTITIES_DEFAULT_GROUP_PACKAGE + DOT;
 
 	private static final String EXPRESSION_PREFIX = "$$";
 

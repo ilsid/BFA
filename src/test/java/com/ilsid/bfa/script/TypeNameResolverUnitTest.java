@@ -12,7 +12,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	private static final String SCRIPT_CLASS_NAME_PREFIX = BASE_PACKAGE + "script.default_group.";
 
-	private static final String ENTITY_CLASS_NAME_PREFIX = BASE_PACKAGE + "entity.default_group.";
+	private static final String ENTITY_CLASS_NAME_WITH_DEFAULT_PACKAGE_PREFIX = BASE_PACKAGE + "entity.default_group.";
 
 	private static final String TEST_SCRIPT_NAME = "TestScript";
 
@@ -31,7 +31,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 		assertEquals("AB", getExpressionClassNamePart("A B"));
 		assertEquals("AB", getExpressionClassNamePart(" AB "));
 		assertEquals("ABC", getExpressionClassNamePart(" A B C "));
-		
+
 		assertEquals("AB", resolveExpressionClassNamePart("A B"));
 		assertEquals("AB", resolveExpressionClassNamePart(" AB "));
 		assertEquals("ABC", resolveExpressionClassNamePart(" A B C "));
@@ -46,7 +46,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 		assertEquals("A_dt_B", getExpressionClassNamePart("A.B"));
 		assertEquals("_dt_AB_dt_", getExpressionClassNamePart(".AB."));
 		assertEquals("_dt_A_dt_B_dt_C_dt_", getExpressionClassNamePart(".A.B.C."));
-		
+
 		assertEquals("A_dt_B", resolveExpressionClassNamePart("A.B"));
 		assertEquals("_dt_AB_dt_", resolveExpressionClassNamePart(".AB."));
 		assertEquals("_dt_A_dt_B_dt_C_dt_", resolveExpressionClassNamePart(".A.B.C."));
@@ -59,7 +59,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Mns_B", getExpressionClassNamePart("A-B"));
 		assertEquals("A_Mns_B", getExpressionClassNamePart("A - B"));
-		
+
 		assertEquals("A_Mns_B", resolveExpressionClassNamePart("A-B"));
 		assertEquals("A_Mns_B", resolveExpressionClassNamePart("A - B"));
 	}
@@ -71,7 +71,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Pls_B", getExpressionClassNamePart("A+B"));
 		assertEquals("A_Pls_B", getExpressionClassNamePart("A + B"));
-		
+
 		assertEquals("A_Pls_B", resolveExpressionClassNamePart("A+B"));
 		assertEquals("A_Pls_B", resolveExpressionClassNamePart("A + B"));
 	}
@@ -83,7 +83,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Mlt_B", getExpressionClassNamePart("A*B"));
 		assertEquals("A_Mlt_B", getExpressionClassNamePart("A * B"));
-		
+
 		assertEquals("A_Mlt_B", resolveExpressionClassNamePart("A*B"));
 		assertEquals("A_Mlt_B", resolveExpressionClassNamePart("A * B"));
 	}
@@ -95,7 +95,7 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 		assertEquals("A_Div_B", getExpressionClassNamePart("A/B"));
 		assertEquals("A_Div_B", getExpressionClassNamePart("A / B"));
-		
+
 		assertEquals("A_Div_B", resolveExpressionClassNamePart("A/B"));
 		assertEquals("A_Div_B", resolveExpressionClassNamePart("A / B"));
 	}
@@ -112,7 +112,32 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void nonPredefinedEntityTypeCanBeResolved() {
-		assertEquals(ENTITY_CLASS_NAME_PREFIX + "SomeBean", TypeNameResolver.resolveEntityClassName("SomeBean"));
+		assertEquals(ENTITY_CLASS_NAME_WITH_DEFAULT_PACKAGE_PREFIX + "SomeBean",
+				TypeNameResolver.resolveEntityClassName("SomeBean"));
+	}
+
+	@Test
+	public void classNameForEntityWithExplicitSimpleGroupCanBeResolved() {
+		assertEquals("com.ilsid.bfa.generated.entity.group_x20_01.Entity_x20_01",
+				TypeNameResolver.resolveEntityClassName("Group 01::Entity 01"));
+	}
+
+	@Test
+	public void classNameForEntityWithExplicitComplexGroupCanBeResolved() {
+		assertEquals("com.ilsid.bfa.generated.entity.group_01.group_x20_01_mns_02.Entity_x20_01",
+				TypeNameResolver.resolveEntityClassName("Group_01::Group 01-02::Entity 01"));
+	}
+
+	@Test
+	public void packageForSimpleEntityGroupCanBeResolved() {
+		assertEquals(ClassNameUtil.GENERATED_ENTITIES_ROOT_PACKAGE + ".group_x20_01",
+				TypeNameResolver.resolveEntityGroupPackageName("Group 01"));
+	}
+
+	@Test
+	public void packageForComplexEntityGroupCanBeResolved() {
+		assertEquals(ClassNameUtil.GENERATED_ENTITIES_ROOT_PACKAGE + ".group_x20_01.group_x20_01_mns_02",
+				TypeNameResolver.resolveEntityGroupPackageName("Group 01::Group 01-02"));
 	}
 
 	@Test
@@ -163,6 +188,27 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 	@Test
 	public void complexNameWithThreePartsCanBeSplit() {
 		TypeNameResolver.NameParts parts = TypeNameResolver.splitName("Some Grand-Parent::Some Parent::Some Child");
+		assertEquals("Some Grand-Parent::Some Parent", parts.getParentName());
+		assertEquals("Some Child", parts.getChildName());
+	}
+	
+	@Test
+	public void simpleGroupNameCanBeSplit() {
+		TypeNameResolver.NameParts parts = TypeNameResolver.splitGroupName("Some Name");
+		assertNull(parts.getParentName());
+		assertEquals("Some Name", parts.getChildName());
+	}
+
+	@Test
+	public void complexGroupNameWithTwoPartsCanBeSplit() {
+		TypeNameResolver.NameParts parts = TypeNameResolver.splitGroupName("Some Parent::Some Child");
+		assertEquals("Some Parent", parts.getParentName());
+		assertEquals("Some Child", parts.getChildName());
+	}
+
+	@Test
+	public void complexGroupNameWithThreePartsCanBeSplit() {
+		TypeNameResolver.NameParts parts = TypeNameResolver.splitGroupName("Some Grand-Parent::Some Parent::Some Child");
 		assertEquals("Some Grand-Parent::Some Parent", parts.getParentName());
 		assertEquals("Some Child", parts.getChildName());
 	}

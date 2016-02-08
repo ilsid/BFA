@@ -25,8 +25,6 @@ import com.ilsid.bfa.service.dto.ScriptAdminParams;
 @Path(Paths.SCRIPT_SERVICE_ADMIN_ROOT)
 public class ScriptAdminResource extends AbstractAdminResource {
 
-	private final static String GROUP_PARAM_NAME = "group";
-
 	/**
 	 * Creates the script and saves it in the code repository. If the script's group is not specified, it is created
 	 * within the Default Group.
@@ -165,7 +163,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 * @return the {@link Status#OK} response
 	 * @throws ResourceException
 	 *             <ul>
-	 *             <li>if the passed group name is <code>null</code></li>
+	 *             <li>if the passed group name is empty</li>
 	 *             <li>if such group already exists in the repository</li>
 	 *             <li>if parent group does not exists in the repository</li>
 	 *             <li>in case of any repository access issues</li>
@@ -175,14 +173,14 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@POST
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path(Paths.SCRIPT_CREATE_GROUP_OPERATION)
+	@Path(Paths.CREATE_GROUP_OPERATION)
 	public Response createGroup(String groupName) {
-		validateNonEmptyParameter(Paths.SCRIPT_CREATE_GROUP_OPERATION, GROUP_PARAM_NAME, groupName);
+		validateNonEmptyParameter(Paths.CREATE_GROUP_OPERATION, GROUP_PARAM_NAME, groupName);
 
 		try {
 			scriptManager.createScriptGroup(groupName);
 		} catch (ManagementException e) {
-			throw new ResourceException(Paths.SCRIPT_CREATE_GROUP_OPERATION, e);
+			throw new ResourceException(Paths.CREATE_GROUP_OPERATION, e);
 		}
 
 		return Response.status(Status.OK).build();

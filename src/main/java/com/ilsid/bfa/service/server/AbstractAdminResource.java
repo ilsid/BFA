@@ -9,6 +9,8 @@ import com.ilsid.bfa.service.dto.TypeAdminParams;
 public abstract class AbstractAdminResource {
 
 	private static final String EMPTY = "";
+	
+	protected final static String GROUP_PARAM_NAME = "group";
 
 	protected ScriptManager scriptManager;
 

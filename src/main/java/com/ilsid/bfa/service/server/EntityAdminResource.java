@@ -113,5 +113,38 @@ public class EntityAdminResource extends AbstractAdminResource {
 
 		return Response.status(Status.OK).entity(entitySource).build();
 	}
+	
+	/**
+	 * Creates new entity group in the code repository. The group name can be simple or complex. The simple group name
+	 * is like <i>My Group</i>. It is treated as a top-level group. The complex group name can be like <i>Grand Parent
+	 * Group::Parent Group::My Group</i>.
+	 * 
+	 * @param groupName
+	 *            the name of group to create
+	 * @return the {@link Status#OK} response
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the passed group name is empty</li>
+	 *             <li>if such group already exists in the repository</li>
+	 *             <li>if parent group does not exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@POST
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.CREATE_GROUP_OPERATION)
+	public Response createGroup(String groupName) {
+		validateNonEmptyParameter(Paths.CREATE_GROUP_OPERATION, GROUP_PARAM_NAME, groupName);
+
+		try {
+			scriptManager.createEntityGroup(groupName);
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.CREATE_GROUP_OPERATION, e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
 
 }

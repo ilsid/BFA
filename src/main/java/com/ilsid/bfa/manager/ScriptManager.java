@@ -49,7 +49,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void createScript(String scriptName, String scriptBody) throws ManagementException {
-		checkParentGroupExists(scriptName);
+		checkParentScriptGroupExists(scriptName);
 
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
@@ -80,7 +80,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
-		checkParentGroupExists(scriptName);
+		checkParentScriptGroupExists(scriptName);
 
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
@@ -112,7 +112,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public String getScriptSourceCode(String scriptName) throws ManagementException {
-		checkParentGroupExists(scriptName);
+		checkParentScriptGroupExists(scriptName);
 
 		String className = TypeNameResolver.resolveScriptClassName(scriptName);
 		String body;
@@ -283,13 +283,42 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void createScriptGroup(String groupName) throws ManagementException {
-		checkParentGroupExists(groupName);
+		String parentGroupName = TypeNameResolver.splitGroupName(groupName).getParentName();
+		if (parentGroupName != null) {
+			checkParentScriptGroupExists(groupName);
+		}
 
 		String packageName = TypeNameResolver.resolveScriptGroupPackageName(groupName);
 		try {
 			repository.savePackage(packageName, createScriptGroupMetadata(groupName));
 		} catch (PersistenceException e) {
 			throw new ManagementException(String.format("Failed to create the script group [%s]", groupName), e);
+		}
+	}
+
+	/**
+	 * Creates new entity group.
+	 * 
+	 * @param groupName
+	 *            the entity group name
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if such group already exists in the repository</li>
+	 *             <li>if parent group does not exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public void createEntityGroup(String groupName) throws ManagementException {
+		String parentGroupName = TypeNameResolver.splitGroupName(groupName).getParentName();
+		if (parentGroupName != null) {
+			checkParentEntityGroupExists(groupName);
+		}
+
+		String packageName = TypeNameResolver.resolveEntityGroupPackageName(groupName);
+		try {
+			repository.savePackage(packageName, createEntityGroupMetadata(groupName));
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to create the entity group [%s]", groupName), e);
 		}
 	}
 
@@ -451,7 +480,15 @@ public class ScriptManager {
 		return metaData;
 	}
 
-	private void checkParentGroupExists(String name) throws ManagementException {
+	private Map<String, String> createEntityGroupMetadata(String groupName) throws ManagementException {
+		Map<String, String> metaData = new HashMap<>();
+		metaData.put(Metadata.NAME, groupName);
+		metaData.put(Metadata.TITLE, TypeNameResolver.splitName(groupName).getChildName());
+
+		return metaData;
+	}
+
+	private void checkParentScriptGroupExists(String name) throws ManagementException {
 		final String parentGroupName = TypeNameResolver.splitName(name).getParentName();
 		String parentPackageName = TypeNameResolver.resolveScriptGroupPackageName(parentGroupName);
 		Map<String, String> parentMetadata;
@@ -464,6 +501,27 @@ public class ScriptManager {
 
 		if (!isScriptGroup(parentMetadata)) {
 			throw new ManagementException(String.format("No parent script group [%s] exists", parentGroupName));
+		}
+	}
+
+	private void checkParentEntityGroupExists(String name) throws ManagementException {
+		final String parentGroupName = TypeNameResolver.splitGroupName(name).getParentName();
+
+		if (parentGroupName == null) {
+			return;
+		}
+
+		String parentPackageName = TypeNameResolver.resolveEntityGroupPackageName(parentGroupName);
+		Map<String, String> parentMetadata;
+		try {
+			parentMetadata = repository.loadMetadataForPackage(parentPackageName);
+		} catch (PersistenceException e) {
+			throw new ManagementException(
+					String.format("Failed to load meta-data for the entity group [%s]", parentGroupName), e);
+		}
+
+		if (parentMetadata == null) {
+			throw new ManagementException(String.format("No parent entity group [%s] exists", parentGroupName));
 		}
 	}
 

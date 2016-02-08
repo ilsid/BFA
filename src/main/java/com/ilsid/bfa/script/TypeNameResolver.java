@@ -8,14 +8,11 @@ import com.ilsid.bfa.common.ClassNameUtil;
 //TODO: write javadocs
 public class TypeNameResolver {
 
+	private static final String WHITESPACE_REGEXP = "\\s";
+
 	private static final char DOT = '.';
 
 	private static final String EMPTY = "";
-
-	private static final String GENERATED_ENTITY_ROOT_PACKAGE = ClassNameUtil.GENERATED_ENTITIES_ROOT_PACKAGE + DOT;
-
-	private static final String GENERATED_ENTITY_DEFAULT_GROUP_PACKAGE = ClassNameUtil.GENERATED_ENTITIES_DEFAULT_GROUP_PACKAGE
-			+ DOT;
 
 	private static final String EXPRESSION_PREFIX = "$$";
 
@@ -40,7 +37,16 @@ public class TypeNameResolver {
 			return predefinedType;
 		}
 
-		return GENERATED_ENTITY_DEFAULT_GROUP_PACKAGE + entityName;
+		NameParts entityNameParts = splitName(entityName);
+
+		final String simpleClassName = ClassNameUtil.generateSimpleClassName(entityNameParts.getChildName(),
+				ClassNameUtil.BLANK_CODE);
+
+		StringBuilder result = new StringBuilder();
+		result.append(resolveEntityGroupPackageName(entityNameParts.getParentName())).append(DOT)
+				.append(simpleClassName);
+
+		return result.toString();
 	}
 
 	public static String resolveScriptClassName(String scriptName) {
@@ -72,7 +78,34 @@ public class TypeNameResolver {
 		return generatePackageName(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE, groupName);
 	}
 
+	public static String resolveEntityGroupPackageName(String groupName) {
+		return generatePackageName(ClassNameUtil.GENERATED_ENTITIES_ROOT_PACKAGE, groupName);
+	}
+
+	/**
+	 * Splits script or entity name.
+	 * 
+	 * @param name
+	 *            script or entity name.
+	 * @return parent and child parts. If no parent is defined then {@link ClassNameUtil#DEFAULT_GROUP_SUBPACKAGE} is
+	 *         returned as a parent part
+	 */
 	public static NameParts splitName(String name) {
+		return doSplitName(name, ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE);
+	}
+
+	/**
+	 * Splits group name.
+	 * 
+	 * @param name
+	 *            group name.
+	 * @return parent and child parts. If no parent is defined then <code>null</code> is returned as a parent part
+	 */
+	public static NameParts splitGroupName(String name) {
+		return doSplitName(name, null);
+	}
+
+	private static NameParts doSplitName(String name, String defaultParentGroup) {
 		int childSepIdx = name.lastIndexOf(ClassNameUtil.GROUP_SEPARATOR);
 		final int offset = childSepIdx + ClassNameUtil.GROUP_SEPARATOR.length();
 
@@ -82,7 +115,7 @@ public class TypeNameResolver {
 			parentName = name.substring(0, childSepIdx);
 			childName = name.substring(offset);
 		} else {
-			parentName = ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
+			parentName = defaultParentGroup;
 			childName = name;
 		}
 
@@ -99,7 +132,7 @@ public class TypeNameResolver {
 	 * <i>grand_parent_group::parent_group::some_group</i>.
 	 */
 	private static String generatePackageName(String parentPackage, String expression) {
-		String childPackage = expression.replaceAll("\\s", ClassNameUtil.BLANK_CODE);
+		String childPackage = expression.replaceAll(WHITESPACE_REGEXP, ClassNameUtil.BLANK_CODE);
 		Map<String, String> escapeSymbols = ClassNameUtil.getEscapeSymbols();
 		for (String smb : escapeSymbols.keySet()) {
 			childPackage = childPackage.replace(smb, escapeSymbols.get(smb));

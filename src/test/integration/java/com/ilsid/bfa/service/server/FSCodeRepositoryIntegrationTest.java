@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -63,5 +64,12 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	protected void copyDirectoryToRepository(String sourceDir, String destDir) throws Exception {
 		FileUtils.copyDirectory(new File(sourceDir), new File(CODE_REPOSITORY_PATH + "/" + destDir));
 	}
+	
+	protected Map<String, String> loadMetadata(File metaFile) throws Exception {
+		@SuppressWarnings("unchecked")
+		Map<String, String> result = new ObjectMapper().readValue(metaFile, Map.class);
+		return result;
+	}
+
 
 }

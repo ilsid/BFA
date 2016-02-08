@@ -15,6 +15,12 @@ public final class Paths {
 	public final static String ENTITY_SERVICE_ROOT = SERVICE_ROOT + "/entity";
 
 	/*
+	 * Common Paths
+	 */
+	
+	public final static String CREATE_GROUP_OPERATION = "createGroup";
+	
+	/*
 	 * Script Administration
 	 */
 
@@ -28,8 +34,6 @@ public final class Paths {
 
 	public final static String SCRIPT_GET_ITEMS_OPERATION = "getItems";
 
-	public final static String SCRIPT_CREATE_GROUP_OPERATION = "createGroup";
-
 	public final static String SCRIPT_CREATE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + SCRIPT_CREATE_OPERATION;
 
 	public final static String SCRIPT_UPDATE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + SCRIPT_UPDATE_OPERATION;
@@ -40,7 +44,7 @@ public final class Paths {
 	public final static String SCRIPT_GET_ITEMS_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + SCRIPT_GET_ITEMS_OPERATION;
 
 	public final static String SCRIPT_CREATE_GROUP_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/"
-			+ SCRIPT_CREATE_GROUP_OPERATION;
+			+ CREATE_GROUP_OPERATION;
 
 	/*
 	 * Script Runtime
@@ -79,5 +83,8 @@ public final class Paths {
 
 	public final static String ENTITY_GET_SOURCE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/"
 			+ ENTITY_GET_SOURCE_OPERATION;
+	
+	public final static String ENTITY_CREATE_GROUP_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/"
+			+ CREATE_GROUP_OPERATION;
 
 }

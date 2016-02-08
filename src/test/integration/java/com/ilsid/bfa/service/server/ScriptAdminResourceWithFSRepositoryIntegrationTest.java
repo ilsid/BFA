@@ -8,7 +8,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.FileUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 import com.ilsid.bfa.common.ClassNameUtil;
@@ -332,19 +331,13 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		final File groupDir = new File(expectedPath);
 		assertTrue(groupDir.isDirectory());
 
-		Map<String, String> metaData = loadContents(new File(groupDir, ClassNameUtil.METADATA_FILE_NAME));
+		Map<String, String> metaData = loadMetadata(new File(groupDir, ClassNameUtil.METADATA_FILE_NAME));
 		assertEquals(3, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(groupName, metaData.get(Metadata.NAME));
 		assertEquals(expectedTitle, metaData.get(Metadata.TITLE));
 
 		FileUtils.forceDelete(groupDir);
-	}
-
-	private Map<String, String> loadContents(File metaFile) throws Exception {
-		@SuppressWarnings("unchecked")
-		Map<String, String> result = new ObjectMapper().readValue(metaFile, Map.class);
-		return result;
 	}
 
 }

@@ -28,7 +28,7 @@ public class ClassNameUtil {
 	public static final String GENERATED_ENTITIES_ROOT_PACKAGE = GENERATED_CLASSES_PACKAGE + ".entity";
 
 	/**
-	 * The default group sub-package for the generated scripts.
+	 * The default group sub-package for the generated scripts and entities.
 	 */
 	public static final String DEFAULT_GROUP_SUBPACKAGE = "default_group";
 

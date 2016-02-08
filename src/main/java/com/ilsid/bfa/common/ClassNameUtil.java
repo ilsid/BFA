@@ -1,6 +1,7 @@
 package com.ilsid.bfa.common;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,18 +63,16 @@ public class ClassNameUtil {
 
 	private static final char DOT = '.';
 
-	private static final String DOT_STR = ".";
-
-	private static final Map<String, String> replaceableSymbols;
+	private static final Map<String, String> escapeSymbols;
 
 	static {
-		replaceableSymbols = new HashMap<>();
+		escapeSymbols = new HashMap<>();
 
-		replaceableSymbols.put("+", "_Pls_");
-		replaceableSymbols.put("-", "_Mns_");
-		replaceableSymbols.put("*", "_Mlt_");
-		replaceableSymbols.put("/", "_Div_");
-		replaceableSymbols.put(".", "_dt_");
+		escapeSymbols.put("+", "_Pls_");
+		escapeSymbols.put("-", "_Mns_");
+		escapeSymbols.put("*", "_Mlt_");
+		escapeSymbols.put("/", "_Div_");
+		escapeSymbols.put(".", "_dt_");
 	}
 
 	/**
@@ -124,35 +123,20 @@ public class ClassNameUtil {
 	 */
 	public static String generateSimpleClassName(String expression, String blankReplacement) {
 		String expr = expression.replaceAll("\\s", blankReplacement);
-		for (String smb : replaceableSymbols.keySet()) {
-			expr = expr.replace(smb, replaceableSymbols.get(smb));
+		for (String smb : escapeSymbols.keySet()) {
+			expr = expr.replace(smb, escapeSymbols.get(smb));
 		}
 
 		return expr;
 	}
 
 	/**
-	 * Generates a full package name for the given parent package and the expression representing a child package. The
-	 * expression is treated as a simple group like <i>some_group</i> or a complex group like
-	 * <i>grand_parent_group::parent_group::some_group</i>.
+	 * Returns a map containing the escape symbols and their place holders.
 	 * 
-	 * @param parentPackage
-	 *            parent package
-	 * @param expression
-	 *            the expression to generate a full package name
-	 * @return a full package name
+	 * @return a map of the escape symbols
 	 */
-	public static String generatePackageName(String parentPackage, String expression) {
-		String childPackage = expression.replaceAll("\\s", BLANK_CODE);
-		for (String smb : replaceableSymbols.keySet()) {
-			childPackage = childPackage.replace(smb, replaceableSymbols.get(smb));
-		}
-		childPackage = childPackage.replaceAll(GROUP_SEPARATOR, DOT_STR).toLowerCase();
-
-		StringBuilder result = new StringBuilder();
-		result.append(parentPackage).append(DOT).append(childPackage);
-
-		return result.toString();
+	public static Map<String, String> getEscapeSymbols() {
+		return Collections.unmodifiableMap(escapeSymbols);
 	}
 
 }

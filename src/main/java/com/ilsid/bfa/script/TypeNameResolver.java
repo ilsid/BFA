@@ -14,9 +14,18 @@ public class TypeNameResolver {
 
 	private static final String GENERATED_ENTITY_ROOT_PACKAGE = ClassNameUtil.GENERATED_ENTITIES_ROOT_PACKAGE + DOT;
 
-	private static final String GENERATED_ENTITY_DEFAULT_GROUP_PACKAGE = ClassNameUtil.GENERATED_ENTITIES_DEFAULT_GROUP_PACKAGE + DOT;
+	private static final String GENERATED_ENTITY_DEFAULT_GROUP_PACKAGE = ClassNameUtil.GENERATED_ENTITIES_DEFAULT_GROUP_PACKAGE
+			+ DOT;
 
 	private static final String EXPRESSION_PREFIX = "$$";
+
+	/*
+	 * The separator used for sub-group naming. For example, the group name can be
+	 * <i>grand_parent_group::parent_group::group</i>.
+	 */
+	private static final String GROUP_SEPARATOR = "::";
+
+	private static final String DOT_STR = ".";
 
 	private static final Map<String, String> predefinedTypes = new HashMap<>();
 
@@ -60,7 +69,7 @@ public class TypeNameResolver {
 	}
 
 	public static String resolveScriptGroupPackageName(String groupName) {
-		return ClassNameUtil.generatePackageName(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE, groupName);
+		return generatePackageName(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE, groupName);
 	}
 
 	public static NameParts splitName(String name) {
@@ -82,6 +91,25 @@ public class TypeNameResolver {
 		result.childName = childName;
 
 		return result;
+	}
+
+	/*
+	 * Generates a full package name for the given parent package and the expression representing a child package. The
+	 * expression is treated as a simple group like <i>some_group</i> or a complex group like
+	 * <i>grand_parent_group::parent_group::some_group</i>.
+	 */
+	private static String generatePackageName(String parentPackage, String expression) {
+		String childPackage = expression.replaceAll("\\s", ClassNameUtil.BLANK_CODE);
+		Map<String, String> escapeSymbols = ClassNameUtil.getEscapeSymbols();
+		for (String smb : escapeSymbols.keySet()) {
+			childPackage = childPackage.replace(smb, escapeSymbols.get(smb));
+		}
+		childPackage = childPackage.replaceAll(GROUP_SEPARATOR, DOT_STR).toLowerCase();
+
+		StringBuilder result = new StringBuilder();
+		result.append(parentPackage).append(DOT).append(childPackage);
+
+		return result.toString();
 	}
 
 	public interface NameParts {

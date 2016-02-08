@@ -150,10 +150,14 @@
 					var tree = registry.byId('scriptsTree');
 					var groupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
 					// group name can't be null, as script creation is enabled only if some group is selected
-					var scriptName = groupName + '::' + textScript.get('value');
+					var scriptShortName = textScript.get('value');
+					var scriptName = groupName + '::' + scriptShortName;
 					
-					var scriptArea = registry.byId('tabContainer').selectedChildWidget.getChildren()[1];
-					var scriptBody = escapeScriptSource(scriptArea.get('value'));
+					var tabContainer = registry.byId('tabContainer');
+					var scriptTab = tabContainer.selectedChildWidget;
+					var scriptArea = scriptTab.getChildren()[1];
+					var scriptSource = scriptArea.get('value');
+					var scriptBody = escapeScriptSource(scriptSource);
 					
 					request('service/script/admin/create', {
 							headers: { 'Content-Type': 'application/json' },
@@ -162,13 +166,18 @@
 						}).then(function(resp){
 							tree.refreshChildrenSubTree(groupName);
 							hideDialog('createScriptDialog');
+							var tabIdx = tabContainer.getIndexOfChild(scriptTab);
+							tabContainer.removeChild(scriptTab);
+							scriptTab.destroyRecursive();
+							createScriptTab(scriptShortName, 'tab_' + scriptName, 'scriptArea_' + scriptName, 
+								scriptSource, tabIdx);
 						}, function(err) {
 							alert('Server request failed. Please contact support staff');
 						});
 				});
 		}
 		
-		function createScriptTab(tabTitle, tabId, textAreaId, textAreaValue) {
+		function createScriptTab(tabTitle, tabId, textAreaId, textAreaValue, indexInContainer) {
 			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
 				'dijit/Toolbar', 'dijit/form/Button', 'dojo/domReady!'],
 				function(registry, ContentPane, SimpleTextarea, Toolbar, Button) {
@@ -214,7 +223,11 @@
 					tab.addChild(saveButton);
 					tab.addChild(scriptArea);
 					
-					tabContainer.addChild(tab);
+					if (indexInContainer > -1) {
+						tabContainer.addChild(tab, indexInContainer);
+					} else {
+						tabContainer.addChild(tab);
+					}
 					tabContainer.selectChild(tab);
 			});
 		}
@@ -277,18 +290,24 @@
 			<h4 id="greeting">Business Flows Automation</h4>
 		 </div>
 		 <div data-dojo-type="dijit/layout/AccordionContainer" data-dojo-props="region:'leading', splitter:true" style="width: 20%;" id='accordionContainer'>
-			<div data-dojo-type="dijit/layout/AccordionPane" title="Scripts" id="scriptsPane">
-				<div id="scriptsToolbar" data-dojo-type="dijit/Toolbar">
-					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
-						onclick="showCreateGroupDialog('scriptsTree', 'SCRIPT_GROUP')">New Group</div>
-					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_newScript" data-dojo-props="iconClass:'dijitLeaf', showLabel:false" disabled="true"
-						onclick="createScriptTab('New Script');">New Script</div>
-					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
-						disabled="true">Delete Group</div>
-					<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteScript" data-dojo-props="iconClass:'toolbarIconDeleteItem', showLabel:false"
-						disabled="true">Delete Script</div>
-				</div>
-				<div id="scriptsTreeContainer" style="height: 100%;"></div>
+			<div data-dojo-type="dijit/layout/AccordionPane" title="Scripts" id="scriptsPane;">
+				<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="isLayoutContainer:true" style="width: 100%; height: 100%; margin: 0; padding: 0;">
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" style="border: none; margin: 0; padding: 0;">
+						<div id="scriptsToolbar" data-dojo-type="dijit/Toolbar">
+							<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
+								onclick="showCreateGroupDialog('scriptsTree', 'SCRIPT_GROUP')">New Group</div>
+							<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_newScript" data-dojo-props="iconClass:'dijitLeaf', showLabel:false" disabled="true"
+								onclick="createScriptTab('New Script');">New Script</div>
+							<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
+								disabled="true">Delete Group</div>
+							<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteScript" data-dojo-props="iconClass:'toolbarIconDeleteItem', showLabel:false"
+								disabled="true">Delete Script</div>
+						</div>
+					</div>
+					<div data-dojo-type="dijit/layout/ContentPane"  data-dojo-props="region:'center'" style="border: none; margin: 0; padding: 0;">
+						<div id="scriptsTreeContainer" style="height: 100%;"></div>
+					</div>
+				</div>	
 			</div>
 			<div data-dojo-type="dijit/layout/AccordionPane" title="Entities" id="entitiesPane">
 			</div>

@@ -162,7 +162,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
-	public void childScriptGroupCanBeCreated() throws Exception {
+	public void childEntityGroupCanBeCreated() throws Exception {
 		entityGroupCanBeCreated("Custom Group 01::Some Child Group", "Some Child Group", CODE_REPOSITORY_PATH + "/"
 				+ GENERATED_ENTITY_ROOT_PATH + "/custom_x20_group_x20_01/some_x20_child_x20_group");
 	}

@@ -40,7 +40,7 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 	@Test
 	public void validScriptWithGeneratedEntityIsRun() throws Exception {
 		// The script depends on Contract entity
-		copyEntityFileToRepository("Contract.class");
+		copyFileFromEntityDefaulGroupDirToRepository("Contract.class");
 		verifyScriptCanBeRun("Single Entity Script");
 	}
 

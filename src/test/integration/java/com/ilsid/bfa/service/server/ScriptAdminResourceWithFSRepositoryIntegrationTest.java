@@ -41,7 +41,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void validScriptWithGeneratedEntityIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem()
 			throws Exception {
-		copyEntityFileToRepository("Contract.class");
+		copyFileFromEntityDefaulGroupDirToRepository("Contract.class");
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams("Entity Script",
 				IOHelper.loadScript("single-entity-script.txt"));

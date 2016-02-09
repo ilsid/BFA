@@ -34,32 +34,37 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Before
 	public void initTest() throws Exception {
 		FileUtils.cleanDirectory(ENTITY_REPOSITORY_DEFAULT_GROUP_DIR);
+		copyFileFromEntityDefaulGroupDirToRepository(ClassNameUtil.METADATA_FILE_NAME);
 	}
 
 	@Test
-	public void validEntityIsCompiledAndItsSourceAndClassIsSavedInFileSystem() {
-		WebResource webResource = getWebResource(Paths.ENTITY_CREATE_SERVICE);
-		EntityAdminParams entity = new EntityAdminParams("Entity001", "Number field1; Decimal field2");
-		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
-
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-
-		File entityDir = ENTITY_REPOSITORY_DEFAULT_GROUP_DIR;
-
-		assertTrue(entityDir.isDirectory());
-		assertEquals(2, entityDir.list().length);
-		assertFilesExist(entityDir.getPath(), new String[] { "Entity001.class", "Entity001.src" });
+	public void entityIsCompiledAndItsSourceAndClassIsSavedInFileSystem() throws Exception {
+		entityIsCompiledAndItsSourceAndClassIsSavedInFileSystem(
+				new EntityAdminParams("Entity001", "{\"field1\":\"Number\", \"field2\":\"Decimal\"}"),
+				ENTITY_REPOSITORY_DEFAULT_GROUP_DIR);
 	}
 
 	@Test
-	public void validEntityWithFieldOfGeneratedTypeIsCompiledAndItsSourceAndClassIsSavedInFileSystem()
-			throws Exception {
+	public void entityInNonDefaultGroupIsCompiledAndItsSourceAndClassIsSavedInFileSystem() throws Exception {
+		File entityDir = new File(
+				CODE_REPOSITORY_PATH + "/" + GENERATED_ENTITY_ROOT_PATH + "/" + "custom_x20_group_x20_01");
+
+		entityIsCompiledAndItsSourceAndClassIsSavedInFileSystem(
+				new EntityAdminParams("Custom Group 01::Entity001", "{\"field1\":\"Number\", \"field2\":\"Decimal\"}"),
+				entityDir);
+
+		FileUtils.forceDelete(entityDir);
+	}
+
+	@Test
+	public void entityWithFieldOfGeneratedTypeIsCompiledAndItsSourceAndClassIsSavedInFileSystem() throws Exception {
 		// Copy the generated class Contract to the code repository
-		copyEntityFileToRepository("Contract.class");
+		copyFileFromEntityDefaulGroupDirToRepository("Contract.class");
 
 		WebResource webResource = getWebResource(Paths.ENTITY_CREATE_SERVICE);
-		// The entity contains the generated class Contract
-		EntityAdminParams entity = new EntityAdminParams("Entity003", "Number field1; Contract field2");
+		// The entity refers to the generated class Contract
+		EntityAdminParams entity = new EntityAdminParams("Entity003",
+				"{\"field1\":\"Number\", \"field2\":\"Contract\"}");
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -67,19 +72,45 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		File entityDir = ENTITY_REPOSITORY_DEFAULT_GROUP_DIR;
 
 		assertTrue(entityDir.isDirectory());
-		assertEquals(3, entityDir.list().length);
+		assertEquals(4, entityDir.list().length);
 		assertFilesExist(entityDir.getPath(), new String[] { "Entity003.class", "Entity003.src" });
+	}
+
+	@Test
+	public void entityWithFieldOfGeneratedTypeInNonDefaultPackageIsCompiledAndItsSourceAndClassIsSavedInFileSystem()
+			throws Exception {
+		// Copy the generated class Subscriber residing in the group "Custom Group 01" (package
+		// custom_x20_group_x20_01) to the code repository
+		copyFileFromEntityDirToRepository("custom_x20_group_x20_01", "Subscriber.class");
+
+		try {
+			WebResource webResource = getWebResource(Paths.ENTITY_CREATE_SERVICE);
+			// The entity refers to the generated class [Custom Group 01::Subscriber]
+			EntityAdminParams entity = new EntityAdminParams("Entity004",
+					"{\"field1\":\"Number\", \"field2\":\"Custom Group 01::Subscriber\"}");
+			ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
+
+			assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+			File entityDir = ENTITY_REPOSITORY_DEFAULT_GROUP_DIR;
+
+			assertTrue(entityDir.isDirectory());
+			assertEquals(3, entityDir.list().length);
+			assertFilesExist(entityDir.getPath(), new String[] { "Entity004.class", "Entity004.src" });
+		} finally {
+			deleteFileFromEntityRepository("custom_x20_group_x20_01/Subscriber.class");
+		}
 	}
 
 	@Test
 	public void invalidEntityIsIsNotSavedInFileSystem() {
 		WebResource webResource = getWebResource(Paths.ENTITY_CREATE_SERVICE);
-		EntityAdminParams entity = new EntityAdminParams("Entity002", "Number field1; Decimal field2 field3");
+		EntityAdminParams entity = new EntityAdminParams("Entity002", "Number field1; Decimal field2");
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
 
 		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class)
-				.startsWith("The entity [Entity002] contains invalid expression [Decimal field2 field3]"));
+				.startsWith("The representation of entity [Entity002] has invalid format"));
 
 		File entityClassFile = new File(
 				CODE_REPOSITORY_PATH + "/" + GENERATED_ENTITY_DEFAULT_GROUP_PATH + "/Entity002.class");
@@ -91,15 +122,15 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
-	public void validEntityAndItsSourceIsUpdatedInFileSystem() throws Exception {
-		copyEntityFileToRepository("EntityToUpdate.class");
-		copyEntityFileToRepository("EntityToUpdate.src");
+	public void entityAndItsSourceIsUpdatedInFileSystem() throws Exception {
+		copyFileFromEntityDefaulGroupDirToRepository("EntityToUpdate.class");
+		copyFileFromEntityDefaulGroupDirToRepository("EntityToUpdate.src");
 
 		String initialEntityBody = IOHelper.loadFileContents(ENTITY_REPOSITORY_DEFAULT_GROUP_PATH,
 				"EntityToUpdate.src");
-		assertEquals("Number field1; Decimal field2", initialEntityBody);
+		assertEquals("{\"field1\":\"Number\", \"field2\":\"Decimal\"}", initialEntityBody);
 
-		String newEntityBody = "Decimal field11; Number field22";
+		String newEntityBody = "{\"field11\":\"Decimal\", \"field22\":\"Number\"}";
 		EntityAdminParams entity = new EntityAdminParams("EntityToUpdate", newEntityBody);
 
 		WebResource webResource = getWebResource(Paths.ENTITY_UPDATE_SERVICE);
@@ -115,7 +146,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void nonExistentEntityIsNotAllowedWhenTryingToUpdate() throws Exception {
 		WebResource webResource = getWebResource(Paths.ENTITY_UPDATE_SERVICE);
-		EntityAdminParams entity = new EntityAdminParams("NonExistentEntity", "Number field1; Decimal field2");
+		EntityAdminParams entity = new EntityAdminParams("NonExistentEntity",
+				"{\"field1\":\"Number\", \"field2\":\"Decimal\"}");
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
 
@@ -129,8 +161,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void sourceCodeForExistingEntityIsLoaded() throws Exception {
-		copyEntityFileToRepository("EntityToRead.class");
-		copyEntityFileToRepository("EntityToRead.src");
+		copyFileFromEntityDefaulGroupDirToRepository("EntityToRead.class");
+		copyFileFromEntityDefaulGroupDirToRepository("EntityToRead.src");
 
 		WebResource webResource = getWebResource(Paths.ENTITY_GET_SOURCE_SERVICE);
 		EntityAdminParams entity = new EntityAdminParams();
@@ -139,7 +171,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		assertEquals("Number field22; Decimal field33; Number field44", response.getEntity(String.class));
+		assertEquals("{\"field22\":\"Number\", \"field33\":\"Decimal\", \"field44\":\"Number\"}",
+				response.getEntity(String.class));
 	}
 
 	@Test
@@ -182,6 +215,19 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(expectedTitle, metaData.get(Metadata.TITLE));
 
 		FileUtils.forceDelete(groupDir);
+	}
+
+	private void entityIsCompiledAndItsSourceAndClassIsSavedInFileSystem(EntityAdminParams entity, File entityDir)
+			throws Exception {
+		WebResource webResource = getWebResource(Paths.ENTITY_CREATE_SERVICE);
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		assertTrue(entityDir.isDirectory());
+		assertEquals(3, entityDir.list().length);
+		assertFilesExist(entityDir.getPath(),
+				new String[] { "Entity001.class", "Entity001.src", ClassNameUtil.METADATA_FILE_NAME });
 	}
 
 }

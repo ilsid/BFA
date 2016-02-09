@@ -24,7 +24,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	private static final String TEST_INVOCATION_CLASS_NAME = "com.ilsid.bfa.test.generated.TestInvocation";
 
 	private static final String TEST_SCRIPT_CLASS_NAME = "com.ilsid.bfa.test.generated.TestScript";
-	
+
 	private static final String TEST_SCRIPT_CLASS_SHORT_NAME = "TestScript";
 
 	private static final String SCRIPT_PACKAGE = "com.ilsid.bfa.generated.script.default_group";
@@ -301,6 +301,17 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 		String className = "com.ilsid.bfa.test.generated.entity.Entity07";
 		ClassCompiler.compileEntity(className, "java.lang.Double field1; java.lang.Integer field2 field3;");
+	}
+
+	@Test
+	public void entityWithFieldOfInvalidTypeCanNotBeCompiled() throws Exception {
+		String className = "com.ilsid.bfa.test.generated.entity.Entity08";
+		
+		exceptionRule.expect(ClassCompilationException.class);
+		exceptionRule.expectMessage(
+				String.format("Compilation of Entity [%s] failed", className));
+
+		ClassCompiler.compileEntity(className, "java.lang.Double field1; com.some.NonExistingType field2;");
 	}
 
 	@SuppressWarnings("unused")

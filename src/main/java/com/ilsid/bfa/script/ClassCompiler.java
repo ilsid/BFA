@@ -130,11 +130,11 @@ public class ClassCompiler {
 	 * </br>
 	 * The following entity body format is expected:</br>
 	 * </br>
-	 * <code>type name[;type name[;type name[...]]]</code> </br>
+	 * <code>type name;[type name;[type name[...]]]</code> </br>
 	 * </br>
 	 * The entity body example: </br>
 	 * </br>
-	 * <code>java.lang.Integer Days;java.lang.Integer ProlongDays;java.lang.Double MonthlyFee</code>
+	 * <code>java.lang.Integer Days;java.lang.Integer ProlongDays;java.lang.Double MonthlyFee;</code>
 	 * 
 	 * @param className
 	 *            class name
@@ -165,11 +165,11 @@ public class ClassCompiler {
 					throw new ClassCompilationException(String.format(
 							"Compilation of Entity [%s] failed. Expression [%s] is invalid", className, trimmedExpr));
 				}
-				String typeName = exprParts[0];
+				String fieldType = exprParts[0];
 				String fieldName = exprParts[1];
 
-				CtClass typeClass = classPool.get(typeName);
-				CtField field = new CtField(typeClass, fieldName, clazz);
+				CtClass fieldTypeClass = classPool.get(fieldType);
+				CtField field = new CtField(fieldTypeClass, fieldName, clazz);
 				field.setModifiers(Modifier.PUBLIC);
 				clazz.addField(field);
 			}

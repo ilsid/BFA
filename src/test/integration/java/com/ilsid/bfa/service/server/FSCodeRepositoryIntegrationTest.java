@@ -10,6 +10,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import com.ilsid.bfa.TestConstants;
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.LoggingConfigurator;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
 
@@ -21,11 +22,16 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 
 	protected static final File CODE_REPOSITORY_DIR = new File(CODE_REPOSITORY_PATH);
 
-	protected static final String GENERATED_ENTITY_ROOT_PATH = "com/ilsid/bfa/generated/entity/default_group";
+	protected static final String GENERATED_ENTITY_ROOT_PATH = "com/ilsid/bfa/generated/entity";
 
-	protected static final String ENTITY_REPOSITORY_DIR_PATH = CODE_REPOSITORY_PATH + "/" + GENERATED_ENTITY_ROOT_PATH;
+	protected static final String GENERATED_ENTITY_DEFAULT_GROUP_PATH = GENERATED_ENTITY_ROOT_PATH + "/"
+			+ ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
 
-	protected static final File ENTITY_REPOSITORY_DIR = new File(ENTITY_REPOSITORY_DIR_PATH);
+	protected static final String ENTITY_REPOSITORY_ROOT_DIR_PATH = CODE_REPOSITORY_PATH + "/"
+			+ GENERATED_ENTITY_ROOT_PATH;
+
+	protected static final String ENTITY_REPOSITORY_DEFAULT_GROUP_DIR_PATH = CODE_REPOSITORY_PATH + "/"
+			+ GENERATED_ENTITY_DEFAULT_GROUP_PATH;
 
 	@BeforeClass
 	public static void setUp() throws Exception {
@@ -55,21 +61,30 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 		}
 	}
 
-	protected void copyEntityFileToRepository(String fileName) throws Exception {
+	protected void copyFileFromEntityDefaulGroupDirToRepository(String fileName) throws Exception {
 		String entitySourceDir = "/integration_tests/to_copy/com/ilsid/bfa/generated/entity/default_group";
 		FileUtils.copyFileToDirectory(new File(TestConstants.TEST_RESOURCES_DIR + entitySourceDir + "/" + fileName),
-				new File(ENTITY_REPOSITORY_DIR_PATH));
+				new File(ENTITY_REPOSITORY_DEFAULT_GROUP_DIR_PATH));
+	}
+
+	protected void copyFileFromEntityDirToRepository(String entityDir, String fileName) throws Exception {
+		String entitySourceDir = "/integration_tests/to_copy/com/ilsid/bfa/generated/entity/" + entityDir;
+		FileUtils.copyFileToDirectory(new File(TestConstants.TEST_RESOURCES_DIR + entitySourceDir + "/" + fileName),
+				new File(ENTITY_REPOSITORY_ROOT_DIR_PATH + "/" + entityDir));
+	}
+	
+	protected void deleteFileFromEntityRepository(String filePath) throws Exception {
+		FileUtils.forceDelete(new File(ENTITY_REPOSITORY_ROOT_DIR_PATH + "/" + filePath));
 	}
 
 	protected void copyDirectoryToRepository(String sourceDir, String destDir) throws Exception {
 		FileUtils.copyDirectory(new File(sourceDir), new File(CODE_REPOSITORY_PATH + "/" + destDir));
 	}
-	
+
 	protected Map<String, String> loadMetadata(File metaFile) throws Exception {
 		@SuppressWarnings("unchecked")
 		Map<String, String> result = new ObjectMapper().readValue(metaFile, Map.class);
 		return result;
 	}
-
 
 }

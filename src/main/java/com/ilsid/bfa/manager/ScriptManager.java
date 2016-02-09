@@ -1,5 +1,6 @@
 package com.ilsid.bfa.manager;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -9,6 +10,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.JsonUtil;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceException;
@@ -133,13 +135,13 @@ public class ScriptManager {
 
 	/**
 	 * Creates new entity in the repository. The entity belongs to the Default Group.</br>
-	 * The following entity body format is expected:</br>
+	 * JSON entity body format is expected:</br>
 	 * </br>
-	 * <code>type name[;type name[;type name[...]]]</code> </br>
+	 * <code>{"name":"type"[, "name":"type"[, ...]]}</code> </br>
 	 * </br>
 	 * The entity body example: </br>
 	 * </br>
-	 * <code>Numeric Days;Numeric ProlongDays;Decimal MonthlyFee</code>
+	 * <code>{"Days":"Numeric", "ProlongDays":"Numeric", "MonthlyFee":"Decimal"}</code>
 	 * 
 	 * @param entityName
 	 *            entity name
@@ -402,25 +404,27 @@ public class ScriptManager {
 		return result;
 	}
 
-	private String validateAndTransformEntityBody(String entityName, String entityBody) throws ManagementException {
-		String[] fieldExpressions = entityBody.split(";");
+	private String transformToJavaCode(String entityName, String entityBody) throws ManagementException {
+		Map<String, String> fields;
+		try {
+			fields = JsonUtil.toMap(entityBody);
+		} catch (IOException e) {
+			throw new ManagementException(
+					String.format("The representation of entity [%s] has invalid format", entityName));
+		}
+
 		StringBuilder javaCode = new StringBuilder();
-		for (String fieldExpr : fieldExpressions) {
-			String trimmedExpr = fieldExpr.trim();
-			String[] exprParts = trimmedExpr.split("\\s+");
-			if (exprParts.length != 2) {
-				throw new ManagementException(
-						String.format("The entity [%s] contains invalid expression [%s]", entityName, trimmedExpr));
-			}
-			String javaType = TypeNameResolver.resolveEntityClassName(exprParts[0]);
-			javaCode.append(javaType).append(" ").append(exprParts[1]).append(";");
+		for (String fieldName : fields.keySet()) {
+			String fieldType = fields.get(fieldName);
+			String javaType = TypeNameResolver.resolveEntityClassName(fieldType);
+			javaCode.append(javaType).append(" ").append(fieldName).append(";");
 		}
 
 		return javaCode.toString();
 	}
 
 	private EntityCompilationUnit compileEntity(String entityName, String entityBody) throws ManagementException {
-		String bodyJavaCode = validateAndTransformEntityBody(entityName, entityBody);
+		String bodyJavaCode = transformToJavaCode(entityName, entityBody);
 		String className = TypeNameResolver.resolveEntityClassName(entityName);
 
 		byte[] byteCode;

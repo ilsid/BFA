@@ -2,6 +2,7 @@ package com.ilsid.bfa.persistence;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 
 import org.junit.BeforeClass;
@@ -80,11 +81,44 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void classFromStaticPackageCanNotBeObtainedAsByteArrayResource() throws Exception {
+	public void nonExistingClassFromGeneratedPackageCanNotBeObtainedAsResource() throws Exception {
+		String classPath = "com/ilsid/bfa/generated/classloadertest/NonExisting.class";
+		InputStream is = DynamicClassLoader.getInstance().getResourceAsStream(classPath);
+
+		assertNull(is);
+	}
+
+	@Test
+	public void existingClassFromStaticPackageCanNotBeObtainedAsByteArrayResource() throws Exception {
 		String classPath = "com/ilsid/bfa/test/types/ContractForCustomClassloaderTesting.class";
 		InputStream is = DynamicClassLoader.getInstance().getResourceAsStream(classPath);
 
 		assertFalse(is.getClass() == ByteArrayInputStream.class);
+	}
+
+	@Test
+	public void classFromGeneratedPackageCanBeObtainedAsURL() throws Exception {
+		String classPath = "com/ilsid/bfa/generated/classloadertest/OneMoreFooContract.class";
+		URL url = DynamicClassLoader.getInstance().findResource(classPath);
+
+		assertEquals("byte", url.getProtocol());
+		assertEquals("/" + classPath, url.getPath());
+	}
+	
+	@Test
+	public void nonExistingClassFromGeneratedPackageCanNotBeObtainedAsURL() throws Exception {
+		String classPath = "com/ilsid/bfa/generated/classloadertest/NonExisting.class";
+		URL url = DynamicClassLoader.getInstance().findResource(classPath);
+
+		assertNull(url);
+	}
+	
+	@Test
+	public void existingClassFromStaticPackageCanNotBeObtainedAsURL() throws Exception {
+		String classPath = "com/ilsid/bfa/test/types/ContractForCustomClassloaderTesting.class";
+		URL url = DynamicClassLoader.getInstance().findResource(classPath);
+
+		assertNull(url);
 	}
 
 }

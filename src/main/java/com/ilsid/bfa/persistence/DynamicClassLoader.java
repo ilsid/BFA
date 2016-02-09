@@ -126,7 +126,7 @@ public class DynamicClassLoader extends ClassLoader {
 	}
 
 	private URL doFindResource(String name) {
-		if (name.startsWith(GENERATED_CLASSES_DIR) && name.endsWith(CLASS_FILE_EXTENSION)) {
+		if (name.startsWith(GENERATED_CLASSES_DIR) && name.endsWith(CLASS_FILE_EXTENSION) && classExists(name)) {
 			String urlSpec = URL_PREFIX + name;
 			try {
 				return new URL(null, urlSpec, new ByteArrayHandler());
@@ -137,6 +137,18 @@ public class DynamicClassLoader extends ClassLoader {
 
 		return null;
 	};
+
+	private boolean classExists(String path) {
+		String className = path.substring(0, path.length() - CLASS_FILE_EXTENSION.length()).replace('/', '.');
+		byte[] byteCode;
+		try {
+			byteCode = repository.load(className);
+		} catch (PersistenceException e) {
+			throw new BFAError(String.format("Failed to load the class [%s] from the repository", className), e);
+		}
+
+		return byteCode != null;
+	}
 
 	private Class<?> doLoadClass(String className) throws ClassNotFoundException, IllegalStateException {
 		if (className.startsWith(ClassNameUtil.GENERATED_CLASSES_PACKAGE)) {
@@ -170,7 +182,7 @@ public class DynamicClassLoader extends ClassLoader {
 		try {
 			byteCode = repository.load(className);
 		} catch (PersistenceException e) {
-			throw new BFAError(String.format("Failed to load the class [%s] from the repository"), e);
+			throw new BFAError(String.format("Failed to load the class [%s] from the repository", className), e);
 		}
 
 		if (byteCode == null) {
@@ -180,14 +192,14 @@ public class DynamicClassLoader extends ClassLoader {
 		return byteCode;
 	}
 
-	private class ByteArrayHandler extends URLStreamHandler {
+	private static class ByteArrayHandler extends URLStreamHandler {
 		@Override
 		protected URLConnection openConnection(URL u) throws IOException {
 			return new ByteArrayUrlConnection(u);
 		}
 	}
 
-	private class ByteArrayUrlConnection extends URLConnection {
+	private static class ByteArrayUrlConnection extends URLConnection {
 		public ByteArrayUrlConnection(URL url) {
 			super(url);
 		}

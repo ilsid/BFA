@@ -140,25 +140,20 @@ public interface ScriptingRepository extends Configurable {
 	long getNextRuntimeId() throws PersistenceException;
 
 	/**
-	 * Loads meta-data items for top-level packages.
-	 * 
-	 * @return a list of meta-data items or an empty list, if no top-level packages found
-	 * @throws PersistenceException
-	 *             in case of any repository access issues
-	 */
-	List<Map<String, String>> loadMetadataForTopLevelPackages() throws PersistenceException;
-
-	/**
-	 * Loads meta-data items for child packages.
+	 * Loads meta-data items for child packages. Only meta-data items of the specified types will be loaded. If the
+	 * types criteria is not specified then meta-data items from all child packages will be loaded.
 	 * 
 	 * @param packageName
 	 *            parent package name
+	 * @param types
+	 *            a list of types to load
 	 * @return a list of meta-data items or an empty list, if no child packages found or such parent package does not
 	 *         exist
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
-	List<Map<String, String>> loadMetadataForChildPackages(String packageName) throws PersistenceException;
+	List<Map<String, String>> loadMetadataForChildPackages(String packageName, String... types)
+			throws PersistenceException;
 
 	/**
 	 * Loads meta-data for the package.

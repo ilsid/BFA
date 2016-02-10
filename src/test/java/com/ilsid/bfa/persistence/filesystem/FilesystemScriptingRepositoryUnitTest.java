@@ -307,7 +307,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void metadataForTopLevelPackagesCanBeLoaded() throws Exception {
-		List<Map<String, String>> metaDatas = repository.loadMetadataForTopLevelPackages();
+		List<Map<String, String>> metaDatas = repository
+				.loadMetadataForChildPackages(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE, Metadata.SCRIPT_GROUP_TYPE);
 
 		assertEquals(1, metaDatas.size());
 		final Map<String, String> metaData = metaDatas.get(0);
@@ -321,8 +322,9 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	public void metadataForChildPackagesInExistingPackageCanBeLoaded() throws Exception {
 		createCodeRepository();
 
-		List<Map<String, String>> metaDatas = repository
-				.loadMetadataForChildPackages(ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE);
+		List<Map<String, String>> metaDatas = repository.loadMetadataForChildPackages(
+				ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE, Metadata.SCRIPT_GROUP_TYPE,
+				Metadata.SCRIPT_TYPE);
 
 		assertEquals(4, metaDatas.size());
 
@@ -354,8 +356,10 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void metadataForChildPackagesInNonExistingPackageIsNotLoaded() throws Exception {
 		createCodeRepository();
-		assertEquals(0, repository.loadMetadataForChildPackages(
-				ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE + ".some_non_existing_package").size());
+		assertEquals(0,
+				repository.loadMetadataForChildPackages(
+						ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE + ".some_non_existing_package",
+						Metadata.SCRIPT_GROUP_TYPE, Metadata.SCRIPT_TYPE).size());
 	}
 
 	@Test
@@ -363,7 +367,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		createCodeRepository();
 
 		List<Map<String, String>> metaDatas = repository.loadMetadataForChildPackages(
-				ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE + ".custom_group_001");
+				ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE + ".custom_group_001", Metadata.SCRIPT_GROUP_TYPE,
+				Metadata.SCRIPT_TYPE);
 
 		assertEquals(2, metaDatas.size());
 
@@ -392,13 +397,13 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals("custom_group_001", metaData.get(Metadata.NAME));
 		assertEquals("Custom Group 001", metaData.get(Metadata.TITLE));
 	}
-	
+
 	@Test
 	public void metadataForNonExistingPackageCanNotBeLoaded() throws Exception {
 		createCodeRepository();
 
-		Map<String, String> metaData = repository
-				.loadMetadataForPackage(ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE + ".some_non_existing_package");
+		Map<String, String> metaData = repository.loadMetadataForPackage(
+				ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE + ".some_non_existing_package");
 
 		assertNull(metaData);
 	}

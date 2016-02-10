@@ -31,6 +31,8 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 
 	private static final char DOT = '.';
 
+	private static final String ALL_TYPES_CRITERIA = "ALL_TYPES";
+
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
 	private static final String SOURCE_FILE_EXTENSION = ".src";
@@ -241,21 +243,11 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadGroupMetadatas()
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadMetadataForChildPackages(java.lang.String,
+	 * java.lang.String[])
 	 */
-	public List<Map<String, String>> loadMetadataForTopLevelPackages() throws PersistenceException {
-		List<Map<String, String>> result = new LinkedList<>();
-		collectMetadatas(scriptsRootDir, Metadata.SCRIPT_GROUP_TYPE, result);
-
-		return result;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadMetadataForChildPackages(java.lang.String)
-	 */
-	public List<Map<String, String>> loadMetadataForChildPackages(String packageName) throws PersistenceException {
+	public List<Map<String, String>> loadMetadataForChildPackages(String packageName, String... types)
+			throws PersistenceException {
 		List<Map<String, String>> result = new LinkedList<>();
 		File packageDir = getPackageDir(packageName);
 
@@ -263,8 +255,11 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			return result;
 		}
 
-		collectMetadatas(packageDir, Metadata.SCRIPT_GROUP_TYPE, result);
-		collectMetadatas(packageDir, Metadata.SCRIPT_TYPE, result);
+		String[] typesToCollect = types.length > 0 ? types : new String[] { ALL_TYPES_CRITERIA };
+
+		for (String type : typesToCollect) {
+			collectSubDirMetadatas(packageDir, type, result);
+		}
 
 		return result;
 	}
@@ -280,7 +275,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		if (!packageDir.isDirectory()) {
 			return null;
 		}
-		
+
 		File metaFile = new File(packageDir, ClassNameUtil.METADATA_FILE_NAME);
 		if (metaFile.exists()) {
 			return loadContents(metaFile);
@@ -375,7 +370,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		return result;
 	}
 
-	private void collectMetadatas(File dir, String typeCriteria, List<Map<String, String>> result)
+	private void collectSubDirMetadatas(File dir, String typeCriteria, List<Map<String, String>> result)
 			throws PersistenceException {
 		File[] children = dir.listFiles();
 		Arrays.sort(children, FILE_NAMES_COMPARATOR);
@@ -385,7 +380,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			if (metaFile.exists()) {
 				Map<String, String> metaData = loadContents(metaFile);
 				String type = metaData.get(Metadata.TYPE);
-				if (typeCriteria.equals(type)) {
+				if ((type != null && typeCriteria == ALL_TYPES_CRITERIA) || typeCriteria.equals(type)) {
 					result.add(metaData);
 				}
 			}

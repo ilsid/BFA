@@ -31,8 +31,6 @@ import com.ilsid.bfa.script.TypeNameResolver;
 // TODO: write unit tests
 public class ScriptManager {
 
-	private static final String METADATA_VALUE_SCRIPT_TYPE = "SCRIPT";
-
 	private ScriptingRepository repository;
 
 	/**
@@ -176,7 +174,7 @@ public class ScriptManager {
 	 */
 	public void updateEntity(String entityName, String entityBody) throws ManagementException {
 		checkParentGroupExists(entityName);
-		
+
 		EntityCompilationUnit compilationUnit = compileEntity(entityName, entityBody);
 		try {
 			startTransaction();
@@ -205,7 +203,7 @@ public class ScriptManager {
 	 */
 	public String getEntitySourceCode(String entityName) throws ManagementException {
 		checkParentGroupExists(entityName);
-		
+
 		String className = TypeNameResolver.resolveEntityClassName(entityName);
 		String body;
 		try {
@@ -233,10 +231,11 @@ public class ScriptManager {
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
-	public List<Map<String, String>> getTopLevelGroupMetadatas() throws ManagementException {
+	public List<Map<String, String>> getTopLevelScriptGroupMetadatas() throws ManagementException {
 		List<Map<String, String>> result;
 		try {
-			result = repository.loadMetadataForTopLevelPackages();
+			result = repository.loadMetadataForChildPackages(ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE,
+					Metadata.SCRIPT_GROUP_TYPE);
 		} catch (PersistenceException e) {
 			throw new ManagementException("Failed to load the info for top-level script groups", e);
 		}
@@ -260,11 +259,12 @@ public class ScriptManager {
 	 * @throws ManagementException
 	 *             in case of any repository access issues
 	 */
-	public List<Map<String, String>> getChildrenMetadatas(String groupName) throws ManagementException {
+	public List<Map<String, String>> getChildrenScriptGroupMetadatas(String groupName) throws ManagementException {
 		List<Map<String, String>> result;
 		String packageName = TypeNameResolver.resolveScriptGroupPackageName(groupName);
 		try {
-			result = repository.loadMetadataForChildPackages(packageName);
+			result = repository.loadMetadataForChildPackages(packageName, Metadata.SCRIPT_GROUP_TYPE,
+					Metadata.SCRIPT_TYPE);
 		} catch (PersistenceException e) {
 			throw new ManagementException(
 					String.format("Failed to load child items info from the group [%s]", groupName), e);
@@ -356,7 +356,7 @@ public class ScriptManager {
 
 	private void saveScriptMetadata(ScriptCompilationUnit compilationUnit) throws PersistenceException {
 		Map<String, String> metaData = new LinkedHashMap<>();
-		metaData.put(Metadata.TYPE, METADATA_VALUE_SCRIPT_TYPE);
+		metaData.put(Metadata.TYPE, Metadata.SCRIPT_TYPE);
 		metaData.put(Metadata.NAME, compilationUnit.scriptName);
 		metaData.put(Metadata.TITLE, TypeNameResolver.splitName(compilationUnit.scriptName).getChildName());
 
@@ -484,7 +484,7 @@ public class ScriptManager {
 		Map<String, String> metaData = new HashMap<>();
 		metaData.put(Metadata.TYPE, Metadata.SCRIPT_GROUP_TYPE);
 		metaData.put(Metadata.NAME, groupName);
-		metaData.put(Metadata.TITLE, TypeNameResolver.splitName(groupName).getChildName());
+		metaData.put(Metadata.TITLE, TypeNameResolver.splitGroupName(groupName).getChildName());
 
 		return metaData;
 	}
@@ -492,7 +492,7 @@ public class ScriptManager {
 	private Map<String, String> createEntityGroupMetadata(String groupName) throws ManagementException {
 		Map<String, String> metaData = new HashMap<>();
 		metaData.put(Metadata.NAME, groupName);
-		metaData.put(Metadata.TITLE, TypeNameResolver.splitName(groupName).getChildName());
+		metaData.put(Metadata.TITLE, TypeNameResolver.splitGroupName(groupName).getChildName());
 
 		return metaData;
 	}
@@ -504,8 +504,8 @@ public class ScriptManager {
 		try {
 			parentMetadata = repository.loadMetadataForPackage(parentPackageName);
 		} catch (PersistenceException e) {
-			throw new ManagementException(
-					String.format("Failed to load meta-data for the group [%s]", parentGroupName), e);
+			throw new ManagementException(String.format("Failed to load meta-data for the group [%s]", parentGroupName),
+					e);
 		}
 
 		if (!isScriptGroup(parentMetadata)) {

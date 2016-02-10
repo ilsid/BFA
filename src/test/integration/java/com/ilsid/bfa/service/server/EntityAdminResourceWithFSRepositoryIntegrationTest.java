@@ -77,7 +77,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
-	public void entityWithFieldOfGeneratedTypeInNonDefaultPackageIsCompiledAndItsSourceAndClassIsSavedInFileSystem()
+	public void entityWithFieldOfGeneratedTypeInNonDefaultGroupIsCompiledAndItsSourceAndClassIsSavedInFileSystem()
 			throws Exception {
 		// Copy the generated class Subscriber residing in the group "Custom Group 01" (package
 		// custom_x20_group_x20_01) to the code repository
@@ -160,7 +160,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
-	public void sourceCodeForExistingEntityIsLoaded() throws Exception {
+	public void sourceCodeForEntityIsLoaded() throws Exception {
 		copyFileFromEntityDefaulGroupDirToRepository("EntityToRead.class");
 		copyFileFromEntityDefaulGroupDirToRepository("EntityToRead.src");
 
@@ -173,6 +173,26 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		assertEquals("{\"field22\":\"Number\", \"field33\":\"Decimal\", \"field44\":\"Number\"}",
 				response.getEntity(String.class));
+	}
+
+	@Test
+	public void sourceCodeForEntityInNonDefaultGroupIsLoaded() throws Exception {
+		// Copy the generated class Subscriber and its source residing in the group "Custom Group 01" (package
+		// custom_x20_group_x20_01) to the code repository
+		copyFileFromEntityDirToRepository("custom_x20_group_x20_01", "Subscriber.class");
+		copyFileFromEntityDirToRepository("custom_x20_group_x20_01", "Subscriber.src");
+		try {
+			WebResource webResource = getWebResource(Paths.ENTITY_GET_SOURCE_SERVICE);
+			EntityAdminParams entity = new EntityAdminParams();
+			entity.setName("Custom Group 01::Subscriber");
+			ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
+			assertEquals(Status.OK.getStatusCode(), response.getStatus());
+			assertEquals("{\"PrepaidAmount\":\"Decimal\", \"PrepaidReserved\":\"Decimal\", \"PrepaidDays\":\"Number\"}",
+					response.getEntity(String.class));
+		} finally {
+			deleteFileFromEntityRepository("custom_x20_group_x20_01/Subscriber.class");
+			deleteFileFromEntityRepository("custom_x20_group_x20_01/Subscriber.src");
+		}
 	}
 
 	@Test

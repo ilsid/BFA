@@ -51,7 +51,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void createScript(String scriptName, String scriptBody) throws ManagementException {
-		checkParentScriptGroupExists(scriptName);
+		checkParentGroupExists(scriptName);
 
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
@@ -82,7 +82,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
-		checkParentScriptGroupExists(scriptName);
+		checkParentGroupExists(scriptName);
 
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
@@ -114,7 +114,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public String getScriptSourceCode(String scriptName) throws ManagementException {
-		checkParentScriptGroupExists(scriptName);
+		checkParentGroupExists(scriptName);
 
 		String className = TypeNameResolver.resolveScriptClassName(scriptName);
 		String body;
@@ -155,6 +155,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void createEntity(String entityName, String entityBody) throws ManagementException {
+		checkParentGroupExists(entityName);
 		EntityCompilationUnit compilationUnit = compileEntity(entityName, entityBody);
 		saveEntity(compilationUnit, entityBody);
 	}
@@ -174,6 +175,8 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void updateEntity(String entityName, String entityBody) throws ManagementException {
+		checkParentGroupExists(entityName);
+		
 		EntityCompilationUnit compilationUnit = compileEntity(entityName, entityBody);
 		try {
 			startTransaction();
@@ -201,6 +204,8 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public String getEntitySourceCode(String entityName) throws ManagementException {
+		checkParentGroupExists(entityName);
+		
 		String className = TypeNameResolver.resolveEntityClassName(entityName);
 		String body;
 		try {
@@ -287,7 +292,7 @@ public class ScriptManager {
 	public void createScriptGroup(String groupName) throws ManagementException {
 		String parentGroupName = TypeNameResolver.splitGroupName(groupName).getParentName();
 		if (parentGroupName != null) {
-			checkParentScriptGroupExists(groupName);
+			checkParentGroupExists(groupName);
 		}
 
 		String packageName = TypeNameResolver.resolveScriptGroupPackageName(groupName);
@@ -492,7 +497,7 @@ public class ScriptManager {
 		return metaData;
 	}
 
-	private void checkParentScriptGroupExists(String name) throws ManagementException {
+	private void checkParentGroupExists(String name) throws ManagementException {
 		final String parentGroupName = TypeNameResolver.splitName(name).getParentName();
 		String parentPackageName = TypeNameResolver.resolveScriptGroupPackageName(parentGroupName);
 		Map<String, String> parentMetadata;
@@ -500,11 +505,11 @@ public class ScriptManager {
 			parentMetadata = repository.loadMetadataForPackage(parentPackageName);
 		} catch (PersistenceException e) {
 			throw new ManagementException(
-					String.format("Failed to load meta-data for the script group [%s]", parentGroupName), e);
+					String.format("Failed to load meta-data for the group [%s]", parentGroupName), e);
 		}
 
 		if (!isScriptGroup(parentMetadata)) {
-			throw new ManagementException(String.format("No parent script group [%s] exists", parentGroupName));
+			throw new ManagementException(String.format("No parent group [%s] exists", parentGroupName));
 		}
 	}
 

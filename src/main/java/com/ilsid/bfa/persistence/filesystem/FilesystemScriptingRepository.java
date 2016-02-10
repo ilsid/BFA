@@ -103,6 +103,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#saveMetadata(java.lang.String,
 	 * com.ilsid.bfa.persistence.Metadata)
 	 */
+	@Override
 	public boolean saveMetadata(String className, Map<String, String> metaData) throws PersistenceException {
 		File classDir = new File(getClassDirectoryPath(className));
 		File classFile = new File(getFilePathPrefix(className) + CLASS_FILE_EXTENSION);
@@ -110,7 +111,10 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		if (classDir.exists() && classFile.exists()) {
 			try {
 				String json = jsonMapper.writeValueAsString(metaData);
-				FileUtils.writeStringToFile(new File(classDir, ClassNameUtil.METADATA_FILE_NAME), json);
+				String shortClassName = ClassNameUtil.getShortClassName(className);
+				String metaFileName = new StringBuilder(shortClassName).append('_')
+						.append(ClassNameUtil.METADATA_FILE_NAME).toString();
+				FileUtils.writeStringToFile(new File(classDir, metaFileName), json);
 			} catch (IOException e) {
 				throw new PersistenceException(
 						String.format("Failed to save the meta-data for the class [%s]", className), e);
@@ -125,8 +129,33 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#savePackageMetadata(java.lang.String, java.util.Map)
+	 */
+	@Override
+	public boolean savePackageMetadata(String packageName, Map<String, String> metaData) throws PersistenceException {
+		File packageDir = getPackageDir(packageName);
+
+		if (packageDir.isDirectory()) {
+			try {
+				String json = jsonMapper.writeValueAsString(metaData);
+				FileUtils.writeStringToFile(new File(packageDir, ClassNameUtil.METADATA_FILE_NAME), json);
+			} catch (IOException e) {
+				throw new PersistenceException(
+						String.format("Failed to save the meta-data for the package [%s]", packageName), e);
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#savePackage(java.lang.String, java.util.Map)
 	 */
+	@Override
 	public void savePackage(String packageName, Map<String, String> metaData) throws PersistenceException {
 		File packageDir = getPackageDir(packageName);
 
@@ -246,6 +275,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadMetadataForChildPackages(java.lang.String,
 	 * java.lang.String[])
 	 */
+	@Override
 	public List<Map<String, String>> loadMetadataForChildPackages(String packageName, String... types)
 			throws PersistenceException {
 		List<Map<String, String>> result = new LinkedList<>();
@@ -267,8 +297,21 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadMetadataForClasses(java.lang.String, java.lang.String[])
+	 */
+	@Override
+	public List<Map<String, String>> loadMetadataForClasses(String packageName, String... types)
+			throws PersistenceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadMetadataForPackage(java.lang.String)
 	 */
+	@Override
 	public Map<String, String> loadMetadataForPackage(String packageName) throws PersistenceException {
 		File packageDir = getPackageDir(packageName);
 
@@ -376,7 +419,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		Arrays.sort(children, FILE_NAMES_COMPARATOR);
 
 		for (int i = 0; i < children.length; i++) {
-			File metaFile = new File(children[i].getPath() + File.separator + ClassNameUtil.METADATA_FILE_NAME);
+			File metaFile = new File(children[i].getPath(), ClassNameUtil.METADATA_FILE_NAME);
 			if (metaFile.exists()) {
 				Map<String, String> metaData = loadContents(metaFile);
 				String type = metaData.get(Metadata.TYPE);

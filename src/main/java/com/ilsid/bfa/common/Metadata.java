@@ -21,6 +21,10 @@ public final class Metadata {
 	public static final String SCRIPT_TYPE = "SCRIPT";
 
 	public static final String SCRIPT_GROUP_TYPE = "SCRIPT_GROUP";
+	
+	public static final String ENTITY_TYPE = "ENTITY";
+
+	public static final String ENTITY_GROUP_TYPE = "ENTITY_GROUP";
 
 	public static final String DEFAULT_GROUP_NAME = "default_group";
 

@@ -1,4 +1,5 @@
 {
+"type": "ENTITY_GROUP",
 "name": "default_group",
 "title": "Default Group"
 }

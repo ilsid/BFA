@@ -49,7 +49,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void createScript(String scriptName, String scriptBody) throws ManagementException {
-		checkParentGroupExists(scriptName);
+		checkParentScriptGroupExists(scriptName);
 
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
@@ -80,7 +80,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
-		checkParentGroupExists(scriptName);
+		checkParentScriptGroupExists(scriptName);
 
 		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
@@ -112,7 +112,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public String getScriptSourceCode(String scriptName) throws ManagementException {
-		checkParentGroupExists(scriptName);
+		checkParentScriptGroupExists(scriptName);
 
 		String className = TypeNameResolver.resolveScriptClassName(scriptName);
 		String body;
@@ -153,9 +153,17 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void createEntity(String entityName, String entityBody) throws ManagementException {
-		checkParentGroupExists(entityName);
+		checkParentEntityGroupExists(entityName);
 		EntityCompilationUnit compilationUnit = compileEntity(entityName, entityBody);
-		saveEntity(compilationUnit, entityBody);
+		try {
+			startTransaction();
+			saveEntity(compilationUnit, entityBody);
+			saveEntityMetadata(compilationUnit);
+			commitTransaction();
+		} catch (PersistenceException e) {
+			rollbackTransaction();
+			throw new ManagementException(String.format("Failed to create the entity [%s]", entityName), e);
+		}
 	}
 
 	/**
@@ -173,13 +181,14 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public void updateEntity(String entityName, String entityBody) throws ManagementException {
-		checkParentGroupExists(entityName);
+		checkParentEntityGroupExists(entityName);
 
 		EntityCompilationUnit compilationUnit = compileEntity(entityName, entityBody);
 		try {
 			startTransaction();
 			deleteEntity(entityName);
 			saveEntity(compilationUnit, entityBody);
+			saveEntityMetadata(compilationUnit);
 			commitTransaction();
 		} catch (PersistenceException e) {
 			rollbackTransaction();
@@ -202,7 +211,7 @@ public class ScriptManager {
 	 *             </ul>
 	 */
 	public String getEntitySourceCode(String entityName) throws ManagementException {
-		checkParentGroupExists(entityName);
+		checkParentEntityGroupExists(entityName);
 
 		String className = TypeNameResolver.resolveEntityClassName(entityName);
 		String body;
@@ -292,7 +301,7 @@ public class ScriptManager {
 	public void createScriptGroup(String groupName) throws ManagementException {
 		String parentGroupName = TypeNameResolver.splitGroupName(groupName).getParentName();
 		if (parentGroupName != null) {
-			checkParentGroupExists(groupName);
+			checkParentScriptGroupExists(groupName);
 		}
 
 		String packageName = TypeNameResolver.resolveScriptGroupPackageName(groupName);
@@ -360,7 +369,17 @@ public class ScriptManager {
 		metaData.put(Metadata.NAME, compilationUnit.scriptName);
 		metaData.put(Metadata.TITLE, TypeNameResolver.splitName(compilationUnit.scriptName).getChildName());
 
-		repository.saveMetadata(compilationUnit.scriptClassName, metaData);
+		String packageName = ClassNameUtil.getPackageName(compilationUnit.scriptClassName);
+		repository.savePackageMetadata(packageName, metaData);
+	}
+
+	private void saveEntityMetadata(EntityCompilationUnit compilationUnit) throws PersistenceException {
+		Map<String, String> metaData = new LinkedHashMap<>();
+		metaData.put(Metadata.TYPE, Metadata.ENTITY_TYPE);
+		metaData.put(Metadata.NAME, compilationUnit.entityName);
+		metaData.put(Metadata.TITLE, TypeNameResolver.splitName(compilationUnit.entityName).getChildName());
+
+		repository.saveMetadata(compilationUnit.entityClassName, metaData);
 	}
 
 	private void deleteScript(String scriptName) throws ManagementException {
@@ -491,35 +510,31 @@ public class ScriptManager {
 
 	private Map<String, String> createEntityGroupMetadata(String groupName) throws ManagementException {
 		Map<String, String> metaData = new HashMap<>();
+		metaData.put(Metadata.TYPE, Metadata.ENTITY_GROUP_TYPE);
 		metaData.put(Metadata.NAME, groupName);
 		metaData.put(Metadata.TITLE, TypeNameResolver.splitGroupName(groupName).getChildName());
 
 		return metaData;
 	}
 
-	private void checkParentGroupExists(String name) throws ManagementException {
+	private void checkParentScriptGroupExists(String name) throws ManagementException {
 		final String parentGroupName = TypeNameResolver.splitName(name).getParentName();
 		String parentPackageName = TypeNameResolver.resolveScriptGroupPackageName(parentGroupName);
 		Map<String, String> parentMetadata;
 		try {
 			parentMetadata = repository.loadMetadataForPackage(parentPackageName);
 		} catch (PersistenceException e) {
-			throw new ManagementException(String.format("Failed to load meta-data for the group [%s]", parentGroupName),
-					e);
+			throw new ManagementException(
+					String.format("Failed to load meta-data for the script group [%s]", parentGroupName), e);
 		}
 
-		if (!isScriptGroup(parentMetadata)) {
-			throw new ManagementException(String.format("No parent group [%s] exists", parentGroupName));
+		if (!isGroup(parentMetadata, Metadata.SCRIPT_GROUP_TYPE)) {
+			throw new ManagementException(String.format("No parent script group [%s] exists", parentGroupName));
 		}
 	}
 
 	private void checkParentEntityGroupExists(String name) throws ManagementException {
-		final String parentGroupName = TypeNameResolver.splitGroupName(name).getParentName();
-
-		if (parentGroupName == null) {
-			return;
-		}
-
+		final String parentGroupName = TypeNameResolver.splitName(name).getParentName();
 		String parentPackageName = TypeNameResolver.resolveEntityGroupPackageName(parentGroupName);
 		Map<String, String> parentMetadata;
 		try {
@@ -529,13 +544,13 @@ public class ScriptManager {
 					String.format("Failed to load meta-data for the entity group [%s]", parentGroupName), e);
 		}
 
-		if (parentMetadata == null) {
+		if (!isGroup(parentMetadata, Metadata.ENTITY_GROUP_TYPE)) {
 			throw new ManagementException(String.format("No parent entity group [%s] exists", parentGroupName));
 		}
 	}
 
-	private boolean isScriptGroup(Map<String, String> meta) {
-		if (meta != null && Metadata.SCRIPT_GROUP_TYPE.equals(meta.get(Metadata.TYPE))) {
+	private boolean isGroup(Map<String, String> meta, String groupType) {
+		if (meta != null && groupType.equals(meta.get(Metadata.TYPE))) {
 			return true;
 		}
 

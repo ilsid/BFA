@@ -72,8 +72,9 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		File entityDir = ENTITY_REPOSITORY_DEFAULT_GROUP_DIR;
 
 		assertTrue(entityDir.isDirectory());
-		assertEquals(4, entityDir.list().length);
-		assertFilesExist(entityDir.getPath(), new String[] { "Entity003.class", "Entity003.src" });
+		assertEquals(5, entityDir.list().length);
+		assertFilesExist(entityDir.getPath(),
+				new String[] { "Entity003.class", "Entity003.src", "Entity003_" + ClassNameUtil.METADATA_FILE_NAME });
 	}
 
 	@Test
@@ -95,8 +96,9 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 			File entityDir = ENTITY_REPOSITORY_DEFAULT_GROUP_DIR;
 
 			assertTrue(entityDir.isDirectory());
-			assertEquals(3, entityDir.list().length);
-			assertFilesExist(entityDir.getPath(), new String[] { "Entity004.class", "Entity004.src" });
+			assertEquals(4, entityDir.list().length);
+			assertFilesExist(entityDir.getPath(), new String[] { "Entity004.class", "Entity004.src",
+					"Entity004_" + ClassNameUtil.METADATA_FILE_NAME });
 		} finally {
 			deleteFileFromEntityRepository("custom_x20_group_x20_01/Subscriber.class");
 		}
@@ -230,7 +232,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertTrue(groupDir.isDirectory());
 
 		Map<String, String> metaData = loadMetadata(new File(groupDir, ClassNameUtil.METADATA_FILE_NAME));
-		assertEquals(2, metaData.keySet().size());
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ENTITY_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(groupName, metaData.get(Metadata.NAME));
 		assertEquals(expectedTitle, metaData.get(Metadata.TITLE));
 
@@ -245,9 +248,9 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		assertTrue(entityDir.isDirectory());
-		assertEquals(3, entityDir.list().length);
-		assertFilesExist(entityDir.getPath(),
-				new String[] { "Entity001.class", "Entity001.src", ClassNameUtil.METADATA_FILE_NAME });
+		assertEquals(4, entityDir.list().length);
+		assertFilesExist(entityDir.getPath(), new String[] { "Entity001.class", "Entity001.src",
+				"Entity001_" + ClassNameUtil.METADATA_FILE_NAME, ClassNameUtil.METADATA_FILE_NAME });
 	}
 
 }

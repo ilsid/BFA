@@ -280,9 +280,37 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	public void metadataForExistingClassCanBeSaved() throws Exception {
 		createCodeRepository();
 
-		String className = "com.ilsid.bfa.generated.script.default_group.script001.Script001";
+		String className = "com.ilsid.bfa.generated.entity.default_group.Entity001";
 
-		boolean result = repository.saveMetadata(className, createScriptMetadata());
+		boolean result = repository.saveMetadata(className, createEntityMetadata());
+		assertTrue(result);
+
+		String savedMetadata = IOHelper.loadFileContents(
+				ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.entity.default_group".replace('.', '/'),
+				"Entity001_" + ClassNameUtil.METADATA_FILE_NAME);
+
+		assertEquals("{\"type\":\"ENTITY\",\"name\":\"Test_Entity_001\",\"title\":\"Test Entity 001\"}", savedMetadata);
+	}
+
+	@Test
+	public void metadataForNonExistingClassCanNotBeSaved() throws Exception {
+		createCodeRepository();
+
+		String className = "com.ilsid.bfa.generated.entity.default_group.SomeNonExistingEntity";
+
+		boolean result = repository.saveMetadata(className, createEntityMetadata());
+		assertFalse(result);
+		assertFalse(new File(ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.entity.default_group".replace('.', '/')
+				+ "/" + "SomeNonExistingEntity_" + ClassNameUtil.METADATA_FILE_NAME).exists());
+	}
+
+	@Test
+	public void metadataForExistingPackageCanBeSaved() throws Exception {
+		createCodeRepository();
+
+		String packageName = "com.ilsid.bfa.generated.script.default_group.script001";
+
+		boolean result = repository.savePackageMetadata(packageName, createScriptMetadata());
 		assertTrue(result);
 
 		String savedMetadata = IOHelper.loadFileContents(
@@ -291,14 +319,14 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		assertEquals("{\"type\":\"SCRIPT\",\"name\":\"Test_Script_001\",\"title\":\"Test Script 001\"}", savedMetadata);
 	}
-
+	
 	@Test
-	public void metadataForNonExistingClassCanNotBeSaved() throws Exception {
+	public void metadataForNonExistingPackageCanNotBeSaved() throws Exception {
 		createCodeRepository();
 
-		String className = "com.ilsid.bfa.generated.script.default_group.somenonexistingscript.SomeNonExistingScript";
+		String className = "com.ilsid.bfa.generated.script.default_group.somenonexistingscript";
 
-		boolean result = repository.saveMetadata(className, createScriptMetadata());
+		boolean result = repository.savePackageMetadata(className, createScriptMetadata());
 		assertFalse(result);
 		assertFalse(new File(ROOT_DIR_PATH + "/"
 				+ "com.ilsid.bfa.generated.script.default_group.somenonexistingscript".replace('.', '/') + "/"
@@ -463,6 +491,15 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		} else {
 			repository.save(SCRIPT_CLASS_NAME, byteCode);
 		}
+	}
+
+	private Map<String, String> createEntityMetadata() {
+		Map<String, String> metaData = new LinkedHashMap<>();
+		metaData.put("type", Metadata.ENTITY_TYPE);
+		metaData.put("name", "Test_Entity_001");
+		metaData.put("title", "Test Entity 001");
+
+		return metaData;
 	}
 
 	private Map<String, String> createScriptMetadata() {

@@ -74,6 +74,21 @@ public interface ScriptingRepository extends Configurable {
 	boolean saveMetadata(String className, Map<String, String> metaData) throws PersistenceException;
 
 	/**
+	 * Saves the meta-data for the given package. Overwrites the existing meta-data, if any.
+	 * 
+	 * @param packageName
+	 *            package name
+	 * @param metaData
+	 *            meta-data
+	 * @return <code>true</code> if the meta-data was saved and <code>false</code> otherwise because the package with
+	 *         the given name does not exist
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 * 
+	 */
+	boolean savePackageMetadata(String packageName, Map<String, String> metaData) throws PersistenceException;
+
+	/**
 	 * Saves new package.
 	 * 
 	 * @param packageName
@@ -154,6 +169,21 @@ public interface ScriptingRepository extends Configurable {
 	 */
 	List<Map<String, String>> loadMetadataForChildPackages(String packageName, String... types)
 			throws PersistenceException;
+
+	/**
+	 * Loads meta-data items for classes in the given package. Only meta-data items of the specified types will be
+	 * loaded. If the types criteria is not specified then meta-data items for all classes (in the given package) will
+	 * be loaded.
+	 * 
+	 * @param packageName
+	 *            package name
+	 * @param types
+	 *            a list of types to load
+	 * @return a list of meta-data items or an empty list, if no classes found or such package does not exist
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	List<Map<String, String>> loadMetadataForClasses(String packageName, String... types) throws PersistenceException;
 
 	/**
 	 * Loads meta-data for the package.

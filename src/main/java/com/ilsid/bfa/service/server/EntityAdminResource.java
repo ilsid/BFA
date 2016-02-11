@@ -41,7 +41,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path(Paths.ENTITY_CREATE_OPERATION)
+	@Path(Paths.CREATE_OPERATION)
 	public Response create(EntityAdminParams entity) {
 		validateNonEmptyNameAndBody(Paths.ENTITY_CREATE_SERVICE, entity);
 		try {
@@ -71,7 +71,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path(Paths.ENTITY_UPDATE_OPERATION)
+	@Path(Paths.UPDATE_OPERATION)
 	public Response update(EntityAdminParams entity) {
 		validateNonEmptyNameAndBody(Paths.ENTITY_UPDATE_SERVICE, entity);
 		try {
@@ -101,7 +101,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
-	@Path(Paths.ENTITY_GET_SOURCE_OPERATION)
+	@Path(Paths.GET_SOURCE_OPERATION)
 	public Response getSource(EntityAdminParams entity) {
 		validateNonEmptyName(Paths.ENTITY_GET_SOURCE_SERVICE, entity);
 		String entitySource;
@@ -113,7 +113,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 
 		return Response.status(Status.OK).entity(entitySource).build();
 	}
-	
+
 	/**
 	 * Creates new entity group in the code repository. The group name can be simple or complex. The simple group name
 	 * is like <i>My Group</i>. It is treated as a top-level group. The complex group name can be like <i>Grand Parent

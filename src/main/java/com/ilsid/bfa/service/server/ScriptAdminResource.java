@@ -44,7 +44,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path(Paths.SCRIPT_CREATE_OPERATION)
+	@Path(Paths.CREATE_OPERATION)
 	public Response create(ScriptAdminParams script) {
 		validateNonEmptyNameAndBody(Paths.SCRIPT_CREATE_SERVICE, script);
 		try {
@@ -75,7 +75,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path(Paths.SCRIPT_UPDATE_OPERATION)
+	@Path(Paths.UPDATE_OPERATION)
 	public Response update(ScriptAdminParams script) {
 		validateNonEmptyNameAndBody(Paths.SCRIPT_UPDATE_SERVICE, script);
 		try {
@@ -105,7 +105,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
-	@Path(Paths.SCRIPT_GET_SOURCE_OPERATION)
+	@Path(Paths.GET_SOURCE_OPERATION)
 	public Response getSource(ScriptAdminParams script) {
 		validateNonEmptyName(Paths.SCRIPT_GET_SOURCE_SERVICE, script);
 		String scriptSource;
@@ -136,7 +136,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@POST
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path(Paths.SCRIPT_GET_ITEMS_OPERATION)
+	@Path(Paths.GET_ITEMS_OPERATION)
 	public Response getItems(String groupName) {
 		validateNonEmptyParameter(Paths.SCRIPT_GET_ITEMS_SERVICE, GROUP_PARAM_NAME, groupName);
 		List<Map<String, String>> metas;

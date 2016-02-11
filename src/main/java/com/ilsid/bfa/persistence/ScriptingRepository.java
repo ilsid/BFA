@@ -125,7 +125,9 @@ public interface ScriptingRepository extends Configurable {
 	 *         <li><code>0</code> is returned, if the class with the given name does not exist</li>
 	 *         <li><code>1</code> is returned if the class with the given name was deleted, but no corresponding source
 	 *         was found</li>
-	 *         <li><code>2</code> is returned if both class and source were deleted</li>
+	 *         <li><code>2</code> is returned if both class and source were deleted, but no corresponding meta-data was
+	 *         found</li>
+	 *         <li><code>3</code> is returned if class, source and meta-data were deleted</li>
 	 *         </ul>
 	 * @throws PersistenceException
 	 *             in case of any repository access issues

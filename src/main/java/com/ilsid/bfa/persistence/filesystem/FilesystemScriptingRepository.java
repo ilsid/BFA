@@ -2,6 +2,7 @@ package com.ilsid.bfa.persistence.filesystem;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -37,7 +38,11 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 
 	private static final String SOURCE_FILE_EXTENSION = ".src";
 
+	private static final String CLASS_METADATA_SUFFIX = '_' + ClassNameUtil.METADATA_FILE_NAME;
+
 	private static final FileNamesComparator FILE_NAMES_COMPARATOR = new FileNamesComparator();
+
+	private static final MetadataFilesFilter METADATA_FILES_FILTER = new MetadataFilesFilter();
 
 	private AtomicLong runtimeId = new AtomicLong(System.currentTimeMillis());
 
@@ -112,8 +117,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			try {
 				String json = jsonMapper.writeValueAsString(metaData);
 				String shortClassName = ClassNameUtil.getShortClassName(className);
-				String metaFileName = new StringBuilder(shortClassName).append('_')
-						.append(ClassNameUtil.METADATA_FILE_NAME).toString();
+				String metaFileName = new StringBuilder(shortClassName).append(CLASS_METADATA_SUFFIX).toString();
 				FileUtils.writeStringToFile(new File(classDir, metaFileName), json);
 			} catch (IOException e) {
 				throw new PersistenceException(
@@ -214,6 +218,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		String filePathPrefix = getFilePathPrefix(className);
 		File classFile = new File(filePathPrefix + CLASS_FILE_EXTENSION);
 		File sourceFile = new File(filePathPrefix + SOURCE_FILE_EXTENSION);
+		File metaFile = new File(filePathPrefix + CLASS_METADATA_SUFFIX);
 
 		int filesCnt = 0;
 
@@ -221,6 +226,9 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			filesCnt++;
 			if (deleteFileIfExists(sourceFile)) {
 				filesCnt++;
+				if (deleteFileIfExists(metaFile)) {
+					filesCnt++;
+				}
 			}
 		}
 
@@ -285,7 +293,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			return result;
 		}
 
-		String[] typesToCollect = types.length > 0 ? types : new String[] { ALL_TYPES_CRITERIA };
+		String[] typesToCollect = defineTypesToCollect(types);
 
 		for (String type : typesToCollect) {
 			collectSubDirMetadatas(packageDir, type, result);
@@ -302,8 +310,20 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	@Override
 	public List<Map<String, String>> loadMetadataForClasses(String packageName, String... types)
 			throws PersistenceException {
-		// TODO Auto-generated method stub
-		return null;
+		List<Map<String, String>> result = new LinkedList<>();
+		File packageDir = getPackageDir(packageName);
+
+		if (!packageDir.isDirectory()) {
+			return result;
+		}
+
+		String[] typesToCollect = defineTypesToCollect(types);
+
+		for (String type : typesToCollect) {
+			collectClassMetadatas(packageDir, type, result);
+		}
+
+		return result;
 	}
 
 	/*
@@ -430,14 +450,40 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		}
 	}
 
+	private void collectClassMetadatas(File dir, String typeCriteria, List<Map<String, String>> result)
+			throws PersistenceException {
+		File[] metaFiles = dir.listFiles(METADATA_FILES_FILTER);
+		Arrays.sort(metaFiles, FILE_NAMES_COMPARATOR);
+
+		for (int i = 0; i < metaFiles.length; i++) {
+			Map<String, String> metaData = loadContents(metaFiles[i]);
+			String type = metaData.get(Metadata.TYPE);
+			if ((type != null && typeCriteria == ALL_TYPES_CRITERIA) || typeCriteria.equals(type)) {
+				result.add(metaData);
+			}
+		}
+	}
+
 	private File getPackageDir(String packageName) {
 		return new File(rootDirPath + File.separatorChar + packageName.replace(DOT, File.separatorChar));
+	}
+
+	private String[] defineTypesToCollect(String[] types) {
+		return types.length > 0 ? types : new String[] { ALL_TYPES_CRITERIA };
 	}
 
 	private static class FileNamesComparator implements Comparator<File> {
 
 		public int compare(File f1, File f2) {
 			return f1.getName().compareTo(f2.getName());
+		}
+
+	}
+
+	private static class MetadataFilesFilter implements FilenameFilter {
+
+		public boolean accept(File dir, String name) {
+			return name.endsWith(CLASS_METADATA_SUFFIX);
 		}
 
 	}

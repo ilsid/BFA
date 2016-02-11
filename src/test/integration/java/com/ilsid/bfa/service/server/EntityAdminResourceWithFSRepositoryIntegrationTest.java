@@ -1,6 +1,7 @@
 package com.ilsid.bfa.service.server;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -220,6 +221,66 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	public void childEntityGroupCanBeCreated() throws Exception {
 		entityGroupCanBeCreated("Custom Group 01::Some Child Group", "Some Child Group", CODE_REPOSITORY_PATH + "/"
 				+ GENERATED_ENTITY_ROOT_PATH + "/custom_x20_group_x20_01/some_x20_child_x20_group");
+	}
+
+	@Test
+	public void topLevelEntityGroupsAreLoaded() throws Exception {
+		WebResource webResource = getWebResource(Paths.ENTITY_GET_ITEMS_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, Metadata.ROOT_PARENT_NAME);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		@SuppressWarnings("unchecked")
+		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
+		assertEquals(2, metaDatas.size());
+
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ENTITY_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Custom Group 01", metaData.get(Metadata.NAME));
+		assertEquals("Custom Group 01", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
+
+		metaData = metaDatas.get(1);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ENTITY_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));
+		assertEquals(Metadata.DEFAULT_GROUP_TITLE, metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
+	}
+
+	@Test
+	public void subGroupAndEntityItemsWithDefinedMetadataAreLoaded() throws Exception {
+		copyEntityDirectoryToRepository(Metadata.DEFAULT_GROUP_NAME, Metadata.DEFAULT_GROUP_NAME);
+		
+		WebResource webResource = getWebResource(Paths.ENTITY_GET_ITEMS_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, Metadata.DEFAULT_GROUP_NAME);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		
+		@SuppressWarnings("unchecked")
+		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
+		assertEquals(3, metaDatas.size());
+		
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ENTITY_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("sub_group_01", metaData.get(Metadata.NAME));
+		assertEquals("sub_group_01", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
+		
+		metaData = metaDatas.get(1);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ENTITY_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("EntityToRead", metaData.get(Metadata.NAME));
+		assertEquals("EntityToRead", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
+		
+		metaData = metaDatas.get(2);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ENTITY_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("EntityToUpdate", metaData.get(Metadata.NAME));
+		assertEquals("EntityToUpdate", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 	}
 
 	private void entityGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

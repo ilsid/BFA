@@ -276,7 +276,63 @@ public class ScriptManager {
 					Metadata.SCRIPT_TYPE);
 		} catch (PersistenceException e) {
 			throw new ManagementException(
-					String.format("Failed to load child items info from the group [%s]", groupName), e);
+					String.format("Failed to load child items info from the script group [%s]", groupName), e);
+		}
+
+		if (!result.isEmpty()) {
+			addParentInfo(result, groupName);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Loads meta-data items for all top-level entity groups.
+	 * 
+	 * @return a list of meta-data items
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if no top-level groups exist in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public List<Map<String, String>> getTopLevelEntityGroupMetadatas() throws ManagementException {
+		List<Map<String, String>> result;
+		try {
+			result = repository.loadMetadataForChildPackages(ClassNameUtil.GENERATED_ENTITIES_ROOT_PACKAGE,
+					Metadata.ENTITY_GROUP_TYPE);
+		} catch (PersistenceException e) {
+			throw new ManagementException("Failed to load the info for top-level entity groups", e);
+		}
+
+		if (result.isEmpty()) {
+			throw new ManagementException("No top-level entity groups found");
+		}
+
+		addParentInfo(result, Metadata.ROOT_PARENT_NAME);
+
+		return result;
+	}
+	
+	/**
+	 * Loads meta-data items for sub-groups and entities in the specified group.
+	 * 
+	 * @param groupName
+	 *            a group name
+	 * @return a list of meta-data items or an empty list, if no sub-groups and scripts found or such group does not
+	 *         exist
+	 * @throws ManagementException
+	 *             in case of any repository access issues
+	 */
+	public List<Map<String, String>> getChildrenEntityGroupMetadatas(String groupName) throws ManagementException {
+		List<Map<String, String>> result;
+		String packageName = TypeNameResolver.resolveEntityGroupPackageName(groupName);
+		try {
+			result = repository.loadMetadataForChildPackages(packageName, Metadata.ENTITY_GROUP_TYPE);
+			result.addAll(repository.loadMetadataForClasses(packageName, Metadata.ENTITY_TYPE));
+		} catch (PersistenceException e) {
+			throw new ManagementException(
+					String.format("Failed to load child items info from the entity group [%s]", groupName), e);
 		}
 
 		if (!result.isEmpty()) {

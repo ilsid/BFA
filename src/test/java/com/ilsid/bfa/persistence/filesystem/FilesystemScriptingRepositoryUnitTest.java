@@ -242,7 +242,27 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		int deletedCount = repository.deleteClass(className);
 		assertEquals(2, deletedCount);
 		assertFalse(classFile.exists());
+		assertFalse(sourceFile.exists());
+	}
+
+	@Test
+	public void classAndItsSourceAndMetadataCanBeDeleted() throws Exception {
+		createCodeRepository();
+
+		String className = "com.ilsid.bfa.generated.entity.default_group.Entity001";
+		String filePrefix = ROOT_DIR_PATH + "/" + className.replace('.', '/');
+		File classFile = new File(filePrefix + ".class");
+		File sourceFile = new File(filePrefix + ".src");
+		File metaFile = new File(filePrefix + "_" + ClassNameUtil.METADATA_FILE_NAME);
+		assertTrue(classFile.exists());
+		assertTrue(sourceFile.exists());
+		assertTrue(metaFile.exists());
+
+		int deletedCount = repository.deleteClass(className);
+		assertEquals(3, deletedCount);
 		assertFalse(classFile.exists());
+		assertFalse(sourceFile.exists());
+		assertFalse(metaFile.exists());
 	}
 
 	@Test
@@ -319,7 +339,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		assertEquals("{\"type\":\"SCRIPT\",\"name\":\"Test_Script_001\",\"title\":\"Test Script 001\"}", savedMetadata);
 	}
-	
+
 	@Test
 	public void metadataForNonExistingPackageCanNotBeSaved() throws Exception {
 		createCodeRepository();
@@ -382,12 +402,37 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void metadataForChildPackagesInNonExistingPackageIsNotLoaded() throws Exception {
+	public void metadataForChildPackagesInNonExistingPackageCanNotLoaded() throws Exception {
 		createCodeRepository();
 		assertEquals(0,
 				repository.loadMetadataForChildPackages(
 						ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE + ".some_non_existing_package",
 						Metadata.SCRIPT_GROUP_TYPE, Metadata.SCRIPT_TYPE).size());
+	}
+
+	@Test
+	public void metadataForClassesInExistingPackageCanBeLoaded() throws Exception {
+		createCodeRepository();
+
+		List<Map<String, String>> metaDatas = repository
+				.loadMetadataForClasses(ClassNameUtil.GENERATED_ENTITIES_DEFAULT_GROUP_PACKAGE, Metadata.ENTITY_TYPE);
+
+		assertEquals(1, metaDatas.size());
+
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ENTITY_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Entity001", metaData.get(Metadata.NAME));
+		assertEquals("Entity001", metaData.get(Metadata.TITLE));
+	}
+
+	@Test
+	public void metadataForClassesInNonExistingPackageCanNotBeLoaded() throws Exception {
+		createCodeRepository();
+		assertEquals(0,
+				repository.loadMetadataForClasses(
+						ClassNameUtil.GENERATED_ENTITIES_ROOT_PACKAGE + ".some_non_existing_package",
+						Metadata.ENTITY_TYPE).size());
 	}
 
 	@Test

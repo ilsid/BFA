@@ -75,6 +75,8 @@ public final class Paths {
 
 	public final static String ENTITY_GET_SOURCE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + GET_SOURCE_OPERATION;
 
+	public final static String ENTITY_GET_ITEMS_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + GET_ITEMS_OPERATION;
+
 	public final static String ENTITY_CREATE_GROUP_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + CREATE_GROUP_OPERATION;
 
 }

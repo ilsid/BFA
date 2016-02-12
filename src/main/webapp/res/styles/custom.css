@@ -14,9 +14,38 @@
   text-align: center;
 }
 
+.toolbarIconEntity{
+  background-image: url("../icons/entity_16x16.png");
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  text-align: center;
+}
+
+.toolbarIconDeleteEntity {
+  background-image: url("../icons/delete_entity_16x16.png");
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  text-align: center;
+}
+
 .fixedTextArea{
   height: 95%; 
   width:100%; 
   resize: none; 
   overflow: scroll; 
+}
+
+.nestedAccordionContainer{
+  width: 100%; 
+  height: 100%; 
+  margin: 0;
+  padding: 0;
+}
+
+.nestedPane{
+  border: none; 
+  margin: 0; 
+  padding: 0;
 }

@@ -68,7 +68,7 @@
 		function showCreateScriptDialog() {
 			require([ 'dijit/registry'],
 				function(registry) {
-					var tree = registry.byId('scriptsTree');
+					var tree = registry.byId('scriptTree');
 					var selectedGroupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
 					var groupText = registry.byId('createScriptDialog_textGroupName');
 					var scriptText = registry.byId('createScriptDialog_textScriptName');
@@ -95,7 +95,7 @@
 			require([ 'dijit/registry'],
 				function(registry) {
 					var checkBox = registry.byId('createGroupDialog_checkTopLevel');
-					var tree = registry.byId('scriptsTree');
+					var tree = registry.byId('scriptTree');
 					var parentGroupText = registry.byId('createGroupDialog_textParentGroup');
 					if (checkBox.checked) {
 						parentGroupText.set('value', '');
@@ -115,7 +115,7 @@
 					}
 					
 					var parentGroupName = null;
-					var tree = registry.byId('scriptsTree');
+					var tree = registry.byId('scriptTree');
 					if (!registry.byId('createGroupDialog_checkTopLevel').checked) {
 						parentGroupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
 					} 
@@ -147,7 +147,7 @@
 						return;
 					}
 					
-					var tree = registry.byId('scriptsTree');
+					var tree = registry.byId('scriptTree');
 					var groupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
 					// group name can't be null, as script creation is enabled only if some group is selected
 					var scriptShortName = textScript.get('value');
@@ -169,15 +169,14 @@
 							var tabIdx = tabContainer.getIndexOfChild(scriptTab);
 							tabContainer.removeChild(scriptTab);
 							scriptTab.destroyRecursive();
-							createScriptTab(scriptShortName, 'tab_' + scriptName, 'scriptArea_' + scriptName, 
-								scriptSource, tabIdx);
+							createScriptTab(scriptShortName, 'tab_' + scriptName, scriptSource, tabIdx);
 						}, function(err) {
 							alert('Server request failed. Please contact support staff');
 						});
 				});
 		}
 		
-		function createScriptTab(tabTitle, tabId, textAreaId, textAreaValue, indexInContainer) {
+		function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
 				'dijit/Toolbar', 'dijit/form/Button', 'dojo/domReady!'],
 				function(registry, ContentPane, SimpleTextarea, Toolbar, Button) {
@@ -212,11 +211,10 @@
 					toolBar.startup();
 				
 					var scriptArea = new SimpleTextarea({
-						id: textAreaId,
 						className: 'fixedTextArea'
 					});
-					if (textAreaValue) {
-						scriptArea.set('value', textAreaValue);
+					if (scriptSource) {
+						scriptArea.set('value', scriptSource);
 					}
 					scriptArea.startup();
 					
@@ -230,6 +228,163 @@
 					}
 					tabContainer.selectChild(tab);
 			});
+		}
+		
+		function createEntityTab(tabTitle, tabId, entitySource, indexInContainer) {
+			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
+				'dijit/Toolbar', 'dijit/form/Button', 'dojo/domReady!'],
+				function(registry, ContentPane, SimpleTextarea, Toolbar, Button) {
+					var tabContainer = registry.byId('tabContainer');
+					
+					var tab = new ContentPane({
+						id: tabId,
+						title: tabTitle,
+						closable: true,
+						iconClass: 'toolbarIconEntity',
+						style: 'overflow: auto;'
+					});
+					
+					var isExistingEntity = (tabId != undefined);
+					
+					var saveButton = new Button({
+						label: 'Save',
+						showLabel: false,
+						iconClass: 'dijitIconSave',
+						onClick: function() {
+							//showCreateEntityDialog();
+						}
+					});
+					if (isExistingEntity) {
+						// TODO: Support of entity update
+						saveButton.set('disabled', true);
+					}
+					saveButton.startup();
+					
+					var toolBar = new Toolbar();
+					toolBar.addChild(saveButton);
+					toolBar.startup();
+				
+					tab.addChild(saveButton);
+					
+					if (indexInContainer > -1) {
+						tabContainer.addChild(tab, indexInContainer);
+					} else {
+						tabContainer.addChild(tab);
+					}
+					tabContainer.selectChild(tab);
+			});
+		}
+		
+		function createTree(objectType, itemDblClickHandler, leafIconClass) {
+			require([ 'dojo/request/xhr', 'dojo/dom', 'dojo/store/Memory', 'dijit/tree/ObjectStoreModel', 'dijit/Tree', 'dojo/store/Observable', 
+				'dijit/registry', 'dojo/domReady!'], 
+				function(request, dom, Memory, ObjectStoreModel, Tree, Observable, registry) {
+				
+					var rootName = '__root';
+					
+					var treeStore = new Memory({
+						data: [{name: rootName}],
+						idProperty: 'name',
+						
+						getChildren: function(object){
+							return request('service/' + objectType + '/admin/getItems', {
+								headers: { 'Content-Type': 'text/plain' },
+								method: 'POST',
+								data: object.name,
+								handleAs: 'json'
+							}).then(function(resp) {
+								return resp;
+							}, function(err) {
+								alert('Server request failed. Please contact support staff');
+							});
+						}
+					});
+					
+					var treeModel = new ObjectStoreModel({
+						store: treeStore,
+						getLabel: function(item){ return item.title; },
+						mayHaveChildren: function(item){ return item.type == objectType.toUpperCase() + '_GROUP'; },
+						query: {name: rootName}
+					});
+					
+					tree = new Tree({
+					id: objectType + 'Tree',
+					model: treeModel,
+					showRoot: false,
+					openOnClick: false,
+					rootName: rootName,
+					
+					onFocus: function() {
+						var btnNew = registry.byId(objectType + 'Toolbar_new');
+						if (btnNew.disabled) {
+							btnNew.set('disabled', false);
+						}
+					},
+					
+					onClick: function(item, node) {
+						//Warning! Depends on internal implementation of Tree: _expandNode() function
+						if (this.model.mayHaveChildren(item)) {
+							if (node.isExpanded) {
+								node.collapse();	
+							} else {
+								this._expandNode(node);
+							}
+						}
+						
+						var btnDeleteGroup = registry.byId(objectType + 'Toolbar_deleteGroup');
+						var btnDelete = registry.byId(objectType + 'Toolbar_delete');
+						if (this.model.mayHaveChildren(item)) {
+							btnDeleteGroup.set('disabled', false);
+							btnDelete.set('disabled', true);
+						} else {
+							btnDeleteGroup.set('disabled', true);
+							btnDelete.set('disabled', false);
+						}
+					},
+					
+					onDblClick: function(item) {
+						if (this.model.mayHaveChildren(item)) {
+							return;
+						}
+						var tabContainer = registry.byId('tabContainer');
+						var tabId = 'tab_' + objectType + '_' + item.name;
+						
+						var oldTab = registry.byId(tabId);
+						if (oldTab) {
+							tabContainer.selectChild(oldTab);
+							return;
+						}
+						
+						request('service/' + objectType + '/admin/getSource', {
+							headers: { 'Content-Type': 'application/json' },
+							method: 'POST',
+							data: '{"name": "' + item.name + '"}'
+						}).then(function(resp){
+							itemDblClickHandler(item.title, tabId, resp);
+						}, function(err) {
+							alert('Server request failed. Please contact support staff');
+						});
+					},
+
+					refreshChildrenSubTree: function(itemId) {
+						//Warning! Depends on internal implementation of Tree and ObjectStoreModel
+						delete this.model.childrenCache[itemId];
+						var node = this._itemNodesMap[itemId][0];
+						delete node._loadDeferred;
+						this._expandNode(node);
+					}
+				});
+				
+				if (leafIconClass) {
+					tree.getIconClass = function(item, opened) {
+						return this.model.mayHaveChildren(item) ? 
+							(opened ? 'dijitFolderOpened' : 'dijitFolderClosed') : leafIconClass;
+					}	
+				}
+
+				tree.placeAt(dom.byId(objectType + 'TreeContainer'));
+				tree.startup();
+			});	
 		}
 		
 	</script>
@@ -289,27 +444,44 @@
 		 <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'">
 			<h4 id="greeting">Business Flows Automation</h4>
 		 </div>
-		 <div data-dojo-type="dijit/layout/AccordionContainer" data-dojo-props="region:'leading', splitter:true" style="width: 20%;" id='accordionContainer'>
-			<div data-dojo-type="dijit/layout/AccordionPane" title="Scripts" id="scriptsPane;">
-				<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="isLayoutContainer:true" style="width: 100%; height: 100%; margin: 0; padding: 0;">
+		 <div data-dojo-type="dijit/layout/AccordionContainer" data-dojo-props="region:'leading', splitter:true" style="width: 20%;" id="accordionContainer">
+			<div data-dojo-type="dijit/layout/AccordionPane" title="Scripts" id="scriptPane">
+				<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="isLayoutContainer:true, className:'nestedAccordionContainer'">
 					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" style="border: none; margin: 0; padding: 0;">
-						<div id="scriptsToolbar" data-dojo-type="dijit/Toolbar">
-							<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
-								onclick="showCreateGroupDialog('scriptsTree', 'SCRIPT_GROUP')">New Group</div>
-							<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_newScript" data-dojo-props="iconClass:'dijitLeaf', showLabel:false" disabled="true"
+						<div id="scriptToolbar" data-dojo-type="dijit/Toolbar">
+							<div data-dojo-type="dijit/form/Button" id="scriptToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
+								onclick="showCreateGroupDialog('scriptTree', 'SCRIPT_GROUP')">New Group</div>
+							<div data-dojo-type="dijit/form/Button" id="scriptToolbar_new" data-dojo-props="iconClass:'dijitLeaf', showLabel:false" disabled="true"
 								onclick="createScriptTab('New Script');">New Script</div>
-							<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
+							<div data-dojo-type="dijit/form/Button" id="scriptToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
 								disabled="true">Delete Group</div>
-							<div data-dojo-type="dijit/form/Button" id="scriptsToolbar_deleteScript" data-dojo-props="iconClass:'toolbarIconDeleteItem', showLabel:false"
+							<div data-dojo-type="dijit/form/Button" id="scriptToolbar_delete" data-dojo-props="iconClass:'toolbarIconDeleteItem', showLabel:false"
 								disabled="true">Delete Script</div>
 						</div>
 					</div>
 					<div data-dojo-type="dijit/layout/ContentPane"  data-dojo-props="region:'center'" style="border: none; margin: 0; padding: 0;">
-						<div id="scriptsTreeContainer" style="height: 100%;"></div>
+						<div id="scriptTreeContainer" style="height: 100%;"></div>
 					</div>
 				</div>	
 			</div>
-			<div data-dojo-type="dijit/layout/AccordionPane" title="Entities" id="entitiesPane">
+			<div data-dojo-type="dijit/layout/AccordionPane" title="Entities" id="entityPane">
+				<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="isLayoutContainer:true, className:'nestedAccordionContainer'">
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" style="border: none; margin: 0; padding: 0;">
+						<div id="entityToolbar" data-dojo-type="dijit/Toolbar">
+							<div data-dojo-type="dijit/form/Button" id="entityToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
+								onclick="showCreateGroupDialog('entityTree')">New Group</div>
+							<div data-dojo-type="dijit/form/Button" id="entityToolbar_new" data-dojo-props="iconClass:'toolbarIconEntity', showLabel:false" disabled="true"
+								onclick="createEntityTab('New Entity');">New Entity</div>
+							<div data-dojo-type="dijit/form/Button" id="entityToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
+								disabled="true">Delete Group</div>
+							<div data-dojo-type="dijit/form/Button" id="entityToolbar_delete" data-dojo-props="iconClass:'toolbarIconDeleteEntity', showLabel:false"
+								disabled="true">Delete Entity</div>
+						</div>
+					</div>
+					<div data-dojo-type="dijit/layout/ContentPane"  data-dojo-props="region:'center'" style="border: none; margin: 0; padding: 0;">
+						<div id="entityTreeContainer" style="height: 100%;"></div>
+					</div>
+				</div>	
 			</div>
 			<div data-dojo-type="dijit/layout/AccordionPane" title="Actions" id="actionsPane">
 			</div>
@@ -319,109 +491,10 @@
 		</div>
 	</div>
 
+	
 	<script>
-		require([ 'dojo/request/xhr', 'dojo/dom', 'dojo/store/Memory', 'dijit/tree/ObjectStoreModel', 'dijit/Tree', 'dojo/store/Observable', 
-				'dijit/registry', 'dojo/domReady!' ], 
-			function(request, dom, Memory, ObjectStoreModel, Tree, Observable, registry) {
-			
-				var rootName = '__root';
-				
-				var treeStore = new Memory({
-					data: [{name: rootName}],
-					idProperty: 'name',
-					
-					getChildren: function(object){
-						return request('service/script/admin/getItems', {
-							headers: { 'Content-Type': 'text/plain' },
-							method: 'POST',
-							data: object.name,
-							handleAs: 'json'
-						}).then(function(resp) {
-							return resp;
-						}, function(err) {
-							alert('Server request failed. Please contact support staff');
-						});
-					}
-				});
-				
-				var treeModel = new ObjectStoreModel({
-					store: treeStore,
-					getLabel: function(item){ return item.title; },
-					mayHaveChildren: function(item){ return item.type == 'SCRIPT_GROUP'; },
-					query: {name: rootName}
-				});
-				
-				var tree = new Tree({
-					id: 'scriptsTree',
-					model: treeModel,
-					showRoot: false,
-					openOnClick: false,
-					rootName: rootName,
-					
-					onFocus: function() {
-						var btnNewScript = registry.byId('scriptsToolbar_newScript');
-						if (btnNewScript.disabled) {
-							btnNewScript.set('disabled', false);
-						}
-					},
-					
-					onClick: function(item, node) {
-						//Warning! Depends on internal implementation of Tree: _expandNode() function
-						if (this.model.mayHaveChildren(item)) {
-							if (node.isExpanded) {
-								node.collapse();	
-							} else {
-								this._expandNode(node);
-							}
-						}
-						
-						var btnDeleteGroup = registry.byId('scriptsToolbar_deleteGroup');
-						var btnDeleteScript = registry.byId('scriptsToolbar_deleteScript');
-						if (this.model.mayHaveChildren(item)) {
-							btnDeleteGroup.set('disabled', false);
-							btnDeleteScript.set('disabled', true);
-						} else {
-							btnDeleteGroup.set('disabled', true);
-							btnDeleteScript.set('disabled', false);
-						}
-					},
-					
-					onDblClick: function(item) {
-						if (this.model.mayHaveChildren(item)) {
-							return;
-						}
-						var tabContainer = registry.byId('tabContainer');
-						var tabId = 'tab_' + item.name;
-						
-						var oldTab = registry.byId(tabId);
-						if (oldTab) {
-							tabContainer.selectChild(oldTab);
-							return;
-						}
-						
-						request('service/script/admin/getSource', {
-							headers: { 'Content-Type': 'application/json' },
-							method: 'POST',
-							data: '{"name": "' + item.name + '"}'
-						}).then(function(resp){
-							createScriptTab(item.title, tabId, 'scriptArea_' + item.name, resp);
-						}, function(err) {
-							alert('Server request failed. Please contact support staff');
-						});
-					},
-					
-					refreshChildrenSubTree: function(itemId) {
-						//Warning! Depends on internal implementation of Tree and ObjectStoreModel
-						delete this.model.childrenCache[itemId];
-						var node = this._itemNodesMap[itemId][0];
-						delete node._loadDeferred;
-						this._expandNode(node);
-					}
-				});
-				
-				tree.placeAt(dom.byId('scriptsTreeContainer'));
-				tree.startup();
-			});
+		createTree('script', createScriptTab);
+		createTree('entity', createEntityTab, 'toolbarIconEntity');	
 	</script>
 
 

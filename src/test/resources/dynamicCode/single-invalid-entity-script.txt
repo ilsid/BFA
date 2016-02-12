@@ -1,0 +1,10 @@
+// com.ilsid.bfa.generated.entity.default_group.Contract555 class does not exist in the code repository
+DeclareLocalVar("Var1", "Contract555");
+DeclareLocalVar("Var2", "Number", "1");
+DeclareLocalVar("Res", "Number");
+
+SetLocalVar("Var1.Days", "2");
+
+if (Equal("Var1.Days - Var2", "1")) {
+	SetLocalVar("Res", "33");
+}

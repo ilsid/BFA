@@ -188,6 +188,22 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void errorDetailsAreProvidedIfScriptContainsInvalidEntityType() throws Exception {
+		exceptionRule.expect(ClassCompilationException.class);
+		StringBuilder msg = new StringBuilder();
+		msg.append("Compilation of the script [TestScript33] failed").append(StringUtils.LF);
+		msg.append("Variable [Var1] has invalid type [Contract555]").append(StringUtils.LF);
+		msg.append("Could not parse expression [Var1.Days]: Unexpected token [Var1.Days]").append(StringUtils.LF);
+		msg.append("   Caused by: Unexpected token [Var1.Days]").append(StringUtils.LF);
+		msg.append("Could not parse expression [Var1.Days - Var2]: Unexpected token [Var1.Days]")
+				.append(StringUtils.LF);
+		msg.append("   Caused by: Unexpected token [Var1.Days]").append(StringUtils.LF);
+		exceptionRule.expectMessage(msg.toString());
+
+		compileScriptExpressions("TestScript33", "single-invalid-entity-script.txt");
+	}
+
+	@Test
 	public void scriptWithActionCanBeCompiled() throws Exception {
 		final String scriptName = "single-action-with-params-script.txt";
 
@@ -306,10 +322,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	@Test
 	public void entityWithFieldOfInvalidTypeCanNotBeCompiled() throws Exception {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity08";
-		
+
 		exceptionRule.expect(ClassCompilationException.class);
-		exceptionRule.expectMessage(
-				String.format("Compilation of Entity [%s] failed", className));
+		exceptionRule.expectMessage(String.format("Compilation of Entity [%s] failed", className));
 
 		ClassCompiler.compileEntity(className, "java.lang.Double field1; com.some.NonExistingType field2;");
 	}

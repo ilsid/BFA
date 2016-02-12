@@ -387,12 +387,14 @@ public class ClassCompiler {
 			String varName = ((StringLiteralExpr) methodParams[0]).getValue();
 			String varType = ((StringLiteralExpr) methodParams[1]).getValue();
 
+			String javaType = TypeNameResolver.resolveEntityClassName(varType);
+			checkVarType(varName, varType, javaType, visitorContext);
+
 			ScriptContext scriptContext = visitorContext.scriptContext;
 
 			// Variables are saved in the script context for the further
 			// expressions parsing stage
 			try {
-				String javaType = TypeNameResolver.resolveEntityClassName(varType);
 				if (varAnnotation.scope() == Var.Scope.LOCAL) {
 					scriptContext.addLocalVar(varName, javaType);
 				} else {
@@ -400,6 +402,17 @@ public class ClassCompiler {
 				}
 			} catch (ScriptException e) {
 				visitorContext.exceptions.add(e);
+			}
+		}
+
+		private void checkVarType(String varName, String varType, String javaType,
+				MethodCallVisitorContext visitorContext) {
+			try {
+				DynamicClassLoader.getInstance().loadClass(javaType);
+			} catch (ClassNotFoundException e) {
+				Exception ce = new ClassCompilationException(
+						String.format("Variable [%s] has invalid type [%s]", varName, varType));
+				visitorContext.exceptions.add(ce);
 			}
 		}
 

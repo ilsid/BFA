@@ -4,6 +4,7 @@
 <title>Business Flow Automation</title>
 
 <link rel="stylesheet" href="script/dijit/themes/claro/claro.css"/>
+<link rel="stylesheet" href="script/dojox/grid/resources/claroGrid.css"/>
 <link rel="stylesheet" href="res/styles/custom.css"/>
 <style type="text/css">
 	html, body {
@@ -20,8 +21,6 @@
 	<script src="script/dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
 	
 	<script>
-		// Public functions
-		
 		function getSelectedGroupName(tree, groupType) {
 			var selectedItem = tree.selectedItems[0];
 			
@@ -40,16 +39,17 @@
 		function escapeScriptSource(source)  {
 			return source.replace(/"/g,'\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 		}
-		
-		function showCreateGroupDialog(treeId, groupType) {
+
+		function showCreateGroupDialog(objectType) {
 			require([ 'dijit/registry'],
 				function(registry) {
-					var tree = registry.byId(treeId);
+					var tree = registry.byId(objectType + 'Tree');
+					var groupType = objectType.toUpperCase() + '_GROUP';
 					var selectedGroupName = getSelectedGroupName(tree, groupType);
 					var groupText = registry.byId('createGroupDialog_textGroupName');
 					var parentGroupText = registry.byId('createGroupDialog_textParentGroup');
 					var topLevelCheckBox = registry.byId('createGroupDialog_checkTopLevel');
-					
+										
 					if (selectedGroupName != null) {
 						parentGroupText.set('value', selectedGroupName);
 						topLevelCheckBox.set('checked', false);
@@ -61,7 +61,9 @@
 					}
 					groupText.set('value', '');
 					groupText.reset();
-					registry.byId('createGroupDialog').show();
+					var dialog = registry.byId('createGroupDialog');
+					dialog.currentObjectType = objectType;
+					dialog.show();
 				});
 		}
 		
@@ -95,12 +97,14 @@
 			require([ 'dijit/registry'],
 				function(registry) {
 					var checkBox = registry.byId('createGroupDialog_checkTopLevel');
-					var tree = registry.byId('scriptTree');
+					var objectType = registry.byId('createGroupDialog').currentObjectType;
+					var tree = registry.byId(objectType + 'Tree');
 					var parentGroupText = registry.byId('createGroupDialog_textParentGroup');
 					if (checkBox.checked) {
 						parentGroupText.set('value', '');
 					} else {
-						var selectedGroupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
+						var groupType = objectType.toUpperCase() + '_GROUP';
+						var selectedGroupName = getSelectedGroupName(tree, groupType);
 						parentGroupText.set('value', selectedGroupName);
 					}
 				});
@@ -114,10 +118,12 @@
 						return;
 					}
 					
+					var objectType = registry.byId('createGroupDialog').currentObjectType;
 					var parentGroupName = null;
-					var tree = registry.byId('scriptTree');
+					var tree = registry.byId(objectType + 'Tree');
 					if (!registry.byId('createGroupDialog_checkTopLevel').checked) {
-						parentGroupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
+						var groupType = objectType.toUpperCase() + '_GROUP';
+						parentGroupName = getSelectedGroupName(tree, groupType);
 					} 
 					
 					var groupName = groupText.get('value');
@@ -125,7 +131,7 @@
 						groupName = parentGroupName + '::' + groupName;
 					}
 					
-					request('service/script/admin/createGroup', {
+					request('service/' + objectType + '/admin/createGroup', {
 							headers: { 'Content-Type': 'text/plain' },
 							method: 'POST',
 							data: groupName
@@ -206,7 +212,9 @@
 					}
 					saveButton.startup();
 					
-					var toolBar = new Toolbar();
+					var toolBar = new Toolbar({
+						className: 'nestedPane'
+					});
 					toolBar.addChild(saveButton);
 					toolBar.startup();
 				
@@ -218,7 +226,7 @@
 					}
 					scriptArea.startup();
 					
-					tab.addChild(saveButton);
+					tab.addChild(toolBar);
 					tab.addChild(scriptArea);
 					
 					if (indexInContainer > -1) {
@@ -260,11 +268,14 @@
 					}
 					saveButton.startup();
 					
-					var toolBar = new Toolbar();
+					var toolBar = new Toolbar({
+						className: 'nestedPane'
+					});
 					toolBar.addChild(saveButton);
 					toolBar.startup();
-				
-					tab.addChild(saveButton);
+					tab.addChild(toolBar);
+					
+					createGrid(tab, entitySource);
 					
 					if (indexInContainer > -1) {
 						tabContainer.addChild(tab, indexInContainer);
@@ -272,6 +283,45 @@
 						tabContainer.addChild(tab);
 					}
 					tabContainer.selectChild(tab);
+			});
+		}
+		
+		function createGrid(tab, entitySource) {
+			require(['dojox/grid/DataGrid', 'dojo/data/ObjectStore', 'dojo/store/Memory', 'dojo/domReady!'],
+				function(DataGrid, ObjectStore, Memory){
+				
+				var gridItems = [];
+				if (entitySource) {
+					var entity = JSON.parse(entitySource);
+					for (var key in entity) {
+						gridItems.push({colName: key, colType: entity[key]});
+					}
+				}
+				
+				var data = { /*identifier: 'colName',*/ items: gridItems };
+				var store = new ObjectStore({ objectStore: new Memory({ data: data.items }) });
+				
+				var layout = [{
+					defaultCell: { /*editable: true,*/ styles: 'text-align: left;', width: '300px'},
+					cells: [
+						{'name': 'Name', 'field': 'colName'},
+						{'name': 'Type', 'field': 'colType'}
+					]
+				}];
+
+				var grid = new DataGrid({
+				store: store,
+				query: {colName: '*'},
+				structure: layout,
+				autoWidth:true,
+				autoHeight:true,
+				//className: 'fixedGrid'
+				//rowSelector: true
+				//singleClickEdit: true
+				});
+
+				tab.addChild(grid);
+				grid.startup();
 			});
 		}
 		
@@ -450,7 +500,7 @@
 					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" style="border: none; margin: 0; padding: 0;">
 						<div id="scriptToolbar" data-dojo-type="dijit/Toolbar">
 							<div data-dojo-type="dijit/form/Button" id="scriptToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
-								onclick="showCreateGroupDialog('scriptTree', 'SCRIPT_GROUP')">New Group</div>
+								onclick="showCreateGroupDialog('script')">New Group</div>
 							<div data-dojo-type="dijit/form/Button" id="scriptToolbar_new" data-dojo-props="iconClass:'dijitLeaf', showLabel:false" disabled="true"
 								onclick="createScriptTab('New Script');">New Script</div>
 							<div data-dojo-type="dijit/form/Button" id="scriptToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
@@ -469,7 +519,7 @@
 					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" style="border: none; margin: 0; padding: 0;">
 						<div id="entityToolbar" data-dojo-type="dijit/Toolbar">
 							<div data-dojo-type="dijit/form/Button" id="entityToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
-								onclick="showCreateGroupDialog('entityTree')">New Group</div>
+								onclick="showCreateGroupDialog('entity')">New Group</div>
 							<div data-dojo-type="dijit/form/Button" id="entityToolbar_new" data-dojo-props="iconClass:'toolbarIconEntity', showLabel:false" disabled="true"
 								onclick="createEntityTab('New Entity');">New Entity</div>
 							<div data-dojo-type="dijit/form/Button" id="entityToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"

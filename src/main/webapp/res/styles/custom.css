@@ -49,3 +49,9 @@
   margin: 0; 
   padding: 0;
 }
+
+.dojoxGrid table {
+  margin: 0;
+  font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
+  font-size: 13px;	
+}

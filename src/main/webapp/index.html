@@ -39,6 +39,10 @@
 		function escapeScriptSource(source)  {
 			return source.replace(/"/g,'\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 		}
+		
+		function escapeEntitySource(source)  {
+			return source.replace(/"/g,'\\"');
+		}
 
 		function showCreateGroupDialog(objectType) {
 			require([ 'dijit/registry'],
@@ -85,6 +89,40 @@
 					registry.byId('createScriptDialog').show();
 				});
 		}
+		
+		function showCreateEntityDialog() {
+			require([ 'dijit/registry'],
+				function(registry) {
+					var tree = registry.byId('entityTree');
+					var selectedGroupName = getSelectedGroupName(tree, 'ENTITY_GROUP');
+					var groupText = registry.byId('createEntityDialog_textGroupName');
+					var nameText = registry.byId('createEntityDialog_textEntityName');
+					
+					if (selectedGroupName != null) {
+						groupText.set('value', selectedGroupName);
+					} else {
+						groupText.set('value', '');
+					}
+					nameText.set('value', '');
+					nameText.reset();
+					registry.byId('createEntityDialog').show();
+				});
+		}
+		
+		function showNewEntityFieldDialog() {
+			require([ 'dijit/registry'],
+				function(registry) {
+					var txtName = registry.byId('newEntityFieldDialog_textName');
+					var txtType = registry.byId('newEntityFieldDialog_textType');
+					txtName.set('value', '');
+					txtName.reset();
+					txtType.set('value', '');
+					txtType.reset();
+					
+					registry.byId('newEntityFieldDialog').show();
+				});
+		}
+
 
 		function hideDialog(id) {
 			require([ 'dijit/registry'],
@@ -148,15 +186,15 @@
 		function onCreateScriptDialog_btnOkClick() {
 			require([ 'dijit/registry', 'dojo/request/xhr'],
 				function(registry, request) {
-					var textScript = registry.byId('createScriptDialog_textScriptName');
-					if (!textScript.isValid()) {
+					var txtName = registry.byId('createScriptDialog_textScriptName');
+					if (!txtName.isValid()) {
 						return;
 					}
 					
 					var tree = registry.byId('scriptTree');
 					var groupName = getSelectedGroupName(tree, 'SCRIPT_GROUP');
 					// group name can't be null, as script creation is enabled only if some group is selected
-					var scriptShortName = textScript.get('value');
+					var scriptShortName = txtName.get('value');
 					var scriptName = groupName + '::' + scriptShortName;
 					
 					var tabContainer = registry.byId('tabContainer');
@@ -175,11 +213,58 @@
 							var tabIdx = tabContainer.getIndexOfChild(scriptTab);
 							tabContainer.removeChild(scriptTab);
 							scriptTab.destroyRecursive();
-							createScriptTab(scriptShortName, 'tab_' + scriptName, scriptSource, tabIdx);
+							createScriptTab(scriptShortName, 'tab_script_' + scriptName, scriptSource, tabIdx);
 						}, function(err) {
 							alert('Server request failed. Please contact support staff');
 						});
 				});
+		}
+		
+		function onCreateEntityDialog_btnOkClick() {
+			require([ 'dijit/registry', 'dojo/request/xhr'],
+				function(registry, request) {
+					var txtName = registry.byId('createEntityDialog_textEntityName');
+					if (!txtName.isValid()) {
+						return;
+					}
+					
+					var tree = registry.byId('entityTree');
+					var groupName = getSelectedGroupName(tree, 'ENTITY_GROUP');
+					// group name can't be null, as script creation is enabled only if some group is selected
+					var entityShortName = txtName.get('value');
+					var entityName = groupName + '::' + entityShortName;
+					
+					var tabContainer = registry.byId('tabContainer');
+					var entityTab = tabContainer.selectedChildWidget;
+					var grid = entityTab.getChildren()[1];
+					var entitySource = buildEntitySource(grid);
+					var entityBody = escapeEntitySource(entitySource);
+					
+					request('service/entity/admin/create', {
+							headers: { 'Content-Type': 'application/json' },
+							method: 'POST',
+							data: '{"name": "' + entityName +'", "body": "' + entityBody + '"}'
+						}).then(function(resp){
+							tree.refreshChildrenSubTree(groupName);
+							hideDialog('createEntityDialog');
+							var tabIdx = tabContainer.getIndexOfChild(entityTab);
+							tabContainer.removeChild(entityTab);
+							entityTab.destroyRecursive();
+							createEntityTab(entityShortName, 'tab_entity_' + entityName, entitySource, tabIdx);
+						}, function(err) {
+							alert('Server request failed. Please contact support staff');
+						});
+				});
+		}
+		
+		function buildEntitySource(grid) {
+			var entity = {};
+			for (var i = 0; i < grid.rowCount; i++) {
+				var item = grid.getItem(i);
+				entity[item.fldName] = item.fldType; 
+			}
+			
+			return dojo.toJson(entity);
 		}
 		
 		function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
@@ -198,7 +283,7 @@
 					
 					var isExistingScript = (tabId != undefined);
 					
-					var saveButton = new Button({
+					var btnSave = new Button({
 						label: 'Save',
 						showLabel: false,
 						iconClass: 'dijitIconSave',
@@ -208,14 +293,14 @@
 					});
 					if (isExistingScript) {
 						// TODO: Support of script update
-						saveButton.set('disabled', true);
+						btnSave.set('disabled', true);
 					}
-					saveButton.startup();
+					btnSave.startup();
 					
 					var toolBar = new Toolbar({
 						className: 'nestedPane'
 					});
-					toolBar.addChild(saveButton);
+					toolBar.addChild(btnSave);
 					toolBar.startup();
 				
 					var scriptArea = new SimpleTextarea({
@@ -254,28 +339,35 @@
 					
 					var isExistingEntity = (tabId != undefined);
 					
-					var saveButton = new Button({
+					var btnSave = new Button({
 						label: 'Save',
 						showLabel: false,
 						iconClass: 'dijitIconSave',
 						onClick: function() {
-							//showCreateEntityDialog();
+							showCreateEntityDialog();
 						}
 					});
 					if (isExistingEntity) {
 						// TODO: Support of entity update
-						saveButton.set('disabled', true);
+						btnSave.set('disabled', true);
 					}
-					saveButton.startup();
 					
-					var toolBar = new Toolbar({
-						className: 'nestedPane'
+					var btnNewField = new Button({
+						label: 'New field',
+						showLabel: false,
+						iconClass: 'toolbarIconAdd',
+						onClick: function() {
+							showNewEntityFieldDialog();
+						}
 					});
-					toolBar.addChild(saveButton);
+										
+					var toolBar = new Toolbar({ className: 'nestedPane' });
+					toolBar.addChild(btnSave);
+					toolBar.addChild(btnNewField);
 					toolBar.startup();
 					tab.addChild(toolBar);
 					
-					createGrid(tab, entitySource);
+					createEntityGrid(tab, entitySource);
 					
 					if (indexInContainer > -1) {
 						tabContainer.addChild(tab, indexInContainer);
@@ -286,43 +378,92 @@
 			});
 		}
 		
-		function createGrid(tab, entitySource) {
-			require(['dojox/grid/DataGrid', 'dojo/data/ObjectStore', 'dojo/store/Memory', 'dojo/domReady!'],
-				function(DataGrid, ObjectStore, Memory){
+		function createEntityGrid(tab, entitySource) {
+			require(['dijit/registry', 'dojox/grid/DataGrid', 'dojo/data/ObjectStore', 'dojo/store/Memory', 'dijit/form/Button', 'dojo/domReady!'],
+				function(registry, DataGrid, ObjectStore, Memory, Button){
 				
-				var gridItems = [];
-				if (entitySource) {
-					var entity = JSON.parse(entitySource);
-					for (var key in entity) {
-						gridItems.push({colName: key, colType: entity[key]});
+					function getDeleteButton() {
+						var btn = new Button({
+							label: 'Delete field',
+							showLabel: false,
+							iconClass: 'toolbarIconDeleteEntity',
+							onClick: function() {
+								var entityTab = registry.byId('tabContainer').selectedChildWidget;
+								var grid = entityTab.getChildren()[1];
+								var selectedItem = grid.selection.getSelected()[0];
+								var store = grid.store;
+								store.deleteItem(selectedItem);
+								store.save();
+								grid.render();
+							}
+						});
+						btn._destroyOnRemove=true;
+						
+						return btn;
 					}
-				}
-				
-				var data = { /*identifier: 'colName',*/ items: gridItems };
-				var store = new ObjectStore({ objectStore: new Memory({ data: data.items }) });
-				
-				var layout = [{
-					defaultCell: { /*editable: true,*/ styles: 'text-align: left;', width: '300px'},
-					cells: [
-						{'name': 'Name', 'field': 'colName'},
-						{'name': 'Type', 'field': 'colType'}
-					]
-				}];
+					
+					var gridItems = [];
+					if (entitySource) {
+						var entity = dojo.fromJson(entitySource);
+						for (var key in entity) {
+							gridItems.push({fldName: key, fldType: entity[key]});
+						}
+					}
+					
+					var data = {identifier: 'fldName', items: gridItems };
+					var store = new ObjectStore({ objectStore: new Memory({ data: data.items, idProperty: 'fldName' }) });
+					
+					var layout = [{
+						defaultCell: {styles: 'text-align: left;', width: '300px'},
+						cells: [
+							{name: 'Field Name', field: 'fldName'},
+							{name: 'Field Type', field: 'fldType'},
+							{name: ' ', field: 'fldDelete', formatter: getDeleteButton, 
+								styles: 'text-align: center; margin: 0; padding: 0;', width: '40px'}
+						]
+					}];
 
-				var grid = new DataGrid({
-				store: store,
-				query: {colName: '*'},
-				structure: layout,
-				autoWidth:true,
-				autoHeight:true,
-				//className: 'fixedGrid'
-				//rowSelector: true
-				//singleClickEdit: true
-				});
+					var grid = new DataGrid({
+						store: store,
+						query: {fldName: '*'},
+						structure: layout,
+						selectionMode: 'single',
+						autoWidth: true,
+						autoHeight: true,
+						
+						onRowMouseOver: function(e) {
+							// The selection is needed for "Delete field" button. See getDeleteButton()
+							var selectedIndex = e.grid.selection.selectedIndex;
+							if (selectedIndex != e.rowIndex) {
+								e.grid.selection.setSelected(e.rowIndex, true);
+								e.grid.selection.setSelected(selectedIndex, false);
+							}
+						}
+					});
 
-				tab.addChild(grid);
-				grid.startup();
+					tab.addChild(grid);
+					grid.startup();
 			});
+		}
+		
+		function onNewEntityFieldDialog_btnOk() {
+			require([ 'dijit/registry', 'dojo/request/xhr'],
+				function(registry, request) {
+					var txtName = registry.byId('newEntityFieldDialog_textName');
+					var txtType = registry.byId('newEntityFieldDialog_textType');
+					
+					if (!(txtName.isValid() && txtType.isValid())) {
+						return;
+					}
+					
+					var tabContainer = registry.byId('tabContainer');
+					var entityTab = tabContainer.selectedChildWidget;
+					var grid = entityTab.getChildren()[1];
+					grid.store.newItem({fldName: txtName.get('value'), fldType: txtType.get('value')});
+					grid.render();
+					
+					hideDialog('newEntityFieldDialog');
+			});	
 		}
 		
 		function createTree(objectType, itemDblClickHandler, leafIconClass) {
@@ -482,6 +623,43 @@
 		<div class="dijitDialogPaneActionBar">
 			<button data-dojo-type="dijit/form/Button" type="button" id="createScriptDialog_btnOk" onclick="onCreateScriptDialog_btnOkClick();">Save</button>
 			<button data-dojo-type="dijit/form/Button" type="button" id="createScriptDialog_btnCancel" onclick="hideDialog('createScriptDialog');">Cancel</button>
+		</div>
+	</div>
+	
+	<div data-dojo-type="dijit/Dialog" id="createEntityDialog" title="Save entity" style="display: none">
+		<table class="dijitDialogPaneContentArea">
+			<tr>
+				<td><label for="createEntityDialog_textGroupName">Group:</label></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createEntityDialog_textGroupName" name="createEntityDialog_textGroupName"></td>
+			</tr>
+			<tr>
+				<td><label for="createEntityDialog_textEntityName">Name:</label></td>
+				<td><input data-dojo-type="dijit/form/ValidationTextBox" id="createEntityDialog_textEntityName" name="createEntityDialog_textEntityName" 
+					required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+			</tr>
+		</table>
+		<div class="dijitDialogPaneActionBar">
+			<button data-dojo-type="dijit/form/Button" type="button" id="createEntityDialog_btnOk" onclick="onCreateEntityDialog_btnOkClick();">Save</button>
+			<button data-dojo-type="dijit/form/Button" type="button" id="createEntityDialog_btnCancel" onclick="hideDialog('createEntityDialog');">Cancel</button>
+		</div>
+	</div>
+	
+	<div data-dojo-type="dijit/Dialog" id="newEntityFieldDialog" title="New field" style="display: none">
+		<table class="dijitDialogPaneContentArea">
+			<tr>
+				<td><label for="newEntityFieldDialog_textName">Name:</label></td>
+				<td><input data-dojo-type="dijit/form/ValidationTextBox" id="newEntityFieldDialog_textName" name="newEntityFieldDialog_textName" 
+					required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+			</tr>
+			<tr>
+				<td><label for="newEntityFieldDialog_textType">Type:</label></td>
+				<td><input data-dojo-type="dijit/form/ValidationTextBox" id="newEntityFieldDialog_textType" name="newEntityFieldDialog_textType" 
+					required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+			</tr>
+		</table>
+		<div class="dijitDialogPaneActionBar">
+			<button data-dojo-type="dijit/form/Button" type="button" id="newEntityFieldDialog_btnOk" onclick="onNewEntityFieldDialog_btnOk();">Add</button>
+			<button data-dojo-type="dijit/form/Button" type="button" id="newEntityFieldDialog_btnCancel" onclick="hideDialog('newEntityFieldDialog');">Cancel</button>
 		</div>
 	</div>
 

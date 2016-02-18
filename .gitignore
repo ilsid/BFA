@@ -1,7 +1,7 @@
 /target/
 /tmp/*
 .settings/
-.classpath
-.project
 /testLogs/*
 /bfaLogs/*
+/.classpath
+/.project

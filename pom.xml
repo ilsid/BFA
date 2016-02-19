@@ -101,8 +101,9 @@
 	</dependencies>
 
 	<properties>
+		<sdkSrcDir>${project.basedir}/src/main/sdk</sdkSrcDir>
 		<integrationTestsSrcDir>${project.basedir}/src/test/integration</integrationTestsSrcDir>
-		<integrationTestsOutputDir>${project.basedir}/target/integration-test-classes</integrationTestsOutputDir>
+		<integrationTestsOutputDir>${project.build.directory}/integration-test-classes</integrationTestsOutputDir>
 		<logsDir>bfaLogs</logsDir>
 	</properties>
 
@@ -133,6 +134,19 @@
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>2.18.1</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.6</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>2.6</version>
+					<configuration>
+						<packagingExcludes>WEB-INF/classes/**/sdk/**</packagingExcludes>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 		<plugins>
@@ -142,7 +156,7 @@
 				<executions>
 					<execution>
 						<id>pack-dojo</id>
-						<phase>generate-resources</phase>
+						<phase>prepare-package</phase>
 						<goals>
 							<goal>run</goal>
 						</goals>
@@ -183,6 +197,18 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
 				<executions>
+					<execution>
+						<id>add-sdk-sources</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${sdkSrcDir}/java</source>
+							</sources>
+						</configuration>
+					</execution>
 					<execution>
 						<id>add-integration-test-sources</id>
 						<phase>pre-integration-test</phase>
@@ -231,6 +257,27 @@
 							<test>**/*IntegrationTest.java</test>
 							<redirectTestOutputToFile>true</redirectTestOutputToFile>
 						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptor>src/assembly/sdk.xml</descriptor>
+					<archive>
+						<manifest>
+							<mainClass>com.ilsid.bfa.sdk.ActionBuilder</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+				<executions>
+					<execution>
+						<id>create-sdk-archive</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>

@@ -1,15 +1,15 @@
 package com.ilsid.bfa.sdk;
 
 /**
- * Builds custom action.
+ * Generates Action project.
  * 
  * @author illia.sydorovych
  *
  */
-public class ActionBuilder {
+public class ActionProjectGenerator {
 
 	public static void main(String[] args) {
-		System.out.println("ActionBuilder was run");
+		System.out.println("ActionProjectGenerator was run");
 
 	}
 

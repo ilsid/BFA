@@ -265,9 +265,11 @@
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
 					<descriptor>src/assembly/sdk.xml</descriptor>
+					<finalName>bfa-sdk</finalName>
+					<appendAssemblyId>false</appendAssemblyId>
 					<archive>
 						<manifest>
-							<mainClass>com.ilsid.bfa.sdk.ActionBuilder</mainClass>
+							<mainClass>com.ilsid.bfa.sdk.ActionProjectGenerator</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

@@ -43,7 +43,7 @@ import javassist.Modifier;
 import javassist.NotFoundException;
 
 /**
- * Compiles classes in runtime.
+ * Compiles scripting classes.
  * 
  * @author illia.sydorovych
  *
@@ -64,7 +64,7 @@ public class ClassCompiler {
 	}
 
 	/**
-	 * Compiles a byte code for a class that implements {@link DynamicCodeInvocation} interface.
+	 * Compiles {@link DynamicCodeInvocation} implementation.
 	 * 
 	 * @param className
 	 *            class name
@@ -90,7 +90,7 @@ public class ClassCompiler {
 	}
 
 	/**
-	 * Compiles a byte code for a class that extends {@link Script} class.
+	 * Compiles {@link Script} descendant.
 	 * 
 	 * @param className
 	 *            class name
@@ -116,8 +116,8 @@ public class ClassCompiler {
 	}
 
 	/**
-	 * Compiles a byte code for an entity using the specified class name and body. The source code to compile will have
-	 * the following format: </br>
+	 * Compiles entity using the specified class name and body. The source code to compile will have the following
+	 * format: </br>
 	 * </br>
 	 * <code>
 	 * &lt;className&gt; {
@@ -188,7 +188,7 @@ public class ClassCompiler {
 	}
 
 	/**
-	 * Compiles all expressions defined in the given script. The expression classes are defined in the script's package.
+	 * Compiles all expressions defined in the given script. The expression classes are put into the script's package.
 	 * 
 	 * @param scriptSourceCode
 	 *            the source code of the script class

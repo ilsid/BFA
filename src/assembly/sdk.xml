@@ -14,6 +14,7 @@
 			<includes>
 				<include>**/action/*.class</include>
 				<include>**/sdk/**/*.class</include>
+				<include>**/BFAException.class</include>
 			</includes>
 		</fileSet>
 		<fileSet>

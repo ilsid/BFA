@@ -54,7 +54,7 @@ class ProjectTemplateExtractor {
 					if (dir.getNameCount() > 1) {
 						String destDirName = getDestinationName(dir);
 						System.out.println("Extracting " + destDirName);
-						new File(currentDir, destDirName.toString()).mkdirs();
+						new File(currentDir, destDirName).mkdirs();
 					}
 					return FileVisitResult.CONTINUE;
 				}

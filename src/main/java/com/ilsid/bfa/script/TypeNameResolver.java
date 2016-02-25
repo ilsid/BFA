@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.GroupNameUtil;
 
 //TODO: write javadocs
 public class TypeNameResolver {
@@ -37,7 +38,7 @@ public class TypeNameResolver {
 			return predefinedType;
 		}
 
-		NameParts entityNameParts = splitName(entityName);
+		GroupNameUtil.NameParts entityNameParts = splitName(entityName);
 
 		final String simpleClassName = ClassNameUtil.generateSimpleClassName(entityNameParts.getChildName(),
 				ClassNameUtil.BLANK_CODE);
@@ -50,7 +51,7 @@ public class TypeNameResolver {
 	}
 
 	public static String resolveScriptClassName(String scriptName) {
-		NameParts scriptNameParts = splitName(scriptName);
+		GroupNameUtil.NameParts scriptNameParts = splitName(scriptName);
 
 		final String simpleClassName = ClassNameUtil.generateSimpleClassName(scriptNameParts.getChildName(),
 				ClassNameUtil.BLANK_CODE);
@@ -90,8 +91,8 @@ public class TypeNameResolver {
 	 * @return parent and child parts. If no parent is defined then {@link ClassNameUtil#DEFAULT_GROUP_SUBPACKAGE} is
 	 *         returned as a parent part
 	 */
-	public static NameParts splitName(String name) {
-		return doSplitName(name, ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE);
+	public static GroupNameUtil.NameParts splitName(String name) {
+		return GroupNameUtil.splitName(name, ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE);
 	}
 
 	/**
@@ -101,29 +102,8 @@ public class TypeNameResolver {
 	 *            group name.
 	 * @return parent and child parts. If no parent is defined then <code>null</code> is returned as a parent part
 	 */
-	public static NameParts splitGroupName(String name) {
-		return doSplitName(name, null);
-	}
-
-	private static NameParts doSplitName(String name, String defaultParentGroup) {
-		int childSepIdx = name.lastIndexOf(ClassNameUtil.GROUP_SEPARATOR);
-		final int offset = childSepIdx + ClassNameUtil.GROUP_SEPARATOR.length();
-
-		String parentName;
-		String childName;
-		if (childSepIdx > 0 && offset < name.length()) {
-			parentName = name.substring(0, childSepIdx);
-			childName = name.substring(offset);
-		} else {
-			parentName = defaultParentGroup;
-			childName = name;
-		}
-
-		NamePartsHolder result = new NamePartsHolder();
-		result.parentName = parentName;
-		result.childName = childName;
-
-		return result;
+	public static GroupNameUtil.NameParts splitGroupName(String name) {
+		return GroupNameUtil.splitName(name);
 	}
 
 	/*
@@ -143,29 +123,6 @@ public class TypeNameResolver {
 		result.append(parentPackage).append(DOT).append(childPackage);
 
 		return result.toString();
-	}
-
-	public interface NameParts {
-
-		String getParentName();
-
-		String getChildName();
-	}
-
-	private static class NamePartsHolder implements NameParts {
-
-		String parentName;
-
-		String childName;
-
-		public String getParentName() {
-			return parentName;
-		}
-
-		public String getChildName() {
-			return childName;
-		}
-
 	}
 
 }

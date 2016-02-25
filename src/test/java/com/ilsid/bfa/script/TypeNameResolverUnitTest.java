@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.GroupNameUtil;
 import com.ilsid.bfa.common.Metadata;
 
 public class TypeNameResolverUnitTest extends BaseUnitTestCase {
@@ -173,42 +174,42 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void simpleNameCanBeSplit() {
-		TypeNameResolver.NameParts parts = TypeNameResolver.splitName("Some Name");
+		GroupNameUtil.NameParts parts = TypeNameResolver.splitName("Some Name");
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, parts.getParentName());
 		assertEquals("Some Name", parts.getChildName());
 	}
 
 	@Test
 	public void complexNameWithTwoPartsCanBeSplit() {
-		TypeNameResolver.NameParts parts = TypeNameResolver.splitName("Some Parent::Some Child");
+		GroupNameUtil.NameParts parts = TypeNameResolver.splitName("Some Parent::Some Child");
 		assertEquals("Some Parent", parts.getParentName());
 		assertEquals("Some Child", parts.getChildName());
 	}
 
 	@Test
 	public void complexNameWithThreePartsCanBeSplit() {
-		TypeNameResolver.NameParts parts = TypeNameResolver.splitName("Some Grand-Parent::Some Parent::Some Child");
+		GroupNameUtil.NameParts parts = TypeNameResolver.splitName("Some Grand-Parent::Some Parent::Some Child");
 		assertEquals("Some Grand-Parent::Some Parent", parts.getParentName());
 		assertEquals("Some Child", parts.getChildName());
 	}
-	
+
 	@Test
 	public void simpleGroupNameCanBeSplit() {
-		TypeNameResolver.NameParts parts = TypeNameResolver.splitGroupName("Some Name");
+		GroupNameUtil.NameParts parts = TypeNameResolver.splitGroupName("Some Name");
 		assertNull(parts.getParentName());
 		assertEquals("Some Name", parts.getChildName());
 	}
 
 	@Test
 	public void complexGroupNameWithTwoPartsCanBeSplit() {
-		TypeNameResolver.NameParts parts = TypeNameResolver.splitGroupName("Some Parent::Some Child");
+		GroupNameUtil.NameParts parts = TypeNameResolver.splitGroupName("Some Parent::Some Child");
 		assertEquals("Some Parent", parts.getParentName());
 		assertEquals("Some Child", parts.getChildName());
 	}
 
 	@Test
 	public void complexGroupNameWithThreePartsCanBeSplit() {
-		TypeNameResolver.NameParts parts = TypeNameResolver.splitGroupName("Some Grand-Parent::Some Parent::Some Child");
+		GroupNameUtil.NameParts parts = TypeNameResolver.splitGroupName("Some Grand-Parent::Some Parent::Some Child");
 		assertEquals("Some Grand-Parent::Some Parent", parts.getParentName());
 		assertEquals("Some Child", parts.getChildName());
 	}

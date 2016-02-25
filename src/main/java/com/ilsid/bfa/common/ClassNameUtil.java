@@ -55,12 +55,6 @@ public class ClassNameUtil {
 	 */
 	public static final String BLANK_CODE = "_x20_";
 
-	/**
-	 * The separator used for sub-group naming. For example, the group name can be
-	 * <i>grand_parent_group::parent_group::group</i>.
-	 */
-	public static final String GROUP_SEPARATOR = "::";
-
 	private static final char DOT = '.';
 
 	private static final Map<String, String> escapeSymbols;

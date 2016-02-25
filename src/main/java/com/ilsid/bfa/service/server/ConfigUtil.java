@@ -31,19 +31,18 @@ public class ConfigUtil {
 	}
 
 	private static Map<String, String> load() {
-		Map<String, String> result;
 		Properties props = new Properties();
 
 		try (InputStream configFile = new FileInputStream(CONFIG_FILE)) {
 			props.load(configFile);
-			result = new HashMap<String, String>();
 		} catch (FileNotFoundException e) {
 			throw new IllegalStateException(String.format("BFA configuration file [%s] is not found", CONFIG_FILE));
 		} catch (IOException e) {
 			throw new IllegalStateException(String.format("Failed to load BFA configuration file [%s]", CONFIG_FILE),
 					e);
 		}
-
+		
+		Map<String, String> result = new HashMap<String, String>();
 		for (String key : props.stringPropertyNames()) {
 			result.put(key, props.getProperty(key));
 		}

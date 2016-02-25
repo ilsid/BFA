@@ -33,7 +33,7 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
  * @author illia.sydorovych
  *
  */
-// FIXME: remove hardcoded config and Repository implementations
+// FIXME: remove hardcoded Repository implementations
 public class ApplicationConfig extends GuiceServletContextListener {
 
 	private static final String INFO_LOGGER_NAME = "info_logger";
@@ -65,10 +65,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			@Provides
 			@RepositoryConfig
 			protected Map<String, String> provideRepositoryConfiguration() {
-				Map<String, String> result = new HashMap<>();
-				result.put("bfa.persistence.fs.root_dir", "d:\\temp\\glassfish\\code_repository");
-
-				return result;
+				return ConfigUtil.getApplicationSettings();
 			}
 
 			@Provides

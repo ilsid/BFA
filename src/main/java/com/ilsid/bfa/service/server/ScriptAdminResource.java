@@ -180,7 +180,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 		try {
 			scriptManager.createScriptGroup(groupName);
 		} catch (ManagementException e) {
-			throw new ResourceException(Paths.CREATE_GROUP_OPERATION, e);
+			throw new ResourceException(Paths.SCRIPT_CREATE_GROUP_SERVICE, e);
 		}
 
 		return Response.status(Status.OK).build();

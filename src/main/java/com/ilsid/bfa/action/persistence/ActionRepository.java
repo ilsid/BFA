@@ -56,4 +56,17 @@ public interface ActionRepository extends Configurable {
 	 *             </ul>
 	 */
 	void createGroup(String groupName, Map<String, String> metaData) throws PersistenceException;
+
+	/**
+	 * Loads meta-data for the action group.
+	 * 
+	 * @param groupName
+	 *            group name
+	 * @return the meta-data for the given group or <code>null</code> if such group does not exist or has no
+	 *         corresponding meta-data
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	Map<String, String> loadGroupMetadata(String groupName) throws PersistenceException;
+
 }

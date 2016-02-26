@@ -341,7 +341,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 
 		File metaFile = new File(packageDir, ClassNameUtil.METADATA_FILE_NAME);
 		if (metaFile.exists()) {
-			return loadContents(metaFile);
+			return MetadataUtil.loadContents(metaFile);
 		} else {
 			return null;
 		}
@@ -422,17 +422,6 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private Map<String, String> loadContents(File metaFile) throws PersistenceException {
-		Map<String, String> result;
-		try {
-			result = jsonMapper.readValue(metaFile, Map.class);
-		} catch (IOException e) {
-			throw new PersistenceException("Failed to read meta-data", e);
-		}
-		return result;
-	}
-
 	private void collectSubDirMetadatas(File dir, String typeCriteria, List<Map<String, String>> result)
 			throws PersistenceException {
 		File[] children = dir.listFiles();
@@ -441,7 +430,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		for (int i = 0; i < children.length; i++) {
 			File metaFile = new File(children[i].getPath(), ClassNameUtil.METADATA_FILE_NAME);
 			if (metaFile.exists()) {
-				Map<String, String> metaData = loadContents(metaFile);
+				Map<String, String> metaData = MetadataUtil.loadContents(metaFile);
 				String type = metaData.get(Metadata.TYPE);
 				if ((type != null && typeCriteria == ALL_TYPES_CRITERIA) || typeCriteria.equals(type)) {
 					result.add(metaData);
@@ -456,7 +445,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		Arrays.sort(metaFiles, FILE_NAMES_COMPARATOR);
 
 		for (int i = 0; i < metaFiles.length; i++) {
-			Map<String, String> metaData = loadContents(metaFiles[i]);
+			Map<String, String> metaData = MetadataUtil.loadContents(metaFiles[i]);
 			String type = metaData.get(Metadata.TYPE);
 			if ((type != null && typeCriteria == ALL_TYPES_CRITERIA) || typeCriteria.equals(type)) {
 				result.add(metaData);

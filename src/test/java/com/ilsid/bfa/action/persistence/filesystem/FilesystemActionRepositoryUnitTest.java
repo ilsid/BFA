@@ -106,6 +106,14 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		repository.createGroup("Non Existing Group::Child Group 001", createGroupMetadata());
 	}
 
+	@Test
+	public void childGroupInParentGroupWithIncorrectMetadataCanNotBeSaved() throws Exception {
+		exceptionRule.expect(PersistenceException.class);
+		exceptionRule.expectMessage("The action group [Group with Invalid Metadata] does not exist");
+
+		repository.createGroup("Group with Invalid Metadata::Child Group 001", createGroupMetadata());
+	}
+
 	private URL toURL(File file) throws Exception {
 		return file.toURI().toURL();
 	}

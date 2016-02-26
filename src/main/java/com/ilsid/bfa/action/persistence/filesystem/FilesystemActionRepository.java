@@ -19,8 +19,10 @@ import org.codehaus.jackson.map.ObjectMapper;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.GroupNameUtil;
+import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.filesystem.ConfigurableRepository;
+import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 
 /**
  * The action repository based on the file system.
@@ -99,6 +101,30 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		createNewGroup(groupName, metaData);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.action.persistence.ActionRepository#loadGroupMetadata(java.lang.String)
+	 */
+	public Map<String, String> loadGroupMetadata(String groupName) throws PersistenceException {
+		File groupDir = getGroupDir(groupName);
+
+		if (!groupDir.isDirectory()) {
+			return null;
+		}
+
+		return loadMetaFile(groupDir);
+	}
+
+	private Map<String, String> loadMetaFile(File groupDir) throws PersistenceException {
+		File metaFile = new File(groupDir, ClassNameUtil.METADATA_FILE_NAME);
+		if (metaFile.exists()) {
+			return MetadataUtil.loadContents(metaFile);
+		} else {
+			return null;
+		}
+	}
+
 	private void createNewGroup(String groupName, Map<String, String> metaData) throws PersistenceException {
 		File groupDir = getGroupDir(groupName);
 		if (groupDir.isDirectory()) {
@@ -128,15 +154,25 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 
 	private void checkGroupExists(String groupName) throws PersistenceException {
 		File groupDir = getGroupDir(groupName);
-		if (!groupDir.isDirectory()) {
+		if (!(groupDir.isDirectory() && isValidGroup(groupDir))) {
 			throw new PersistenceException(String.format("The action group [%s] does not exist", groupName));
 		}
+	}
+
+	private boolean isValidGroup(File groupDir) throws PersistenceException {
+		Map<String, String> meta = loadMetaFile(groupDir);
+
+		if (meta != null && Metadata.ACTION_GROUP_TYPE.equals(meta.get(Metadata.TYPE))) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private File getGroupDir(String groupName) {
 		String actionRootDir = new StringBuilder(rootDirPath).append(File.separatorChar).append(ACTION_ROOT_DIR)
 				.toString();
-		
+
 		return new File(actionRootDir, GroupNameUtil.getDirs(groupName));
 	}
 

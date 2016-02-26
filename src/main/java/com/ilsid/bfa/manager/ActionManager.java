@@ -1,8 +1,13 @@
 package com.ilsid.bfa.manager;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.inject.Inject;
 
 import com.ilsid.bfa.action.persistence.ActionRepository;
+import com.ilsid.bfa.common.GroupNameUtil;
+import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
 
 /**
@@ -29,7 +34,7 @@ public class ActionManager {
 	 */
 	public void createGroup(String groupName) throws ManagementException {
 		try {
-			repository.createGroup(groupName, null);
+			repository.createGroup(groupName, createActionGroupMetadata(groupName));
 		} catch (PersistenceException e) {
 			throw new ManagementException(String.format("Failed to created the action group [%s]", groupName), e);
 		}
@@ -44,6 +49,15 @@ public class ActionManager {
 	@Inject
 	public void setRepository(ActionRepository repository) {
 		this.repository = repository;
+	}
+
+	private Map<String, String> createActionGroupMetadata(String groupName) throws ManagementException {
+		Map<String, String> metaData = new HashMap<>();
+		metaData.put(Metadata.TYPE, Metadata.ACTION_GROUP_TYPE);
+		metaData.put(Metadata.NAME, groupName);
+		metaData.put(Metadata.TITLE, GroupNameUtil.splitName(groupName).getChildName());
+
+		return metaData;
 	}
 
 }

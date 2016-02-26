@@ -1,5 +1,6 @@
 package com.ilsid.bfa;
 
+import java.io.File;
 import java.lang.reflect.Field;
 
 import org.jmock.Mockery;
@@ -11,6 +12,10 @@ import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
 public abstract class BaseUnitTestCase {
+	
+	protected final static String REPOSITORY_ROOT_DIR_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_class_repository";
+	
+	protected final static File REPOSITORY_ROOT_DIR = new File(REPOSITORY_ROOT_DIR_PATH);
 
 	private Mockery mockery = new JUnit4Mockery() {
 		{
@@ -79,6 +84,10 @@ public abstract class BaseUnitTestCase {
 	
 	protected void assertIsSatisfed() {
 		mockery.assertIsSatisfied();
+	}
+	
+	protected String toNativeFS(String dirs) {
+		return dirs.replace('/', File.separatorChar);
 	}
 
 }

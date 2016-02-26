@@ -1,7 +1,5 @@
 package com.ilsid.bfa.common;
 
-import java.io.File;
-
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
@@ -55,10 +53,6 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 		// Precondition: class name must contain a package
 		exceptionRule.expect(IndexOutOfBoundsException.class);
 		ClassNameUtil.getPackageName("Foo");
-	}
-
-	private String toNativeFS(String dirs) {
-		return dirs.replace('/', File.separatorChar);
 	}
 
 }

@@ -1,5 +1,7 @@
 package com.ilsid.bfa.common;
 
+import java.io.File;
+
 /**
  * Provides the routines for the group names processing.
  * 
@@ -8,7 +10,11 @@ package com.ilsid.bfa.common;
  */
 public class GroupNameUtil {
 
-	private static final String GROUP_SEPARATOR = "::";
+	/**
+	 * The separator used for sub-group naming. For example, the group name can be
+	 * <i>grand_parent_group::parent_group::group</i>.
+	 */
+	public static final String GROUP_SEPARATOR = "::";
 
 	/**
 	 * Splits group name.
@@ -48,6 +54,22 @@ public class GroupNameUtil {
 		NamePartsHolder result = new NamePartsHolder();
 		result.parentName = parentName;
 		result.childName = childName;
+
+		return result;
+	}
+
+	/**
+	 * Returns directories string from the given group name. For example, the method returns the string
+	 * <i>grand_parent/parent/child</i> for the group name <i>grand_parent::parent::child</i>.
+	 * 
+	 * @param groupName
+	 *            group name
+	 * @return directories for the given group
+	 */
+	public static String getDirs(String groupName) {
+		String result = groupName;
+		result = ClassNameUtil.escape(result).replace(GROUP_SEPARATOR, File.separator)
+				.replaceAll(ClassNameUtil.WHITESPACE_REGEXP, ClassNameUtil.BLANK_CODE).toLowerCase();
 
 		return result;
 	}

@@ -9,19 +9,11 @@ import com.ilsid.bfa.common.GroupNameUtil;
 //TODO: write javadocs
 public class TypeNameResolver {
 
-	private static final String WHITESPACE_REGEXP = "\\s";
-
 	private static final char DOT = '.';
 
 	private static final String EMPTY = "";
 
 	private static final String EXPRESSION_PREFIX = "$$";
-
-	/*
-	 * The separator used for sub-group naming. For example, the group name can be
-	 * <i>grand_parent_group::parent_group::group</i>.
-	 */
-	private static final String GROUP_SEPARATOR = "::";
 
 	private static final String DOT_STR = ".";
 
@@ -112,12 +104,9 @@ public class TypeNameResolver {
 	 * <i>grand_parent_group::parent_group::some_group</i>.
 	 */
 	private static String generatePackageName(String parentPackage, String expression) {
-		String childPackage = expression.replaceAll(WHITESPACE_REGEXP, ClassNameUtil.BLANK_CODE);
-		Map<String, String> escapeSymbols = ClassNameUtil.getEscapeSymbols();
-		for (String smb : escapeSymbols.keySet()) {
-			childPackage = childPackage.replace(smb, escapeSymbols.get(smb));
-		}
-		childPackage = childPackage.replaceAll(GROUP_SEPARATOR, DOT_STR).toLowerCase();
+		String childPackage = expression.replaceAll(ClassNameUtil.WHITESPACE_REGEXP, ClassNameUtil.BLANK_CODE);
+		childPackage = ClassNameUtil.escape(childPackage);
+		childPackage = childPackage.replaceAll(GroupNameUtil.GROUP_SEPARATOR, DOT_STR).toLowerCase();
 
 		StringBuilder result = new StringBuilder();
 		result.append(parentPackage).append(DOT).append(childPackage);

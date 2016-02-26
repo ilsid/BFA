@@ -2,6 +2,7 @@ package com.ilsid.bfa.action.persistence;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 import com.ilsid.bfa.Configurable;
 import com.ilsid.bfa.persistence.PersistenceException;
@@ -40,4 +41,19 @@ public interface ActionRepository extends Configurable {
 	 */
 	List<URL> getDependencies(String actionName) throws PersistenceException;
 
+	/**
+	 * Creates new action group.
+	 * 
+	 * @param groupName
+	 *            group name
+	 * @param metaData
+	 *            group meta-data
+	 * @throws PersistenceException
+	 *             <ul>
+	 *             <li>if the group with the given name already exists in the repository</li>
+	 *             <li>if the group is not a top-level and its parent group does not exist in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	void createGroup(String groupName, Map<String, String> metaData) throws PersistenceException;
 }

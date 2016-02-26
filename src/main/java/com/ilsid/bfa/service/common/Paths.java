@@ -13,6 +13,8 @@ public final class Paths {
 	public final static String SCRIPT_SERVICE_ROOT = SERVICE_ROOT + "/script";
 
 	public final static String ENTITY_SERVICE_ROOT = SERVICE_ROOT + "/entity";
+	
+	public final static String ACTION_SERVICE_ROOT = SERVICE_ROOT + "/action";
 
 	/*
 	 * Common Paths
@@ -78,5 +80,12 @@ public final class Paths {
 	public final static String ENTITY_GET_ITEMS_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + GET_ITEMS_OPERATION;
 
 	public final static String ENTITY_CREATE_GROUP_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + CREATE_GROUP_OPERATION;
-
+	
+	/*
+	 * Action Administration
+	 */
+	
+	public final static String ACTION_SERVICE_ADMIN_ROOT = ACTION_SERVICE_ROOT + "/admin";
+	
+	public final static String ACTION_CREATE_GROUP_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + CREATE_GROUP_OPERATION;
 }

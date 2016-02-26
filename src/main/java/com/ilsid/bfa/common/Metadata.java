@@ -25,6 +25,8 @@ public final class Metadata {
 	public static final String ENTITY_TYPE = "ENTITY";
 
 	public static final String ENTITY_GROUP_TYPE = "ENTITY_GROUP";
+	
+	public static final String ACTION_GROUP_TYPE = "ACTION_GROUP";
 
 	public static final String DEFAULT_GROUP_NAME = "default_group";
 

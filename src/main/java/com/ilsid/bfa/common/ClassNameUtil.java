@@ -1,7 +1,6 @@
 package com.ilsid.bfa.common;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +54,11 @@ public class ClassNameUtil {
 	 */
 	public static final String BLANK_CODE = "_x20_";
 
+	/**
+	 * Whitespace regular expression.
+	 */
+	public static final String WHITESPACE_REGEXP = "\\s";
+	
 	private static final char DOT = '.';
 
 	private static final Map<String, String> escapeSymbols;
@@ -116,21 +120,26 @@ public class ClassNameUtil {
 	 * @return a class name
 	 */
 	public static String generateSimpleClassName(String expression, String blankReplacement) {
-		String expr = expression.replaceAll("\\s", blankReplacement);
+		String expr = expression.replaceAll(WHITESPACE_REGEXP, blankReplacement);
 		for (String smb : escapeSymbols.keySet()) {
 			expr = expr.replace(smb, escapeSymbols.get(smb));
 		}
 
 		return expr;
 	}
-
+	
 	/**
-	 * Returns a map containing the escape symbols and their place holders.
-	 * 
-	 * @return a map of the escape symbols
+	 * Escapes the given expression.
+	 * @param expression expression to escape
+	 * @return the expression with the following escaped symbols: [+-*./]
 	 */
-	public static Map<String, String> getEscapeSymbols() {
-		return Collections.unmodifiableMap(escapeSymbols);
+	public static String escape(String expression) {
+		String result = expression;
+		for (String smb : escapeSymbols.keySet()) {
+			result = result.replace(smb, escapeSymbols.get(smb));
+		}
+		
+		return result;
 	}
 
 }

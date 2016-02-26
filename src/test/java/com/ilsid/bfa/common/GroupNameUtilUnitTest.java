@@ -43,4 +43,21 @@ public class GroupNameUtilUnitTest extends BaseUnitTestCase {
 		assertEquals("Some Name", parts.getChildName());
 	}
 
+	@Test
+	public void dirsTopLevelGroupCanBeObtained() {
+		assertEquals("simple_x20_group", GroupNameUtil.getDirs("Simple Group"));
+	}
+
+	@Test
+	public void dirsForChildGroupCanBeObtained() {
+		assertEquals(toNativeFS("parent_x20_group/child_x20_group"),
+				GroupNameUtil.getDirs("Parent Group::Child Group"));
+	}
+
+	@Test
+	public void dirsForGrandChildGroupCanBeObtained() {
+		assertEquals(toNativeFS("grand_x20_parent_x20_group/parent_x20_group/child_x20_group"),
+				GroupNameUtil.getDirs("Grand Parent Group::Parent Group::Child Group"));
+	}
+
 }

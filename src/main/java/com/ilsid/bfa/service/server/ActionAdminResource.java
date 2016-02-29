@@ -1,5 +1,8 @@
 package com.ilsid.bfa.service.server;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -9,6 +12,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.manager.ActionManager;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.service.common.Paths;
@@ -17,6 +21,41 @@ import com.ilsid.bfa.service.common.Paths;
 public class ActionAdminResource extends AbstractAdminResource {
 
 	private ActionManager actionManager;
+
+	/**
+	 * Loads meta-data items for the members of the given group. The members can be actions or/and action groups. If
+	 * <code>groupName</code> parameter equals {@link Metadata#ROOT_PARENT_NAME} then top-level group items are loaded.
+	 * 
+	 * @param groupName
+	 *            name of the group
+	 * @return a list of meta-data items or an empty list, if no members found or such group does not exist. Each item
+	 *         is represented by <{@link Map} instance.
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the passed group name is <code>null</code></li>
+	 *             <li>in case of the repository access failure</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@POST
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.GET_ITEMS_OPERATION)
+	public Response getItems(String groupName) {
+		validateNonEmptyParameter(Paths.ACTION_GET_ITEMS_SERVICE, GROUP_PARAM_NAME, groupName);
+		List<Map<String, String>> metas;
+		try {
+			if (groupName.equals(Metadata.ROOT_PARENT_NAME)) {
+				metas = actionManager.getTopLevelActionGroupMetadatas();
+			} else {
+				throw new ResourceException(Paths.ACTION_GET_ITEMS_SERVICE, "Not implemented", Status.BAD_REQUEST);
+			}
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.ACTION_GET_ITEMS_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).entity(metas).build();
+	}
 
 	/**
 	 * Creates new action group in the code repository. The group name can be simple or complex. The simple group name

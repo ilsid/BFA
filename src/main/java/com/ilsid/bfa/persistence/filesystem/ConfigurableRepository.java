@@ -40,7 +40,25 @@ public abstract class ConfigurableRepository implements Configurable {
 				buildMetadata(Metadata.ENTITY_GROUP_TYPE));
 	}
 
-	private String buildMetadata(String groupType) {
+	protected void initDefaultGroup(String packageName, String metaData) throws ConfigurationException {
+		File defaultGroupDir = new File(rootDirPath, packageName.replace('.', File.separatorChar));
+
+		if (!defaultGroupDir.exists()) {
+			try {
+				FileUtils.forceMkdir(defaultGroupDir);
+
+				File metadaFile = new File(
+						defaultGroupDir.getPath() + File.separator + ClassNameUtil.METADATA_FILE_NAME);
+				FileUtils.writeStringToFile(metadaFile, metaData);
+			} catch (IOException e) {
+				throw new ConfigurationException(String.format(
+						"The repository initialization failure. The error occurred while creating the default group directory [%s]",
+						defaultGroupDir.getAbsolutePath()), e);
+			}
+		}
+	}
+	
+	protected String buildMetadata(String groupType) {
 		StringBuilder json = new StringBuilder();
 		json.append("{\"").append(Metadata.TYPE).append("\":\"").append(groupType).append("\",\"").append(Metadata.NAME)
 				.append("\":\"").append(Metadata.DEFAULT_GROUP_NAME).append("\",\"").append(Metadata.TITLE)
@@ -60,24 +78,6 @@ public abstract class ConfigurableRepository implements Configurable {
 					+ "] property is not a directory");
 		}
 
-	}
-
-	private void initDefaultGroup(String packageName, String metaData) throws ConfigurationException {
-		File defaultGroupDir = new File(rootDirPath + File.separator + packageName.replace('.', File.separatorChar));
-
-		if (!defaultGroupDir.exists()) {
-			try {
-				FileUtils.forceMkdir(defaultGroupDir);
-
-				File metadaFile = new File(
-						defaultGroupDir.getPath() + File.separator + ClassNameUtil.METADATA_FILE_NAME);
-				FileUtils.writeStringToFile(metadaFile, metaData);
-			} catch (IOException e) {
-				throw new ConfigurationException(String.format(
-						"The repository initialization failure. The error occurred while creating the default group directory [%s]",
-						defaultGroupDir.getAbsolutePath()), e);
-			}
-		}
 	}
 
 }

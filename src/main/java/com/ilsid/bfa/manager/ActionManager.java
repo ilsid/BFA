@@ -1,6 +1,7 @@
 package com.ilsid.bfa.manager;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -9,6 +10,7 @@ import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.GroupNameUtil;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 
 /**
  * Provides a set of management operations for actions.
@@ -38,6 +40,33 @@ public class ActionManager {
 		} catch (PersistenceException e) {
 			throw new ManagementException(String.format("Failed to created the action group [%s]", groupName), e);
 		}
+	}
+	
+	/**
+	 * Loads meta-data items for all top-level action groups.
+	 * 
+	 * @return a list of meta-data items
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if no top-level groups exist in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public List<Map<String, String>> getTopLevelActionGroupMetadatas() throws ManagementException {
+		List<Map<String, String>> result;
+		try {
+			result = repository.loadMetadataForTopLevelGroups();
+		} catch (PersistenceException e) {
+			throw new ManagementException("Failed to load the info for top-level action groups", e);
+		}
+
+		if (result.isEmpty()) {
+			throw new ManagementException("No top-level action groups found");
+		}
+
+		MetadataUtil.addParentRecord(result, Metadata.ROOT_PARENT_NAME);
+
+		return result;
 	}
 
 	/**

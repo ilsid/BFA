@@ -67,6 +67,14 @@ public interface ActionRepository extends Configurable {
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
-	Map<String, String> loadGroupMetadata(String groupName) throws PersistenceException;
+	Map<String, String> loadMetadataForGroup(String groupName) throws PersistenceException;
 
+	/**
+	 * Loads meta-data items for top-level groups.
+	 * 
+	 * @return a list of meta-data items or an empty list, if no top-level groups exist
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	List<Map<String, String>> loadMetadataForTopLevelGroups() throws PersistenceException;
 }

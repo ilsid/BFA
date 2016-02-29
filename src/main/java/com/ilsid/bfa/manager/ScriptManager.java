@@ -16,6 +16,7 @@ import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.TransactionManager;
+import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 import com.ilsid.bfa.script.ClassCompilationException;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.CompilationBlock;
@@ -253,7 +254,7 @@ public class ScriptManager {
 			throw new ManagementException("No top-level script groups found");
 		}
 
-		addParentInfo(result, Metadata.ROOT_PARENT_NAME);
+		MetadataUtil.addParentRecord(result, Metadata.ROOT_PARENT_NAME);
 
 		return result;
 	}
@@ -280,7 +281,7 @@ public class ScriptManager {
 		}
 
 		if (!result.isEmpty()) {
-			addParentInfo(result, groupName);
+			MetadataUtil.addParentRecord(result, groupName);
 		}
 
 		return result;
@@ -309,7 +310,7 @@ public class ScriptManager {
 			throw new ManagementException("No top-level entity groups found");
 		}
 
-		addParentInfo(result, Metadata.ROOT_PARENT_NAME);
+		MetadataUtil.addParentRecord(result, Metadata.ROOT_PARENT_NAME);
 
 		return result;
 	}
@@ -336,7 +337,7 @@ public class ScriptManager {
 		}
 
 		if (!result.isEmpty()) {
-			addParentInfo(result, groupName);
+			MetadataUtil.addParentRecord(result, groupName);
 		}
 
 		return result;
@@ -546,12 +547,6 @@ public class ScriptManager {
 			rollbackTransaction();
 			throw new ManagementException(
 					String.format("The entity [%s] does not exist in the repository", entityName));
-		}
-	}
-
-	private void addParentInfo(List<Map<String, String>> metaDatas, String parentName) {
-		for (Map<String, String> metaData : metaDatas) {
-			metaData.put(Metadata.PARENT, parentName);
 		}
 	}
 

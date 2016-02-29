@@ -88,4 +88,6 @@ public final class Paths {
 	public final static String ACTION_SERVICE_ADMIN_ROOT = ACTION_SERVICE_ROOT + "/admin";
 	
 	public final static String ACTION_CREATE_GROUP_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + CREATE_GROUP_OPERATION;
+	
+	public final static String ACTION_GET_ITEMS_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + GET_ITEMS_OPERATION;
 }

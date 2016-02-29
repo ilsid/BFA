@@ -23,6 +23,8 @@ import com.ilsid.bfa.persistence.PersistenceException;
 
 public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 
+	private static final String EXISTING_ACTION_GROUP = "Top Level Group 01";
+
 	private static final String EXISTING_ACTION_NAME = "Reserve Amount";
 
 	private static final String NON_EXISTING_ACTION_NAME = "Non Existing Action";
@@ -112,6 +114,33 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		exceptionRule.expectMessage("The action group [Group with Invalid Metadata] does not exist");
 
 		repository.createGroup("Group with Invalid Metadata::Child Group 001", createGroupMetadata());
+	}
+	
+	@Test
+	public void metadataForPackageCanBeLoaded() throws Exception {
+		Map<String, String> metaData = repository.loadMetadataForGroup(EXISTING_ACTION_GROUP);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals(EXISTING_ACTION_GROUP, metaData.get(Metadata.NAME));
+		assertEquals(EXISTING_ACTION_GROUP, metaData.get(Metadata.TITLE));
+	}	
+
+	@Test
+	public void metadataForTopLevelPackagesCanBeLoaded() throws Exception {
+		List<Map<String, String>> metaDatas = repository.loadMetadataForTopLevelGroups();
+
+		assertEquals(2, metaDatas.size());
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));
+		assertEquals(Metadata.DEFAULT_GROUP_TITLE, metaData.get(Metadata.TITLE));
+		
+		metaData = metaDatas.get(1);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals(EXISTING_ACTION_GROUP, metaData.get(Metadata.NAME));
+		assertEquals(EXISTING_ACTION_GROUP, metaData.get(Metadata.TITLE));
 	}
 
 	private URL toURL(File file) throws Exception {

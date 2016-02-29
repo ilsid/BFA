@@ -13,14 +13,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.GroupNameUtil;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.filesystem.ConfigurableRepository;
 import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 
@@ -34,6 +38,9 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 
 	private static final String ACTION_ROOT_DIR = "action";
 
+	private static final String DEFAULT_GROUP_DIR = ACTION_ROOT_DIR + File.separatorChar
+			+ ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
+
 	private static final String CONFIG_FILE_NAME = "config.properties";
 
 	private static final String CLASS_NAME_PROP = "action.class";
@@ -41,6 +48,8 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	private static final String CLASSES_DIR = "classes";
 
 	private static final String LIB_DIR = "lib";
+
+	private File actionRootDir;
 
 	private ObjectMapper jsonMapper = new ObjectMapper();
 
@@ -106,7 +115,7 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	 * 
 	 * @see com.ilsid.bfa.action.persistence.ActionRepository#loadGroupMetadata(java.lang.String)
 	 */
-	public Map<String, String> loadGroupMetadata(String groupName) throws PersistenceException {
+	public Map<String, String> loadMetadataForGroup(String groupName) throws PersistenceException {
 		File groupDir = getGroupDir(groupName);
 
 		if (!groupDir.isDirectory()) {
@@ -114,6 +123,30 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		}
 
 		return loadMetaFile(groupDir);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.action.persistence.ActionRepository#loadMetadataForTopLevelGroups()
+	 */
+	public List<Map<String, String>> loadMetadataForTopLevelGroups() throws PersistenceException {
+		List<Map<String, String>> result = new LinkedList<>();
+		MetadataUtil.collectSubDirMetadatas(getRootDir(), Metadata.ACTION_GROUP_TYPE, result);
+
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.persistence.filesystem.ConfigurableRepository#setConfiguration(java.util.Map)
+	 */
+	@Override
+	@Inject
+	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
+		super.setConfiguration(config);
+		initDefaultGroup(DEFAULT_GROUP_DIR, buildMetadata(Metadata.ACTION_GROUP_TYPE));
 	}
 
 	private Map<String, String> loadMetaFile(File groupDir) throws PersistenceException {
@@ -169,11 +202,17 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		return false;
 	}
 
-	private File getGroupDir(String groupName) {
-		String actionRootDir = new StringBuilder(rootDirPath).append(File.separatorChar).append(ACTION_ROOT_DIR)
-				.toString();
+	private File getRootDir() {
+		if (actionRootDir == null) {
+			String path = new StringBuilder(rootDirPath).append(File.separatorChar).append(ACTION_ROOT_DIR).toString();
+			actionRootDir = new File(path);
+		}
 
-		return new File(actionRootDir, GroupNameUtil.getDirs(groupName));
+		return actionRootDir;
+	}
+
+	private File getGroupDir(String groupName) {
+		return new File(getRootDir(), GroupNameUtil.getDirs(groupName));
 	}
 
 	private URL toURL(File file) {

@@ -320,7 +320,7 @@ public class ScriptManager {
 	 * 
 	 * @param groupName
 	 *            a group name
-	 * @return a list of meta-data items or an empty list, if no sub-groups and scripts found or such group does not
+	 * @return a list of meta-data items or an empty list, if no sub-groups and entities found or such group does not
 	 *         exist
 	 * @throws ManagementException
 	 *             in case of any repository access issues

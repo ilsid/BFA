@@ -28,10 +28,10 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void childActionGroupCanBeCreated() throws Exception {
-		actionGroupCanBeCreated("Top Level Group 01::Child Group 02", "Child Group 02",
-				"top_x20_level_x20_group_x20_01/child_x20_group_x20_02");
+		actionGroupCanBeCreated("Top Level Group 01::Child Group 007", "Child Group 007",
+				"top_x20_level_x20_group_x20_01/child_x20_group_x20_007");
 	}
-	
+
 	@Test
 	public void topLevelActionGroupsAreLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.ACTION_GET_ITEMS_SERVICE);
@@ -55,6 +55,40 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals("Top Level Group 01", metaData.get(Metadata.NAME));
 		assertEquals("Top Level Group 01", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
+	}
+
+	@Test
+	public void subGroupsWithDefinedMetadataAreLoaded() {
+		WebResource webResource = getWebResource(Paths.ACTION_GET_ITEMS_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, "Top Level Group 01");
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		@SuppressWarnings("unchecked")
+		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
+
+		assertEquals(2, metaDatas.size());
+
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Top Level Group 01::Child Group 01", metaData.get(Metadata.NAME));
+		assertEquals("Child Group 01", metaData.get(Metadata.TITLE));
+		assertEquals("Top Level Group 01", metaData.get(Metadata.PARENT));
+
+		metaData = metaDatas.get(1);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Top Level Group 01::Child Group 02", metaData.get(Metadata.NAME));
+		assertEquals("Child Group 02", metaData.get(Metadata.TITLE));
+		assertEquals("Top Level Group 01", metaData.get(Metadata.PARENT));
+	}
+
+	@Test
+	public void childMetadataItemsAreNotLoadedIfGroupNameIsNotDefined() {
+		WebResource webResource = getWebResource(Paths.ACTION_GET_ITEMS_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class);
+
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 	}
 
 	private void actionGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

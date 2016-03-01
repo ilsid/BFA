@@ -48,7 +48,7 @@ public class ActionAdminResource extends AbstractAdminResource {
 			if (groupName.equals(Metadata.ROOT_PARENT_NAME)) {
 				metas = actionManager.getTopLevelActionGroupMetadatas();
 			} else {
-				throw new ResourceException(Paths.ACTION_GET_ITEMS_SERVICE, "Not implemented", Status.BAD_REQUEST);
+				metas = actionManager.getChildrenActionGroupMetadatas(groupName);
 			}
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.ACTION_GET_ITEMS_SERVICE, e);

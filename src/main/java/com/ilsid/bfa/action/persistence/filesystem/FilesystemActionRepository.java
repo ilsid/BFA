@@ -115,6 +115,7 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	 * 
 	 * @see com.ilsid.bfa.action.persistence.ActionRepository#loadGroupMetadata(java.lang.String)
 	 */
+	@Override
 	public Map<String, String> loadMetadataForGroup(String groupName) throws PersistenceException {
 		File groupDir = getGroupDir(groupName);
 
@@ -130,9 +131,26 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	 * 
 	 * @see com.ilsid.bfa.action.persistence.ActionRepository#loadMetadataForTopLevelGroups()
 	 */
+	@Override
 	public List<Map<String, String>> loadMetadataForTopLevelGroups() throws PersistenceException {
 		List<Map<String, String>> result = new LinkedList<>();
 		MetadataUtil.collectSubDirMetadatas(getRootDir(), Metadata.ACTION_GROUP_TYPE, result);
+
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.action.persistence.ActionRepository#loadMetadataForChildGroups(java.lang.String)
+	 */
+	@Override
+	public List<Map<String, String>> loadMetadataForChildGroups(String groupName) throws PersistenceException {
+		List<Map<String, String>> result = new LinkedList<>();
+		File groupDir = getGroupDir(groupName);
+		if (isGroupDir(groupDir)) {
+			MetadataUtil.collectSubDirMetadatas(groupDir, Metadata.ACTION_GROUP_TYPE, result);
+		}
 
 		return result;
 	}
@@ -187,9 +205,13 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 
 	private void checkGroupExists(String groupName) throws PersistenceException {
 		File groupDir = getGroupDir(groupName);
-		if (!(groupDir.isDirectory() && isValidGroup(groupDir))) {
+		if (!isGroupDir(groupDir)) {
 			throw new PersistenceException(String.format("The action group [%s] does not exist", groupName));
 		}
+	}
+
+	private boolean isGroupDir(File dir) throws PersistenceException {
+		return dir.isDirectory() && isValidGroup(dir);
 	}
 
 	private boolean isValidGroup(File groupDir) throws PersistenceException {

@@ -41,7 +41,7 @@ public class ActionManager {
 			throw new ManagementException(String.format("Failed to created the action group [%s]", groupName), e);
 		}
 	}
-	
+
 	/**
 	 * Loads meta-data items for all top-level action groups.
 	 * 
@@ -65,6 +65,31 @@ public class ActionManager {
 		}
 
 		MetadataUtil.addParentRecord(result, Metadata.ROOT_PARENT_NAME);
+
+		return result;
+	}
+
+	/**
+	 * Loads meta-data items for sub-groups in the specified group.
+	 * 
+	 * @param groupName
+	 *            a group name
+	 * @return a list of meta-data items or an empty list, if no sub-groups found or such group does not exist
+	 * @throws ManagementException
+	 *             in case of any repository access issues
+	 */
+	public List<Map<String, String>> getChildrenActionGroupMetadatas(String groupName) throws ManagementException {
+		List<Map<String, String>> result;
+		try {
+			result = repository.loadMetadataForChildGroups(groupName);
+		} catch (PersistenceException e) {
+			throw new ManagementException(
+					String.format("Failed to load child groups for the action group [%s]", groupName), e);
+		}
+
+		if (!result.isEmpty()) {
+			MetadataUtil.addParentRecord(result, groupName);
+		}
 
 		return result;
 	}

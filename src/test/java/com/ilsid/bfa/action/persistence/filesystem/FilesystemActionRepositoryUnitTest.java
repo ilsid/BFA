@@ -115,7 +115,7 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 
 		repository.createGroup("Group with Invalid Metadata::Child Group 001", createGroupMetadata());
 	}
-	
+
 	@Test
 	public void metadataForPackageCanBeLoaded() throws Exception {
 		Map<String, String> metaData = repository.loadMetadataForGroup(EXISTING_ACTION_GROUP);
@@ -123,7 +123,7 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(EXISTING_ACTION_GROUP, metaData.get(Metadata.NAME));
 		assertEquals(EXISTING_ACTION_GROUP, metaData.get(Metadata.TITLE));
-	}	
+	}
 
 	@Test
 	public void metadataForTopLevelPackagesCanBeLoaded() throws Exception {
@@ -135,12 +135,37 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));
 		assertEquals(Metadata.DEFAULT_GROUP_TITLE, metaData.get(Metadata.TITLE));
-		
+
 		metaData = metaDatas.get(1);
 		assertEquals(3, metaData.keySet().size());
 		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(EXISTING_ACTION_GROUP, metaData.get(Metadata.NAME));
 		assertEquals(EXISTING_ACTION_GROUP, metaData.get(Metadata.TITLE));
+	}
+
+	@Test
+	public void metadataForChildGroupsInExistingGroupCanBeLoaded() throws Exception {
+		List<Map<String, String>> metaDatas = repository.loadMetadataForChildGroups(EXISTING_ACTION_GROUP);
+
+		assertEquals(2, metaDatas.size());
+
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Top Level Group 01::Child Group 01", metaData.get(Metadata.NAME));
+		assertEquals("Child Group 01", metaData.get(Metadata.TITLE));
+
+		metaData = metaDatas.get(1);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Top Level Group 01::Child Group 02", metaData.get(Metadata.NAME));
+		assertEquals("Child Group 02", metaData.get(Metadata.TITLE));
+	}
+
+	@Test
+	public void metadataForChildGroupsInNonExistingGroupCanNotBeLoaded() throws Exception {
+		assertEquals(0, repository.loadMetadataForChildGroups("Some Non-Existing Group").size());
+
 	}
 
 	private URL toURL(File file) throws Exception {

@@ -30,6 +30,14 @@
   text-align: center;
 }
 
+.toolbarIconAdd {
+  background-image: url("../icons/add_16x16.png");
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  text-align: center;
+}
+
 .fixedTextArea{
   height: 95%; 
   width:100%; 

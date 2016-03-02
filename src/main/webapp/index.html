@@ -711,7 +711,24 @@
 					</div>
 				</div>	
 			</div>
-			<div data-dojo-type="dijit/layout/AccordionPane" title="Actions" id="actionsPane">
+			<div data-dojo-type="dijit/layout/AccordionPane" title="Actions" id="actionPane">
+				<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="isLayoutContainer:true, className:'nestedAccordionContainer'">
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" style="border: none; margin: 0; padding: 0;">
+						<div id="actionToolbar" data-dojo-type="dijit/Toolbar">
+							<div data-dojo-type="dijit/form/Button" id="actionToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
+								onclick="">New Group</div>
+							<div data-dojo-type="dijit/form/Button" id="actionToolbar_new" data-dojo-props="iconClass:'toolbarIconEntity', showLabel:false" disabled="true"
+								onclick="">New Action</div>
+							<div data-dojo-type="dijit/form/Button" id="actionToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
+								disabled="true">Delete Group</div>
+							<div data-dojo-type="dijit/form/Button" id="actionToolbar_delete" data-dojo-props="iconClass:'toolbarIconDeleteEntity', showLabel:false"
+								disabled="true">Delete Action</div>
+						</div>
+					</div>
+					<div data-dojo-type="dijit/layout/ContentPane"  data-dojo-props="region:'center'" style="border: none; margin: 0; padding: 0;">
+						<div id="actionTreeContainer" style="height: 100%;"></div>
+					</div>
+				</div>	
 			</div>
 		 </div>
 		 
@@ -723,6 +740,7 @@
 	<script>
 		createTree('script', createScriptTab);
 		createTree('entity', createEntityTab, 'toolbarIconEntity');	
+		createTree('action');
 	</script>
 
 

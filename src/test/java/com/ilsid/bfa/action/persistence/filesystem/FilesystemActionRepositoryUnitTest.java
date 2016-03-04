@@ -1,10 +1,14 @@
 package com.ilsid.bfa.action.persistence.filesystem;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -166,6 +170,57 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 	public void metadataForChildGroupsInNonExistingGroupCanNotBeLoaded() throws Exception {
 		assertEquals(0, repository.loadMetadataForChildGroups("Some Non-Existing Group").size());
 
+	}
+
+	@Test
+	public void validActionPackageCanBeSavedInExistingGroup() throws Exception {
+		verifyActionCanBeSaved("Top Level Group 01::New Action 01", "New Action 01",
+				"top_x20_level_x20_group_x20_01/new_x20_action_x20_01");
+	}
+
+	@Test
+	public void validActionPackageCanBeSavedInDefaultGroup() throws Exception {
+		verifyActionCanBeSaved("New Action 01", "New Action 01", "default_group/new_x20_action_x20_01");
+	}
+
+	private void verifyActionCanBeSaved(String name, String title, String path) throws Exception {
+		// Archives the existing action and saves it with another name
+		File validActionDir = new File(REPOSITORY_ROOT_DIR, "action/default_group/write_x20_system_x20_property");
+		File actionZipFile = new File(REPOSITORY_ROOT_DIR, "action/default_group/validAction.zip");
+
+		File newActionDir = new File(REPOSITORY_ROOT_DIR, "action/" + path);
+		assertFalse(newActionDir.exists());
+
+		IOHelper.zipDirectory(validActionDir, actionZipFile);
+		try (InputStream is = new FileInputStream(actionZipFile)) {
+			repository.save(name, is);
+		}
+
+		assertTrue(newActionDir.isDirectory());
+
+		Collection<File> expectedFiles = FileUtils.listFiles(validActionDir, null, true);
+		List<String> expectedPaths = getRelativeFilePaths(validActionDir, expectedFiles);
+		Collection<File> savedFiles = FileUtils.listFiles(newActionDir, null, true);
+		List<String> actualPaths = getRelativeFilePaths(newActionDir, savedFiles);
+
+		assertEquals(expectedPaths, actualPaths);
+
+		File metaFile = new File(REPOSITORY_ROOT_DIR, "action/" + path + "/meta.data");
+		Map<String, String> metaData = IOHelper.toMap(metaFile);
+
+		assertEquals(3, metaData.size());
+		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals(name, metaData.get(Metadata.NAME));
+		assertEquals(title, metaData.get(Metadata.TITLE));
+	}
+
+	private List<String> getRelativeFilePaths(File dir, Collection<File> files) throws Exception {
+		List<String> result = new LinkedList<>();
+		for (File file : files) {
+			result.add(IOHelper.getRelativePath(dir, file));
+		}
+
+		return result;
 	}
 
 	private URL toURL(File file) throws Exception {

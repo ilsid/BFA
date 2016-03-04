@@ -1,5 +1,6 @@
 package com.ilsid.bfa.action.persistence;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,6 @@ import com.ilsid.bfa.persistence.PersistenceException;
  * @author illia.sydorovych
  *
  */
-// TODO: Handle non-default action groups
 public interface ActionRepository extends Configurable {
 
 	/**
@@ -88,4 +88,21 @@ public interface ActionRepository extends Configurable {
 	 *             in case of any repository access issues
 	 */
 	List<Map<String, String>> loadMetadataForChildGroups(String groupName) throws PersistenceException;
+
+	/**
+	 * Saves new action in the repository.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @param actionPackage
+	 *            action package
+	 * @throws PersistenceException
+	 *             <ul>
+	 *             <li>if action with the given name already exists in the repository</li>
+	 *             <li>if action group does not exist in the repository</li>
+	 *             <li>if action package has invalid format</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	void save(String actionName, InputStream actionPackage) throws PersistenceException;
 }

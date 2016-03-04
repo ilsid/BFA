@@ -98,6 +98,12 @@
 			<version>8.1.18.v20150929</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.10</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<properties>

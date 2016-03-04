@@ -3,11 +3,14 @@ package com.ilsid.bfa.action.persistence.filesystem;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -16,12 +19,14 @@ import java.util.Properties;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.GroupNameUtil;
+import com.ilsid.bfa.common.IOUtil;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.RepositoryConfig;
@@ -37,6 +42,8 @@ import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 public class FilesystemActionRepository extends ConfigurableRepository implements ActionRepository {
 
 	private static final String ACTION_ROOT_DIR = "action";
+
+	private static final String PACKAGE_FILE_EXTENSION = ".zip";
 
 	private static final String DEFAULT_GROUP_DIR = ACTION_ROOT_DIR + File.separatorChar
 			+ ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
@@ -60,8 +67,8 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	 */
 	@Override
 	public String getImplementationClassName(String actionName) throws PersistenceException {
-		String actionDir = getActionDir(actionName);
-		if (!new File(actionDir).isDirectory()) {
+		File actionDir = getActionDir(actionName);
+		if (!actionDir.isDirectory()) {
 			return null;
 		}
 		String className = getActionClassName(actionDir);
@@ -77,7 +84,7 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	public List<URL> getDependencies(String actionName) throws PersistenceException {
 		List<URL> urls = new LinkedList<>();
 
-		String actionDir = getActionDir(actionName);
+		File actionDir = getActionDir(actionName);
 		File classesDir = new File(actionDir, CLASSES_DIR);
 		if (classesDir.isDirectory()) {
 			urls.add(toURL(classesDir));
@@ -153,6 +160,27 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		}
 
 		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.action.persistence.ActionRepository#save(java.lang.String, java.io.InputStream)
+	 */
+	@Override
+	public void save(String actionName, InputStream actionPackage) throws PersistenceException {
+		GroupNameUtil.NameParts nameParts = GroupNameUtil.splitName(actionName);
+		final String groupName = nameParts.getParentName();
+
+		if (groupName != null) {
+			checkGroupExists(groupName);
+		}
+
+		if (actionExists(actionName)) {
+			throw new PersistenceException(String.format("Action [%s] already exists in the repository", actionName));
+		}
+
+		doSave(actionName, actionPackage);
 	}
 
 	/*
@@ -245,20 +273,24 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		}
 	}
 
-	private String getActionDir(String actionName) {
+	private String getActionDirPath(String actionName) {
 		GroupNameUtil.NameParts nameParts = GroupNameUtil.splitName(actionName, ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE);
 		String groupDir = GroupNameUtil.getDirs(nameParts.getParentName());
 		String actionDir = GroupNameUtil.getDirs(nameParts.getChildName());
 
-		StringBuilder result = new StringBuilder(rootDirPath).append(File.separatorChar).append(ACTION_ROOT_DIR)
+		StringBuilder path = new StringBuilder(rootDirPath).append(File.separatorChar).append(ACTION_ROOT_DIR)
 				.append(File.separatorChar).append(groupDir).append(File.separatorChar).append(actionDir);
 
-		return result.toString();
+		return path.toString();
 	}
 
-	private String getActionClassName(String actionDir) throws PersistenceException {
+	private File getActionDir(String actionName) {
+		return new File(getActionDirPath(actionName));
+	}
+
+	private String getActionClassName(File actionDir) throws PersistenceException {
 		Properties props = new Properties();
-		try (InputStream is = new FileInputStream(new File(actionDir + File.separatorChar + CONFIG_FILE_NAME))) {
+		try (InputStream is = new FileInputStream(new File(actionDir, CONFIG_FILE_NAME))) {
 			props.load(is);
 		} catch (FileNotFoundException e) {
 			return null;
@@ -272,6 +304,60 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		}
 
 		return className;
+	}
+
+	private boolean actionExists(String actionName) throws PersistenceException {
+		File dir = getActionDir(actionName);
+
+		if (!dir.isDirectory()) {
+			return false;
+		}
+
+		String className = getActionClassName(dir);
+
+		return className != null;
+	}
+
+	private void doSave(String actionName, InputStream actionPackage) throws PersistenceException {
+		final String actionDirPath = getActionDirPath(actionName);
+		final File tmpPackageFile = new File(actionDirPath.concat(PACKAGE_FILE_EXTENSION));
+		final File actionDir = new File(actionDirPath);
+
+		try (OutputStream out = new FileOutputStream(tmpPackageFile)) {
+			IOUtils.copy(actionPackage, out);
+			IOUtil.unzip(tmpPackageFile, actionDir);
+		} catch (IOException e) {
+			throw new PersistenceException(String.format("Failed to save the action [%s]", actionName), e);
+		}
+
+		FileUtils.deleteQuietly(tmpPackageFile);
+
+		validateActionFormat(actionDir);
+		saveActionMetadata(actionName, actionDir);
+	}
+
+	private void validateActionFormat(File actionDir) throws PersistenceException {
+		// TODO: implement
+	}
+
+	private void saveActionMetadata(String actionName, File actionDir) throws PersistenceException {
+		Map<String, String> metaData = createActionMetadata(actionName);
+		try {
+			String json = jsonMapper.writeValueAsString(metaData);
+			FileUtils.writeStringToFile(new File(actionDir, ClassNameUtil.METADATA_FILE_NAME), json);
+		} catch (IOException e) {
+			throw new PersistenceException(
+					String.format("Failed to save the meta-data for the action [%s]", actionName), e);
+		}
+	}
+
+	private Map<String, String> createActionMetadata(String actionName) {
+		Map<String, String> metaData = new LinkedHashMap<>();
+		metaData.put(Metadata.TYPE, Metadata.ACTION_TYPE);
+		metaData.put(Metadata.NAME, actionName);
+		metaData.put(Metadata.TITLE, GroupNameUtil.splitName(actionName).getChildName());
+
+		return metaData;
 	}
 
 	private class JarFilesFilter implements FilenameFilter {

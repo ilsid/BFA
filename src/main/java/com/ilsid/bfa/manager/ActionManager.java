@@ -1,6 +1,6 @@
 package com.ilsid.bfa.manager;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -105,8 +105,8 @@ public class ActionManager {
 		this.repository = repository;
 	}
 
-	private Map<String, String> createActionGroupMetadata(String groupName) throws ManagementException {
-		Map<String, String> metaData = new HashMap<>();
+	private Map<String, String> createActionGroupMetadata(String groupName) {
+		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put(Metadata.TYPE, Metadata.ACTION_GROUP_TYPE);
 		metaData.put(Metadata.NAME, groupName);
 		metaData.put(Metadata.TITLE, GroupNameUtil.splitName(groupName).getChildName());

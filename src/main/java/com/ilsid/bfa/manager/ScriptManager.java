@@ -2,7 +2,6 @@ package com.ilsid.bfa.manager;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -551,7 +550,7 @@ public class ScriptManager {
 	}
 
 	private Map<String, String> createScriptGroupMetadata(String groupName) throws ManagementException {
-		Map<String, String> metaData = new HashMap<>();
+		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put(Metadata.TYPE, Metadata.SCRIPT_GROUP_TYPE);
 		metaData.put(Metadata.NAME, groupName);
 		metaData.put(Metadata.TITLE, TypeNameResolver.splitGroupName(groupName).getChildName());
@@ -560,7 +559,7 @@ public class ScriptManager {
 	}
 
 	private Map<String, String> createEntityGroupMetadata(String groupName) throws ManagementException {
-		Map<String, String> metaData = new HashMap<>();
+		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put(Metadata.TYPE, Metadata.ENTITY_GROUP_TYPE);
 		metaData.put(Metadata.NAME, groupName);
 		metaData.put(Metadata.TITLE, TypeNameResolver.splitGroupName(groupName).getChildName());

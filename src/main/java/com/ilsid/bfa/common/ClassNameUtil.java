@@ -58,12 +58,12 @@ public class ClassNameUtil {
 	 * Whitespace regular expression.
 	 */
 	public static final String WHITESPACE_REGEXP = "\\s";
-	
+
 	/**
 	 * Class file extension.
 	 */
 	public static final String CLASS_FILE_EXTENSION = ".class";
-	
+
 	private static final char DOT = '.';
 
 	private static final Map<String, String> escapeSymbols;
@@ -132,10 +132,12 @@ public class ClassNameUtil {
 
 		return expr;
 	}
-	
+
 	/**
 	 * Escapes the given expression.
-	 * @param expression expression to escape
+	 * 
+	 * @param expression
+	 *            expression to escape
 	 * @return the expression with the following escaped symbols: [+-*./]
 	 */
 	public static String escape(String expression) {
@@ -143,8 +145,20 @@ public class ClassNameUtil {
 		for (String smb : escapeSymbols.keySet()) {
 			result = result.replace(smb, escapeSymbols.get(smb));
 		}
-		
+
 		return result;
+	}
+
+	/**
+	 * Returns path for the given class name. For example, the method returns the string
+	 * <i>com/foo/bar/MyClass.class</i> for the class name <i>com.foo.bar.MyClass</i>.
+	 * 
+	 * @param className
+	 *            a fully qualified class name
+	 * @return path to the class
+	 */
+	public static String getPath(String className) {
+		return className.replace(DOT, File.separatorChar).concat(CLASS_FILE_EXTENSION);
 	}
 
 }

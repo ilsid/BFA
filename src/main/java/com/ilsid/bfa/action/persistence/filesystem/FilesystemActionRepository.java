@@ -332,12 +332,22 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 
 		FileUtils.deleteQuietly(tmpPackageFile);
 
-		validateActionFormat(actionDir);
+		validatePackageFormat(actionDir);
 		saveActionMetadata(actionName, actionDir);
 	}
 
-	private void validateActionFormat(File actionDir) throws PersistenceException {
-		// TODO: implement
+	private void validatePackageFormat(File actionDir) throws PersistenceException {
+		final String implClassName = getActionClassName(actionDir);
+		if (implClassName == null) {
+			throw new PersistenceException("Invalid action package. Configuration is missed");
+		}
+
+		final File classesDir = new File(actionDir, CLASSES_DIR);
+		File implClassFile = new File(classesDir, ClassNameUtil.getPath(implClassName));
+		if (!implClassFile.exists()) {
+			throw new PersistenceException(
+					String.format("Invalid action package. The implementation class [%s] is missed", implClassName));
+		}
 	}
 
 	private void saveActionMetadata(String actionName, File actionDir) throws PersistenceException {

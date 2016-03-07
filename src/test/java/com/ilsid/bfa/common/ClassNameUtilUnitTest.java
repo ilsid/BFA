@@ -55,4 +55,9 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 		ClassNameUtil.getPackageName("Foo");
 	}
 
+	@Test
+	public void pathForClassCanBeResolved() {
+		assertEquals(toNativeFS("com/foo/bar/MyClass.class"), ClassNameUtil.getPath("com.foo.bar.MyClass"));
+	}
+
 }

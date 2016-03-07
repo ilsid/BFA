@@ -27,6 +27,9 @@ import com.ilsid.bfa.persistence.PersistenceException;
 
 public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 
+	private static final File VALID_ACTION_DIR = new File(REPOSITORY_ROOT_DIR,
+			"action/default_group/write_x20_system_x20_property");
+
 	private static final String EXISTING_ACTION_GROUP = "Top Level Group 01";
 
 	private static final String EXISTING_ACTION_NAME = "Reserve Amount";
@@ -183,23 +186,69 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		verifyActionCanBeSaved("New Action 01", "New Action 01", "default_group/new_x20_action_x20_01");
 	}
 
+	@Test
+	public void actionPackageCanNotBeSavedInNonExistingGroup() throws Exception {
+		exceptionRule.expect(PersistenceException.class);
+		exceptionRule.expectMessage("The action group [Non Existing Group] does not exist");
+
+		verifyActionCanBeSaved("Non Existing Group::New Action 01", "New Action 01",
+				"non_x20_existing_x20_group/new_x20_action_x20_01");
+	}
+
+	@Test
+	public void actionPackageCanNotBeSavedIfConfigurationIsMissed() throws Exception {
+		exceptionRule.expect(PersistenceException.class);
+		exceptionRule.expectMessage("Invalid action package. Configuration is missed");
+
+		final File configFile = new File(VALID_ACTION_DIR, "config.properties");
+		final File configFileBackup = new File(VALID_ACTION_DIR, "config_bkp.properties");
+		FileUtils.copyFile(configFile, configFileBackup);
+		assertTrue(configFile.delete());
+
+		try {
+			verifyActionCanBeSaved("New Action 01", "New Action 01", "default_group/new_x20_action_x20_01");
+		} finally {
+			FileUtils.copyFile(configFileBackup, configFile);
+			configFileBackup.delete();
+		}
+	}
+
+	@Test
+	public void actionPackageCanNotBeSavedIfImplementationClassIsMissed() throws Exception {
+		exceptionRule.expect(PersistenceException.class);
+		exceptionRule.expectMessage(
+				"Invalid action package. The implementation class [com.some.action.impl.WriteSystemProperty] is missed");
+
+		final File implClassFile = new File(VALID_ACTION_DIR, "classes/com/some/action/impl/WriteSystemProperty.class");
+		final File implClassFileBackup = new File(VALID_ACTION_DIR,
+				"classes/com/some/action/impl/WriteSystemProperty_bkp.class");
+		FileUtils.copyFile(implClassFile, implClassFileBackup);
+		assertTrue(implClassFile.delete());
+
+		try {
+			verifyActionCanBeSaved("New Action 01", "New Action 01", "default_group/new_x20_action_x20_01");
+		} finally {
+			FileUtils.copyFile(implClassFileBackup, implClassFile);
+			implClassFileBackup.delete();
+		}
+	}
+
 	private void verifyActionCanBeSaved(String name, String title, String path) throws Exception {
 		// Archives the existing action and saves it with another name
-		File validActionDir = new File(REPOSITORY_ROOT_DIR, "action/default_group/write_x20_system_x20_property");
 		File actionZipFile = new File(REPOSITORY_ROOT_DIR, "action/default_group/validAction.zip");
 
 		File newActionDir = new File(REPOSITORY_ROOT_DIR, "action/" + path);
 		assertFalse(newActionDir.exists());
 
-		IOHelper.zipDirectory(validActionDir, actionZipFile);
+		IOHelper.zipDirectory(VALID_ACTION_DIR, actionZipFile);
 		try (InputStream is = new FileInputStream(actionZipFile)) {
 			repository.save(name, is);
 		}
 
 		assertTrue(newActionDir.isDirectory());
 
-		Collection<File> expectedFiles = FileUtils.listFiles(validActionDir, null, true);
-		List<String> expectedPaths = getRelativeFilePaths(validActionDir, expectedFiles);
+		Collection<File> expectedFiles = FileUtils.listFiles(VALID_ACTION_DIR, null, true);
+		List<String> expectedPaths = getRelativeFilePaths(VALID_ACTION_DIR, expectedFiles);
 		Collection<File> savedFiles = FileUtils.listFiles(newActionDir, null, true);
 		List<String> actualPaths = getRelativeFilePaths(newActionDir, savedFiles);
 

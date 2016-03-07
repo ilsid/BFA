@@ -29,8 +29,6 @@ public class DynamicClassLoader extends ClassLoader {
 
 	private static final String URL_PREFIX = "byte:///";
 
-	private static final String CLASS_FILE_EXTENSION = ".class";
-
 	private static final String GENERATED_CLASSES_DIR = ClassNameUtil.GENERATED_CLASSES_PACKAGE.replace('.', '/');
 
 	private static Map<String, Class<?>> cache = new ConcurrentHashMap<>();
@@ -126,7 +124,8 @@ public class DynamicClassLoader extends ClassLoader {
 	}
 
 	private URL doFindResource(String name) {
-		if (name.startsWith(GENERATED_CLASSES_DIR) && name.endsWith(CLASS_FILE_EXTENSION) && classExists(name)) {
+		if (name.startsWith(GENERATED_CLASSES_DIR) && name.endsWith(ClassNameUtil.CLASS_FILE_EXTENSION)
+				&& classExists(name)) {
 			String urlSpec = URL_PREFIX + name;
 			try {
 				return new URL(null, urlSpec, new ByteArrayHandler());
@@ -139,7 +138,8 @@ public class DynamicClassLoader extends ClassLoader {
 	};
 
 	private boolean classExists(String path) {
-		String className = path.substring(0, path.length() - CLASS_FILE_EXTENSION.length()).replace('/', '.');
+		String className = path.substring(0, path.length() - ClassNameUtil.CLASS_FILE_EXTENSION.length()).replace('/',
+				'.');
 		byte[] byteCode;
 		try {
 			byteCode = repository.load(className);
@@ -211,7 +211,8 @@ public class DynamicClassLoader extends ClassLoader {
 		@Override
 		public InputStream getInputStream() throws IOException {
 			String path = url.getPath();
-			final String className = path.substring(1, path.length() - CLASS_FILE_EXTENSION.length()).replace('/', '.');
+			final String className = path.substring(1, path.length() - ClassNameUtil.CLASS_FILE_EXTENSION.length())
+					.replace('/', '.');
 			try {
 				return new ByteArrayInputStream(loadClassByteCode(className));
 			} catch (ClassNotFoundException e) {

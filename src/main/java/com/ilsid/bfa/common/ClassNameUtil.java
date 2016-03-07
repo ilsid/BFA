@@ -59,6 +59,11 @@ public class ClassNameUtil {
 	 */
 	public static final String WHITESPACE_REGEXP = "\\s";
 	
+	/**
+	 * Class file extension.
+	 */
+	public static final String CLASS_FILE_EXTENSION = ".class";
+	
 	private static final char DOT = '.';
 
 	private static final Map<String, String> escapeSymbols;

@@ -28,8 +28,6 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 
 	private static final char DOT = '.';
 
-	private static final String CLASS_FILE_EXTENSION = ".class";
-
 	private static final String SOURCE_FILE_EXTENSION = ".src";
 
 	private static final String CLASS_METADATA_SUFFIX = '_' + ClassNameUtil.METADATA_FILE_NAME;
@@ -52,8 +50,8 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			return null;
 		}
 
-		File classFile = new File(
-				classDirPath + File.separator + ClassNameUtil.getShortClassName(className) + CLASS_FILE_EXTENSION);
+		File classFile = new File(classDir,
+				ClassNameUtil.getShortClassName(className).concat(ClassNameUtil.CLASS_FILE_EXTENSION));
 
 		if (!classFile.exists()) {
 			return null;
@@ -101,7 +99,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	@Override
 	public boolean saveMetadata(String className, Map<String, String> metaData) throws PersistenceException {
 		File classDir = new File(getClassDirectoryPath(className));
-		File classFile = new File(getFilePathPrefix(className) + CLASS_FILE_EXTENSION);
+		File classFile = new File(getFilePathPrefix(className) + ClassNameUtil.CLASS_FILE_EXTENSION);
 
 		if (classDir.exists() && classFile.exists()) {
 			try {
@@ -206,7 +204,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	@Override
 	public int deleteClass(String className) throws PersistenceException {
 		String filePathPrefix = getFilePathPrefix(className);
-		File classFile = new File(filePathPrefix + CLASS_FILE_EXTENSION);
+		File classFile = new File(filePathPrefix + ClassNameUtil.CLASS_FILE_EXTENSION);
 		File sourceFile = new File(filePathPrefix + SOURCE_FILE_EXTENSION);
 		File metaFile = new File(filePathPrefix + CLASS_METADATA_SUFFIX);
 
@@ -353,7 +351,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		}
 
 		String shortClassName = ClassNameUtil.getShortClassName(className);
-		String fileClassName = shortClassName + CLASS_FILE_EXTENSION;
+		String fileClassName = shortClassName + ClassNameUtil.CLASS_FILE_EXTENSION;
 		String fileClassDir = getClassDirectoryPath(className);
 
 		File classFile = new File(fileClassDir + File.separatorChar + fileClassName);

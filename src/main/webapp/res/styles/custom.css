@@ -38,6 +38,14 @@
   text-align: center;
 }
 
+.toolbarIconAction{
+  background-image: url("../icons/action_16x16.png");
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  text-align: center;
+}
+
 .fixedTextArea{
   height: 95%; 
   width:100%; 

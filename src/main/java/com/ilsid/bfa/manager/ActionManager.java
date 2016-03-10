@@ -1,5 +1,6 @@
 package com.ilsid.bfa.manager;
 
+import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +93,29 @@ public class ActionManager {
 		}
 
 		return result;
+	}
+	
+	/**
+	 * Saves new action in the repository.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @param actionPackage
+	 *            action package
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if action with the given name already exists in the repository</li>
+	 *             <li>if action group does not exist in the repository</li>
+	 *             <li>if action package has invalid format</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public void createAction(String actionName, InputStream actionPackage) throws ManagementException {
+		try {
+			repository.save(actionName, actionPackage);
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to save the action [%s]", actionName), e);
+		}
 	}
 
 	/**

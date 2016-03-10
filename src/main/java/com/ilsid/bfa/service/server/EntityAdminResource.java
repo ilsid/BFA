@@ -138,7 +138,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.GET_ITEMS_OPERATION)
 	public Response getItems(String groupName) {
-		validateNonEmptyParameter(Paths.ENTITY_GET_ITEMS_SERVICE, GROUP_PARAM_NAME, groupName);
+		validateNonEmptyParameter(Paths.ENTITY_GET_ITEMS_SERVICE, GROUP_PARAM, groupName);
 		List<Map<String, String>> metas;
 		try {
 			if (groupName.equals(Metadata.ROOT_PARENT_NAME)) {
@@ -175,7 +175,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.CREATE_GROUP_OPERATION)
 	public Response createGroup(String groupName) {
-		validateNonEmptyParameter(Paths.CREATE_GROUP_OPERATION, GROUP_PARAM_NAME, groupName);
+		validateNonEmptyParameter(Paths.CREATE_GROUP_OPERATION, GROUP_PARAM, groupName);
 
 		try {
 			scriptManager.createEntityGroup(groupName);

@@ -52,15 +52,15 @@ public final class Paths {
 
 	public final static String SCRIPT_SERVICE_RUNTIME_ROOT = SCRIPT_SERVICE_ROOT + "/runtime";
 
-	public final static String SCRIPT_RUN_OPERATION = "run";
+	public final static String RUN_OPERATION = "run";
 
-	public final static String SCRIPT_START_OPERATION = "start";
+	public final static String START_OPERATION = "start";
 
 	public final static String SCRIPT_GET_STATUS_OPERATION = "getStatus";
 
-	public final static String SCRIPT_RUN_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/" + SCRIPT_RUN_OPERATION;
+	public final static String SCRIPT_RUN_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/" + RUN_OPERATION;
 
-	public final static String SCRIPT_START_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/" + SCRIPT_START_OPERATION;
+	public final static String SCRIPT_START_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/" + START_OPERATION;
 
 	public final static String SCRIPT_GET_STATUS_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/"
 			+ SCRIPT_GET_STATUS_OPERATION;
@@ -90,4 +90,6 @@ public final class Paths {
 	public final static String ACTION_CREATE_GROUP_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + CREATE_GROUP_OPERATION;
 	
 	public final static String ACTION_GET_ITEMS_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + GET_ITEMS_OPERATION;
+	
+	public final static String ACTION_CREATE_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + CREATE_OPERATION;
 }

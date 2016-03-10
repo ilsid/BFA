@@ -1,5 +1,6 @@
 package com.ilsid.bfa.service.server;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.manager.ActionManager;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.service.common.Paths;
+import com.sun.jersey.multipart.FormDataParam;
 
 @Path(Paths.ACTION_SERVICE_ADMIN_ROOT)
 public class ActionAdminResource extends AbstractAdminResource {
@@ -42,7 +44,7 @@ public class ActionAdminResource extends AbstractAdminResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.GET_ITEMS_OPERATION)
 	public Response getItems(String groupName) {
-		validateNonEmptyParameter(Paths.ACTION_GET_ITEMS_SERVICE, GROUP_PARAM_NAME, groupName);
+		validateNonEmptyParameter(Paths.ACTION_GET_ITEMS_SERVICE, GROUP_PARAM, groupName);
 		List<Map<String, String>> metas;
 		try {
 			if (groupName.equals(Metadata.ROOT_PARENT_NAME)) {
@@ -79,12 +81,36 @@ public class ActionAdminResource extends AbstractAdminResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.CREATE_GROUP_OPERATION)
 	public Response createGroup(String groupName) {
-		validateNonEmptyParameter(Paths.CREATE_GROUP_OPERATION, GROUP_PARAM_NAME, groupName);
+		validateNonEmptyParameter(Paths.CREATE_GROUP_OPERATION, GROUP_PARAM, groupName);
 
 		try {
 			actionManager.createGroup(groupName);
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.ACTION_CREATE_GROUP_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+
+	/**
+	 * 
+	 * @param actionName
+	 * @param actionPackage
+	 * @param contentDispositionHeader
+	 * @return
+	 */
+	@POST
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Path(Paths.CREATE_OPERATION)
+	public Response createAction(@FormDataParam(NAME_PARAM) String actionName,
+			@FormDataParam(FILE_PARAM) InputStream actionPackage) {
+		validateNonEmptyParameter(Paths.CREATE_OPERATION, NAME_PARAM, actionName);
+		validateNonNullParameter(Paths.CREATE_OPERATION, FILE_PARAM, actionPackage);
+
+		try {
+			actionManager.createAction(actionName, actionPackage);
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.ACTION_CREATE_SERVICE, e);
 		}
 
 		return Response.status(Status.OK).build();

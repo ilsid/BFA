@@ -10,7 +10,11 @@ public abstract class AbstractAdminResource {
 
 	private static final String EMPTY = "";
 	
-	protected final static String GROUP_PARAM_NAME = "group";
+	protected final static String GROUP_PARAM = "group";
+	
+	protected final static String NAME_PARAM = "name";
+	
+	protected static final String FILE_PARAM = "file";
 
 	protected ScriptManager scriptManager;
 
@@ -36,7 +40,14 @@ public abstract class AbstractAdminResource {
 
 	protected void validateNonEmptyParameter(String path, String name, Object value) {
 		if (isEmpty(value)) {
-			throw new ResourceException(path, String.format("The value of [%s] must be defined", name),
+			throw new ResourceException(path, String.format("The value of [%s] parameter must be not empty", name),
+					Status.BAD_REQUEST);
+		}
+	}
+	
+	protected void validateNonNullParameter(String path, String name, Object value) {
+		if (value == null) {
+			throw new ResourceException(path, String.format("The value of [%s] parameter must be not null", name),
 					Status.BAD_REQUEST);
 		}
 	}

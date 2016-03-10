@@ -1,25 +1,35 @@
 package com.ilsid.bfa.service.server;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.service.common.Paths;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.multipart.FormDataMultiPart;
+import com.sun.jersey.multipart.MultiPart;
+import com.sun.jersey.multipart.file.StreamDataBodyPart;
 
 public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRepositoryIntegrationTest {
 
 	private static final String ACTIONS_DIR = "action";
 
 	private static final File ACTIONS_ROOT_DIR = new File(CODE_REPOSITORY_PATH, ACTIONS_DIR);
+
+	private static final File VALID_ACTION_DIR = new File(ACTIONS_ROOT_DIR,
+			"default_group/write_x20_system_x20_property");
 
 	@Test
 	public void topLevelActionGroupCanBeCreated() throws Exception {
@@ -89,6 +99,41 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		ClientResponse response = webResource.post(ClientResponse.class);
 
 		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+	}
+
+	@Test
+	public void validActionCanBeCreatedInExistingGroup() throws Exception {
+		// Archives the existing action and saves it with another name
+		File actionZipFile = new File(ACTIONS_ROOT_DIR, "default_group/tmp_validAction.zip");
+		IOHelper.zipDirectory(VALID_ACTION_DIR, actionZipFile);
+
+		final String newActionPath = "top_x20_level_x20_group_x20_01/new_x20_action_x20_01";
+		File newActionDir = new File(ACTIONS_ROOT_DIR, newActionPath);
+		assertFalse(newActionDir.exists());
+
+		WebResource webResource = getWebResource(Paths.ACTION_CREATE_SERVICE);
+
+		try (InputStream is = new FileInputStream(actionZipFile)) {
+			StreamDataBodyPart streamPart = new StreamDataBodyPart("file", is);
+			@SuppressWarnings("resource")
+			MultiPart entity = new FormDataMultiPart().field("name", "Top Level Group 01::New Action 01")
+					.bodyPart(streamPart);
+			ClientResponse response = webResource.type(MediaType.MULTIPART_FORM_DATA).post(ClientResponse.class,
+					entity);
+
+			assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		assertTrue(newActionDir.isDirectory());
+		IOHelper.assertEqualDirs(VALID_ACTION_DIR, newActionDir);
+
+		File metaFile = new File(ACTIONS_ROOT_DIR, newActionPath + "/" + ClassNameUtil.METADATA_FILE_NAME);
+		Map<String, String> metaData = IOHelper.toMap(metaFile);
+
+		assertEquals(3, metaData.size());
+		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Top Level Group 01::New Action 01", metaData.get(Metadata.NAME));
+		assertEquals("New Action 01", metaData.get(Metadata.TITLE));
 	}
 
 	private void actionGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

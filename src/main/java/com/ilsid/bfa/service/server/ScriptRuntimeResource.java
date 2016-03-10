@@ -48,7 +48,7 @@ public class ScriptRuntimeResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path(Paths.SCRIPT_RUN_OPERATION)
+	@Path(Paths.RUN_OPERATION)
 	// TODO: support for group name and input params is needed
 	public Response run(ScriptRuntimeParams script) {
 		long runtimeId;
@@ -65,7 +65,7 @@ public class ScriptRuntimeResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path(Paths.SCRIPT_START_OPERATION)
+	@Path(Paths.START_OPERATION)
 	public Response start(String scriptName) {
 		return Response.status(Status.NOT_FOUND).build();
 	}

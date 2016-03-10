@@ -5,10 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -246,30 +244,15 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		}
 
 		assertTrue(newActionDir.isDirectory());
+		IOHelper.assertEqualDirs(VALID_ACTION_DIR, newActionDir);
 
-		Collection<File> expectedFiles = FileUtils.listFiles(VALID_ACTION_DIR, null, true);
-		List<String> expectedPaths = getRelativeFilePaths(VALID_ACTION_DIR, expectedFiles);
-		Collection<File> savedFiles = FileUtils.listFiles(newActionDir, null, true);
-		List<String> actualPaths = getRelativeFilePaths(newActionDir, savedFiles);
-
-		assertEquals(expectedPaths, actualPaths);
-
-		File metaFile = new File(REPOSITORY_ROOT_DIR, "action/" + path + "/meta.data");
+		File metaFile = new File(REPOSITORY_ROOT_DIR, "action/" + path + "/" + ClassNameUtil.METADATA_FILE_NAME);
 		Map<String, String> metaData = IOHelper.toMap(metaFile);
 
 		assertEquals(3, metaData.size());
 		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(name, metaData.get(Metadata.NAME));
 		assertEquals(title, metaData.get(Metadata.TITLE));
-	}
-
-	private List<String> getRelativeFilePaths(File dir, Collection<File> files) throws Exception {
-		List<String> result = new LinkedList<>();
-		for (File file : files) {
-			result.add(IOHelper.getRelativePath(dir, file));
-		}
-
-		return result;
 	}
 
 	private URL toURL(File file) throws Exception {

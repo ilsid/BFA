@@ -36,6 +36,7 @@ import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+import com.sun.jersey.multipart.impl.MultiPartWriter;
 
 public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
@@ -52,7 +53,7 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 	private static Server server;
 
 	private static Client client;
-
+	
 	protected WebResource getWebResource(String path) {
 		return client.resource(rootURL + path);
 	}
@@ -60,6 +61,7 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 	public static void startWebServer(ServletContextListener applicationConfig) throws Exception {
 		ClientConfig config = new DefaultClientConfig();
 		config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+		config.getClasses().add(MultiPartWriter.class);
 		client = Client.create(config);
 
 		String serverPortConfigValue = System.getProperty(PORT_PROPERTY);

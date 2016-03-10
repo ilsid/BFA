@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
@@ -18,6 +20,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.junit.Assert;
 
 import com.ilsid.bfa.TestConstants;
 
@@ -98,5 +101,23 @@ public class IOHelper {
 		};
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.readValue(jsonFile, mapTypeRef);
+	}
+	
+	public static void assertEqualDirs(File expectedDir, File actualDir) throws Exception {
+		Collection<File> expectedFiles = FileUtils.listFiles(expectedDir, null, true);
+		List<String> expectedPaths = getRelativeFilePaths(expectedDir, expectedFiles);
+		Collection<File> savedFiles = FileUtils.listFiles(actualDir, null, true);
+		List<String> actualPaths = getRelativeFilePaths(actualDir, savedFiles);
+
+		Assert.assertEquals(expectedPaths, actualPaths);
+	}
+	
+	private static List<String> getRelativeFilePaths(File dir, Collection<File> files) throws Exception {
+		List<String> result = new LinkedList<>();
+		for (File file : files) {
+			result.add(IOHelper.getRelativePath(dir, file));
+		}
+
+		return result;
 	}
 }

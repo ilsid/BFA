@@ -94,10 +94,21 @@ public class ActionAdminResource extends AbstractAdminResource {
 
 	/**
 	 * 
+	 * Saves new action in the repository.
+	 * 
 	 * @param actionName
+	 *            action name
 	 * @param actionPackage
-	 * @param contentDispositionHeader
-	 * @return
+	 *            action package
+	 * @return the {@link Status#OK} response
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if action with the given name already exists in the repository</li>
+	 *             <li>if action group does not exist in the repository</li>
+	 *             <li>if action package has invalid format</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
 	 */
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)

@@ -537,6 +537,11 @@
 						if (this.model.mayHaveChildren(item)) {
 							return;
 						}
+						
+						if (!itemDblClickHandler) {
+							return;
+						}
+						
 						var tabContainer = registry.byId('tabContainer');
 						var tabId = 'tab_' + objectType + '_' + item.name;
 						
@@ -740,7 +745,7 @@
 	<script>
 		createTree('script', createScriptTab);
 		createTree('entity', createEntityTab, 'toolbarIconEntity');	
-		createTree('action');
+		createTree('action', undefined, 'toolbarIconAction');
 	</script>
 
 

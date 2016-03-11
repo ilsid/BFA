@@ -170,7 +170,31 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void metadataForChildGroupsInNonExistingGroupCanNotBeLoaded() throws Exception {
 		assertEquals(0, repository.loadMetadataForChildGroups("Some Non-Existing Group").size());
+	}
+	
+	@Test
+	public void metadataForActionsInExistingGroupCanBeLoaded() throws Exception {
+		List<Map<String, String>> metaDatas = repository.loadMetadataForActions(ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE);
+		
+		assertEquals(2, metaDatas.size());
 
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Reserve Amount", metaData.get(Metadata.NAME));
+		assertEquals("Reserve Amount", metaData.get(Metadata.TITLE));
+
+		metaData = metaDatas.get(1);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Write System Property", metaData.get(Metadata.NAME));
+		assertEquals("Write System Property", metaData.get(Metadata.TITLE));
+
+	}	
+	
+	@Test
+	public void metadataForActionsInNonExistingGroupCanNotBeLoaded() throws Exception {
+		assertEquals(0, repository.loadMetadataForActions("Some Non-Existing Group").size());
 	}
 
 	@Test

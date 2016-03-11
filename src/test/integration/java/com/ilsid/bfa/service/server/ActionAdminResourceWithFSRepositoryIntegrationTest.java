@@ -94,6 +94,32 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
+	public void subGroupsAndChildActionsWithDefinedMetadataAreLoaded() {
+		WebResource webResource = getWebResource(Paths.ACTION_GET_ITEMS_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		@SuppressWarnings("unchecked")
+		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
+
+		assertEquals(2, metaDatas.size());
+
+		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Child Group 01", metaData.get(Metadata.NAME));
+		assertEquals("Child Group 01", metaData.get(Metadata.TITLE));
+		assertEquals(ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE, metaData.get(Metadata.PARENT));
+
+		metaData = metaDatas.get(1);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Write System Property", metaData.get(Metadata.NAME));
+		assertEquals("Write System Property", metaData.get(Metadata.TITLE));
+		assertEquals(ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE, metaData.get(Metadata.PARENT));
+	}
+
+	@Test
 	public void childMetadataItemsAreNotLoadedIfGroupNameIsNotDefined() {
 		WebResource webResource = getWebResource(Paths.ACTION_GET_ITEMS_SERVICE);
 		ClientResponse response = webResource.post(ClientResponse.class);
@@ -113,27 +139,33 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		WebResource webResource = getWebResource(Paths.ACTION_CREATE_SERVICE);
 
-		try (InputStream is = new FileInputStream(actionZipFile)) {
-			StreamDataBodyPart streamPart = new StreamDataBodyPart("file", is);
-			@SuppressWarnings("resource")
-			MultiPart entity = new FormDataMultiPart().field("name", "Top Level Group 01::New Action 01")
-					.bodyPart(streamPart);
-			ClientResponse response = webResource.type(MediaType.MULTIPART_FORM_DATA).post(ClientResponse.class,
-					entity);
+		try {
+			try (InputStream is = new FileInputStream(actionZipFile)) {
+				StreamDataBodyPart streamPart = new StreamDataBodyPart("file", is);
+				@SuppressWarnings("resource")
+				MultiPart entity = new FormDataMultiPart().field("name", "Top Level Group 01::New Action 01")
+						.bodyPart(streamPart);
+				ClientResponse response = webResource.type(MediaType.MULTIPART_FORM_DATA).post(ClientResponse.class,
+						entity);
 
-			assertEquals(Status.OK.getStatusCode(), response.getStatus());
+				assertEquals(Status.OK.getStatusCode(), response.getStatus());
+			}
+
+			assertTrue(newActionDir.isDirectory());
+			IOHelper.assertEqualDirs(VALID_ACTION_DIR, newActionDir);
+
+			File metaFile = new File(ACTIONS_ROOT_DIR, newActionPath + "/" + ClassNameUtil.METADATA_FILE_NAME);
+			Map<String, String> metaData = IOHelper.toMap(metaFile);
+
+			assertEquals(3, metaData.size());
+			assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
+			assertEquals("Top Level Group 01::New Action 01", metaData.get(Metadata.NAME));
+			assertEquals("New Action 01", metaData.get(Metadata.TITLE));
+		} finally {
+			if (newActionDir.exists()) {
+				FileUtils.forceDelete(newActionDir);
+			}
 		}
-
-		assertTrue(newActionDir.isDirectory());
-		IOHelper.assertEqualDirs(VALID_ACTION_DIR, newActionDir);
-
-		File metaFile = new File(ACTIONS_ROOT_DIR, newActionPath + "/" + ClassNameUtil.METADATA_FILE_NAME);
-		Map<String, String> metaData = IOHelper.toMap(metaFile);
-
-		assertEquals(3, metaData.size());
-		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
-		assertEquals("Top Level Group 01::New Action 01", metaData.get(Metadata.NAME));
-		assertEquals("New Action 01", metaData.get(Metadata.TITLE));
 	}
 
 	private void actionGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

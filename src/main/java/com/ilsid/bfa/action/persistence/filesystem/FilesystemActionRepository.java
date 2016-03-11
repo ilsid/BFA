@@ -153,13 +153,18 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	 */
 	@Override
 	public List<Map<String, String>> loadMetadataForChildGroups(String groupName) throws PersistenceException {
-		List<Map<String, String>> result = new LinkedList<>();
-		File groupDir = getGroupDir(groupName);
-		if (isGroupDir(groupDir)) {
-			MetadataUtil.collectSubDirMetadatas(groupDir, Metadata.ACTION_GROUP_TYPE, result);
-		}
+		return collectMetadata(groupName, Metadata.ACTION_GROUP_TYPE);
+	}
 
-		return result;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.action.persistence.ActionRepository#loadMetadataForActions(java.lang.String)
+	 */
+	@Override
+	public List<Map<String, String>> loadMetadataForActions(String groupName) throws PersistenceException {
+		return collectMetadata(groupName, Metadata.ACTION_TYPE);
+
 	}
 
 	/*
@@ -368,6 +373,17 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		metaData.put(Metadata.TITLE, GroupNameUtil.splitName(actionName).getChildName());
 
 		return metaData;
+	}
+	
+	private List<Map<String, String>> collectMetadata(String groupName, String metadataType)
+			throws PersistenceException {
+		List<Map<String, String>> result = new LinkedList<>();
+		File groupDir = getGroupDir(groupName);
+		if (isGroupDir(groupDir)) {
+			MetadataUtil.collectSubDirMetadatas(groupDir, metadataType, result);
+		}
+
+		return result;
 	}
 
 	private class JarFilesFilter implements FilenameFilter {

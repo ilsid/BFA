@@ -71,11 +71,12 @@ public class ActionManager {
 	}
 
 	/**
-	 * Loads meta-data items for sub-groups in the specified group.
+	 * Loads meta-data items for sub-groups and actions in the specified group.
 	 * 
 	 * @param groupName
 	 *            a group name
-	 * @return a list of meta-data items or an empty list, if no sub-groups found or such group does not exist
+	 * @return a list of meta-data items or an empty list, if no sub-groups or actions found or such group does not
+	 *         exist
 	 * @throws ManagementException
 	 *             in case of any repository access issues
 	 */
@@ -83,9 +84,10 @@ public class ActionManager {
 		List<Map<String, String>> result;
 		try {
 			result = repository.loadMetadataForChildGroups(groupName);
+			result.addAll(repository.loadMetadataForActions(groupName));
 		} catch (PersistenceException e) {
 			throw new ManagementException(
-					String.format("Failed to load child groups for the action group [%s]", groupName), e);
+					String.format("Failed to load children meta-data for the action group [%s]", groupName), e);
 		}
 
 		if (!result.isEmpty()) {
@@ -94,7 +96,7 @@ public class ActionManager {
 
 		return result;
 	}
-	
+
 	/**
 	 * Saves new action in the repository.
 	 * 

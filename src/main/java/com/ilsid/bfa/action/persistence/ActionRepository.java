@@ -90,6 +90,17 @@ public interface ActionRepository extends Configurable {
 	List<Map<String, String>> loadMetadataForChildGroups(String groupName) throws PersistenceException;
 
 	/**
+	 * Loads meta-data items for actions under the given group.
+	 * 
+	 * @param groupName
+	 *            group name
+	 * @return a list of meta-data items or an empty list, if no actions found or such group does not exist
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	List<Map<String, String>> loadMetadataForActions(String groupName) throws PersistenceException;
+
+	/**
 	 * Saves new action in the repository.
 	 * 
 	 * @param actionName

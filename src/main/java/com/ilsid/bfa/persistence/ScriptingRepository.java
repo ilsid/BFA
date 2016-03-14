@@ -135,12 +135,11 @@ public interface ScriptingRepository extends Configurable {
 	int deleteClass(String className) throws PersistenceException;
 
 	/**
-	 * Loads the source code for the script defined by the given class name. The source code means here the variable
-	 * part only (the script body).
+	 * Loads the source code associated with the given class.
 	 * 
 	 * @param className
-	 *            the script's class name including the full package
-	 * @return the source code or <code>null</code>, if the script with such class name is not found
+	 *            class name including the full package
+	 * @return the source code or <code>null</code>, if class is not found or has no associated source code
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */

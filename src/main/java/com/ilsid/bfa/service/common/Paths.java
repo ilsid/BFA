@@ -29,6 +29,8 @@ public final class Paths {
 	public final static String CREATE_GROUP_OPERATION = "createGroup";
 
 	public final static String GET_ITEMS_OPERATION = "getItems";
+	
+	public final static String GET_INFO_OPERATION = "getInfo";
 
 	/*
 	 * Script Administration
@@ -92,4 +94,6 @@ public final class Paths {
 	public final static String ACTION_GET_ITEMS_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + GET_ITEMS_OPERATION;
 	
 	public final static String ACTION_CREATE_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + CREATE_OPERATION;
+	
+	public final static String ACTION_GET_INFO_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + GET_INFO_OPERATION;
 }

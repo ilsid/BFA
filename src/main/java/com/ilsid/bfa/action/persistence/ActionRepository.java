@@ -116,4 +116,15 @@ public interface ActionRepository extends Configurable {
 	 *             </ul>
 	 */
 	void save(String actionName, InputStream actionPackage) throws PersistenceException;
+
+	/**
+	 * Loads information about the given action.
+	 *
+	 * @param actionName
+	 *            action name
+	 * @return action details or <code>null</code>, if such action does not exist
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	ActionInfo loadInfo(String actionName) throws PersistenceException;
 }

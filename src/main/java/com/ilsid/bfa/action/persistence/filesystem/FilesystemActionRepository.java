@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +24,7 @@ import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.ilsid.bfa.ConfigurationException;
+import com.ilsid.bfa.action.persistence.ActionInfo;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.GroupNameUtil;
@@ -186,6 +188,31 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		}
 
 		doSave(actionName, actionPackage);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.action.persistence.ActionRepository#loadInfo(java.lang.String)
+	 */
+	public ActionInfo loadInfo(String actionName) throws PersistenceException {
+		File actionDir = getActionDir(actionName);
+
+		if (!actionDir.isDirectory()) {
+			return null;
+		}
+		
+		String implClassName = getActionClassName(actionDir);
+
+		List<String> dependencies;
+		File libDir = new File(actionDir, LIB_DIR);
+		if (libDir.isDirectory()) {
+			dependencies = Arrays.asList(libDir.list(new JarFilesFilter()));
+		} else {
+			dependencies = new LinkedList<>();
+		}
+		
+		return new ActionInfo(implClassName, dependencies);
 	}
 
 	/*
@@ -374,7 +401,7 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 
 		return metaData;
 	}
-	
+
 	private List<Map<String, String>> collectMetadata(String groupName, String metadataType)
 			throws PersistenceException {
 		List<Map<String, String>> result = new LinkedList<>();

@@ -15,6 +15,7 @@ import org.junit.Test;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.Metadata;
+import com.ilsid.bfa.manager.ActionManager.ActionDetails;
 import com.ilsid.bfa.service.common.Paths;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -166,6 +167,29 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 				FileUtils.forceDelete(newActionDir);
 			}
 		}
+	}
+	
+	@Test
+	public void actionInfoIsLoaded() {
+		WebResource webResource = getWebResource(Paths.ACTION_GET_INFO_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, "Write System Property");
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		
+		ActionDetails info = response.getEntity(ActionDetails.class);
+		assertEquals("com.some.action.impl.WriteSystemProperty", info.getImplementationClassName());
+		final List<String> dependencies = info.getDependencies();
+		assertEquals(2, dependencies.size());
+		assertTrue(dependencies.contains("commons-collections-3.2.1.jar"));
+		assertTrue(dependencies.contains("mail-1.4.1.jar"));
+	}
+	
+	@Test
+	public void actionInfoIsNotLoadedIfActionNameIsNotDefined() {
+		WebResource webResource = getWebResource(Paths.ACTION_GET_INFO_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class);
+		
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 	}
 
 	private void actionGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

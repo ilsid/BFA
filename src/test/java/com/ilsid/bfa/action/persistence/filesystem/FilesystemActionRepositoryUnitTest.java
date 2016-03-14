@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
+import com.ilsid.bfa.action.persistence.ActionInfo;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
@@ -253,6 +254,21 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 			FileUtils.copyFile(implClassFileBackup, implClassFile);
 			implClassFileBackup.delete();
 		}
+	}
+	
+	@Test
+	public void infoForExistingActionCanBeLoaded() throws Exception {
+		ActionInfo info = repository.loadInfo(EXISTING_ACTION_NAME);
+		assertEquals("com.some.action.impl.SomeAction", info.getImplementationClassName());
+		final List<String> dependencies = info.getDependencies();
+		assertEquals(2, dependencies.size());
+		assertTrue(dependencies.contains("commons-collections-3.2.1.jar"));
+		assertTrue(dependencies.contains("mail-1.4.1.jar"));
+	}
+	
+	@Test
+	public void infoForNonExistingActionCanNotBeLoaded() throws Exception {
+		assertNull(repository.loadInfo(NON_EXISTING_ACTION_NAME));
 	}
 
 	private void verifyActionCanBeSaved(String name, String title, String path) throws Exception {

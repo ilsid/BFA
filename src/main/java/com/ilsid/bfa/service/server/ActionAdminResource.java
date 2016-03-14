@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response.Status;
 
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.manager.ActionManager;
+import com.ilsid.bfa.manager.ActionManager.ActionDetails;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.service.common.Paths;
 import com.sun.jersey.multipart.FormDataParam;
@@ -125,6 +126,22 @@ public class ActionAdminResource extends AbstractAdminResource {
 		}
 
 		return Response.status(Status.OK).build();
+	}
+
+	@POST
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.GET_INFO_OPERATION)
+	public Response getInfo(String actionName) {
+		validateNonEmptyParameter(Paths.ACTION_GET_INFO_SERVICE, NAME_PARAM, actionName);
+		ActionDetails info;
+		try {
+			info = actionManager.getDetails(actionName);
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.ACTION_GET_INFO_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).entity(info).build();
 	}
 
 	@Inject

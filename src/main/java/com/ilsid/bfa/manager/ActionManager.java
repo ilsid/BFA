@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import com.ilsid.bfa.action.persistence.ActionInfo;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.GroupNameUtil;
 import com.ilsid.bfa.common.Metadata;
@@ -121,6 +122,38 @@ public class ActionManager {
 	}
 
 	/**
+	 * Provides details for the given action.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @return action details
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if action with the given name does not exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public ActionDetails getDetails(String actionName) throws ManagementException {
+		ActionInfo info;
+		try {
+			info = repository.loadInfo(actionName);
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to load details for the action [%s]", actionName), e);
+		}
+
+		if (info == null) {
+			throw new ManagementException(
+					String.format("The action [%s] does not exist in the repository", actionName));
+		}
+
+		ActionDetails result = new ActionDetails();
+		result.setImplementationClassName(info.getImplementationClassName());
+		result.setDependencies(info.getDependencies());
+
+		return result;
+	}
+
+	/**
 	 * Defines a repository implementation.
 	 * 
 	 * @param repository
@@ -129,6 +162,32 @@ public class ActionManager {
 	@Inject
 	public void setRepository(ActionRepository repository) {
 		this.repository = repository;
+	}
+
+	/**
+	 * Action details.
+	 */
+	public static class ActionDetails {
+
+		private String implementationClassName;
+
+		private List<String> dependencies;
+
+		public String getImplementationClassName() {
+			return implementationClassName;
+		}
+
+		public List<String> getDependencies() {
+			return dependencies;
+		}
+		
+		void setImplementationClassName(String implementationClassName) {
+			this.implementationClassName = implementationClassName;
+		}
+
+	    void setDependencies(List<String> dependencies) {
+			this.dependencies = dependencies;
+		}
 	}
 
 	private Map<String, String> createActionGroupMetadata(String groupName) {

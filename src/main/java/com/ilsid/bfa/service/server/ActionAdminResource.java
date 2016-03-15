@@ -18,6 +18,7 @@ import com.ilsid.bfa.manager.ActionManager;
 import com.ilsid.bfa.manager.ActionManager.ActionDetails;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.service.common.Paths;
+import com.ilsid.bfa.service.dto.ActionAdminParams;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path(Paths.ACTION_SERVICE_ADMIN_ROOT)
@@ -129,10 +130,11 @@ public class ActionAdminResource extends AbstractAdminResource {
 	}
 
 	@POST
-	@Consumes(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.GET_INFO_OPERATION)
-	public Response getInfo(String actionName) {
+	public Response getInfo(ActionAdminParams action) {
+		final String actionName = action.getName();
 		validateNonEmptyParameter(Paths.ACTION_GET_INFO_SERVICE, NAME_PARAM, actionName);
 		ActionDetails info;
 		try {

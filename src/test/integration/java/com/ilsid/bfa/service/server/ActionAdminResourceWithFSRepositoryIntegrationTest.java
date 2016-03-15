@@ -17,6 +17,7 @@ import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.manager.ActionManager.ActionDetails;
 import com.ilsid.bfa.service.common.Paths;
+import com.ilsid.bfa.service.dto.ActionAdminParams;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.multipart.FormDataMultiPart;
@@ -168,14 +169,15 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 			}
 		}
 	}
-	
+
 	@Test
 	public void actionInfoIsLoaded() {
 		WebResource webResource = getWebResource(Paths.ACTION_GET_INFO_SERVICE);
-		ClientResponse response = webResource.post(ClientResponse.class, "Write System Property");
-		
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class,
+				new ActionAdminParams("Write System Property"));
+
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		
+
 		ActionDetails info = response.getEntity(ActionDetails.class);
 		assertEquals("com.some.action.impl.WriteSystemProperty", info.getImplementationClassName());
 		final List<String> dependencies = info.getDependencies();
@@ -183,12 +185,13 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertTrue(dependencies.contains("commons-collections-3.2.1.jar"));
 		assertTrue(dependencies.contains("mail-1.4.1.jar"));
 	}
-	
+
 	@Test
 	public void actionInfoIsNotLoadedIfActionNameIsNotDefined() {
 		WebResource webResource = getWebResource(Paths.ACTION_GET_INFO_SERVICE);
-		ClientResponse response = webResource.post(ClientResponse.class);
-		
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class,
+				new ActionAdminParams());
+
 		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 	}
 

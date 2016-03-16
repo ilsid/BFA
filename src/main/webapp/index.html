@@ -324,9 +324,9 @@
 		}
 		
 		function createEntityTab(tabTitle, tabId, entitySource, indexInContainer) {
-			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
-				'dijit/Toolbar', 'dijit/form/Button', 'dojo/domReady!'],
-				function(registry, ContentPane, SimpleTextarea, Toolbar, Button) {
+			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/Toolbar', 
+					'dijit/form/Button', 'dojo/domReady!'],
+				function(registry, ContentPane, Toolbar, Button) {
 					var tabContainer = registry.byId('tabContainer');
 					
 					var tab = new ContentPane({
@@ -466,7 +466,103 @@
 			});	
 		}
 		
-		function createTree(objectType, itemDblClickHandler, leafIconClass) {
+		function createActionTab(tabTitle, tabId, actionInfo, indexInContainer) {
+			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/Toolbar', 
+					'dijit/form/Button', 'dijit/form/TextBox', 'dojo/dom-construct', 'dojo/domReady!'],
+				function(registry, ContentPane, Toolbar, Button, TextBox, domConstruct) {
+					var tabContainer = registry.byId('tabContainer');
+					
+					var tab = new ContentPane({
+						id: tabId,
+						title: tabTitle,
+						closable: true,
+						iconClass: 'toolbarIconAction',
+						style: 'overflow: auto;'
+					});
+					
+					var isExistingAction = (tabId != undefined);
+					
+					var btnSave = new Button({
+						label: 'Save',
+						showLabel: false,
+						iconClass: 'dijitIconSave',
+						onClick: function() {
+							//TODO: implement;
+						}
+					});
+					if (isExistingAction) {
+						// TODO: Support of action update
+						btnSave.set('disabled', true);
+					}
+										
+					var toolBar = new Toolbar({ className: 'nestedPane' });
+					toolBar.addChild(btnSave);
+					toolBar.startup();
+					tab.addChild(toolBar);
+					
+					var action = dojo.fromJson(actionInfo);
+					
+					var txtClassName = new TextBox({
+						disabled: true,
+						value: action.implementationClassName,
+						style: 'width: 500px;'
+					});
+					txtClassName.startup();
+					tab.addChild(txtClassName);
+					
+					domConstruct.place('<hr/><label for="' + txtClassName.id + '">Implementation class: &nbsp;&nbsp;</label>', 
+						txtClassName.domNode, 'before');
+						
+					if (action.dependencies.length > 0) {
+						domConstruct.place('<br/><br/>', txtClassName.domNode, 'after');
+						createActionDependenciesGrid(tab, action.dependencies);	
+					} else {
+						domConstruct.place('<br/><br/><label>No dependencies</label>', txtClassName.domNode, 'after');
+					}	
+					
+					if (indexInContainer > -1) {
+						tabContainer.addChild(tab, indexInContainer);
+					} else {
+						tabContainer.addChild(tab);
+					}
+					tabContainer.selectChild(tab);
+			});
+		}
+		
+		function createActionDependenciesGrid(tab, dependencies) {
+			require(['dijit/registry', 'dojox/grid/DataGrid', 'dojo/data/ObjectStore', 'dojo/store/Memory', 'dojo/domReady!'],
+				function(registry, DataGrid, ObjectStore, Memory) {
+				
+					var gridItems = [];
+					for (var i = 0; i < dependencies.length; i++) {
+						gridItems.push({fldDep: dependencies[i]});
+					}
+				
+					//var data = {identifier: 'fldDep', items: dependencies };
+					var store = new ObjectStore({ objectStore: new Memory({ data: gridItems, idProperty: 'fldDep' }) });
+					
+					var layout = [{
+						defaultCell: {styles: 'text-align: left;', width: '300px'},
+						cells: [
+							{name: 'Dependencies', field: 'fldDep'}
+						]
+					}];
+
+					var grid = new DataGrid({
+						store: store,
+						query: {fldDep: '*'},
+						structure: layout,
+						selectionMode: 'single',
+						autoWidth: true,
+						autoHeight: true
+					});
+
+					tab.addChild(grid);
+					grid.startup();
+			});
+		}		
+		
+		function createTree(objectType, itemDblClickHandler, leafIconClass, itemDblClickOperationName) {
 			require([ 'dojo/request/xhr', 'dojo/dom', 'dojo/store/Memory', 'dijit/tree/ObjectStoreModel', 'dijit/Tree', 'dojo/store/Observable', 
 				'dijit/registry', 'dojo/domReady!'], 
 				function(request, dom, Memory, ObjectStoreModel, Tree, Observable, registry) {
@@ -538,10 +634,6 @@
 							return;
 						}
 						
-						if (!itemDblClickHandler) {
-							return;
-						}
-						
 						var tabContainer = registry.byId('tabContainer');
 						var tabId = 'tab_' + objectType + '_' + item.name;
 						
@@ -551,7 +643,7 @@
 							return;
 						}
 						
-						request('service/' + objectType + '/admin/getSource', {
+						request('service/' + objectType + '/admin/' + itemDblClickOperationName, {
 							headers: { 'Content-Type': 'application/json' },
 							method: 'POST',
 							data: '{"name": "' + item.name + '"}'
@@ -743,9 +835,9 @@
 
 	
 	<script>
-		createTree('script', createScriptTab);
-		createTree('entity', createEntityTab, 'toolbarIconEntity');	
-		createTree('action', undefined, 'toolbarIconAction');
+		createTree('script', createScriptTab, undefined, 'getSource');
+		createTree('entity', createEntityTab, 'toolbarIconEntity', 'getSource');	
+		createTree('action', createActionTab, 'toolbarIconAction', 'getInfo');
 	</script>
 
 

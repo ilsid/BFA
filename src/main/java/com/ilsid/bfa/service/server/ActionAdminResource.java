@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.manager.ActionManager;
 import com.ilsid.bfa.manager.ActionManager.ActionDetails;
@@ -155,7 +156,8 @@ public class ActionAdminResource extends AbstractAdminResource {
 		try {
 			return createAction(actionName, actionPackage);
 		} catch (ResourceException e) {
-			final OperationStatus.Failure failureStatus = new OperationStatus.Failure(e.getActualCause().getMessage());
+			final String failureMsg = ExceptionUtil.getExceptionMessageChain(e.getActualCause());
+			final OperationStatus.Failure failureStatus = new OperationStatus.Failure(failureMsg);
 			throw new ResourceException(e.getPath(), e.getActualCause(), Status.OK, failureStatus);
 		}
 	}

@@ -108,7 +108,7 @@
 					registry.byId('createEntityDialog').show();
 				});
 		}
-		
+
 		function showNewEntityFieldDialog() {
 			require([ 'dijit/registry'],
 				function(registry) {
@@ -529,6 +529,86 @@
 			});
 		}
 		
+		function showCreateActionDialog() {
+			require([ 'dijit/registry'],
+				function(registry) {
+					var tree = registry.byId('actionTree');
+					var selectedGroupName = getSelectedGroupName(tree, 'ACTION_GROUP');
+					var groupText = registry.byId('createActionDialog_textGroupName');
+					var nameText = registry.byId('createActionDialog_textActionName');
+					var fileText = registry.byId('createActionDialog_textFileName');
+					
+					if (selectedGroupName != null) {
+						groupText.set('value', selectedGroupName);
+					} else {
+						groupText.set('value', '');
+					}
+					nameText.set('value', '');
+					nameText.reset();
+					fileText.set('value', '');
+					fileText.reset();
+					registry.byId('actionPackageUploader').reset();
+					registry.byId('createActionDialog').show();
+				});
+		}
+		
+		function onCreateActionForm_selectFile(files, uploader) {
+			require([ 'dijit/registry' ],
+				function(registry) {
+					registry.byId('createActionDialog_textFileName').set('value', files[0].name);
+			});
+		}
+		
+		function onCreateActionForm_uploadCompele(event, uploader) {
+			require([ 'dijit/registry' ],
+				function(registry) {
+					var status = event.value;
+					
+					if (status === 'OK') {
+						var tree = registry.byId('actionTree');
+						var groupName = getSelectedGroupName(tree, 'ACTION_GROUP');
+						
+						tree.refreshChildrenSubTree(groupName);
+						hideDialog('createActionDialog');
+						//TODO: request server for actionInfo 
+						//createActionTab(entityShortName, 'tab_action_' + actionName, actionInfo);	
+						uploader.reset();
+					} else {
+						alert(status);
+					}
+			});
+		}
+		
+		function onCreateActionForm_submit() {
+			require([ 'dijit/registry', 'dojo/request/iframe' ],
+				function(registry, iframe) {
+					var txtName = registry.byId('createActionDialog_textActionName');
+					var txtFile = registry.byId('createActionDialog_textFileName');
+					if (!(txtName.isValid() && txtFile.isValid())) {
+						return;
+					}
+					
+					var tree = registry.byId('actionTree');
+					var groupName = getSelectedGroupName(tree, 'ACTION_GROUP');
+					// group name can't be null, as action creation is enabled only if some group is selected
+					var actionShortName = txtName.get('value');
+					var actionName = groupName + '::' + actionShortName;
+					// Setting form's "name" parameter
+					registry.byId('createActionDialog_actionFullName').set('value', actionName);
+					
+					iframe('service/action/admin/createQuietly', {
+						method: 'POST',
+						form: 'createActionForm',
+						// Got exception for "handleAs: 'json'". See iframe.js, handleResponse(response, error) function
+						handleAs: 'html'
+					}).then(function(resp) {
+						// Upload completion is handled with onCreateActionForm_uploadCompele(event, uploader)
+					}, function(err) {
+						alert('Error while parsing server reponse: ' + err);
+					});
+			});	
+		}
+		
 		function createActionDependenciesGrid(tab, dependencies) {
 			require(['dijit/registry', 'dojox/grid/DataGrid', 'dojo/data/ObjectStore', 'dojo/store/Memory', 'dojo/domReady!'],
 				function(registry, DataGrid, ObjectStore, Memory) {
@@ -538,7 +618,6 @@
 						gridItems.push({fldDep: dependencies[i]});
 					}
 				
-					//var data = {identifier: 'fldDep', items: dependencies };
 					var store = new ObjectStore({ objectStore: new Memory({ data: gridItems, idProperty: 'fldDep' }) });
 					
 					var layout = [{
@@ -679,7 +758,7 @@
 
 	
 	<script>
-		require(["dijit/Dialog", "dijit/form/TextBox", "dijit/form/ValidationTextBox"]);
+		require(["dojo/parser", "dijit/Dialog", "dijit/form/TextBox", "dijit/form/ValidationTextBox", "dijit/form/Form", "dojox/form/Uploader"]);
 	</script>
 	
 	<div data-dojo-type="dijit/Dialog" id="createGroupDialog" title="Create group" style="display: none">
@@ -759,6 +838,43 @@
 			<button data-dojo-type="dijit/form/Button" type="button" id="newEntityFieldDialog_btnCancel" onclick="hideDialog('newEntityFieldDialog');">Cancel</button>
 		</div>
 	</div>
+	
+	<div data-dojo-type="dijit/Dialog" id="createActionDialog" title="New action" style="display: none">
+		<form data-dojo-type="dijit/form/Form" id="createActionForm" enctype="multipart/form-data">
+			<table class="dijitDialogPaneContentArea">
+				<tr>
+					<td><label for="createActionDialog_textGroupName">Group:</label></td>
+					<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createActionDialog_textGroupName" name="createActionDialog_textGroupName"></td>
+				</tr>
+				<tr>
+					<td><label for="createActionDialog_textActionName">Name:</label></td>
+					<td><input data-dojo-type="dijit/form/ValidationTextBox" id="createActionDialog_textActionName" name="createActionDialog_textActionName" 
+						required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+				</tr>
+				<tr>
+					<td>
+						<div data-dojo-type="dojox/form/Uploader" id="actionPackageUploader" name="file" multiple="false" type="file" 
+							data-dojo-props="label: 'File...'">
+							<script type="dojo/method" data-dojo-event="onComplete" data-dojo-args="evt">
+								onCreateActionForm_uploadCompele(evt, this);
+							</script>
+							<script type="dojo/method" data-dojo-event="onChange" data-dojo-args="files">
+								onCreateActionForm_selectFile(files, this);
+							</script>
+						</div>
+					</td>
+					<td><input data-dojo-type="dijit/form/ValidationTextBox" data-dojo-props="disabled:true" id="createActionDialog_textFileName" name="createActionDialog_textFileName" 
+						required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+				</tr>
+			</table>
+			<input data-dojo-type="dijit/form/TextBox" type="hidden" name="name" id="createActionDialog_actionFullName" />
+			
+			<div class="dijitDialogPaneActionBar">
+				<button data-dojo-type="dijit/form/Button" type="submit" id="createActionDialog_btnOk" onclick="onCreateActionForm_submit();">Save</button>
+				<button data-dojo-type="dijit/form/Button" type="button" id="createActionDialog_btnCancel" onclick="hideDialog('createActionDialog');">Cancel</button>
+			</div>
+		</form>
+	</div>
 
 	<script>
 		require(["dojo/parser", "dijit/layout/BorderContainer", "dijit/layout/TabContainer", "dijit/layout/AccordionContainer", 
@@ -815,7 +931,7 @@
 							<div data-dojo-type="dijit/form/Button" id="actionToolbar_newGroup" data-dojo-props="iconClass:'dijitFolderClosed', showLabel:false" 
 								onclick="showCreateGroupDialog('action')">New Group</div>
 							<div data-dojo-type="dijit/form/Button" id="actionToolbar_new" data-dojo-props="iconClass:'toolbarIconAction', showLabel:false" disabled="true"
-								onclick="">New Action</div>
+								onclick="showCreateActionDialog();">New Action</div>
 							<div data-dojo-type="dijit/form/Button" id="actionToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
 								disabled="true">Delete Group</div>
 							<div data-dojo-type="dijit/form/Button" id="actionToolbar_delete" data-dojo-props="iconClass:'toolbarIconDeleteEntity', showLabel:false"

@@ -8,8 +8,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.slf4j.Logger;
 
-import com.ilsid.bfa.common.ExceptionUtil;
-
 /**
  * Intercepts {@link ResourceException} exceptions raised by resource methods.
  * 
@@ -30,14 +28,11 @@ public class WebApplicationExceptionMapper implements ExceptionMapper<ResourceEx
 	 * @return {@link Status#INTERNAL_SERVER_ERROR} response
 	 */
 	public Response toResponse(ResourceException exception) {
-		Throwable actualException = exception.hasCause() ? exception.getCause() : exception;
 		if (logger != null) {
-			logger.error(ERROR_MESSAGE_TEMPLATE, exception.getPath(), actualException);
+			logger.error(ERROR_MESSAGE_TEMPLATE, exception.getPath(), exception.getActualCause());
 		}
 
-		return Response.status(exception.getStatus()).entity(ExceptionUtil.getExceptionMessageChain(actualException))
-				.build();
-
+		return Response.status(exception.getStatus()).entity(exception.getEntity()).build();
 	}
 
 	/**

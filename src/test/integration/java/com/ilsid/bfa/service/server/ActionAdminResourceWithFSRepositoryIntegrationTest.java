@@ -18,6 +18,8 @@ import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.manager.ActionManager.ActionDetails;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ActionAdminParams;
+import com.ilsid.bfa.service.dto.OperationStatus;
+import com.ilsid.bfa.service.dto.OperationStatus.Failure;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.multipart.FormDataMultiPart;
@@ -25,6 +27,8 @@ import com.sun.jersey.multipart.MultiPart;
 import com.sun.jersey.multipart.file.StreamDataBodyPart;
 
 public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRepositoryIntegrationTest {
+
+	private static final String NEW_ACTION_NAME = "Top Level Group 01::New Action 01";
 
 	private static final String ACTIONS_DIR = "action";
 
@@ -130,44 +134,34 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
-	public void validActionCanBeCreatedInExistingGroup() throws Exception {
-		// Archives the existing action and saves it with another name
-		File actionZipFile = new File(ACTIONS_ROOT_DIR, "default_group/tmp_validAction.zip");
-		IOHelper.zipDirectory(VALID_ACTION_DIR, actionZipFile);
+	public void actionIsCreatedInExistingGroup() throws Exception {
+		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_SERVICE, NEW_ACTION_NAME, true);
+	
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		assertNotNull(response.getEntity(OperationStatus.Success.class));
+	}
 
-		final String newActionPath = "top_x20_level_x20_group_x20_01/new_x20_action_x20_01";
-		File newActionDir = new File(ACTIONS_ROOT_DIR, newActionPath);
-		assertFalse(newActionDir.exists());
+	@Test
+	public void actionIsCreatedQuietlyInExistingGroup() throws Exception {
+		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_QUIETLY_SERVICE, NEW_ACTION_NAME, true);
 
-		WebResource webResource = getWebResource(Paths.ACTION_CREATE_SERVICE);
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		assertNotNull(response.getEntity(OperationStatus.Success.class));
+	}
 
-		try {
-			try (InputStream is = new FileInputStream(actionZipFile)) {
-				StreamDataBodyPart streamPart = new StreamDataBodyPart("file", is);
-				@SuppressWarnings("resource")
-				MultiPart entity = new FormDataMultiPart().field("name", "Top Level Group 01::New Action 01")
-						.bodyPart(streamPart);
-				ClientResponse response = webResource.type(MediaType.MULTIPART_FORM_DATA).post(ClientResponse.class,
-						entity);
+	@Test
+	public void actionIsNotCreatedIfActionNameIsNotDefined() throws Exception {
+		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_SERVICE, "", false);
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+	}
 
-				assertEquals(Status.OK.getStatusCode(), response.getStatus());
-			}
-
-			assertTrue(newActionDir.isDirectory());
-			IOHelper.assertEqualDirs(VALID_ACTION_DIR, newActionDir);
-
-			File metaFile = new File(ACTIONS_ROOT_DIR, newActionPath + "/" + ClassNameUtil.METADATA_FILE_NAME);
-			Map<String, String> metaData = IOHelper.toMap(metaFile);
-
-			assertEquals(3, metaData.size());
-			assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
-			assertEquals("Top Level Group 01::New Action 01", metaData.get(Metadata.NAME));
-			assertEquals("New Action 01", metaData.get(Metadata.TITLE));
-		} finally {
-			if (newActionDir.exists()) {
-				FileUtils.forceDelete(newActionDir);
-			}
-		}
+	@Test
+	public void actionIsNotCreatedQuietlyIfActionNameIsNotDefined() throws Exception {
+		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_QUIETLY_SERVICE, "", false);
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		final Failure respEntity = response.getEntity(OperationStatus.Failure.class);
+		assertTrue(respEntity.getValue().startsWith("Error:"));
 	}
 
 	@Test
@@ -213,4 +207,44 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		FileUtils.forceDelete(groupDir);
 	}
 
+	private ClientResponse tryCreateAction(String serviceName, String actionName, boolean verifyNewAction)
+			throws Exception {
+		// Archives the existing action and saves it with another name
+		File actionZipFile = new File(ACTIONS_ROOT_DIR, "default_group/tmp_validAction.zip");
+		IOHelper.zipDirectory(VALID_ACTION_DIR, actionZipFile);
+
+		final String newActionPath = "top_x20_level_x20_group_x20_01/new_x20_action_x20_01";
+		File newActionDir = new File(ACTIONS_ROOT_DIR, newActionPath);
+		assertFalse(newActionDir.exists());
+
+		WebResource webResource = getWebResource(serviceName);
+		ClientResponse response;
+		try {
+			try (InputStream is = new FileInputStream(actionZipFile)) {
+				StreamDataBodyPart streamPart = new StreamDataBodyPart("file", is);
+				@SuppressWarnings("resource")
+				MultiPart entity = new FormDataMultiPart().field("name", actionName).bodyPart(streamPart);
+				response = webResource.type(MediaType.MULTIPART_FORM_DATA).post(ClientResponse.class, entity);
+			}
+
+			if (verifyNewAction) {
+				assertTrue(newActionDir.isDirectory());
+				IOHelper.assertEqualDirs(VALID_ACTION_DIR, newActionDir);
+
+				File metaFile = new File(ACTIONS_ROOT_DIR, newActionPath + "/" + ClassNameUtil.METADATA_FILE_NAME);
+				Map<String, String> metaData = IOHelper.toMap(metaFile);
+
+				assertEquals(3, metaData.size());
+				assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
+				assertEquals(NEW_ACTION_NAME, metaData.get(Metadata.NAME));
+				assertEquals("New Action 01", metaData.get(Metadata.TITLE));
+			}
+		} finally {
+			if (newActionDir.exists()) {
+				FileUtils.forceDelete(newActionDir);
+			}
+		}
+
+		return response;
+	}
 }

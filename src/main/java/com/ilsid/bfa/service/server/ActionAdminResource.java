@@ -19,6 +19,7 @@ import com.ilsid.bfa.manager.ActionManager.ActionDetails;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ActionAdminParams;
+import com.ilsid.bfa.service.dto.OperationStatus;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path(Paths.ACTION_SERVICE_ADMIN_ROOT)
@@ -114,9 +115,11 @@ public class ActionAdminResource extends AbstractAdminResource {
 	 */
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.CREATE_OPERATION)
 	public Response createAction(@FormDataParam(NAME_PARAM) String actionName,
 			@FormDataParam(FILE_PARAM) InputStream actionPackage) {
+
 		validateNonEmptyParameter(Paths.CREATE_OPERATION, NAME_PARAM, actionName);
 		validateNonNullParameter(Paths.CREATE_OPERATION, FILE_PARAM, actionPackage);
 
@@ -126,9 +129,50 @@ public class ActionAdminResource extends AbstractAdminResource {
 			throw new ResourceException(Paths.ACTION_CREATE_SERVICE, e);
 		}
 
-		return Response.status(Status.OK).build();
+		return Response.status(Status.OK).entity(OperationStatus.SUCCESS).build();
 	}
 
+	/**
+	 * Does the same as {@link #createAction(String, InputStream)} but in case of failure always throws
+	 * {@link ResourceException} with {@link Status#OK} status.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @param actionPackage
+	 *            action package
+	 * @return the {@link Status#OK} response
+	 * @see #createAction(String, InputStream)
+	 * @see WebApplicationExceptionMapper
+	 * 
+	 */
+	@POST
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.CREATE_QUIETLY_OPERATION)
+	public Response createActionQuietly(@FormDataParam(NAME_PARAM) String actionName,
+			@FormDataParam(FILE_PARAM) InputStream actionPackage) {
+
+		try {
+			return createAction(actionName, actionPackage);
+		} catch (ResourceException e) {
+			final OperationStatus.Failure failureStatus = new OperationStatus.Failure(e.getActualCause().getMessage());
+			throw new ResourceException(e.getPath(), e.getActualCause(), Status.OK, failureStatus);
+		}
+	}
+
+	/**
+	 * Provides details for the given action.
+	 * 
+	 * @param action
+	 *            the action parameters. The name must be specified.
+	 * @return response containing implementation class name and a list of dependencies
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if action with the given name does not exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)

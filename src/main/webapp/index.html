@@ -562,6 +562,7 @@
 		function onCreateActionForm_uploadCompele(event, uploader) {
 			require([ 'dijit/registry' ],
 				function(registry) {
+					// event is a response from server
 					var status = event.value;
 					
 					if (status === 'OK') {
@@ -573,39 +574,31 @@
 						//TODO: request server for actionInfo 
 						//createActionTab(entityShortName, 'tab_action_' + actionName, actionInfo);	
 						uploader.reset();
+						registry.byId('createActionForm').reset();
 					} else {
 						alert(status);
 					}
 			});
 		}
 		
-		function onCreateActionForm_submit() {
+		function onCreateActionForm_btnOk() {
 			require([ 'dijit/registry', 'dojo/request/iframe' ],
 				function(registry, iframe) {
-					var txtName = registry.byId('createActionDialog_textActionName');
-					var txtFile = registry.byId('createActionDialog_textFileName');
-					if (!(txtName.isValid() && txtFile.isValid())) {
-						return;
+					var form = registry.byId('createActionForm');
+					
+					if (form.validate()) {					
+						var txtName = registry.byId('createActionDialog_textActionName');
+						var tree = registry.byId('actionTree');
+						var groupName = getSelectedGroupName(tree, 'ACTION_GROUP');
+						// group name can't be null, as action creation is enabled only if some group is selected
+						var actionShortName = txtName.get('value');
+						var actionName = groupName + '::' + actionShortName;
+						// Setting form's "name" parameter
+						registry.byId('createActionDialog_actionFullName').set('value', actionName);
+						
+						var uploader = registry.byId('actionPackageUploader');
+						uploader.submit(form);
 					}
-					
-					var tree = registry.byId('actionTree');
-					var groupName = getSelectedGroupName(tree, 'ACTION_GROUP');
-					// group name can't be null, as action creation is enabled only if some group is selected
-					var actionShortName = txtName.get('value');
-					var actionName = groupName + '::' + actionShortName;
-					// Setting form's "name" parameter
-					registry.byId('createActionDialog_actionFullName').set('value', actionName);
-					
-					iframe('service/action/admin/createQuietly', {
-						method: 'POST',
-						form: 'createActionForm',
-						// Got exception for "handleAs: 'json'". See iframe.js, handleResponse(response, error) function
-						handleAs: 'html'
-					}).then(function(resp) {
-						// Upload completion is handled with onCreateActionForm_uploadCompele(event, uploader)
-					}, function(err) {
-						alert('Error while parsing server reponse: ' + err);
-					});
 			});	
 		}
 		
@@ -840,7 +833,7 @@
 	</div>
 	
 	<div data-dojo-type="dijit/Dialog" id="createActionDialog" title="New action" style="display: none">
-		<form data-dojo-type="dijit/form/Form" id="createActionForm" enctype="multipart/form-data">
+		<form data-dojo-type="dijit/form/Form" id="createActionForm" enctype="multipart/form-data" action="service/action/admin/createQuietly" method="post">
 			<table class="dijitDialogPaneContentArea">
 				<tr>
 					<td><label for="createActionDialog_textGroupName">Group:</label></td>
@@ -863,14 +856,14 @@
 							</script>
 						</div>
 					</td>
-					<td><input data-dojo-type="dijit/form/ValidationTextBox" data-dojo-props="disabled:true" id="createActionDialog_textFileName" name="createActionDialog_textFileName" 
+					<td><input data-dojo-type="dijit/form/ValidationTextBox" data-dojo-props="disabled:false" id="createActionDialog_textFileName" name="createActionDialog_textFileName" 
 						required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
 				</tr>
 			</table>
 			<input data-dojo-type="dijit/form/TextBox" type="hidden" name="name" id="createActionDialog_actionFullName" />
 			
 			<div class="dijitDialogPaneActionBar">
-				<button data-dojo-type="dijit/form/Button" type="submit" id="createActionDialog_btnOk" onclick="onCreateActionForm_submit();">Save</button>
+				<button data-dojo-type="dijit/form/Button" type="button" id="createActionDialog_btnOk" onclick="onCreateActionForm_btnOk();">Save</button>
 				<button data-dojo-type="dijit/form/Button" type="button" id="createActionDialog_btnCancel" onclick="hideDialog('createActionDialog');">Cancel</button>
 			</div>
 		</form>

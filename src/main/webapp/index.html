@@ -560,8 +560,8 @@
 		}
 		
 		function onCreateActionForm_uploadCompele(event, uploader) {
-			require([ 'dijit/registry' ],
-				function(registry) {
+			require([ 'dijit/registry', 'dojo/request/xhr' ],
+				function(registry, request) {
 					// event is a response from server
 					var status = event.value;
 					
@@ -571,10 +571,19 @@
 						
 						tree.refreshChildrenSubTree(groupName);
 						hideDialog('createActionDialog');
-						//TODO: request server for actionInfo 
-						//createActionTab(entityShortName, 'tab_action_' + actionName, actionInfo);	
-						uploader.reset();
-						registry.byId('createActionForm').reset();
+						
+						var actionShortName = registry.byId('createActionDialog_textActionName').get('value');
+						var actionName = groupName + '::' + actionShortName;
+
+						request('service/action/admin/getInfo', {
+							headers: { 'Content-Type': 'application/json' },
+							method: 'POST',
+							data: '{"name": "' + actionName + '"}'
+						}).then(function(resp){
+							createActionTab(actionShortName, 'tab_action_' + actionName, resp);	
+						}, function(err) {
+							alert('Server request failed. Please contact support staff');
+						});
 					} else {
 						alert(status);
 					}

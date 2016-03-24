@@ -24,7 +24,7 @@ import com.ilsid.bfa.common.ClassNameUtil;
  *
  */
 // TODO: Check the performance impact caused by the synchronization block usage. The synchronization is required
-// here because of reloadClasses() logic.
+// here because of reloadClasses() logic. Consider usage of ReadWriteLock.
 public class DynamicClassLoader extends ClassLoader {
 
 	private static final String URL_PREFIX = "byte:///";

@@ -79,14 +79,20 @@
 					var groupText = registry.byId('createScriptDialog_textGroupName');
 					var scriptText = registry.byId('createScriptDialog_textScriptName');
 					
-					if (selectedGroupName != null) {
-						groupText.set('value', selectedGroupName);
-					} else {
-						groupText.set('value', '');
-					}
+					groupText.set('value', selectedGroupName);
 					scriptText.set('value', '');
 					scriptText.reset();
 					registry.byId('createScriptDialog').show();
+				});
+		}
+		
+		function showUpdateScriptDialog() {
+			require([ 'dijit/registry'],
+				function(registry) {
+					var tab = registry.byId('tabContainer').selectedChildWidget;
+					registry.byId('updateScriptDialog_textGroupName').set('value', tab.objectInfo.group);
+					registry.byId('updateScriptDialog_textScriptName').set('value', tab.objectInfo.name);
+					registry.byId('updateScriptDialog').show();
 				});
 		}
 		
@@ -98,11 +104,7 @@
 					var groupText = registry.byId('createEntityDialog_textGroupName');
 					var nameText = registry.byId('createEntityDialog_textEntityName');
 					
-					if (selectedGroupName != null) {
-						groupText.set('value', selectedGroupName);
-					} else {
-						groupText.set('value', '');
-					}
+					groupText.set('value', selectedGroupName);
 					nameText.set('value', '');
 					nameText.reset();
 					registry.byId('createEntityDialog').show();
@@ -220,6 +222,35 @@
 				});
 		}
 		
+		function onUpdateScriptDialog_btnOkClick() {
+			require([ 'dijit/registry', 'dojo/request/xhr'],
+				function(registry, request) {
+					var groupName = registry.byId('updateScriptDialog_textGroupName').get('value');
+					var scriptShortName = registry.byId('updateScriptDialog_textScriptName').get('value');
+					var scriptName = groupName + '::' + scriptShortName;
+					
+					var tabContainer = registry.byId('tabContainer');
+					var scriptTab = tabContainer.selectedChildWidget;
+					var scriptArea = scriptTab.getChildren()[1];
+					var scriptSource = scriptArea.get('value');
+					var scriptBody = escapeScriptSource(scriptSource);
+					
+					request('service/script/admin/update', {
+							headers: { 'Content-Type': 'application/json' },
+							method: 'POST',
+							data: '{"name": "' + scriptName +'", "body": "' + scriptBody + '"}'
+						}).then(function(resp){
+							hideDialog('updateScriptDialog');
+							var tabIdx = tabContainer.getIndexOfChild(scriptTab);
+							tabContainer.removeChild(scriptTab);
+							scriptTab.destroyRecursive();
+							createScriptTab(scriptShortName, 'tab_script_' + scriptName, scriptSource, tabIdx);
+						}, function(err) {
+							alert('Server request failed. Please contact support staff');
+						});
+				});
+		}
+		
 		function onCreateEntityDialog_btnOkClick() {
 			require([ 'dijit/registry', 'dojo/request/xhr'],
 				function(registry, request) {
@@ -272,13 +303,15 @@
 				'dijit/Toolbar', 'dijit/form/Button', 'dojo/domReady!'],
 				function(registry, ContentPane, SimpleTextarea, Toolbar, Button) {
 					var tabContainer = registry.byId('tabContainer');
+					var groupName = getSelectedGroupName(registry.byId('scriptTree'), 'SCRIPT_GROUP');
 					
 					var tab = new ContentPane({
 						id: tabId,
 						title: tabTitle,
 						closable: true,
 						iconClass: 'dijitLeaf',
-						style: 'overflow: auto;'
+						style: 'overflow: auto;',
+						objectInfo: {name: tabTitle, group: groupName}
 					});
 					
 					var isExistingScript = (tabId != undefined);
@@ -286,15 +319,16 @@
 					var btnSave = new Button({
 						label: 'Save',
 						showLabel: false,
-						iconClass: 'dijitIconSave',
-						onClick: function() {
-							showCreateScriptDialog();
-						}
+						iconClass: 'dijitIconSave'
 					});
+					
 					if (isExistingScript) {
-						// TODO: Support of script update
 						btnSave.set('disabled', true);
+						btnSave.onClick = showUpdateScriptDialog;
+					} else {
+						btnSave.onClick = showCreateScriptDialog;
 					}
+					
 					btnSave.startup();
 					
 					var toolBar = new Toolbar({
@@ -304,8 +338,18 @@
 					toolBar.startup();
 				
 					var scriptArea = new SimpleTextarea({
-						className: 'fixedTextArea'
+						className: 'fixedTextArea',
+						modified: false,
+						
+						onInput: function(event) {
+							if (isExistingScript && !this.modified) {
+								btnSave.set('disabled', false);
+								tab.set('title', '*' + tab.title);
+								this.modified = true;
+							}
+						}
 					});
+					
 					if (scriptSource) {
 						scriptArea.set('value', scriptSource);
 					}
@@ -538,11 +582,7 @@
 					var nameText = registry.byId('createActionDialog_textActionName');
 					var fileText = registry.byId('createActionDialog_textFileName');
 					
-					if (selectedGroupName != null) {
-						groupText.set('value', selectedGroupName);
-					} else {
-						groupText.set('value', '');
-					}
+					groupText.set('value', selectedGroupName);
 					nameText.set('value', '');
 					nameText.reset();
 					fileText.set('value', '');
@@ -767,7 +807,7 @@
 		<table class="dijitDialogPaneContentArea">
 			<tr>
 				<td><label for="createGroupDialog_textParentGroup">Parent group:</label></td>
-				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createGroupDialog_textParentGroup" name="createGroupDialog_textParentGroup"></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createGroupDialog_textParentGroup" name="createGroupDialog_textParentGroup" /></td>
 			</tr>
 			<tr>
 				<td><label for="createGroupDialog_textGroupName">Name:</label></td>
@@ -790,7 +830,7 @@
 		<table class="dijitDialogPaneContentArea">
 			<tr>
 				<td><label for="createScriptDialog_textGroupName">Group:</label></td>
-				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createScriptDialog_textGroupName" name="createScriptDialog_textGroupName"></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createScriptDialog_textGroupName" name="createScriptDialog_textGroupName" /></td>
 			</tr>
 			<tr>
 				<td><label for="createScriptDialog_textScriptName">Name:</label></td>
@@ -804,11 +844,28 @@
 		</div>
 	</div>
 	
+	<div data-dojo-type="dijit/Dialog" id="updateScriptDialog" title="Update script" style="display: none">
+		<table class="dijitDialogPaneContentArea">
+			<tr>
+				<td><label for="updateScriptDialog_textGroupName">Group:</label></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="updateScriptDialog_textGroupName" name="updateScriptDialog_textGroupName" /></td>
+			</tr>
+			<tr>
+				<td><label for="updateScriptDialog_textScriptName">Name:</label></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="updateScriptDialog_textScriptName" name="updateScriptDialog_textScriptName" /></td>
+			</tr>
+		</table>
+		<div class="dijitDialogPaneActionBar">
+			<button data-dojo-type="dijit/form/Button" type="button" id="updateScriptDialog_btnOk" onclick="onUpdateScriptDialog_btnOkClick();">Update</button>
+			<button data-dojo-type="dijit/form/Button" type="button" id="updateScriptDialog_btnCancel" onclick="hideDialog('updateScriptDialog');">Cancel</button>
+		</div>
+	</div>
+	
 	<div data-dojo-type="dijit/Dialog" id="createEntityDialog" title="Save entity" style="display: none">
 		<table class="dijitDialogPaneContentArea">
 			<tr>
 				<td><label for="createEntityDialog_textGroupName">Group:</label></td>
-				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createEntityDialog_textGroupName" name="createEntityDialog_textGroupName"></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createEntityDialog_textGroupName" name="createEntityDialog_textGroupName" /></td>
 			</tr>
 			<tr>
 				<td><label for="createEntityDialog_textEntityName">Name:</label></td>
@@ -846,7 +903,7 @@
 			<table class="dijitDialogPaneContentArea">
 				<tr>
 					<td><label for="createActionDialog_textGroupName">Group:</label></td>
-					<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createActionDialog_textGroupName" name="createActionDialog_textGroupName"></td>
+					<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="createActionDialog_textGroupName" name="createActionDialog_textGroupName" /></td>
 				</tr>
 				<tr>
 					<td><label for="createActionDialog_textActionName">Name:</label></td>

@@ -110,6 +110,16 @@
 					registry.byId('createEntityDialog').show();
 				});
 		}
+		
+		function showUpdateEntityDialog() {
+			require([ 'dijit/registry'],
+				function(registry) {
+					var tab = registry.byId('tabContainer').selectedChildWidget;
+					registry.byId('updateEntityDialog_textGroupName').set('value', tab.objectInfo.group);
+					registry.byId('updateEntityDialog_textEntityName').set('value', tab.objectInfo.name);
+					registry.byId('updateEntityDialog').show();
+				});
+		}
 
 		function showNewEntityFieldDialog() {
 			require([ 'dijit/registry'],
@@ -288,6 +298,35 @@
 				});
 		}
 		
+		function onUpdateEntityDialog_btnOkClick() {
+			require([ 'dijit/registry', 'dojo/request/xhr'],
+				function(registry, request) {
+					var groupName = registry.byId('updateEntityDialog_textGroupName').get('value');
+					var entityShortName = registry.byId('updateEntityDialog_textEntityName').get('value');
+					var entityName = groupName + '::' + entityShortName;
+					
+					var tabContainer = registry.byId('tabContainer');
+					var entityTab = tabContainer.selectedChildWidget;
+					var grid = entityTab.getChildren()[1];
+					var entitySource = buildEntitySource(grid);
+					var entityBody = escapeEntitySource(entitySource);
+					
+					request('service/entity/admin/update', {
+							headers: { 'Content-Type': 'application/json' },
+							method: 'POST',
+							data: '{"name": "' + entityName +'", "body": "' + entityBody + '"}'
+						}).then(function(resp){
+							hideDialog('updateEntityDialog');
+							var tabIdx = tabContainer.getIndexOfChild(entityTab);
+							tabContainer.removeChild(entityTab);
+							entityTab.destroyRecursive();
+							createEntityTab(entityShortName, 'tab_entity_' + entityName, entitySource, tabIdx);
+						}, function(err) {
+							alert('Server request failed. Please contact support staff');
+						});
+				});
+		}
+		
 		function buildEntitySource(grid) {
 			var entity = {};
 			for (var i = 0; i < grid.rowCount; i++) {
@@ -372,13 +411,15 @@
 					'dijit/form/Button', 'dojo/domReady!'],
 				function(registry, ContentPane, Toolbar, Button) {
 					var tabContainer = registry.byId('tabContainer');
+					var groupName = getSelectedGroupName(registry.byId('entityTree'), 'ENTITY_GROUP');
 					
 					var tab = new ContentPane({
 						id: tabId,
 						title: tabTitle,
 						closable: true,
 						iconClass: 'toolbarIconEntity',
-						style: 'overflow: auto;'
+						style: 'overflow: auto;',
+						objectInfo: {name: tabTitle, group: groupName}
 					});
 					
 					var isExistingEntity = (tabId != undefined);
@@ -386,14 +427,14 @@
 					var btnSave = new Button({
 						label: 'Save',
 						showLabel: false,
-						iconClass: 'dijitIconSave',
-						onClick: function() {
-							showCreateEntityDialog();
-						}
+						iconClass: 'dijitIconSave'
 					});
+					
 					if (isExistingEntity) {
-						// TODO: Support of entity update
 						btnSave.set('disabled', true);
+						btnSave.onClick = showUpdateEntityDialog;
+					} else {
+						btnSave.onClick = showCreateEntityDialog;
 					}
 					
 					var btnNewField = new Button({
@@ -411,7 +452,7 @@
 					toolBar.startup();
 					tab.addChild(toolBar);
 					
-					createEntityGrid(tab, entitySource);
+					createEntityGrid(tab, entitySource, isExistingEntity);
 					
 					if (indexInContainer > -1) {
 						tabContainer.addChild(tab, indexInContainer);
@@ -422,9 +463,10 @@
 			});
 		}
 		
-		function createEntityGrid(tab, entitySource) {
-			require(['dijit/registry', 'dojox/grid/DataGrid', 'dojo/data/ObjectStore', 'dojo/store/Memory', 'dijit/form/Button', 'dojo/domReady!'],
-				function(registry, DataGrid, ObjectStore, Memory, Button){
+		function createEntityGrid(tab, entitySource, isExistingEntity) {
+			require(['dijit/registry', 'dojox/grid/DataGrid', 'dojo/data/ObjectStore', 
+				'dojo/store/Memory', 'dijit/form/Button', 'dojo/domReady!'],
+				function(registry, DataGrid, ObjectStore, Memory, Button) {
 				
 					function getDeleteButton() {
 						var btn = new Button({
@@ -455,7 +497,21 @@
 					}
 					
 					var data = {identifier: 'fldName', items: gridItems };
-					var store = new ObjectStore({ objectStore: new Memory({ data: data.items, idProperty: 'fldName' }) });
+					var store = new ObjectStore({ 
+						handleStoreChange: function() {
+							if (isExistingEntity && !this.modified) {
+								var btnSave = tab.getChildren()[0].getChildren()[0];
+								btnSave.set('disabled', false);
+								tab.set('title', '*' + tab.title);
+								this.modified = true;
+							}
+						},
+						
+						objectStore: new Memory({ data: data.items, idProperty: 'fldName' }),
+						modified: false,
+						onDelete: function() { this.handleStoreChange(); },
+						onNew: function() { this.handleStoreChange(); } 
+					});
 					
 					var layout = [{
 						defaultCell: {styles: 'text-align: left;', width: '300px'},
@@ -504,6 +560,7 @@
 					var entityTab = tabContainer.selectedChildWidget;
 					var grid = entityTab.getChildren()[1];
 					grid.store.newItem({fldName: txtName.get('value'), fldType: txtType.get('value')});
+					grid.store.save();
 					grid.render();
 					
 					hideDialog('newEntityFieldDialog');
@@ -876,6 +933,23 @@
 		<div class="dijitDialogPaneActionBar">
 			<button data-dojo-type="dijit/form/Button" type="button" id="createEntityDialog_btnOk" onclick="onCreateEntityDialog_btnOkClick();">Save</button>
 			<button data-dojo-type="dijit/form/Button" type="button" id="createEntityDialog_btnCancel" onclick="hideDialog('createEntityDialog');">Cancel</button>
+		</div>
+	</div>
+	
+	<div data-dojo-type="dijit/Dialog" id="updateEntityDialog" title="Update entity" style="display: none">
+		<table class="dijitDialogPaneContentArea">
+			<tr>
+				<td><label for="updateEntityDialog_textGroupName">Group:</label></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="updateEntityDialog_textGroupName" name="updateEntityDialog_textGroupName" /></td>
+			</tr>
+			<tr>
+				<td><label for="updateEntityDialog_textEntityName">Name:</label></td>
+				<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="updateEntityDialog_textEntityName" name="updateEntityDialog_textEntityName" /></td>
+			</tr>
+		</table>
+		<div class="dijitDialogPaneActionBar">
+			<button data-dojo-type="dijit/form/Button" type="button" id="updateEntityDialog_btnOk" onclick="onUpdateEntityDialog_btnOkClick();">Update</button>
+			<button data-dojo-type="dijit/form/Button" type="button" id="updateEntityDialog_btnCancel" onclick="hideDialog('updateEntityDialog');">Cancel</button>
 		</div>
 	</div>
 	

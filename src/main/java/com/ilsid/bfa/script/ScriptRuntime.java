@@ -4,8 +4,8 @@ import javax.inject.Inject;
 
 import com.ilsid.bfa.action.persistence.ActionLocator;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
-import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 
 /**
  * Provides the script runtime operations.
@@ -13,12 +13,11 @@ import com.ilsid.bfa.persistence.PersistenceException;
  * @author illia.sydorovych
  *
  */
-// TODO: support for group name and input params is needed
 public class ScriptRuntime {
 
 	private static final Object[] EMPTY_PARAMS = new Object[] {};
 
-	private ScriptingRepository repository;
+	private RuntimeRepository repository;
 
 	private ActionLocator actionLocator;
 
@@ -74,7 +73,7 @@ public class ScriptRuntime {
 	 *            a code repository
 	 */
 	@Inject
-	public void setRepository(ScriptingRepository repository) {
+	public void setRepository(RuntimeRepository repository) {
 		this.repository = repository;
 	}
 

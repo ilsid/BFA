@@ -26,6 +26,8 @@ import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
+import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
+import com.ilsid.bfa.runtime.persistence.hibernate.HibernateRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ScriptLogger;
 import com.sun.jersey.api.client.Client;
@@ -115,6 +117,7 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 				protected void configureServlets() {
 					bind(ScriptingRepository.class).to(repositoryClass);
 					bind(ActionRepository.class).to(FilesystemActionRepository.class);
+					bind(RuntimeRepository.class).to(HibernateRuntimeRepository.class);
 
 					requestStaticInjection(DynamicClassLoader.class);
 					requestStaticInjection(ActionClassLoader.class);

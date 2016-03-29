@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -31,8 +30,6 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	private static final String SOURCE_FILE_EXTENSION = ".src";
 
 	private static final String CLASS_METADATA_SUFFIX = '_' + ClassNameUtil.METADATA_FILE_NAME;
-
-	private AtomicLong runtimeId = new AtomicLong(System.currentTimeMillis());
 
 	private ObjectMapper jsonMapper = new ObjectMapper();
 
@@ -253,16 +250,6 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		}
 
 		return sourceCode;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.ilsid.bfa.persistence.ScriptingRepository#getNextRuntimeId()
-	 */
-	@Override
-	public long getNextRuntimeId() throws PersistenceException {
-		return runtimeId.incrementAndGet();
 	}
 
 	/*

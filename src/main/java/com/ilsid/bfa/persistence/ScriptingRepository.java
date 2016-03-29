@@ -146,16 +146,6 @@ public interface ScriptingRepository extends Configurable {
 	String loadSourceCode(String className) throws PersistenceException;
 
 	/**
-	 * Generates new unique script runtime id.
-	 * 
-	 * @return the runtime id value
-	 * @throws PersistenceException
-	 *             in case of any repository access issues
-	 */
-	// FIXME: move from repository API
-	long getNextRuntimeId() throws PersistenceException;
-
-	/**
 	 * Loads meta-data items for child packages. Only meta-data items of the specified types will be loaded. If the
 	 * types criteria is not specified then meta-data items from all child packages will be loaded.
 	 * 

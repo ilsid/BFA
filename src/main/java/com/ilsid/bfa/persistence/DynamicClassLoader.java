@@ -11,6 +11,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.inject.Inject;
 
@@ -23,8 +26,6 @@ import com.ilsid.bfa.common.ClassNameUtil;
  * @author illia.sydorovych
  *
  */
-// TODO: Check the performance impact caused by the synchronization block usage. The synchronization is required
-// here because of reloadClasses() logic. Consider usage of ReadWriteLock.
 public class DynamicClassLoader extends ClassLoader {
 
 	private static final String URL_PREFIX = "byte:///";
@@ -35,7 +36,11 @@ public class DynamicClassLoader extends ClassLoader {
 
 	private static DynamicClassLoader instance = new DynamicClassLoader();
 
-	private static final Object RELOAD_LOCK = new Object();
+	private static final ReadWriteLock RELOAD_LOCK = new ReentrantReadWriteLock();
+
+	private static final Lock READ_RELOAD_LOCK = RELOAD_LOCK.readLock();
+
+	private static final Lock WRITE_RELOAD_LOCK = RELOAD_LOCK.writeLock();
 
 	private static ScriptingRepository repository;
 
@@ -52,8 +57,11 @@ public class DynamicClassLoader extends ClassLoader {
 	 * @see {@link DynamicClassLoader#reloadClasses()}
 	 */
 	public static DynamicClassLoader getInstance() {
-		synchronized (RELOAD_LOCK) {
+		READ_RELOAD_LOCK.lock();
+		try {
 			return instance;
+		} finally {
+			READ_RELOAD_LOCK.unlock();
 		}
 	}
 
@@ -65,8 +73,11 @@ public class DynamicClassLoader extends ClassLoader {
 	 */
 	@Override
 	protected URL findResource(String name) {
-		synchronized (RELOAD_LOCK) {
+		READ_RELOAD_LOCK.lock();
+		try {
 			return instance.doFindResource(name);
+		} finally {
+			READ_RELOAD_LOCK.unlock();
 		}
 	};
 
@@ -83,8 +94,11 @@ public class DynamicClassLoader extends ClassLoader {
 	 */
 	@Override
 	public Class<?> loadClass(String className) throws ClassNotFoundException, IllegalStateException {
-		synchronized (RELOAD_LOCK) {
+		READ_RELOAD_LOCK.lock();
+		try {
 			return instance.doLoadClass(className);
+		} finally {
+			READ_RELOAD_LOCK.unlock();
 		}
 	}
 
@@ -94,7 +108,8 @@ public class DynamicClassLoader extends ClassLoader {
 	 * {@link DynamicClassLoader#getInstance()} will return this new instance.
 	 */
 	public static void reloadClasses() {
-		synchronized (RELOAD_LOCK) {
+		WRITE_RELOAD_LOCK.lock();
+		try {
 			instance = new DynamicClassLoader();
 
 			// Force reloading of all cached classes
@@ -109,6 +124,8 @@ public class DynamicClassLoader extends ClassLoader {
 					// TODO: log WARN message
 				}
 			}
+		} finally {
+			WRITE_RELOAD_LOCK.unlock();
 		}
 	}
 

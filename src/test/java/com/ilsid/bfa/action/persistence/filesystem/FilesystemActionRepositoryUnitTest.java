@@ -74,7 +74,7 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		assertTrue(urls
 				.contains(toURL(new File(REPOSITORY_ROOT_DIR, "action/default_group/reserve_x20_amount/classes/"))));
 		assertTrue(urls.contains(toURL(new File(REPOSITORY_ROOT_DIR,
-				"action/default_group/reserve_x20_amount/lib/commons-collections-3.2.1.jar"))));
+				"action/default_group/reserve_x20_amount/lib/joda-time-1.6.jar"))));
 		assertTrue(urls.contains(
 				toURL(new File(REPOSITORY_ROOT_DIR, "action/default_group/reserve_x20_amount/lib/mail-1.4.1.jar"))));
 	}
@@ -262,7 +262,7 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals("com.some.action.impl.SomeAction", info.getImplementationClassName());
 		final List<String> dependencies = info.getDependencies();
 		assertEquals(2, dependencies.size());
-		assertTrue(dependencies.contains("commons-collections-3.2.1.jar"));
+		assertTrue(dependencies.contains("joda-time-1.6.jar"));
 		assertTrue(dependencies.contains("mail-1.4.1.jar"));
 	}
 	

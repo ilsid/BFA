@@ -1,4 +1,4 @@
-package com.ilsid.bfa.runtime.persistence.hibernate;
+package com.ilsid.bfa.runtime.persistence.orientdb;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -12,7 +12,7 @@ import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
  * @author illia.sydorovych
  *
  */
-public class HibernateRuntimeRepository extends ConfigurableRepository implements RuntimeRepository {
+public class OrientdbRuntimeRepository extends ConfigurableRepository implements RuntimeRepository {
 
 	private AtomicLong runtimeId = new AtomicLong(System.currentTimeMillis());
 

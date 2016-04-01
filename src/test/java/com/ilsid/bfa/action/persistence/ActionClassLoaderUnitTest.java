@@ -3,7 +3,6 @@ package com.ilsid.bfa.action.persistence;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
@@ -83,14 +82,14 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void actionThirdPartyDependencyCanBeLoaded() throws Exception {
-		final String className = "org.apache.commons.collections.CollectionUtils";
+		final String className = "org.joda.time.Months";
 		makeSureClassIsNotInClasspathOfCurrentLoader(className);
 
 		Class<?> clazz = loader.loadClass(className);
 		assertEquals(LOADER_CLASS_NAME, clazz.getClassLoader().getClass().getName());
 
-		Field field = clazz.getDeclaredField("EMPTY_COLLECTION");
-		assertEquals(0, ((Collection<?>) field.get(null)).size());
+		Field field = clazz.getDeclaredField("EIGHT");
+		assertEquals(className, field.get(null).getClass().getName());
 	}
 
 	@Test

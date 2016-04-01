@@ -19,7 +19,7 @@ import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
-import com.ilsid.bfa.runtime.persistence.hibernate.HibernateRuntimeRepository;
+import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ScriptLogger;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -50,7 +50,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			protected void configureServlets() {
 				bind(ScriptingRepository.class).to(FilesystemScriptingRepository.class);
 				bind(ActionRepository.class).to(FilesystemActionRepository.class);
-				bind(RuntimeRepository.class).to(HibernateRuntimeRepository.class);
+				bind(RuntimeRepository.class).to(OrientdbRuntimeRepository.class);
 
 				requestStaticInjection(DynamicClassLoader.class);
 				requestStaticInjection(ActionClassLoader.class);

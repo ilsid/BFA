@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.runtime.persistence.hibernate.HibernateRuntimeRepository;
+import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbRuntimeRepository;
 
 public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	
@@ -14,7 +14,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	public void setUp() throws Exception {
 		CodeRepositoryInitializer.init();
 		runtime = new ScriptRuntime();
-		runtime.setRepository(new HibernateRuntimeRepository());
+		runtime.setRepository(new OrientdbRuntimeRepository());
 	}
 	
 	@Test

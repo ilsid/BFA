@@ -1,9 +1,7 @@
 package com.some.action.impl;
 
-// commons-collections jar is needed in classpath
-import org.apache.commons.collections.CollectionUtils;
-
-import java.util.Collection;
+//joda-time jar is needed in classpath
+import org.joda.time.Months;
 
 // mail jar is needed in classpath
 import javax.mail.Address;
@@ -16,7 +14,7 @@ public class SomeAction implements Action {
 
 	@SuppressWarnings("unused")
 	public Object[] execute() throws ActionException {
-		Collection<?> collection = CollectionUtils.EMPTY_COLLECTION;
+		Months month = Months.EIGHT;
 		Address address = new InternetAddress();
 		return new Object[] { new ActionResultProvider().getResult() };
 	}

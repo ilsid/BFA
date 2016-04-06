@@ -21,7 +21,6 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.action.persistence.ActionClassLoader;
 import com.ilsid.bfa.action.persistence.ActionRepository;
-import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
@@ -55,7 +54,7 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 	private static Server server;
 
 	private static Client client;
-	
+
 	protected WebResource getWebResource(String path) {
 		return client.resource(rootURL + path);
 	}
@@ -99,13 +98,17 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 		private static final String LOGGER_NAME = "test_logger";
 
-		private final Class<? extends ScriptingRepository> repositoryClass;
+		private final Class<? extends ScriptingRepository> scriptingRepositoryClass;
+		
+		private final Class<? extends ActionRepository> actionRepositoryClass;
 
 		private final Map<String, String> repositoryConfig;
 
-		public TestApplicationConfig(Class<? extends ScriptingRepository> repositoryClass,
-				Map<String, String> repositoryConfig) {
-			this.repositoryClass = repositoryClass;
+		public TestApplicationConfig(Class<? extends ScriptingRepository> scriptingRepositoryClass,
+				Class<? extends ActionRepository> actionRepositoryClass, Map<String, String> repositoryConfig) {
+			
+			this.scriptingRepositoryClass = scriptingRepositoryClass;
+			this.actionRepositoryClass = actionRepositoryClass;
 			this.repositoryConfig = repositoryConfig;
 		}
 
@@ -115,8 +118,8 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 				@Override
 				protected void configureServlets() {
-					bind(ScriptingRepository.class).to(repositoryClass);
-					bind(ActionRepository.class).to(FilesystemActionRepository.class);
+					bind(ScriptingRepository.class).to(scriptingRepositoryClass);
+					bind(ActionRepository.class).to(actionRepositoryClass);
 					bind(RuntimeRepository.class).to(OrientdbRuntimeRepository.class);
 
 					requestStaticInjection(DynamicClassLoader.class);

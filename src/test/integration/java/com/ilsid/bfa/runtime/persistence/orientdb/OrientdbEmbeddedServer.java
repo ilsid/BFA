@@ -1,5 +1,9 @@
 package com.ilsid.bfa.runtime.persistence.orientdb;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+import com.ilsid.bfa.TestConstants;
 import com.orientechnologies.orient.server.OServer;
 import com.orientechnologies.orient.server.OServerMain;
 
@@ -11,7 +15,7 @@ import com.orientechnologies.orient.server.OServerMain;
  */
 public class OrientdbEmbeddedServer {
 
-	private static final String CONFIG_FILE = "test-orientdb-config.xml";
+	private static final String CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/test-orientdb-config.xml";
 
 	private static OServer server;
 
@@ -30,7 +34,9 @@ public class OrientdbEmbeddedServer {
 
 		try {
 			server = OServerMain.create();
-			server.startup(Thread.currentThread().getContextClassLoader().getResourceAsStream(CONFIG_FILE));
+			try (InputStream is = new FileInputStream(CONFIG_FILE)) {
+				server.startup(is);
+			}
 			server.activate();
 		} catch (Exception e) {
 			throw new OrientdbSystemException("Startup of embedded OrientDB server failed", e);

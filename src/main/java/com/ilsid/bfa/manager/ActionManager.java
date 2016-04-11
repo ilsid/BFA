@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.ilsid.bfa.action.persistence.ActionInfo;
 import com.ilsid.bfa.action.persistence.ActionRepository;
@@ -20,6 +21,7 @@ import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
  * @author illia.sydorovych
  *
  */
+@Singleton
 public class ActionManager {
 
 	private ActionRepository repository;

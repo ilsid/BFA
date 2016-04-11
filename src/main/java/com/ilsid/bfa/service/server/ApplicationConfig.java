@@ -3,6 +3,8 @@ package com.ilsid.bfa.service.server;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +41,14 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 public class ApplicationConfig extends GuiceServletContextListener {
 
 	private static final String INFO_LOGGER_NAME = "info_logger";
-	
+
 	private static final String ERROR_LOGGER_NAME = "error_logger";
+
+	@Override
+	public void contextDestroyed(javax.servlet.ServletContextEvent servletContextEvent) {
+		super.contextDestroyed(servletContextEvent);
+		OrientdbRuntimeRepository.release();
+	}
 
 	@Override
 	protected Injector getInjector() {
@@ -48,9 +56,9 @@ public class ApplicationConfig extends GuiceServletContextListener {
 
 			@Override
 			protected void configureServlets() {
-				bind(ScriptingRepository.class).to(FilesystemScriptingRepository.class);
-				bind(ActionRepository.class).to(FilesystemActionRepository.class);
-				bind(RuntimeRepository.class).to(OrientdbRuntimeRepository.class);
+				bind(ScriptingRepository.class).to(FilesystemScriptingRepository.class).asEagerSingleton();
+				bind(ActionRepository.class).to(FilesystemActionRepository.class).asEagerSingleton();
+				bind(RuntimeRepository.class).to(OrientdbRuntimeRepository.class).asEagerSingleton();
 
 				requestStaticInjection(DynamicClassLoader.class);
 				requestStaticInjection(ActionClassLoader.class);
@@ -66,24 +74,28 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			}
 
 			@Provides
+			@Singleton
 			@RepositoryConfig
 			protected Map<String, String> provideRepositoryConfiguration() {
 				return ConfigUtil.getApplicationSettings();
 			}
 
 			@Provides
+			@Singleton
 			@WebAppLogger
 			protected Logger provideWebAppLogger() {
 				return LoggerFactory.getLogger(ERROR_LOGGER_NAME);
 			}
 
 			@Provides
+			@Singleton
 			@ScriptLogger
 			protected Logger provideScriptLogger() {
 				return LoggerFactory.getLogger(ERROR_LOGGER_NAME);
 			}
 
 			@Provides
+			@Singleton
 			@PersistenceLogger
 			protected Logger providePersistenceLogger() {
 				return LoggerFactory.getLogger(INFO_LOGGER_NAME);

@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Singleton;
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletContextListener;
 
@@ -26,6 +27,7 @@ import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
+import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbEmbeddedServer;
 import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ScriptLogger;
@@ -40,6 +42,10 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.sun.jersey.multipart.impl.MultiPartWriter;
 
 public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
+
+	private static final String ORIENTDB_HOME_PROPERTY = "ORIENTDB_HOME";
+
+	private static final String ORIENTDB_HOME_VALUE = "src/test/resources/database/orientdb";
 
 	private static final String PORT_PROPERTY = "test.http.server.port";
 
@@ -57,6 +63,15 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 	protected WebResource getWebResource(String path) {
 		return client.resource(rootURL + path);
+	}
+	
+	public static void startDatabaseServer() throws Exception{
+		System.setProperty(ORIENTDB_HOME_PROPERTY, ORIENTDB_HOME_VALUE);
+		OrientdbEmbeddedServer.startup();
+	}
+	
+	public static void stopDatabaseServer() throws Exception{
+		OrientdbEmbeddedServer.shutdown();
 	}
 
 	public static void startWebServer(ServletContextListener applicationConfig) throws Exception {
@@ -99,17 +114,23 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 		private static final String LOGGER_NAME = "test_logger";
 
 		private final Class<? extends ScriptingRepository> scriptingRepositoryClass;
-		
+
 		private final Class<? extends ActionRepository> actionRepositoryClass;
 
 		private final Map<String, String> repositoryConfig;
 
 		public TestApplicationConfig(Class<? extends ScriptingRepository> scriptingRepositoryClass,
 				Class<? extends ActionRepository> actionRepositoryClass, Map<String, String> repositoryConfig) {
-			
+
 			this.scriptingRepositoryClass = scriptingRepositoryClass;
 			this.actionRepositoryClass = actionRepositoryClass;
 			this.repositoryConfig = repositoryConfig;
+		}
+
+		@Override
+		public void contextDestroyed(javax.servlet.ServletContextEvent servletContextEvent) {
+			super.contextDestroyed(servletContextEvent);
+			OrientdbRuntimeRepository.release();
 		}
 
 		@Override
@@ -118,9 +139,9 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 				@Override
 				protected void configureServlets() {
-					bind(ScriptingRepository.class).to(scriptingRepositoryClass);
-					bind(ActionRepository.class).to(actionRepositoryClass);
-					bind(RuntimeRepository.class).to(OrientdbRuntimeRepository.class);
+					bind(ScriptingRepository.class).to(scriptingRepositoryClass).in(Singleton.class);
+					bind(ActionRepository.class).to(actionRepositoryClass).in(Singleton.class);
+					bind(RuntimeRepository.class).to(OrientdbRuntimeRepository.class).in(Singleton.class);
 
 					requestStaticInjection(DynamicClassLoader.class);
 					requestStaticInjection(ActionClassLoader.class);
@@ -136,24 +157,28 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 				}
 
 				@Provides
+				@Singleton
 				@RepositoryConfig
 				protected Map<String, String> provideRepositoryConfiguration() {
 					return repositoryConfig;
 				}
 
 				@Provides
+				@Singleton
 				@WebAppLogger
 				protected Logger provideWebAppLogger() {
 					return LoggerFactory.getLogger(LOGGER_NAME);
 				}
 
 				@Provides
+				@Singleton
 				@ScriptLogger
 				protected Logger provideScriptLogger() {
 					return LoggerFactory.getLogger(LOGGER_NAME);
 				}
 
 				@Provides
+				@Singleton
 				@PersistenceLogger
 				protected Logger providePersistenceLogger() {
 					return LoggerFactory.getLogger(LOGGER_NAME);

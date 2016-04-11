@@ -1,6 +1,7 @@
 package com.ilsid.bfa.script;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.ilsid.bfa.action.persistence.ActionLocator;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
@@ -13,6 +14,7 @@ import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
  * @author illia.sydorovych
  *
  */
+@Singleton
 public class ScriptRuntime {
 
 	private static final Object[] EMPTY_PARAMS = new Object[] {};

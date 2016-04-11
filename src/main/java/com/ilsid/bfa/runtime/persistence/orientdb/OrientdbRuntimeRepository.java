@@ -1,20 +1,31 @@
 package com.ilsid.bfa.runtime.persistence.orientdb;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.inject.Inject;
+
+import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.persistence.PersistenceException;
-import com.ilsid.bfa.persistence.filesystem.ConfigurableRepository;
+import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 
 /**
- * Hibernate based runtime repository.
+ * OrientDB based runtime repository.
  * 
  * @author illia.sydorovych
  *
  */
-public class OrientdbRuntimeRepository extends ConfigurableRepository implements RuntimeRepository {
+public class OrientdbRuntimeRepository implements RuntimeRepository {
 
 	private AtomicLong runtimeId = new AtomicLong(System.currentTimeMillis());
+
+	/**
+	 * Releases resources.
+	 */
+	public static void release() {
+		//TODO: implement
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -25,6 +36,17 @@ public class OrientdbRuntimeRepository extends ConfigurableRepository implements
 	@Override
 	public long getNextRuntimeId() throws PersistenceException {
 		return runtimeId.incrementAndGet();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.Configurable#setConfiguration(java.util.Map)
+	 */
+	@Override
+	@Inject
+	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
+		//TODO: implement
 	}
 
 }

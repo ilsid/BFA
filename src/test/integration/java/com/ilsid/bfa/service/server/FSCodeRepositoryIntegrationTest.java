@@ -45,7 +45,9 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 
 		Map<String, String> repositoryConfig = new HashMap<>();
 		repositoryConfig.put("bfa.persistence.fs.root_dir", CODE_REPOSITORY_PATH);
-
+		
+		startDatabaseServer();
+		
 		startWebServer(new TestApplicationConfig(FilesystemScriptingRepository.class, FilesystemActionRepository.class,
 				repositoryConfig));
 	}
@@ -54,6 +56,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	public static void tearDown() throws Exception {
 		stopWebServer();
 		FileUtils.forceDelete(CODE_REPOSITORY_DIR);
+		stopDatabaseServer();
 	}
 
 	protected void assertFilesExist(String dirPath, String[] fileNames) {

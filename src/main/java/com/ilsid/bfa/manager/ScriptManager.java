@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.JsonUtil;
@@ -29,6 +30,7 @@ import com.ilsid.bfa.script.TypeNameResolver;
  *
  */
 // TODO: write unit tests
+@Singleton
 public class ScriptManager {
 
 	private ScriptingRepository repository;

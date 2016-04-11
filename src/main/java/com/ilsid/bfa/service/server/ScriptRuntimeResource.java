@@ -15,9 +15,9 @@ import javax.ws.rs.core.Response.Status;
 import com.ilsid.bfa.script.ScriptException;
 import com.ilsid.bfa.script.ScriptRuntime;
 import com.ilsid.bfa.service.common.Paths;
+import com.ilsid.bfa.service.dto.RuntimeStatus;
 import com.ilsid.bfa.service.dto.RuntimeStatusType;
 import com.ilsid.bfa.service.dto.ScriptRuntimeParams;
-import com.ilsid.bfa.service.dto.RuntimeStatus;
 
 /**
  * Provides the script runtime services.
@@ -26,7 +26,6 @@ import com.ilsid.bfa.service.dto.RuntimeStatus;
  *
  */
 @Path(Paths.SCRIPT_SERVICE_RUNTIME_ROOT)
-//FIXME: Handle non-default script groups
 public class ScriptRuntimeResource {
 
 	private ScriptRuntime scriptRuntime;
@@ -49,7 +48,6 @@ public class ScriptRuntimeResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.RUN_OPERATION)
-	// TODO: support for group name and input params is needed
 	public Response run(ScriptRuntimeParams script) {
 		long runtimeId;
 		try {

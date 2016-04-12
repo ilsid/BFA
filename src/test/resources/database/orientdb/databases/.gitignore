@@ -1,6 +1,0 @@
-# This is a work-around to commit this empty dir
-
-# Ignore everything in this directory
-*
-# Except this file
-!.gitignore

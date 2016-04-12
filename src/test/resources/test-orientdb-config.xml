@@ -86,9 +86,7 @@
 		<user name="root" password="root" resources="*" />
 	</users>
 	<properties>
-		<entry name="server.database.path" value="src/test/resources/database/orientdb/databases" />
-        
-        <entry value="1" name="db.pool.min"/>
+		<entry value="1" name="db.pool.min"/>
         <entry value="50" name="db.pool.max"/>
         <entry value="true" name="profiler.enabled"/>
         <entry value="info" name="log.console.level"/>

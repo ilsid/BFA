@@ -27,8 +27,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	private static final String GENERATED_ENTITY_DEFAULT_GROUP_PATH = ClassNameUtil.GENERATED_ENTITIES_DEFAULT_GROUP_PACKAGE
 			.replace('.', '/');
 
-	private static final String ENTITY_REPOSITORY_DEFAULT_GROUP_PATH = CODE_REPOSITORY_PATH + "/"
-			+ GENERATED_ENTITY_DEFAULT_GROUP_PATH;
+	private static final String ENTITY_REPOSITORY_DEFAULT_GROUP_PATH = CODE_REPOSITORY_PATH + "/" + GENERATED_ENTITY_DEFAULT_GROUP_PATH;
 
 	private static final File ENTITY_REPOSITORY_DEFAULT_GROUP_DIR = new File(ENTITY_REPOSITORY_DEFAULT_GROUP_PATH);
 
@@ -251,30 +250,30 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void subGroupAndEntityItemsWithDefinedMetadataAreLoaded() throws Exception {
 		copyEntityDirectoryToRepository(Metadata.DEFAULT_GROUP_NAME, Metadata.DEFAULT_GROUP_NAME);
-		
+
 		WebResource webResource = getWebResource(Paths.ENTITY_GET_ITEMS_SERVICE);
 		ClientResponse response = webResource.post(ClientResponse.class, Metadata.DEFAULT_GROUP_NAME);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		
+
 		@SuppressWarnings("unchecked")
 		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
 		assertEquals(3, metaDatas.size());
-		
+
 		Map<String, String> metaData = metaDatas.get(0);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.ENTITY_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("sub_group_01", metaData.get(Metadata.NAME));
 		assertEquals("sub_group_01", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
-		
+
 		metaData = metaDatas.get(1);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.ENTITY_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("EntityToRead", metaData.get(Metadata.NAME));
 		assertEquals("EntityToRead", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
-		
+
 		metaData = metaDatas.get(2);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.ENTITY_TYPE, metaData.get(Metadata.TYPE));

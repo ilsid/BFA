@@ -12,6 +12,7 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
+import com.ilsid.bfa.IntegrationTestConstants;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.Metadata;
@@ -32,7 +33,7 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	private static final String ACTIONS_DIR = "action";
 
-	private static final File ACTIONS_ROOT_DIR = new File(CODE_REPOSITORY_PATH, ACTIONS_DIR);
+	private static final File ACTIONS_ROOT_DIR = new File(IntegrationTestConstants.CODE_REPOSITORY_DIR, ACTIONS_DIR);
 
 	private static final File VALID_ACTION_DIR = new File(ACTIONS_ROOT_DIR,
 			"default_group/write_x20_system_x20_property");
@@ -136,7 +137,7 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void actionIsCreatedInExistingGroup() throws Exception {
 		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_SERVICE, NEW_ACTION_NAME, true);
-	
+
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		assertNotNull(response.getEntity(OperationStatus.Success.class));
 	}
@@ -158,7 +159,7 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void actionIsNotCreatedQuietlyIfActionNameIsNotDefined() throws Exception {
 		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_QUIETLY_SERVICE, "", false);
-		
+
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		final Failure respEntity = response.getEntity(OperationStatus.Failure.class);
 		assertTrue(respEntity.getValue().startsWith("Error:"));

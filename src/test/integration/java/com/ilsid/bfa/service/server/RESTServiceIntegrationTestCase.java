@@ -27,7 +27,6 @@ import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
-import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbEmbeddedServer;
 import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ScriptLogger;
@@ -43,10 +42,6 @@ import com.sun.jersey.multipart.impl.MultiPartWriter;
 
 public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
-	private static final String ORIENTDB_HOME_PROPERTY = "ORIENTDB_HOME";
-
-	private static final String ORIENTDB_HOME_VALUE = "src/test/resources/database/orientdb";
-
 	private static final String PORT_PROPERTY = "test.http.server.port";
 
 	private static final String LOCALHOST_URL = "http://localhost";
@@ -60,20 +55,11 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 	private static Server server;
 
 	private static Client client;
-
+	
 	protected WebResource getWebResource(String path) {
 		return client.resource(rootURL + path);
 	}
 	
-	public static void startDatabaseServer() throws Exception{
-		System.setProperty(ORIENTDB_HOME_PROPERTY, ORIENTDB_HOME_VALUE);
-		OrientdbEmbeddedServer.startup();
-	}
-	
-	public static void stopDatabaseServer() throws Exception{
-		OrientdbEmbeddedServer.shutdown();
-	}
-
 	public static void startWebServer(ServletContextListener applicationConfig) throws Exception {
 		ClientConfig config = new DefaultClientConfig();
 		config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);

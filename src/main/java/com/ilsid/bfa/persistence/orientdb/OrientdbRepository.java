@@ -36,7 +36,7 @@ public abstract class OrientdbRepository implements Configurable {
 	private static final int DB_POOL_SIZE_DEFAULT_VALUE = 10;
 
 	private static OrientGraphFactory factory;
-	
+
 	private static final Object FACTORY_LOCK = new Object();
 
 	/**
@@ -137,9 +137,11 @@ public abstract class OrientdbRepository implements Configurable {
 	}
 
 	static void closeFactory() {
-		if (factory != null) {
-			factory.close();
-			factory = null;
+		synchronized (FACTORY_LOCK) {
+			if (factory != null) {
+				factory.close();
+				factory = null;
+			}
 		}
 	}
 

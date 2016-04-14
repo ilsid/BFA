@@ -68,6 +68,7 @@ public class NumberUtilUnitTest extends BaseUnitTestCase {
 		assertTrue(NumberUtil.isInteger("1"));
 		assertTrue(NumberUtil.isInteger("123"));
 		assertTrue(NumberUtil.isInteger("0"));
+		assertTrue(NumberUtil.isInteger("0123"));
 		
 		assertTrue(NumberUtil.isInteger("-1"));
 		assertTrue(NumberUtil.isInteger("-123"));
@@ -84,6 +85,30 @@ public class NumberUtilUnitTest extends BaseUnitTestCase {
 		assertFalse(NumberUtil.isInteger("12a"));
 		assertFalse(NumberUtil.isInteger("1-2"));
 		assertFalse(NumberUtil.isInteger("12-"));
+	}
+	
+	@Test
+	public void positiveIntegerValuesAreRecognized() {
+		assertTrue(NumberUtil.isPositiveInteger("1"));
+		assertTrue(NumberUtil.isPositiveInteger("123"));
+		
+		assertFalse(NumberUtil.isPositiveInteger("0123"));
+		assertFalse(NumberUtil.isPositiveInteger("0"));
+		assertFalse(NumberUtil.isPositiveInteger("-1"));
+		assertFalse(NumberUtil.isPositiveInteger("-123"));
+		assertFalse(NumberUtil.isPositiveInteger("-0"));
+		
+		assertFalse(NumberUtil.isPositiveInteger(""));
+		assertFalse(NumberUtil.isPositiveInteger(null));
+		assertFalse(NumberUtil.isPositiveInteger("5.1"));
+		assertFalse(NumberUtil.isPositiveInteger(".51"));
+		assertFalse(NumberUtil.isPositiveInteger("2.51"));
+		assertFalse(NumberUtil.isPositiveInteger("abc"));
+		assertFalse(NumberUtil.isPositiveInteger("1a2"));
+		assertFalse(NumberUtil.isPositiveInteger("a12"));
+		assertFalse(NumberUtil.isPositiveInteger("12a"));
+		assertFalse(NumberUtil.isPositiveInteger("1-2"));
+		assertFalse(NumberUtil.isPositiveInteger("12-"));
 	}
 
 }

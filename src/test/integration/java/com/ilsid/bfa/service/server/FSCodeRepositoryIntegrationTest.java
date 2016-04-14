@@ -46,7 +46,10 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 
 		Map<String, String> repositoryConfig = new HashMap<>();
 		repositoryConfig.put("bfa.persistence.fs.root_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
-
+		repositoryConfig.put("bfa.persistence.orientdb.url", "remote:localhost/BFA_test");
+		repositoryConfig.put("bfa.persistence.orientdb.user", "root");
+		repositoryConfig.put("bfa.persistence.orientdb.password", "root");
+		
 		OrientdbEmbeddedServer.startup();
 
 		startWebServer(new TestApplicationConfig(FilesystemScriptingRepository.class, FilesystemActionRepository.class,

@@ -9,6 +9,7 @@ import org.apache.commons.io.FileUtils;
 
 import com.ilsid.bfa.IntegrationTestConstants;
 import com.ilsid.bfa.TestConstants;
+import com.ilsid.bfa.persistence.orientdb.OrientdbSystemException;
 import com.orientechnologies.orient.core.command.script.OCommandScript;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.server.OServer;
@@ -43,7 +44,7 @@ public class OrientdbEmbeddedServer {
 		}
 
 		System.setProperty(ORIENTDB_HOME_PROPERTY, IntegrationTestConstants.ORIENTDB_HOME_DIR.getPath());
-		
+
 		try {
 			server = OServerMain.create();
 			try (InputStream is = new FileInputStream(CONFIG_FILE)) {
@@ -53,9 +54,8 @@ public class OrientdbEmbeddedServer {
 
 			initDatabase();
 		} catch (Exception e) {
-			throw new OrientdbSystemException("Startup of embedded OrientDB server failed", e);
-		} finally {
 			shutdown();
+			throw new OrientdbSystemException("Startup of embedded OrientDB server failed", e);
 		}
 	}
 
@@ -70,7 +70,7 @@ public class OrientdbEmbeddedServer {
 	}
 
 	private static void initDatabase() throws IOException {
-		// Copy initial clear database
+		// Copy initial clean database to the testing directory
 		FileUtils.copyDirectory(TestConstants.INIT_DATABASE_DIR, IntegrationTestConstants.DATABASE_DIR);
 
 		OrientGraphFactory factory = new OrientGraphFactory("remote:localhost/BFA_test", "root", "root").setupPool(1,

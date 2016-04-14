@@ -104,4 +104,40 @@ public class NumberUtil {
 
 		return true;
 	}
+	
+	/**
+	 * Checks whether the passed string represents positive integer value.
+	 * 
+	 * @param str
+	 *            the string to check
+	 * @return <code>true</code> if the string is positive integer or <code>false</code>
+	 *         otherwise
+	 */
+	public static boolean isPositiveInteger(String str) {
+		if (str == null) {
+			return false;
+		}
+
+		int length = str.length();
+		if (length == 0) {
+			return false;
+		}
+
+		if (str.charAt(0) == '-') {
+			return false;
+		}
+		
+		if (str.charAt(0) == '0') {
+			return false;
+		}
+
+		for (int i = 0; i < length; i++) {
+			char c = str.charAt(i);
+			if (c <= '/' || c >= ':') {
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

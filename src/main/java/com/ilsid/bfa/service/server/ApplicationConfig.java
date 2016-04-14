@@ -20,6 +20,7 @@ import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
+import com.ilsid.bfa.persistence.orientdb.OrientdbResourceManager;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
@@ -47,7 +48,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 	@Override
 	public void contextDestroyed(javax.servlet.ServletContextEvent servletContextEvent) {
 		super.contextDestroyed(servletContextEvent);
-		OrientdbRuntimeRepository.release();
+		OrientdbResourceManager.releaseResources();
 	}
 
 	@Override

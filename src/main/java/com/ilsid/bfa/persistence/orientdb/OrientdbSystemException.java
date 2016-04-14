@@ -1,4 +1,4 @@
-package com.ilsid.bfa.runtime.persistence.orientdb;
+package com.ilsid.bfa.persistence.orientdb;
 
 import com.ilsid.bfa.persistence.PersistenceException;
 

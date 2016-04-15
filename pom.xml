@@ -259,6 +259,9 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<redirectTestOutputToFile>true</redirectTestOutputToFile>
+				</configuration>
 				<executions>
 					<execution>
 						<id>run-integration-tests</id>
@@ -270,7 +273,6 @@
 							<testClassesDirectory>${integrationTestsOutputDir}</testClassesDirectory>
 							<reportsDirectory>${integrationTestsOutputDir}/test-reports</reportsDirectory>
 							<test>**/*IntegrationTest.java</test>
-							<redirectTestOutputToFile>true</redirectTestOutputToFile>
 						</configuration>
 					</execution>
 				</executions>

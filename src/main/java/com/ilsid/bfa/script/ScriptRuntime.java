@@ -1,11 +1,16 @@
 package com.ilsid.bfa.script;
 
+import java.util.Arrays;
+import java.util.Date;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.ilsid.bfa.action.persistence.ActionLocator;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
+import com.ilsid.bfa.runtime.dto.ScriptRuntimeDTO;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 
 /**
@@ -63,7 +68,19 @@ public class ScriptRuntime {
 		script.setActionLocator(actionLocator);
 		script.setInputParameters(params);
 
-		script.execute();
+		ScriptRuntimeDTO newRecord = new ScriptRuntimeDTO().setRuntimeId(runtimeId).setScriptName(scriptName)
+				.setParameters(Arrays.asList(params)).setStatus(RuntimeStatusType.INPROGRESS).setStartTime(new Date());
+
+		createRuntimeRecord(newRecord);
+		try {
+			script.execute();
+		} catch (ScriptException | RuntimeException e) {
+			updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(runtimeId).setStatus(RuntimeStatusType.FAILED)
+					.setError(e).setEndTime(new Date()));
+			throw e;
+		}
+		updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(runtimeId).setStatus(RuntimeStatusType.COMPLETED)
+				.setEndTime(new Date()));
 
 		return runtimeId;
 	}
@@ -125,4 +142,23 @@ public class ScriptRuntime {
 		return runtimeId;
 	}
 
+	private void createRuntimeRecord(ScriptRuntimeDTO record) throws ScriptException {
+		try {
+			repository.createRuntimeRecord(record);
+		} catch (PersistenceException e) {
+			throw new ScriptException(
+					String.format("Failed to create runtime record for the script [%s]", record.getScriptName()), e);
+		}
+
+	}
+
+	private void updateRuntimeRecord(ScriptRuntimeDTO record) throws ScriptException {
+		try {
+			repository.updateRuntimeRecord(record);
+		} catch (PersistenceException e) {
+			throw new ScriptException(
+					String.format("Failed to update runtime record for the script [%s]", record.getScriptName()), e);
+		}
+
+	}
 }

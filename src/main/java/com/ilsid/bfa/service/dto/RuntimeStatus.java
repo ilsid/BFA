@@ -1,5 +1,7 @@
 package com.ilsid.bfa.service.dto;
 
+import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
+
 /**
  * Represents the script runtime state.
  * 

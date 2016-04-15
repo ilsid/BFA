@@ -9,5 +9,7 @@ CREATE PROPERTY FlowRuntime.runtimeId LONG;
 CREATE PROPERTY FlowRuntime.scriptName STRING;
 CREATE PROPERTY FlowRuntime.scriptParameters EMBEDDEDLIST;
 CREATE PROPERTY FlowRuntime.runtimeState STRING;
+CREATE PROPERTY FlowRuntime.startTime DATETIME;
+CREATE PROPERTY FlowRuntime.endTime DATETIME;
 CREATE PROPERTY FlowRuntime.errorDetails EMBEDDEDLIST;
 

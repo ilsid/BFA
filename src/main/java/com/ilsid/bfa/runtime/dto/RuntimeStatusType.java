@@ -1,4 +1,4 @@
-package com.ilsid.bfa.service.dto;
+package com.ilsid.bfa.runtime.dto;
 
 public enum RuntimeStatusType {
 

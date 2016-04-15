@@ -11,9 +11,9 @@ import org.junit.Test;
 
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.action.persistence.ActionClassLoader;
+import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.RuntimeStatus;
-import com.ilsid.bfa.service.dto.RuntimeStatusType;
 import com.ilsid.bfa.service.dto.ScriptRuntimeParams;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;

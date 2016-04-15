@@ -12,11 +12,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
 import com.ilsid.bfa.script.ScriptException;
 import com.ilsid.bfa.script.ScriptRuntime;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.RuntimeStatus;
-import com.ilsid.bfa.service.dto.RuntimeStatusType;
 import com.ilsid.bfa.service.dto.ScriptRuntimeParams;
 
 /**

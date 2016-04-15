@@ -46,15 +46,19 @@ public abstract class OrientdbRepository implements Configurable {
 	 *            database callback
 	 * @throws PersistenceException
 	 *             in case of callback failure
+	 * @return callback's result
 	 */
-	protected void execute(DatabaseCallback callback) throws PersistenceException {
+	protected <T> T execute(DatabaseCallback<T> callback) throws PersistenceException {
+		final T result;
 		OrientGraph connection = getConnection();
 
 		try {
-			callback.doInDatabase(connection);
+			result = callback.doInDatabase(connection);
 		} finally {
 			connection.shutdown();
 		}
+
+		return result;
 	}
 
 	/**
@@ -65,15 +69,17 @@ public abstract class OrientdbRepository implements Configurable {
 	 *            database callback
 	 * @throws PersistenceException
 	 *             in case of callback failure
+	 * @return callback's result
 	 */
-	protected void executeInTransaction(DatabaseCallback callback) throws PersistenceException {
+	protected <T> T executeInTransaction(DatabaseCallback<T> callback) throws PersistenceException {
+		final T result;
 		OrientGraph connection = getConnection();
+		ODatabaseDocumentTx rawConnection = connection.getRawGraph();
 
-		final ODatabaseDocumentTx rawConnection = connection.getRawGraph();
 		rawConnection.begin();
 		try {
 			try {
-				callback.doInDatabase(connection);
+				result = callback.doInDatabase(connection);
 			} catch (PersistenceException e) {
 				rawConnection.rollback();
 				throw e;
@@ -82,6 +88,8 @@ public abstract class OrientdbRepository implements Configurable {
 		} finally {
 			connection.shutdown();
 		}
+
+		return result;
 	}
 
 	private OrientGraph getConnection() throws OrientdbSystemException {

@@ -1,4 +1,4 @@
-package com.ilsid.bfa.runtime.persistence.orientdb;
+package com.ilsid.bfa.persistence.orientdb;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,7 +7,6 @@ import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
 
-import com.ilsid.bfa.IntegrationTestConstants;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.persistence.orientdb.OrientdbSystemException;
 import com.orientechnologies.orient.core.command.script.OCommandScript;
@@ -23,8 +22,6 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
  *
  */
 public class OrientdbEmbeddedServer {
-
-	private static final String ORIENTDB_HOME_PROPERTY = "ORIENTDB_HOME";
 
 	private static final String CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/test-orientdb-config.xml";
 
@@ -42,8 +39,6 @@ public class OrientdbEmbeddedServer {
 		if (server != null) {
 			throw new IllegalStateException("Embedded OrientDB server has been already started");
 		}
-
-		System.setProperty(ORIENTDB_HOME_PROPERTY, IntegrationTestConstants.ORIENTDB_HOME_DIR.getPath());
 
 		try {
 			server = OServerMain.create();
@@ -70,9 +65,6 @@ public class OrientdbEmbeddedServer {
 	}
 
 	private static void initDatabase() throws IOException {
-		// Copy initial clean database to the testing directory
-		FileUtils.copyDirectory(TestConstants.INIT_DATABASE_DIR, IntegrationTestConstants.DATABASE_DIR);
-
 		OrientGraphFactory factory = new OrientGraphFactory("remote:localhost/BFA_test", "root", "root").setupPool(1,
 				10);
 

@@ -15,19 +15,17 @@ import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.LoggingConfigurator;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
-import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbEmbeddedServer;
 
 public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegrationTestCase {
 
 	private static final String LOGGING_CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/test-log4j.xml";
 
 	private static final String GENERATED_ENTITY_ROOT_PATH = "com/ilsid/bfa/generated/entity";
-	
+
 	private static final String GENERATED_ENTITY_DEFAULT_GROUP_DIR = GENERATED_ENTITY_ROOT_PATH + "/"
 			+ ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
-	
-	protected static final String CODE_REPOSITORY_PATH = IntegrationTestConstants.CODE_REPOSITORY_DIR
-			.getPath();
+
+	protected static final String CODE_REPOSITORY_PATH = IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath();
 
 	protected static final File ENTITY_REPOSITORY_ROOT_DIR = new File(IntegrationTestConstants.CODE_REPOSITORY_DIR,
 			GENERATED_ENTITY_ROOT_PATH);
@@ -46,11 +44,11 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 
 		Map<String, String> repositoryConfig = new HashMap<>();
 		repositoryConfig.put("bfa.persistence.fs.root_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
-		repositoryConfig.put("bfa.persistence.orientdb.url", "remote:localhost/BFA_test");
-		repositoryConfig.put("bfa.persistence.orientdb.user", "root");
-		repositoryConfig.put("bfa.persistence.orientdb.password", "root");
-		
-		OrientdbEmbeddedServer.startup();
+		repositoryConfig.put("bfa.persistence.orientdb.url", TestConstants.DATABASE_URL);
+		repositoryConfig.put("bfa.persistence.orientdb.user", TestConstants.DATABASE_USER);
+		repositoryConfig.put("bfa.persistence.orientdb.password", TestConstants.DATABASE_PASSWORD);
+
+		startDatabaseServer();
 
 		startWebServer(new TestApplicationConfig(FilesystemScriptingRepository.class, FilesystemActionRepository.class,
 				repositoryConfig));
@@ -59,7 +57,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	@AfterClass
 	public static void tearDown() throws Exception {
 		stopWebServer();
-		OrientdbEmbeddedServer.shutdown();
+		stopDatabaseServer();
 		FileUtils.forceDelete(IntegrationTestConstants.CODE_REPOSITORY_DIR);
 	}
 

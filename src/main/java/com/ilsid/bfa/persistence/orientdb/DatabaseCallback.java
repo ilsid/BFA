@@ -9,7 +9,7 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
  * @author illia.sydorovych
  *
  */
-public interface DatabaseCallback {
+public interface DatabaseCallback<T> {
 
 	/**
 	 * Executes database operation.
@@ -18,7 +18,8 @@ public interface DatabaseCallback {
 	 *            a database connection
 	 * @throws PersistenceException
 	 *             in case of operation failure
+	 * @return operation result
 	 */
-	void doInDatabase(OrientGraph connection) throws PersistenceException;
+	T doInDatabase(OrientGraph connection) throws PersistenceException;
 
 }

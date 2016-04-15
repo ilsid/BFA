@@ -1,5 +1,8 @@
 package com.ilsid.bfa.service.server;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
@@ -22,7 +25,9 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 	private static final String TEST_SYSTEM_PROP_NAME = "test.action.sys.property";
 
 	private static final String ACTION_DIR = "action/default_group/Write_x20_System_x20_Property";
-
+	
+	private static final Set<Long> uniqueRuntimeIds = new HashSet<>();
+	
 	@After
 	public void after() {
 		System.getProperties().remove(TEST_SYSTEM_PROP_NAME);
@@ -89,7 +94,11 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		RuntimeStatus status = response.getEntity(RuntimeStatus.class);
-		assertTrue(status.getRuntimeId() > 0);
+		
+		final long runtimeId = status.getRuntimeId();
+		assertTrue(runtimeId > 0);
+		assertTrue(uniqueRuntimeIds.add(runtimeId));
+		
 		assertEquals(RuntimeStatusType.COMPLETED, status.getStatusType());
 	}
 

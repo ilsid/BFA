@@ -41,6 +41,8 @@ class ScriptSourcePreprocessor {
 	 * 
 	 * <br/>
 	 * <br/>
+	 * The same pre-processing is applied for {@link Script#SubFlow(String, Object...)}.
+	 * <br/>
 	 * See also <a href=
 	 * "Javassist Tutorial" >http://jboss-javassist.github.io/javassist/tutorial/tutorial3.html#varargs</a>.
 	 * 

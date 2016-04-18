@@ -31,14 +31,14 @@ public class ScriptRuntime {
 	private ActionLocator actionLocator;
 
 	/**
-	 * Runs the script with the given name. The script is searched in the Default Group.
+	 * Runs the script with the given name.
 	 * 
 	 * @param scriptName
 	 *            the script name
 	 * @return the script runtime identifier
 	 * @throws ScriptException
 	 *             <ul>
-	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
+	 *             <li>if the script with such name does not exist in the repository</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             <li>in case of the script runtime failure</li>
 	 *             </ul>
@@ -48,7 +48,7 @@ public class ScriptRuntime {
 	}
 
 	/**
-	 * Runs the script with the given name and input parameters. The script is searched in the Default Group.
+	 * Runs the script with the given name and input parameters.
 	 * 
 	 * @param scriptName
 	 *            the script name
@@ -57,7 +57,7 @@ public class ScriptRuntime {
 	 * @return the script runtime identifier
 	 * @throws ScriptException
 	 *             <ul>
-	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
+	 *             <li>if the script with such name does not exist in the repository</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             <li>in case of the script runtime failure</li>
 	 *             </ul>

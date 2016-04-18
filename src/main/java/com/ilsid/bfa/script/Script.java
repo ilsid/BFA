@@ -1,5 +1,6 @@
 package com.ilsid.bfa.script;
 
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -14,10 +15,14 @@ public abstract class Script {
 	private ScriptContext scriptContext;
 
 	private Queue<Object> inputParams = new LinkedList<>();
+	
+	private Deque<String> callStack = new LinkedList<>();
 
 	private ScriptRuntime runtime;
 
 	private long runtimeId = -1;
+	
+	private String name;
 
 	private ActionLocator actionLocator;
 
@@ -92,12 +97,11 @@ public abstract class Script {
 	}
 
 	public void SubFlow(String name) throws ScriptException {
-		// TODO: maybe some parent info is needed
-		runtime.runScript(name);
+		runtime.runScript(name, runtimeId, createSubflowCallStack());
 	}
 
 	public void SubFlow(String name, @ExprParam Object... params) throws ScriptException {
-		runtime.runScript(name, toValues(params));
+		runtime.runScript(name, toValues(params), runtimeId, createSubflowCallStack());
 	}
 
 	public ActionResult Action(String name) throws ScriptException {
@@ -139,6 +143,18 @@ public abstract class Script {
 
 	public void setRuntimeId(long runtimeId) {
 		this.runtimeId = runtimeId;
+	}
+	
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+	
+	void setCallStack(Deque<String> callStack) {
+		this.callStack = callStack;
 	}
 
 	public void setActionLocator(ActionLocator actionResolver) {
@@ -189,6 +205,14 @@ public abstract class Script {
 
 	private void setLocalVarValue(String name, Object value) throws ScriptException {
 		scriptContext.updateLocalVar(name, value);
+	}
+	
+	private Deque<String> createSubflowCallStack() {
+		// This script's name is added to the call stack of its sub-flow
+		Deque<String> result = new LinkedList<>(callStack);
+		result.addFirst(name);
+		
+		return result;
 	}
 
 	private class ActionResultImpl implements ActionResult {

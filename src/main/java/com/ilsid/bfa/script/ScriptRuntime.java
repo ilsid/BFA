@@ -1,7 +1,9 @@
 package com.ilsid.bfa.script;
 
-import java.util.Arrays;
 import java.util.Date;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -42,7 +44,7 @@ public class ScriptRuntime {
 	 *             </ul>
 	 */
 	public long runScript(String scriptName) throws ScriptException {
-		return runScript(scriptName, EMPTY_PARAMS);
+		return runScript(scriptName, EMPTY_PARAMS, null, null);
 	}
 
 	/**
@@ -60,29 +62,8 @@ public class ScriptRuntime {
 	 *             <li>in case of the script runtime failure</li>
 	 *             </ul>
 	 */
-	public long runScript(String scriptName, Object... params) throws ScriptException {
-		Script script = createInstance(scriptName);
-		long runtimeId = generatedRuntimeId(scriptName);
-		script.setRuntimeId(runtimeId);
-		script.setRuntime(this);
-		script.setActionLocator(actionLocator);
-		script.setInputParameters(params);
-
-		ScriptRuntimeDTO newRecord = new ScriptRuntimeDTO().setRuntimeId(runtimeId).setScriptName(scriptName)
-				.setParameters(Arrays.asList(params)).setStatus(RuntimeStatusType.INPROGRESS).setStartTime(new Date());
-
-		createRuntimeRecord(newRecord);
-		try {
-			script.execute();
-		} catch (ScriptException | RuntimeException e) {
-			updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(runtimeId).setStatus(RuntimeStatusType.FAILED)
-					.setError(e).setEndTime(new Date()));
-			throw e;
-		}
-		updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(runtimeId).setStatus(RuntimeStatusType.COMPLETED)
-				.setEndTime(new Date()));
-
-		return runtimeId;
+	public long runScript(String scriptName, Object[] params) throws ScriptException {
+		return runScript(scriptName, params, null, null);
 	}
 
 	/**
@@ -105,6 +86,47 @@ public class ScriptRuntime {
 	@Inject
 	public void setActionLocator(ActionLocator actionLocator) {
 		this.actionLocator = actionLocator;
+	}
+
+	long runScript(String scriptName, long runtimeId, Deque<String> callStack) throws ScriptException {
+		return runScript(scriptName, EMPTY_PARAMS, runtimeId, callStack);
+	}
+
+	long runScript(String scriptName, Object[] params, Long runtimeId, Deque<String> callStack) throws ScriptException {
+		Script script = createInstance(scriptName);
+
+		long flowRuntimeId;
+		if (runtimeId == null) {
+			flowRuntimeId = generatedRuntimeId(scriptName);
+		} else {
+			flowRuntimeId = runtimeId;
+		}
+
+		script.setRuntimeId(flowRuntimeId);
+		script.setName(scriptName);
+		script.setRuntime(this);
+		script.setActionLocator(actionLocator);
+		script.setInputParameters(params);
+		if (callStack != null) {
+			script.setCallStack(callStack);
+		}
+
+		ScriptRuntimeDTO newRecord = new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
+				.setParameters(toStrings(params)).setStatus(RuntimeStatusType.INPROGRESS).setStartTime(new Date())
+				.setCallStack(callStack);
+
+		createRuntimeRecord(newRecord);
+		try {
+			script.execute();
+		} catch (ScriptException | RuntimeException e) {
+			updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
+					.setStatus(RuntimeStatusType.FAILED).setError(e).setEndTime(new Date()));
+			throw e;
+		}
+		updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
+				.setStatus(RuntimeStatusType.COMPLETED).setEndTime(new Date()));
+
+		return flowRuntimeId;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -160,5 +182,14 @@ public class ScriptRuntime {
 					String.format("Failed to update runtime record for the script [%s]", record.getScriptName()), e);
 		}
 
+	}
+
+	private List<String> toStrings(Object[] params) {
+		List<String> result = new LinkedList<>();
+		for (Object param : params) {
+			result.add(param.toString());
+		}
+
+		return result;
 	}
 }

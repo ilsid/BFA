@@ -54,6 +54,8 @@ public abstract class OrientdbRepository implements Configurable {
 
 		try {
 			result = callback.doInDatabase(connection);
+		} catch (RuntimeException e) {
+			throw new PersistenceException("Database operation failed", e);
 		} finally {
 			connection.shutdown();
 		}
@@ -80,6 +82,9 @@ public abstract class OrientdbRepository implements Configurable {
 		try {
 			try {
 				result = callback.doInDatabase(connection);
+			} catch (RuntimeException e) {
+				rawConnection.rollback();
+				throw new PersistenceException("Database operation failed", e);
 			} catch (PersistenceException e) {
 				rawConnection.rollback();
 				throw e;

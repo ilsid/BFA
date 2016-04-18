@@ -2,6 +2,7 @@ package com.ilsid.bfa.script;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -12,6 +13,9 @@ import org.junit.Test;
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.persistence.orientdb.OrientdbEmbeddedServer;
+import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
+import com.orientechnologies.orient.core.record.impl.ODocument;
+import com.ilsid.bfa.persistence.orientdb.OrientdbClient;
 
 public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
@@ -20,12 +24,13 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	private final static File DATABASE_DIR = new File(ORIENTDB_HOME_DIR, "databases");
 
 	private static ScriptRuntime runtime;
-	
+
 	private static final Set<Long> uniqueRuntimeIds = new HashSet<>();
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
 		startDatabaseServer();
+		OrientdbClient.init();
 
 		CodeRepositoryInitializer.init();
 
@@ -35,6 +40,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
 	@AfterClass
 	public static void afterClass() throws Exception {
+		OrientdbClient.release();
 		stopDatabaseServer();
 	}
 
@@ -49,7 +55,51 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		long runtimeId = runtime.runScript("SingleSubflowScript");
 		assertRuntimeId(runtimeId);
 	}
-	
+
+	@Test
+	public void runtimeRecordIsGenerated() throws Exception {
+		long runtimeId = runtime.runScript("Script001");
+		assertRuntimeId(runtimeId);
+
+		List<ODocument> records = OrientdbClient.query("SELECT * FROM FlowRuntime WHERE runtimeId=" + runtimeId);
+		assertEquals(1, records.size());
+		ODocument rec = records.get(0);
+
+		assertEquals("Script001", rec.field("scriptName"));
+		assertEquals(RuntimeStatusType.COMPLETED.getValue(), rec.field("status"));
+		assertNotNull(rec.field("startTime"));
+		assertNotNull(rec.field("endTime"));
+	}
+
+	@Test
+	public void runtimeRecordIsGeneratedForScriptWithSubflow() throws Exception {
+		long runtimeId = runtime.runScript("SingleSubflowScript");
+		assertRuntimeId(runtimeId);
+
+		List<ODocument> records = OrientdbClient
+				.query("SELECT * FROM FlowRuntime WHERE runtimeId=" + runtimeId + " ORDER BY @RID");
+		assertEquals(2, records.size());
+		ODocument topScript = records.get(0);
+		ODocument subFlow = records.get(1);
+
+		assertEquals("SingleSubflowScript", topScript.field("scriptName"));
+		assertEquals(RuntimeStatusType.COMPLETED.getValue(), topScript.field("status"));
+		assertNotNull(topScript.field("startTime"));
+		assertNotNull(topScript.field("endTime"));
+		assertNull(topScript.field("callStack"));
+
+		assertEquals("Script001", subFlow.field("scriptName"));
+		assertEquals(RuntimeStatusType.COMPLETED.getValue(), subFlow.field("status"));
+		assertNotNull(subFlow.field("startTime"));
+		assertNotNull(subFlow.field("endTime"));
+
+		@SuppressWarnings("unchecked")
+		final List<String> callStack = (List<String>) subFlow.field("callStack");
+		assertEquals(1, callStack.size());
+		// Subflow's call stack contains names of calling scripts (a single script in this case)
+		assertEquals("SingleSubflowScript", callStack.get(0));
+	}
+
 	private void assertRuntimeId(long value) {
 		assertTrue(value > 0);
 		assertTrue(uniqueRuntimeIds.add(value));

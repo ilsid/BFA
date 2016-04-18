@@ -1,5 +1,6 @@
 package com.ilsid.bfa.runtime.dto;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class ScriptRuntimeDTO {
 	@RequiredField
 	private String scriptName;
 
-	private List<Object> parameters;
+	private List<String> parameters;
 
 	@RequiredField
 	private RuntimeStatusType status;
@@ -28,6 +29,8 @@ public class ScriptRuntimeDTO {
 	private Date startTime;
 
 	private Date endTime;
+	
+	private Collection<String> callStack;
 
 	private Exception error;
 
@@ -49,11 +52,11 @@ public class ScriptRuntimeDTO {
 		return this;
 	}
 
-	public List<Object> getParameters() {
+	public List<String> getParameters() {
 		return parameters;
 	}
 
-	public ScriptRuntimeDTO setParameters(List<Object> parameters) {
+	public ScriptRuntimeDTO setParameters(List<String> parameters) {
 		this.parameters = parameters;
 		return this;
 	}
@@ -82,6 +85,15 @@ public class ScriptRuntimeDTO {
 
 	public ScriptRuntimeDTO setEndTime(Date endTime) {
 		this.endTime = endTime;
+		return this;
+	}
+	
+	public Collection<String> getCallStack() {
+		return callStack;
+	}
+
+	public ScriptRuntimeDTO setCallStack(Collection<String> callStack) {
+		this.callStack = callStack;
 		return this;
 	}
 

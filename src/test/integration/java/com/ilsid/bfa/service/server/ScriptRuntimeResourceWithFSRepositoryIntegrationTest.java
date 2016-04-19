@@ -25,9 +25,9 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 	private static final String TEST_SYSTEM_PROP_NAME = "test.action.sys.property";
 
 	private static final String ACTION_DIR = "action/default_group/Write_x20_System_x20_Property";
-	
+
 	private static final Set<Long> uniqueRuntimeIds = new HashSet<>();
-	
+
 	@After
 	public void after() {
 		System.getProperties().remove(TEST_SYSTEM_PROP_NAME);
@@ -38,19 +38,19 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 	}
 
 	@Test
-	public void validScriptIsRun() throws Exception {
+	public void scriptIsRun() throws Exception {
 		verifyScriptCanBeRun("ScriptToRead");
 	}
 
 	@Test
-	public void validScriptWithGeneratedEntityIsRun() throws Exception {
+	public void scriptWithGeneratedEntityIsRun() throws Exception {
 		// The script depends on Contract entity
 		copyFileFromEntityDefaulGroupDirToRepository("Contract.class");
 		verifyScriptCanBeRun("Single Entity Script");
 	}
 
 	@Test
-	public void validScriptWithSingleActionIsRun() throws Exception {
+	public void scriptWithSingleActionIsRun() throws Exception {
 		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
 
 		// The script is run "Write System Property" action that sets "test.action.sys.property" system property
@@ -60,7 +60,7 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 	}
 
 	@Test
-	public void validScriptWithSingleParametrizedActionIsRun() throws Exception {
+	public void scriptWithSingleParametrizedActionIsRun() throws Exception {
 		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
 
 		// The script invokes "Write System Property" action that sets "test.action.sys.property" system property
@@ -72,7 +72,7 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 	}
 
 	@Test
-	public void validScriptWithSingleParametrizedSubflowIsRun() throws Exception {
+	public void scriptWithSingleParametrizedSubflowIsRun() throws Exception {
 		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
 
 		// The sub-flow script invokes "Write System Property" action that sets "test.action.sys.property" system
@@ -84,21 +84,41 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 		assertEquals("Test Action Value 3 5.4", System.getProperty(TEST_SYSTEM_PROP_NAME));
 	}
 
+	@Test
+	public void scriptWithInputParametersIsRun() throws Exception {
+		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
+
+		// The script invokes "Write System Property" action that sets "test.action.sys.property" system property
+		assertNull(System.getProperty(TEST_SYSTEM_PROP_NAME));
+		verifyScriptCanBeRun("Script with Params", new Object[] { 55, 9.99 });
+		// "Write System Property" accepts two values from script's input parameters. Their values are 55 and 9.99. The
+		// values are appended to the initial system property value "Test Action Value".
+		assertEquals("Test Action Value 55 9.99", System.getProperty(TEST_SYSTEM_PROP_NAME));
+	}
+
 	private void verifyScriptCanBeRun(String scriptName) throws Exception {
+		verifyScriptCanBeRun(scriptName, null);
+	}
+
+	private void verifyScriptCanBeRun(String scriptName, Object[] params) throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_RUN_SERVICE);
 		ScriptRuntimeParams script = new ScriptRuntimeParams();
 		script.setName(scriptName);
+
+		if (params != null) {
+			script.setInputParameters(params);
+		}
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		RuntimeStatus status = response.getEntity(RuntimeStatus.class);
-		
+
 		final long runtimeId = status.getRuntimeId();
 		assertTrue(runtimeId > 0);
 		assertTrue(uniqueRuntimeIds.add(runtimeId));
-		
+
 		assertEquals(RuntimeStatusType.COMPLETED, status.getStatusType());
 	}
 

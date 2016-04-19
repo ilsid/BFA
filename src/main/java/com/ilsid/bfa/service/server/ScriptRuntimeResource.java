@@ -51,7 +51,12 @@ public class ScriptRuntimeResource {
 	public Response run(ScriptRuntimeParams script) {
 		long runtimeId;
 		try {
-			runtimeId = scriptRuntime.runScript(script.getName());
+			final Object[] params = script.getInputParameters();
+			if (params != null && params.length > 0) {
+				runtimeId = scriptRuntime.runScript(script.getName(), params);
+			} else {
+				runtimeId = scriptRuntime.runScript(script.getName());
+			}
 		} catch (ScriptException e) {
 			throw new ResourceException(Paths.SCRIPT_RUN_SERVICE, e);
 		}

@@ -1,0 +1,5 @@
+DeclareInputVar("Var1", "Number"); 
+DeclareInputVar("Var2", "Decimal");
+
+Action("Write System Property", "Var1", "Var2");
+

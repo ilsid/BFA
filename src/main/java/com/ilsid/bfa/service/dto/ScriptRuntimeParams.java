@@ -4,8 +4,8 @@ public class ScriptRuntimeParams {
 	
 	private String name;
 	
-	private String group;
-
+	private Object[] inputParameters = new Object[] {};
+	
 	public String getName() {
 		return name;
 	}
@@ -14,12 +14,12 @@ public class ScriptRuntimeParams {
 		this.name = name;
 	}
 
-	public String getGroup() {
-		return group;
+	public Object[] getInputParameters() {
+		return inputParameters;
 	}
-
-	public void setGroup(String group) {
-		this.group = group;
+	
+	public void setInputParameters(Object[] inputParameters) {
+		this.inputParameters = inputParameters;
 	}
-
+	
 }

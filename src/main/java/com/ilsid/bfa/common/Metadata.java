@@ -14,6 +14,8 @@ public final class Metadata {
 
 	public static final String TITLE = "title";
 	
+	public static final String PARAMETERS = "parameters";
+	
 	public static final String PARENT = "parent";
 	
 	public static final String ROOT_PARENT_NAME = "__root";

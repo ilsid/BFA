@@ -1,0 +1,7 @@
+DeclareInputVar("Var3", "Number"); 
+DeclareInputVar("Var1", "Decimal");
+DeclareInputVar("Var2", "Number");
+
+if (Equal("Var2 - Var3", "2")) {
+	Action("Write System Property", "Var1", "Var2");
+}

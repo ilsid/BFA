@@ -46,4 +46,18 @@ public class JsonUtil {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.readValue(file, MAP_TYPE_REF);
 	}
+
+	/**
+	 * Converts {@link Map} instance to JSON string.
+	 * 
+	 * @param map
+	 *            a map to convert
+	 * @return JSON string
+	 * @throws IOException
+	 *             in case a map can't be converted
+	 */
+	public static String toJsonString(Map<String, String> map) throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writeValueAsString(map);
+	}
 }

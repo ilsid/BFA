@@ -192,13 +192,13 @@ public class ClassCompiler {
 	 * 
 	 * @param scriptSourceCode
 	 *            the source code of the script class
-	 * @return a collection of {@link CompilationBlock} instances for each expression
+	 * @return the compiled expressions unit
 	 * @throws ClassCompilationException
 	 *             if the compilation of any expression failed
 	 * @throws IllegalArgumentException
 	 *             in case of invalid source code
 	 */
-	public static Collection<CompilationBlock> compileScriptExpressions(String scriptSourceCode)
+	public static ScriptExpressionsUnit compileScriptExpressions(String scriptSourceCode)
 			throws ClassCompilationException, IllegalArgumentException {
 		CompilationUnit compilationUnit;
 
@@ -238,7 +238,10 @@ public class ClassCompiler {
 							+ StringUtils.LF + mergeErrorMessages(exceptions));
 		}
 
-		return methodCallContext.compiledExpressions.values();
+		ScriptExpressionsUnit result = new ScriptExpressionsUnit(methodCallContext.scriptInputParameters,
+				methodCallContext.compiledExpressions.values());
+
+		return result;
 	}
 
 	/**
@@ -250,6 +253,64 @@ public class ClassCompiler {
 	@Inject
 	public static void setLogger(@ScriptLogger Logger loggerImpl) {
 		logger = loggerImpl;
+	}
+
+	/**
+	 * A compilation block. Contains a class name, a byte code and a source code of a dynamic part (script body or
+	 * dynamic expression).
+	 * 
+	 */
+	public static class CompilationBlock {
+
+		private String className;
+
+		private byte[] byteCode;
+
+		private String sourceCode;
+
+		public CompilationBlock(String className, byte[] byteCode, String sourceCode) {
+			this.className = className;
+			this.byteCode = byteCode;
+			this.sourceCode = sourceCode;
+		}
+
+		public String getClassName() {
+			return className;
+		}
+
+		public byte[] getByteCode() {
+			return byteCode;
+		}
+
+		public String getSourceCode() {
+			return sourceCode;
+		}
+
+	}
+
+	/**
+	 * A script compilation unit that contains input parameters and compiled expressions.
+	 *
+	 */
+	public static class ScriptExpressionsUnit {
+
+		private Map<String, String> inputParameters;
+
+		private Collection<CompilationBlock> expressions;
+
+		public ScriptExpressionsUnit(Map<String, String> inputParameters,
+				Collection<CompilationBlock> expressions) {
+			this.inputParameters = inputParameters;
+			this.expressions = expressions;
+		}
+
+		public Map<String, String> getInputParameters() {
+			return inputParameters;
+		}
+
+		public Collection<CompilationBlock> getExpressions() {
+			return expressions;
+		}
 	}
 
 	private static ClassPool getClassPool() {
@@ -336,6 +397,8 @@ public class ClassCompiler {
 
 		String scriptShortClassName;
 
+		Map<String, String> scriptInputParameters = new LinkedHashMap<>();
+
 		List<Exception> exceptions = new LinkedList<>();
 
 		Map<String, CompilationBlock> compiledExpressions = new LinkedHashMap<>();
@@ -398,6 +461,7 @@ public class ClassCompiler {
 				if (varAnnotation.scope() == Var.Scope.LOCAL) {
 					scriptContext.addLocalVar(varName, javaType);
 				} else {
+					visitorContext.scriptInputParameters.put(varName, varType);
 					scriptContext.addInputVar(varName, javaType, null);
 				}
 			} catch (ScriptException e) {

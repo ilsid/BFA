@@ -1,6 +1,6 @@
 package com.ilsid.bfa.script;
 
-import java.util.Collection;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jmock.Expectations;
@@ -11,6 +11,8 @@ import org.junit.Test;
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
+import com.ilsid.bfa.script.ClassCompiler.CompilationBlock;
+import com.ilsid.bfa.script.ClassCompiler.ScriptExpressionsUnit;
 
 import javassist.ByteArrayClassPath;
 import javassist.ClassPath;
@@ -219,6 +221,32 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void scriptWithInputVarsCanBeCompiled() throws Exception {
+		ScriptExpressionsUnit unit = compileScriptExpressionsAndReturnUnit("TestScript555", "input-vars-script.txt");
+		Map<String, String> params = unit.getInputParameters();
+
+		assertEquals(3, params.size());
+
+		String[] paramNames = params.keySet().toArray(new String[] {});
+		assertEquals("Var1", paramNames[0]);
+		assertEquals("Var2", paramNames[1]);
+		assertEquals("Var3", paramNames[2]);
+	}
+
+	@Test
+	public void scriptInputVarsDeclarationOrderIsPreserved() throws Exception {
+		ScriptExpressionsUnit unit = compileScriptExpressionsAndReturnUnit("TestScript777", "input-vars-script-2.txt");
+		Map<String, String> params = unit.getInputParameters();
+
+		assertEquals(3, params.size());
+
+		String[] paramNames = params.keySet().toArray(new String[] {});
+		assertEquals("Var3", paramNames[0]);
+		assertEquals("Var1", paramNames[1]);
+		assertEquals("Var2", paramNames[2]);
+	}
+
+	@Test
 	public void errorDetailsAreProvidedIfScriptContainsDuplicatedInputAndLocalVars() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
@@ -340,14 +368,20 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
+		return compileScriptExpressionsAndReturnUnit(shortClassName, fileName).getExpressions()
+				.toArray(new CompilationBlock[] {});
+	}
+
+	private ScriptExpressionsUnit compileScriptExpressionsAndReturnUnit(String shortClassName, String fileName)
+			throws Exception {
 		String body = IOHelper.loadScript(fileName);
 		String sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
 				ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE + "." + shortClassName.toLowerCase(),
 				shortClassName, body);
 
-		Collection<CompilationBlock> expressions = ClassCompiler.compileScriptExpressions(sourceCode);
+		ScriptExpressionsUnit unit = ClassCompiler.compileScriptExpressions(sourceCode);
 
-		return expressions.toArray(new CompilationBlock[] {});
+		return unit;
 	}
 
 	private void assertExpressionShortClassName(String expected, String actual) {

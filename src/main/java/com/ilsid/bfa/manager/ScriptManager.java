@@ -19,7 +19,8 @@ import com.ilsid.bfa.persistence.TransactionManager;
 import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 import com.ilsid.bfa.script.ClassCompilationException;
 import com.ilsid.bfa.script.ClassCompiler;
-import com.ilsid.bfa.script.CompilationBlock;
+import com.ilsid.bfa.script.ClassCompiler.CompilationBlock;
+import com.ilsid.bfa.script.ClassCompiler.ScriptExpressionsUnit;
 import com.ilsid.bfa.script.CompilerConstants;
 import com.ilsid.bfa.script.TypeNameResolver;
 
@@ -315,7 +316,7 @@ public class ScriptManager {
 
 		return result;
 	}
-	
+
 	/**
 	 * Loads meta-data items for sub-groups and entities in the specified group.
 	 * 
@@ -427,8 +428,26 @@ public class ScriptManager {
 		metaData.put(Metadata.NAME, compilationUnit.scriptName);
 		metaData.put(Metadata.TITLE, TypeNameResolver.splitName(compilationUnit.scriptName).getChildName());
 
+		writeInputParametersIfAny(metaData, compilationUnit);
+
 		String packageName = ClassNameUtil.getPackageName(compilationUnit.scriptClassName);
 		repository.savePackageMetadata(packageName, metaData);
+	}
+
+	private void writeInputParametersIfAny(Map<String, String> metaData, ScriptCompilationUnit compilationUnit)
+			throws PersistenceException {
+
+		if (compilationUnit.scriptParameters.size() > 0) {
+			try {
+				metaData.put(Metadata.PARAMETERS, JsonUtil.toJsonString(compilationUnit.scriptParameters));
+			} catch (IOException e) {
+				throw new PersistenceException(
+						String.format("Failed to save \"input parameters\" meta-data for the script [%s]",
+								compilationUnit.scriptName),
+						e);
+			}
+		}
+
 	}
 
 	private void saveEntityMetadata(EntityCompilationUnit compilationUnit) throws PersistenceException {
@@ -464,7 +483,7 @@ public class ScriptManager {
 	private ScriptCompilationUnit compileScript(String scriptName, String scriptBody) throws ManagementException {
 		String scriptClassName = TypeNameResolver.resolveScriptClassName(scriptName);
 		byte[] scriptByteCode;
-		Collection<CompilationBlock> expressions;
+		ScriptExpressionsUnit expressionsUnit;
 		try {
 			scriptByteCode = ClassCompiler.compileScript(scriptClassName, scriptBody);
 
@@ -472,16 +491,17 @@ public class ScriptManager {
 			final String scriptSourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
 					ClassNameUtil.getPackageName(scriptClassName), scriptShortClassName, scriptBody);
 
-			expressions = ClassCompiler.compileScriptExpressions(scriptSourceCode);
+			expressionsUnit = ClassCompiler.compileScriptExpressions(scriptSourceCode);
 		} catch (ClassCompilationException e) {
 			throw new ManagementException(String.format("Compilation of the script [%s] failed", scriptName), e);
 		}
 
 		ScriptCompilationUnit result = new ScriptCompilationUnit();
 		result.scriptName = scriptName;
+		result.scriptParameters = expressionsUnit.getInputParameters();
 		result.scriptClassName = scriptClassName;
 		result.scriptByteCode = scriptByteCode;
-		result.scriptExpressions = expressions;
+		result.scriptExpressions = expressionsUnit.getExpressions();
 
 		return result;
 	}
@@ -627,6 +647,8 @@ public class ScriptManager {
 	private static class ScriptCompilationUnit {
 
 		String scriptName;
+
+		Map<String, String> scriptParameters;
 
 		String scriptClassName;
 

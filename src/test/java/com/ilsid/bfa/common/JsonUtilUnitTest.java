@@ -1,6 +1,7 @@
 package com.ilsid.bfa.common;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +33,20 @@ public class JsonUtilUnitTest extends BaseUnitTestCase {
 		assertEquals("a", fields.get(2));
 		assertEquals("2", fields.get(3));
 		assertEquals("1", fields.get(4));
+	}
+
+	@Test
+	public void mapCanBeConvertedToJsonString() throws Exception {
+		@SuppressWarnings("serial")
+		Map<String, String> map = new LinkedHashMap<String, String>() {
+			{
+				put("var1", "Integer");
+				put("var2", "Double");
+				put("var3", "String");
+			}
+		};
+
+		assertEquals("{\"var1\":\"Integer\",\"var2\":\"Double\",\"var3\":\"String\"}", JsonUtil.toJsonString(map));
 	}
 
 }

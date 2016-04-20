@@ -243,7 +243,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		@SuppressWarnings("unchecked")
 		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
-		assertEquals(2, metaDatas.size());
+		assertEquals(3, metaDatas.size());
 
 		Map<String, String> metaData = metaDatas.get(0);
 		assertEquals(4, metaData.keySet().size());
@@ -251,8 +251,15 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals("Custom Group 01", metaData.get(Metadata.NAME));
 		assertEquals("Custom Group 01", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
-
+		
 		metaData = metaDatas.get(1);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Custom Group 02", metaData.get(Metadata.NAME));
+		assertEquals("Custom Group 02", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
+
+		metaData = metaDatas.get(2);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.NAME));

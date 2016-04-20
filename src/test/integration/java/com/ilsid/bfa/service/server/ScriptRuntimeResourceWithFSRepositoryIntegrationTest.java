@@ -43,6 +43,14 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 	}
 
 	@Test
+	public void scriptInNonDefaultGroupIsRun() throws Exception {
+		// The script is run "Write System Property" action that sets "test.action.sys.property" system property
+		assertNull(System.getProperty(TEST_SYSTEM_PROP_NAME));
+		verifyScriptCanBeRun("Custom Group 02::Local Vars and Action Script");
+		assertEquals("Test Action Value 333 55.77", System.getProperty(TEST_SYSTEM_PROP_NAME));
+	}
+
+	@Test
 	public void scriptWithGeneratedEntityIsRun() throws Exception {
 		// The script depends on Contract entity
 		copyFileFromEntityDefaulGroupDirToRepository("Contract.class");

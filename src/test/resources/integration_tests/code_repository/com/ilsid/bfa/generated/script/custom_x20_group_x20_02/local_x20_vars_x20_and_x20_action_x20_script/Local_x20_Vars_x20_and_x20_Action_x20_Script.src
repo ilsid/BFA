@@ -1,0 +1,4 @@
+DeclareLocalVar("Var1", "Number", "333"); 
+DeclareLocalVar("Var2", "Decimal", "55.77");
+
+Action("Write System Property", "Var1", "Var2");

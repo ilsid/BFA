@@ -30,7 +30,6 @@ public abstract class Script {
 
 	public Script() {
 		scriptContext = new ScriptContext();
-		scriptContext.setScriptName(this.getClass().getSimpleName());
 	}
 
 	public void execute() throws ScriptException {
@@ -151,6 +150,7 @@ public abstract class Script {
 
 	public void setName(String name) {
 		this.name = name;
+		scriptContext.setScriptName(name);
 	}
 	
 	void setCallStack(Deque<String> callStack) {

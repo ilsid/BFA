@@ -2,6 +2,8 @@ package com.ilsid.bfa.manager;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -600,7 +602,7 @@ public class ScriptManager {
 					String.format("Failed to load meta-data for the script group [%s]", parentGroupName), e);
 		}
 
-		if (!isGroup(parentMetadata, Metadata.SCRIPT_GROUP_TYPE)) {
+		if (!isTypeOf(parentMetadata, Metadata.SCRIPT_GROUP_TYPE)) {
 			throw new ManagementException(String.format("No parent script group [%s] exists", parentGroupName));
 		}
 	}
@@ -616,12 +618,12 @@ public class ScriptManager {
 					String.format("Failed to load meta-data for the entity group [%s]", parentGroupName), e);
 		}
 
-		if (!isGroup(parentMetadata, Metadata.ENTITY_GROUP_TYPE)) {
+		if (!isTypeOf(parentMetadata, Metadata.ENTITY_GROUP_TYPE)) {
 			throw new ManagementException(String.format("No parent entity group [%s] exists", parentGroupName));
 		}
 	}
 
-	private boolean isGroup(Map<String, String> meta, String groupType) {
+	private boolean isTypeOf(Map<String, String> meta, String groupType) {
 		if (meta != null && groupType.equals(meta.get(Metadata.TYPE))) {
 			return true;
 		}

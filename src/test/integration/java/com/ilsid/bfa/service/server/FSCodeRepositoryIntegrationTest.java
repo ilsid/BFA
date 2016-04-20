@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -13,6 +12,7 @@ import com.ilsid.bfa.IntegrationTestConstants;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.LoggingConfigurator;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
 
@@ -95,9 +95,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	}
 
 	protected Map<String, String> loadMetadata(File metaFile) throws Exception {
-		@SuppressWarnings("unchecked")
-		Map<String, String> result = new ObjectMapper().readValue(metaFile, Map.class);
-		return result;
+		return IOHelper.loadMetadata(metaFile);
 	}
 
 }

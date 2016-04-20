@@ -46,19 +46,46 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		ScriptAdminParams script = new ScriptAdminParams("Entity Script",
 				IOHelper.loadScript("single-entity-script.txt"));
 
-		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
-
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-
 		File scriptDir = new File(
 				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/entity_x20_script");
+		try {
+			ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+			assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
-		assertTrue(scriptDir.isDirectory());
-		assertEquals(6, scriptDir.list().length);
-		assertFilesExist(scriptDir.getPath(),
-				new String[] { "Entity_x20_Script.class", "Entity_x20_Script.src", "Entity_x20_Script$$2.class",
-						"Entity_x20_Script$$1.class", "Entity_x20_Script$$Var1_dt_Days_Mns_Var2.class",
-						ClassNameUtil.METADATA_FILE_NAME });
+			assertTrue(scriptDir.isDirectory());
+			assertEquals(6, scriptDir.list().length);
+			assertFilesExist(scriptDir.getPath(),
+					new String[] { "Entity_x20_Script.class", "Entity_x20_Script.src", "Entity_x20_Script$$2.class",
+							"Entity_x20_Script$$1.class", "Entity_x20_Script$$Var1_dt_Days_Mns_Var2.class",
+							ClassNameUtil.METADATA_FILE_NAME });
+		} finally {
+			FileUtils.forceDelete(scriptDir);
+		}
+	}
+
+	@Test
+	public void inputParametersMetadataIsSavedForScriptWithInputVars() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams("Input Params Script",
+				IOHelper.loadScript("input-vars-script.txt"));
+
+		File scriptDir = new File(
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/input_x20_params_x20_script");
+		try {
+			ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+			assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+			assertTrue(scriptDir.isDirectory());
+
+			File metaFile = new File(scriptDir, ClassNameUtil.METADATA_FILE_NAME);
+			Map<String, String> params = IOHelper.toMap(loadMetadata(metaFile).get(Metadata.PARAMETERS));
+			assertEquals(3, params.size());
+			assertEquals("Number", params.get("Var1"));
+			assertEquals("Decimal", params.get("Var2"));
+			assertEquals("Number", params.get("Var3"));
+		} finally {
+			FileUtils.forceDelete(scriptDir);
+		}
 	}
 
 	@Test
@@ -317,20 +344,21 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		ScriptAdminParams script = new ScriptAdminParams(scriptName,
 				IOHelper.loadScript("duplicated-expression-script.txt"));
 
-		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
-
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-
 		File scriptDir = new File(expectedScriptPath);
+		try {
+			ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
-		assertTrue(scriptDir.isDirectory());
-		assertEquals(6, scriptDir.list().length);
-		assertFilesExist(scriptDir.getPath(),
-				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
-						"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class",
-						ClassNameUtil.METADATA_FILE_NAME });
+			assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
-		FileUtils.forceDelete(scriptDir);
+			assertTrue(scriptDir.isDirectory());
+			assertEquals(6, scriptDir.list().length);
+			assertFilesExist(scriptDir.getPath(),
+					new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
+							"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class",
+							ClassNameUtil.METADATA_FILE_NAME });
+		} finally {
+			FileUtils.forceDelete(scriptDir);
+		}
 	}
 
 	private void scriptGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

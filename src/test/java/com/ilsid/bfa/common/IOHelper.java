@@ -26,6 +26,9 @@ import com.ilsid.bfa.TestConstants;
 
 public class IOHelper {
 
+	private static final TypeReference<LinkedHashMap<String, String>> MAP_TYPE_REF = new TypeReference<LinkedHashMap<String, String>>() {
+	};
+
 	private static final String SCRIPTS_DIR = TestConstants.TEST_RESOURCES_DIR + "/dynamicCode/";
 
 	private static final String BYTECODE_DIR = TestConstants.TEST_RESOURCES_DIR + "/byteCode/";
@@ -95,12 +98,15 @@ public class IOHelper {
 		String path = file.getCanonicalPath();
 		return path.substring(index);
 	}
-	
+
 	public static Map<String, String> toMap(File jsonFile) throws IOException {
-		TypeReference<LinkedHashMap<String, String>> mapTypeRef = new TypeReference<LinkedHashMap<String, String>>() {
-		};
 		ObjectMapper mapper = new ObjectMapper();
-		return mapper.readValue(jsonFile, mapTypeRef);
+		return mapper.readValue(jsonFile, MAP_TYPE_REF);
+	}
+
+	public static Map<String, String> toMap(String json) throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.readValue(json, MAP_TYPE_REF);
 	}
 	
 	public static void assertEqualDirs(File expectedDir, File actualDir) throws Exception {
@@ -111,7 +117,13 @@ public class IOHelper {
 
 		Assert.assertEquals(expectedPaths, actualPaths);
 	}
-	
+
+	public static Map<String, String> loadMetadata(File metaFile) throws Exception {
+		@SuppressWarnings("unchecked")
+		Map<String, String> result = new ObjectMapper().readValue(metaFile, Map.class);
+		return result;
+	}
+
 	private static List<String> getRelativeFilePaths(File dir, Collection<File> files) throws Exception {
 		List<String> result = new LinkedList<>();
 		for (File file : files) {

@@ -1,49 +1,43 @@
-.toolbarIconDeleteItem {
-  background-image: url("../icons/delete_item_16x16.png");
+.toolbarIconDeleteItem,
+.toolbarIconDeleteFolder,
+.toolbarIconEntity,
+.toolbarIconDeleteEntity,
+.toolbarIconAdd ,
+.toolbarIconAction,
+.toolbarIconRun
+ {
   background-repeat: no-repeat;
   width: 16px;
   height: 16px;
   text-align: center;
+}
+
+.toolbarIconDeleteItem{
+  background-image: url("../icons/delete_item_16x16.png");
 }
 	
 .toolbarIconDeleteFolder{
   background-image: url("../icons/delete_folder_16x16.png");
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 16px;
-  text-align: center;
 }
 
 .toolbarIconEntity{
   background-image: url("../icons/entity_16x16.png");
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 16px;
-  text-align: center;
 }
 
 .toolbarIconDeleteEntity {
   background-image: url("../icons/delete_entity_16x16.png");
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 16px;
-  text-align: center;
 }
 
 .toolbarIconAdd {
   background-image: url("../icons/add_16x16.png");
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 16px;
-  text-align: center;
 }
 
 .toolbarIconAction{
   background-image: url("../icons/action_16x16.png");
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 16px;
-  text-align: center;
+}
+
+.toolbarIconRun {
+  background-image: url("../icons/run_16x16.png");
 }
 
 .fixedTextArea{

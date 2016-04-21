@@ -2,6 +2,8 @@ package com.ilsid.bfa.manager;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,8 @@ import com.ilsid.bfa.script.TypeNameResolver;
 // TODO: write unit tests
 @Singleton
 public class ScriptManager {
+
+	private static final Map<String, String> EMPTY_MAP = Collections.unmodifiableMap(new HashMap<String, String>());
 
 	private ScriptingRepository repository;
 
@@ -110,7 +114,7 @@ public class ScriptManager {
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script's group does not exists in the repository</li>
-	 *             <li>if the script with such name does not exist in the repository within the Default Group</li>
+	 *             <li>if the script with such name does not exist in the repository</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
@@ -135,7 +139,7 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Creates new entity in the repository. The entity belongs to the Default Group.</br>
+	 * Creates new entity in the repository.</br>
 	 * JSON entity body format is expected:</br>
 	 * </br>
 	 * <code>{"name":"type"[, "name":"type"[, ...]]}</code> </br>
@@ -170,7 +174,7 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Updates the existing entity in the repository. The entity is searched in the Default Group.
+	 * Updates the existing entity in the repository.
 	 * 
 	 * @param entityName
 	 *            the name of the entity to update
@@ -179,7 +183,7 @@ public class ScriptManager {
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the entity can't be compiled or persisted</li>
-	 *             <li>if the entity with such name does not exist in the repository within the Default Group</li>
+	 *             <li>if the entity with such name does not exist in the repository</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
@@ -202,14 +206,14 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Loads the body of the given entity from the repository. The entity is searched in the Default Group.
+	 * Loads the body of the given entity from the repository.
 	 * 
 	 * @param entityName
 	 *            the name of the entity to load
 	 * @return the entity body
 	 * @throws ManagementException
 	 *             <ul>
-	 *             <li>if the entity with such name does not exist in the repository within the Default Group</li>
+	 *             <li>if the entity with such name does not exist in the repository</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
@@ -284,6 +288,44 @@ public class ScriptManager {
 
 		if (!result.isEmpty()) {
 			MetadataUtil.addParentRecord(result, groupName);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Loads info about script input parameters (Name/Type entries).
+	 * 
+	 * @param scriptName
+	 *            script name
+	 * @return the input parameters meta-data represented as {@link Map} with Name/Type entries or an empty {@link Map}
+	 *         if the script has no input parameters
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if the script with such name does not exist in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public Map<String, String> getScriptParametersMetadata(String scriptName) throws ManagementException {
+		String className = TypeNameResolver.resolveScriptClassName(scriptName);
+		String packageName = ClassNameUtil.getPackageName(className);
+
+		Map<String, String> meta;
+		try {
+			meta = repository.loadMetadataForPackage(packageName);
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to load meta-data for the script [%s]", scriptName), e);
+		}
+
+		if (meta == null) {
+			throw new ManagementException(
+					String.format("The script [%s] does not exist in the repository", scriptName));
+		}
+
+		Map<String, String> result = EMPTY_MAP;
+
+		if (!meta.isEmpty() && isTypeOf(meta, Metadata.SCRIPT_TYPE)) {
+			result = extractInputParameters(meta, scriptName);
 		}
 
 		return result;
@@ -627,6 +669,26 @@ public class ScriptManager {
 		}
 
 		return false;
+	}
+
+	private Map<String, String> extractInputParameters(Map<String, String> meta, String scriptName)
+			throws ManagementException {
+		Map<String, String> result = EMPTY_MAP;
+
+		String jsonParams = meta.get(Metadata.PARAMETERS);
+		if (jsonParams != null) {
+			Map<String, String> params;
+			try {
+				params = JsonUtil.toMap(jsonParams);
+			} catch (IOException e) {
+				throw new ManagementException(
+						String.format("Failed to read \"input parameters\" meta-data for the script [%s]", scriptName),
+						e);
+			}
+			result = params;
+		}
+
+		return result;
 	}
 
 	private void startTransaction() throws PersistenceException {

@@ -251,7 +251,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals("Custom Group 01", metaData.get(Metadata.NAME));
 		assertEquals("Custom Group 01", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.ROOT_PARENT_NAME, metaData.get(Metadata.PARENT));
-		
+
 		metaData = metaDatas.get(1);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_GROUP_TYPE, metaData.get(Metadata.TYPE));
@@ -289,10 +289,11 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
 		metaData = metaDatas.get(1);
-		assertEquals(4, metaData.keySet().size());
+		assertEquals(5, metaData.keySet().size());
 		assertEquals(Metadata.SCRIPT_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("default_group::Script with Params", metaData.get(Metadata.NAME));
 		assertEquals("Script with Params", metaData.get(Metadata.TITLE));
+		assertEquals("{\"Var1\":\"Number\",\"Var2\":\"Decimal\"}", metaData.get(Metadata.PARAMETERS));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
 		metaData = metaDatas.get(2);
@@ -324,6 +325,29 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 	}
 
+	@Test
+	public void scriptInputParametersAreLoaded() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_INPUT_PARAMS_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, "Script with Params");
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		@SuppressWarnings("unchecked")
+		Map<String, String> params = response.getEntity(Map.class);
+		assertEquals(2, params.size());
+		assertEquals("Number", params.get("Var1"));
+		assertEquals("Decimal", params.get("Var2"));
+	}
+
+	@Test
+	public void emptyScriptInputParametersAreLoadedIfNoInputVars() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_INPUT_PARAMS_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, "ScriptToRead");
+		
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		assertEquals(0, response.getEntity(Map.class).size());
+	}
+	
 	@Test
 	public void childMetadataItemsAreNotLoadedIfGroupNameIsNotDefined() {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_ITEMS_SERVICE);

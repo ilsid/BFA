@@ -186,4 +186,34 @@ public class ScriptAdminResource extends AbstractAdminResource {
 		return Response.status(Status.OK).build();
 	}
 
+	/**
+	 * Loads meta-data about script input parameters (Name/Type entries).
+	 * 
+	 * @param scriptName
+	 *            name of the script
+	 * @return the input parameters meta-data represented as {@link Map} with Name/Type entries or an empty {@link Map}
+	 *         if the script has no input parameters
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the script with such name does not exist in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@POST
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.GET_INPUT_PARAMS_OPERATION)
+	public Response getInputParameters(String scriptName) {
+		validateNonEmptyParameter(Paths.SCRIPT_GET_INPUT_PARAMS_SERVICE, NAME_PARAM, scriptName);
+		Map<String, String> params;
+		try {
+			params = scriptManager.getScriptParametersMetadata(scriptName);
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.SCRIPT_GET_INPUT_PARAMS_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).entity(params).build();
+	}
+
 }

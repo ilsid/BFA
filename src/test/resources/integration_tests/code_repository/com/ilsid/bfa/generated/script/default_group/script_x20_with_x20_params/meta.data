@@ -1,1 +1,1 @@
-{"type":"SCRIPT","name":"default_group::Script with Params","title":"Script with Params"}
+{"type":"SCRIPT","name":"default_group::Script with Params","title":"Script with Params","parameters":"{\"Var1\":\"Number\",\"Var2\":\"Decimal\"}"}

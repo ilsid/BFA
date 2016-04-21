@@ -38,6 +38,8 @@ public final class Paths {
 	 * Script Administration
 	 */
 
+	public final static String GET_INPUT_PARAMS_OPERATION = "getInputParameters";
+
 	public final static String SCRIPT_SERVICE_ADMIN_ROOT = SCRIPT_SERVICE_ROOT + "/admin";
 
 	public final static String SCRIPT_CREATE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + CREATE_OPERATION;
@@ -49,6 +51,9 @@ public final class Paths {
 	public final static String SCRIPT_GET_ITEMS_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + GET_ITEMS_OPERATION;
 
 	public final static String SCRIPT_CREATE_GROUP_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + CREATE_GROUP_OPERATION;
+
+	public final static String SCRIPT_GET_INPUT_PARAMS_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/"
+			+ GET_INPUT_PARAMS_OPERATION;
 
 	/*
 	 * Script Runtime

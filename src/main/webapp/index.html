@@ -21,6 +21,15 @@
 	<script src="script/dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
 	
 	<script>
+		function isEmptyObject(obj) {
+			var keys = [];
+			for (var key in obj) {
+				keys.push(key);
+				break;
+			}
+			return keys.length == 0;
+		}
+	
 		function getSelectedGroupName(tree, groupType) {
 			var selectedItem = tree.selectedItems[0];
 			
@@ -327,12 +336,102 @@
 				});
 		}
 		
-		function onRunScriptBtnClick() {
+		function runScript() {
 			require([ 'dijit/registry', 'dojo/request/xhr'],
+				function(registry, request) {
+					var dialog = registry.byId('scriptParamsDialog');
+					var paramValues = [];
+					
+					if (dialog.parameters) {
+						var validValues = true;
+						for (paramName in dialog.parameters) {
+							var txt = registry.byId('txtScriptInputParam_' + paramName);
+							validValues = validValues && txt.isValid();
+							var value = txt.get('value');
+							paramValues.push(value);
+						}
+						
+						if (!validValues) {
+							return;
+						} 
+					}
+					
+					var tab = registry.byId('tabContainer').selectedChildWidget;
+					var scriptName = tab.objectInfo.group + '::' + tab.objectInfo.name;
+					
+					request('service/script/runtime/run', {
+							headers: { 'Content-Type': 'application/json' },
+							method: 'POST',
+							data: '{"name": "' + scriptName + '", "inputParameters": [' + paramValues + ']}'
+						}).then(function(resp){
+							dialog.parameters = undefined;
+							dialog.hide();
+						}, function(err) {
+							alert('Server request failed. Please contact support staff');
+						});
+			});	
+		}
+		
+		function onScriptParamsDialog_show() {
+			require([ 'dijit/registry', 'dojox/layout/TableContainer', 'dijit/form/ValidationTextBox', 'dojo/domReady!'],
+				function(registry, TableContainer, ValidationTextBox) {
+					var paramsPane = registry.byId('scriptParamsDialog_paramsTablePane');
+					// Re-creation of parameters table using the current set of script parameters
+					dojo.forEach(registry.findWidgets(paramsPane.domNode), function(w) {
+						w.destroyRecursive();
+					});
+					
+					var dialog = registry.byId('scriptParamsDialog');
+					
+					var paramsTable = new TableContainer({
+						cols: 1
+					});
+					
+					for (var paramName in dialog.parameters) {
+						var paramType = dialog.parameters[paramName];
+						
+						var txt = new ValidationTextBox({
+							id: 'txtScriptInputParam_' + paramName,
+							required: true,
+							title: paramName + ' (' + paramType + '):',
+							style: 'width: 100px;',
+							missingMessage: 'The value is required'
+						});
+						
+						paramsTable.addChild(txt);	
+					}
+
+					paramsPane.addChild(paramsTable);
+					paramsTable.startup();	
+					dialog.resize();	
+			});
+		}
+		
+		function onRunScriptBtnClick() {
+			require([ 'dijit/registry', 'dojo/request/xhr', 'dojo/domReady!'],
 				function(registry, request) {
 					var tab = registry.byId('tabContainer').selectedChildWidget;
 					var scriptName = tab.objectInfo.group + '::' + tab.objectInfo.name;
 					
+					request('service/script/admin/getInputParameters', {
+							headers: { 'Content-Type': 'text/plain' },
+							method: 'POST',
+							data: scriptName
+						}).then(function(resp){
+							var params = dojo.fromJson(resp);
+							
+							if (!isEmptyObject(params)) {
+								var dialog = registry.byId('scriptParamsDialog');
+								dialog.parameters = params;
+								dialog.show();
+							} else {
+								runScript();
+							}
+						}, function(err) {
+							alert('Server request failed. Please contact support staff');
+						});
+					
+					/*
 					request('service/script/runtime/run', {
 							headers: { 'Content-Type': 'application/json' },
 							method: 'POST',
@@ -341,7 +440,7 @@
 							alert('Done!');
 						}, function(err) {
 							alert('Server request failed. Please contact support staff');
-						});
+						);*/
 				});
 		}
 		
@@ -379,21 +478,22 @@
 						iconClass: 'dijitIconSave'
 					});
 					
-					if (isExistingScript) {
-						btnSave.set('disabled', true);
-						btnSave.onClick = showUpdateScriptDialog;
-					} else {
-						btnSave.onClick = showCreateScriptDialog;
-					}
-					
-					btnSave.startup();
-					
 					var btnRun = new Button({
 						label: 'Run',
 						showLabel: false,
 						iconClass: 'toolbarIconRun',
 						onClick: onRunScriptBtnClick
 					});
+										
+					if (isExistingScript) {
+						btnSave.set('disabled', true);
+						btnSave.onClick = showUpdateScriptDialog;
+					} else {
+						btnSave.onClick = showCreateScriptDialog;
+						btnRun.set('disabled', true);
+					}
+					
+					btnSave.startup();
 					btnRun.startup();
 					
 					var toolBar = new Toolbar({
@@ -1038,6 +1138,20 @@
 				<button data-dojo-type="dijit/form/Button" type="button" id="createActionDialog_btnCancel" onclick="hideDialog('createActionDialog');">Cancel</button>
 			</div>
 		</form>
+	</div>
+	
+	<div data-dojo-type="dijit/Dialog" id="scriptParamsDialog" title="Enter input parameters" style="display: none;">
+		<script type="dojo/method" data-dojo-event="onShow">
+			onScriptParamsDialog_show();
+		</script>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" style="margin: 0; padding: 0;" id="scriptParamsDialog_paramsTablePane" >
+			<!-- Dynamic parameters table is placed here -->
+		</div>
+		
+		<div class="dijitDialogPaneActionBar">
+			<button data-dojo-type="dijit/form/Button" type="button" id="scriptParamsDialog_btnRun" onclick="runScript();">Run</button>
+			<button data-dojo-type="dijit/form/Button" type="button" id="scriptParamsDialog_btnCancel" onclick="hideDialog('scriptParamsDialog');">Cancel</button>
+		</div>
 	</div>
 
 	<script>

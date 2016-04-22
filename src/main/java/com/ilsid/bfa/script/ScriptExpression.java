@@ -10,6 +10,8 @@ import com.ilsid.bfa.persistence.DynamicClassLoader;
  */
 public class ScriptExpression implements ValueExpression<Object> {
 
+	private static final String ERROR_MSG_TEMPLATE = "Failed to get a value from the expression [%s]";
+
 	private String input;
 
 	private ScriptContext scriptContext;
@@ -46,11 +48,15 @@ public class ScriptExpression implements ValueExpression<Object> {
 			invocation = (DynamicCodeInvocation) invocationClazz.newInstance();
 		} catch (ClassNotFoundException | IllegalStateException | InstantiationException | IllegalAccessException
 				| ClassCastException e) {
-			throw new ScriptException("Failed to get a value from the expression [" + input + "]", e);
+			throw new ScriptException(String.format(ERROR_MSG_TEMPLATE, input), e);
 		}
 
 		invocation.setScriptContext(scriptContext);
-		value = invocation.invoke();
+		try {
+			value = invocation.invoke();
+		} catch (RuntimeException e) {
+			throw new ScriptException(String.format(ERROR_MSG_TEMPLATE, input), e);
+		}
 
 		return value;
 	}

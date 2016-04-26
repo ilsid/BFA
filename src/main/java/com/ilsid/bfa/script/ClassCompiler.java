@@ -15,6 +15,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.slf4j.Logger;
 
 import com.github.javaparser.JavaParser;
@@ -198,6 +199,12 @@ public class ClassCompiler {
 	 * @throws IllegalArgumentException
 	 *             in case of invalid source code
 	 */
+	// FIXME: No compile-time check of value type for SetLocalVar() call. For example, this is legal in compile-time,
+	// but causes expected error in runtime:
+
+	// DeclareLocalVar("Var5", "Number");
+	// SetLocalVar("Var5", "1.77");
+	
 	public static ScriptExpressionsUnit compileScriptExpressions(String scriptSourceCode)
 			throws ClassCompilationException, IllegalArgumentException {
 		CompilationUnit compilationUnit;
@@ -298,8 +305,7 @@ public class ClassCompiler {
 
 		private Collection<CompilationBlock> expressions;
 
-		public ScriptExpressionsUnit(Map<String, String> inputParameters,
-				Collection<CompilationBlock> expressions) {
+		public ScriptExpressionsUnit(Map<String, String> inputParameters, Collection<CompilationBlock> expressions) {
 			this.inputParameters = inputParameters;
 			this.expressions = expressions;
 		}
@@ -459,7 +465,11 @@ public class ClassCompiler {
 			// expressions parsing stage
 			try {
 				if (varAnnotation.scope() == Var.Scope.LOCAL) {
-					scriptContext.addLocalVar(varName, javaType);
+					Object varValue = null;
+					if (methodParams.length > 2) {
+						varValue = extractValue(methodParams[2]);
+					}
+					scriptContext.addLocalVar(varName, javaType, varValue);
 				} else {
 					visitorContext.scriptInputParameters.put(varName, varType);
 					scriptContext.addInputVar(varName, javaType, null);
@@ -467,6 +477,33 @@ public class ClassCompiler {
 			} catch (ScriptException e) {
 				visitorContext.exceptions.add(e);
 			}
+		}
+
+		private Object extractValue(Expression expression) throws ScriptException {
+			Object result;
+			if (MethodCallExpr.class.isInstance(expression)) {
+				MethodCallExpr methodCall = (MethodCallExpr) expression;
+
+				// Expected only methods that return ValueExpression instances
+				if (isValueExpressionMethodWithSingleStringParameter(methodCall)) {
+					Expression[] methodParams = methodCall.getArgs().toArray(new Expression[] {});
+					// ValueExpression method must have a single string parameter (see AsString(), AsBoolean() methods)
+					result = ((StringLiteralExpr) methodParams[0]).getValue();
+				} else {
+					throw new ScriptException(String.format("Unexpected expression [%s]", methodCall.getName()));
+				}
+			} else if (StringLiteralExpr.class.isInstance(expression)) {
+				result = ((StringLiteralExpr) expression).getValue();
+			} else {
+				throw new ScriptException(String.format("Unexpected expression [%s]", expression));
+			}
+
+			return result;
+		}
+
+		private boolean isValueExpressionMethodWithSingleStringParameter(MethodCallExpr expression) {
+			Method method = MethodUtils.getAccessibleMethod(Script.class, expression.getName(), String.class);
+			return method != null && ValueExpression.class.isAssignableFrom(method.getReturnType());
 		}
 
 		private void checkVarType(String varName, String varType, String javaType,

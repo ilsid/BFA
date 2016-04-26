@@ -142,8 +142,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 				.newInstance();
 
 		// Define the variables declared in the script. They are needed for the expression runtime.
-		expr3.setScriptContext(
-				ScriptContextUtil.createContext(new Variable("Var1", "Number", 2), new Variable("Var2", "Number", 1)));
+		expr3.setScriptContext(ScriptContextUtil.createContext(new Variable("Var1", "java.lang.Integer", 2),
+				new Variable("Var2", "java.lang.Integer", 1)));
 
 		Integer exprResult1 = (Integer) expr1.invoke();
 		Integer exprResult2 = (Integer) expr2.invoke();
@@ -231,6 +231,32 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		assertEquals("Var1", paramNames[0]);
 		assertEquals("Var2", paramNames[1]);
 		assertEquals("Var3", paramNames[2]);
+	}
+
+	@Test
+	public void scriptLocalVarValuesCanBeResolved() throws Exception {
+		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithValuesToResolve",
+				"local-vars-with-values-to-resolve-script.txt");
+
+		assertEquals(2, expressions.length);
+
+		assertExpressionShortClassName("TestScriptWithValuesToResolve$$33", expressions[0].getClassName());
+		assertExpressionShortClassName("TestScriptWithValuesToResolve$$2", expressions[1].getClassName());
+	}
+
+	@Test
+	public void errorDetailsAreProvidedIfScriptContainsLocalVarsThatCanNotBeResolved() throws Exception {
+		 exceptionRule.expect(ClassCompilationException.class);
+		 StringBuilder msg = new StringBuilder();
+		 msg.append("Compilation of the script [TestScriptWithUnresolvedValues] failed").append(StringUtils.LF);
+		 msg.append("[1.2] is not a value of type Number").append(StringUtils.LF);
+		 msg.append("[abc] is not a value of type Decimal").append(StringUtils.LF);
+		 msg.append("Could not parse expression [abc]: Unexpected token [abc]").append(StringUtils.LF);
+		 msg.append("   Caused by: Unexpected token [abc]");
+		 
+		 exceptionRule.expectMessage(msg.toString());
+		
+		 compileScriptExpressions("TestScriptWithUnresolvedValues", "local-vars-with-unresolved-values-script.txt");
 	}
 
 	@Test

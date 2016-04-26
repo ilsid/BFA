@@ -55,7 +55,7 @@ public abstract class Script {
 	public void DeclareLocalVar(String name, String type, @ExprParam Object initValue) throws ScriptException {
 		scriptContext.addLocalVar(name, TypeNameResolver.resolveEntityClassName(type), getValue(initValue));
 	}
-
+	
 	public void SetLocalVar(@ExprParam(compile = false) String name, @ExprParam Object expr) throws ScriptException {
 		scriptContext.updateLocalVar(name, getValue(expr));
 	}

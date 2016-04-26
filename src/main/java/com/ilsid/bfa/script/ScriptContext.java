@@ -23,9 +23,9 @@ public class ScriptContext {
 
 	public void addInputVar(String name, String javaType, Object value) throws ScriptException {
 		// FIXME: validate name format
-		// FIXME: validate value type
 		checkVarNameUniqueness(name);
-		inputVars.put(name, new Variable(name, javaType, value));
+		Object resolvedValue = resolveValue(javaType, value);
+		inputVars.put(name, new Variable(name, javaType, resolvedValue));
 	}
 
 	public void addLocalVar(String name, String javaType) throws ScriptException {
@@ -36,9 +36,9 @@ public class ScriptContext {
 
 	public void addLocalVar(String name, String javaType, Object initValue) throws ScriptException {
 		// FIXME: validate name format
-		// FIXME: validate value type
 		checkVarNameUniqueness(name);
-		localVars.put(name, new Variable(name, javaType, initValue));
+		Object resolvedValue = resolveValue(javaType, initValue);
+		localVars.put(name, new Variable(name, javaType, resolvedValue));
 	}
 
 	/**
@@ -71,7 +71,8 @@ public class ScriptContext {
 		} else if (varParts.length == 1) {
 			checkLocalVarExists(name);
 			Variable var = localVars.get(name);
-			var.setValue(value);
+			Object resolvedValue = resolveValue(var.getJavaType(), value);
+			var.setValue(resolvedValue);
 		} else {
 			String varName = varParts[0];
 			String fieldName = varParts[1];
@@ -96,12 +97,13 @@ public class ScriptContext {
 		this.scriptName = scriptName;
 	}
 
-	private void setField(Object target, String fieldName, Object value) {
+	private void setField(Object target, String fieldName, Object value) throws ScriptException {
 		Field field;
 		try {
 			field = target.getClass().getField(fieldName);
 			field.setAccessible(true);
-			field.set(target, value);
+			Object resolvedValue = resolveValue(field.getType().getName(), value);
+			field.set(target, resolvedValue);
 		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
 			throw new IllegalStateException(
 					String.format("Failed to set the field [%s] for [%s] instance", fieldName, target.getClass()), e);
@@ -132,6 +134,14 @@ public class ScriptContext {
 		if (!localVars.containsKey(name)) {
 			throw new ScriptException("Local variable with name [" + name + "] is not declared");
 		}
+	}
+
+	private Object resolveValue(String javaType, Object value) throws ScriptException {
+		if (value == null) {
+			return null;
+		}
+		TypeValueResolver resolver = TypeValueResolver.getResolver(javaType);
+		return resolver.resolve(value);
 	}
 
 }

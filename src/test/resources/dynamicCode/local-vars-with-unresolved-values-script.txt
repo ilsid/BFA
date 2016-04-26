@@ -1,0 +1,10 @@
+// Decimal value can't be resolved to Number 
+DeclareLocalVar("Var1", "Number", AsString("1.2"));
+// String value can't be resolved to Decimal
+DeclareLocalVar("Var2", "Decimal", "abc");
+DeclareLocalVar("Var5", "Number");
+
+
+// FIXME: This is legal in compile-time, but causes error in runtime
+SetLocalVar("Var5", "1.77");
+

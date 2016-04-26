@@ -1,8 +1,5 @@
 package com.ilsid.bfa.script;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.GroupNameUtil;
 
@@ -17,17 +14,10 @@ public class TypeNameResolver {
 
 	private static final String DOT_STR = ".";
 
-	private static final Map<String, String> predefinedTypes = new HashMap<>();
-
-	static {
-		predefinedTypes.put("Number", "java.lang.Integer");
-		predefinedTypes.put("Decimal", "java.lang.Double");
-	}
-
 	public static String resolveEntityClassName(String entityName) {
-		String predefinedType = predefinedTypes.get(entityName);
-		if (predefinedType != null) {
-			return predefinedType;
+		String className = PredefinedTypes.getJavaType(entityName);
+		if (className != null) {
+			return className;
 		}
 
 		GroupNameUtil.NameParts entityNameParts = splitName(entityName);

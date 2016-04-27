@@ -49,6 +49,24 @@
 			return source.replace(/"/g,'\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 		}
 		
+		function writeInfo(message) {
+			require([ 'dijit/registry', 'dojo/dom-construct', 'dojo/domReady!'],
+				function(registry, domConstruct) {
+					domConstruct.place('<tr class="consoleMessage"><td>' + message + '</td></tr>', 
+						'infoTable');
+					registry.byId('messageContainer').selectChild(registry.byId('infoTab'));	
+				});
+		}
+		
+		function writeError(message) {
+			require([ 'dijit/registry', 'dojo/dom-construct', 'dojo/domReady!'],
+				function(registry, domConstruct) {
+					domConstruct.place('<tr class="consoleMessage"><td>' + message + '</td></tr>', 
+						'errorTable');
+					registry.byId('messageContainer').selectChild(registry.byId('errorTab'));	
+				});
+		}
+		
 		function escapeEntitySource(source)  {
 			return source.replace(/"/g,'\\"');
 		}
@@ -348,7 +366,7 @@
 							var txt = registry.byId('txtScriptInputParam_' + paramName);
 							validValues = validValues && txt.isValid();
 							var value = txt.get('value');
-							paramValues.push(value);
+							paramValues.push('"' + value + '"');
 						}
 						
 						if (!validValues) {
@@ -364,10 +382,12 @@
 							method: 'POST',
 							data: '{"name": "' + scriptName + '", "inputParameters": [' + paramValues + ']}'
 						}).then(function(resp){
-							dialog.parameters = undefined;
+							delete dialog.parameters;
 							dialog.hide();
+							writeInfo('Script [' + scriptName + '] is completed');
 						}, function(err) {
-							alert('Server request failed. Please contact support staff');
+							dialog.hide();
+							writeError('Script [' + scriptName + '] failed: ' + err.response.text);
 						});
 			});	
 		}
@@ -431,16 +451,6 @@
 							alert('Server request failed. Please contact support staff');
 						});
 					
-					/*
-					request('service/script/runtime/run', {
-							headers: { 'Content-Type': 'application/json' },
-							method: 'POST',
-							data: '{"name": "' + scriptName + '"}'
-						}).then(function(resp){
-							alert('Done!');
-						}, function(err) {
-							alert('Server request failed. Please contact support staff');
-						);*/
 				});
 		}
 		
@@ -1226,9 +1236,22 @@
 				</div>	
 			</div>
 		 </div>
-		 
-		<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props="region:'center', splitter:true, tabStrip:true" id="tabContainer">
-		</div>
+		
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center', splitter:true" style="border: none; margin: 0; padding: 0;" >
+			<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="isLayoutContainer:true, className:'nestedBorderContainer'">
+				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props="region:'center', splitter:true, tabStrip:true" id="tabContainer">
+				</div>
+				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props="region:'bottom', splitter:true, tabStrip:true" style="height: 20%;" id="messageContainer">
+					 <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="iconClass:'toolbarIconInfo'" title="Info" id="infoTab">
+						<table id="infoTable"></table>
+					 </div>
+					 <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="iconClass:'toolbarIconError'" title="Errors" id="errorTab">
+						<table id="errorTable"></table>
+					 </div>
+				</div>
+			</div>
+		 </div>
+				
 	</div>
 
 	

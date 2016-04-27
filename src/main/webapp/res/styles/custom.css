@@ -4,7 +4,9 @@
 .toolbarIconDeleteEntity,
 .toolbarIconAdd ,
 .toolbarIconAction,
-.toolbarIconRun
+.toolbarIconRun,
+.toolbarIconError,
+.toolbarIconInfo
  {
   background-repeat: no-repeat;
   width: 16px;
@@ -40,6 +42,14 @@
   background-image: url("../icons/run_16x16.png");
 }
 
+.toolbarIconError {
+  background-image: url("../icons/error_16x16.png");
+}
+
+.toolbarIconInfo {
+  background-image: url("../icons/info_16x16.png");
+}
+
 .fixedTextArea{
   height: 95%; 
   width:100%; 
@@ -54,6 +64,14 @@
   padding: 0;
 }
 
+.nestedBorderContainer{
+  width: 100%; 
+  height: 100%; 
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
 .nestedPane{
   border: none; 
   margin: 0; 
@@ -64,4 +82,9 @@
   margin: 0;
   font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
   font-size: 13px;	
+}
+
+.consoleMessage {
+  font-family: Courier New,Courier,Lucida Sans Typewriter,Lucida Typewriter,monospace;
+  font-size: 12px;
 }

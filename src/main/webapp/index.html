@@ -58,13 +58,24 @@
 				});
 		}
 		
-		function writeError(message) {
+		function writeErrorMessage(msg) {
 			require([ 'dijit/registry', 'dojo/dom-construct', 'dojo/domReady!'],
 				function(registry, domConstruct) {
-					domConstruct.place('<tr class="consoleMessage"><td>' + message + '</td></tr>', 
+					domConstruct.place('<tr class="consoleMessage"><td><pre>' + msg + '</pre></td></tr>', 
 						'errorTable');
+					domConstruct.place('<tr class="consoleMessage"><td>' 
+						+ '----------------------------------------------------------------</td></tr>', 
+						'errorTable');	
 					registry.byId('messageContainer').selectChild(registry.byId('errorTab'));	
 				});
+		}
+		
+		function writeError(error, message) {
+			if (message) {
+				writeErrorMessage(message + ': ' + error.response.text);
+			} else {
+				writeErrorMessage(error.response.text);
+			}
 		}
 		
 		function escapeEntitySource(source)  {
@@ -217,7 +228,8 @@
 							tree.refreshChildrenSubTree(parentId);
 							hideDialog('createGroupDialog');
 						}, function(err) {
-							alert('Server request failed. Please contact support staff');
+							hideDialog('createGroupDialog');
+							writeError(err);
 						});
 				});
 		}
@@ -254,7 +266,8 @@
 							scriptTab.destroyRecursive();
 							createScriptTab(scriptShortName, 'tab_script_' + scriptName, scriptSource, tabIdx);
 						}, function(err) {
-							alert('Server request failed. Please contact support staff');
+							hideDialog('createScriptDialog');
+							writeError(err);
 						});
 				});
 		}
@@ -283,7 +296,8 @@
 							scriptTab.destroyRecursive();
 							createScriptTab(scriptShortName, 'tab_script_' + scriptName, scriptSource, tabIdx);
 						}, function(err) {
-							alert('Server request failed. Please contact support staff');
+							hideDialog('updateScriptDialog');
+							writeError(err);
 						});
 				});
 		}
@@ -320,7 +334,8 @@
 							entityTab.destroyRecursive();
 							createEntityTab(entityShortName, 'tab_entity_' + entityName, entitySource, tabIdx);
 						}, function(err) {
-							alert('Server request failed. Please contact support staff');
+							hideDialog('createEntityDialog');
+							writeError(err);
 						});
 				});
 		}
@@ -349,7 +364,8 @@
 							entityTab.destroyRecursive();
 							createEntityTab(entityShortName, 'tab_entity_' + entityName, entitySource, tabIdx);
 						}, function(err) {
-							alert('Server request failed. Please contact support staff');
+							hideDialog('updateEntityDialog');
+							writeError(err);
 						});
 				});
 		}
@@ -387,7 +403,7 @@
 							writeInfo('Script [' + scriptName + '] is completed');
 						}, function(err) {
 							dialog.hide();
-							writeError('Script [' + scriptName + '] failed: ' + err.response.text);
+							writeError(err);
 						});
 			});	
 		}
@@ -448,7 +464,8 @@
 								runScript();
 							}
 						}, function(err) {
-							alert('Server request failed. Please contact support staff');
+							writeError(err, 'Failed to determine the input parameters for script [' 
+								+ scriptName + ']');
 						});
 					
 				});
@@ -816,10 +833,11 @@
 						}).then(function(resp){
 							createActionTab(actionShortName, 'tab_action_' + actionName, resp);	
 						}, function(err) {
-							alert('Server request failed. Please contact support staff');
+							writeError(err, 'Failed to get action [' + actionName + '] info from server');
 						});
 					} else {
-						alert(status);
+						hideDialog('createActionDialog');
+						writeErrorMessage(status);
 					}
 			});
 		}
@@ -897,7 +915,7 @@
 							}).then(function(resp) {
 								return resp;
 							}, function(err) {
-								alert('Server request failed. Please contact support staff');
+								writeError(err);
 							});
 						}
 					});
@@ -965,7 +983,7 @@
 						}).then(function(resp){
 							itemDblClickHandler(item.title, tabId, resp);
 						}, function(err) {
-							alert('Server request failed. Please contact support staff');
+							writeError(err);
 						});
 					},
 

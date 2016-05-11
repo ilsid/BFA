@@ -2,7 +2,6 @@ package com.ilsid.bfa.service.server;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
@@ -22,10 +21,9 @@ public class WebApplicationExceptionMapper implements ExceptionMapper<ResourceEx
 	private Logger logger;
 
 	/**
-	 * Logs the exception if the logger is defined and returns {@link Status#INTERNAL_SERVER_ERROR} response containing
-	 * the list of exception messages.
+	 * Logs the exception if the logger is defined and returns response with the exception's status and entity.
 	 * 
-	 * @return {@link Status#INTERNAL_SERVER_ERROR} response
+	 * @return response for the given exception
 	 */
 	public Response toResponse(ResourceException exception) {
 		if (logger != null) {

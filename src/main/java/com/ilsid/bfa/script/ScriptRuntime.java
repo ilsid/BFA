@@ -118,11 +118,18 @@ public class ScriptRuntime {
 		createRuntimeRecord(newRecord);
 		try {
 			script.execute();
-		} catch (ScriptException | RuntimeException e) {
+		} catch (ScriptException e) {
 			updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
 					.setStatus(RuntimeStatusType.FAILED).setError(e).setEndTime(new Date()));
+			
 			throw e;
+		} catch (RuntimeException e) {
+			updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
+					.setStatus(RuntimeStatusType.FAILED).setError(e).setEndTime(new Date()));
+			
+			throw new ScriptException(String.format("Script [%s] failed", scriptName), e);
 		}
+
 		updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
 				.setStatus(RuntimeStatusType.COMPLETED).setEndTime(new Date()));
 

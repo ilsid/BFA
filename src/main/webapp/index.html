@@ -52,8 +52,8 @@
 		function writeInfo(message) {
 			require([ 'dijit/registry', 'dojo/dom-construct', 'dojo/domReady!'],
 				function(registry, domConstruct) {
-					domConstruct.place('<tr class="consoleMessage"><td>' + message + '</td></tr>', 
-						'infoTable');
+					domConstruct.place('<tr class="consoleMessage"><td><pre>' + message + '</pre></td></tr>', 
+						'infoTable', 'first');
 					registry.byId('messageContainer').selectChild(registry.byId('infoTab'));	
 				});
 		}
@@ -61,11 +61,10 @@
 		function writeErrorMessage(msg) {
 			require([ 'dijit/registry', 'dojo/dom-construct', 'dojo/domReady!'],
 				function(registry, domConstruct) {
-					domConstruct.place('<tr class="consoleMessage"><td><pre>' + msg + '</pre></td></tr>', 
-						'errorTable');
-					domConstruct.place('<tr class="consoleMessage"><td>' 
-						+ '----------------------------------------------------------------</td></tr>', 
-						'errorTable');	
+					domConstruct.place('<tr class="consoleMessage"><td><pre>' + msg + '</pre></td></tr>' 
+						+ '<tr class="consoleMessage"><td>'
+						+ '----------------------------------------------------------------</td></tr>'
+						,'errorTable', 'first');
 					registry.byId('messageContainer').selectChild(registry.byId('errorTab'));	
 				});
 		}
@@ -403,7 +402,7 @@
 							writeInfo('Script [' + scriptName + '] is completed');
 						}, function(err) {
 							dialog.hide();
-							writeError(err);
+							writeError(err, 'Script [' + scriptName + '] is failed');
 						});
 			});	
 		}

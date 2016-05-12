@@ -226,6 +226,7 @@
 							var parentId = parentGroupName != null ? parentGroupName : tree.rootName; 
 							tree.refreshChildrenSubTree(parentId);
 							hideDialog('createGroupDialog');
+							writeInfo('Group [' + groupName + '] is created');
 						}, function(err) {
 							hideDialog('createGroupDialog');
 							writeError(err);
@@ -264,6 +265,7 @@
 							tabContainer.removeChild(scriptTab);
 							scriptTab.destroyRecursive();
 							createScriptTab(scriptShortName, 'tab_script_' + scriptName, scriptSource, tabIdx);
+							writeInfo('Script [' + scriptName + '] is created');
 						}, function(err) {
 							hideDialog('createScriptDialog');
 							writeError(err);
@@ -294,6 +296,7 @@
 							tabContainer.removeChild(scriptTab);
 							scriptTab.destroyRecursive();
 							createScriptTab(scriptShortName, 'tab_script_' + scriptName, scriptSource, tabIdx);
+							writeInfo('Script [' + scriptName + '] is updated');
 						}, function(err) {
 							hideDialog('updateScriptDialog');
 							writeError(err);
@@ -332,6 +335,7 @@
 							tabContainer.removeChild(entityTab);
 							entityTab.destroyRecursive();
 							createEntityTab(entityShortName, 'tab_entity_' + entityName, entitySource, tabIdx);
+							writeInfo('Entity [' + entityName + '] is created');
 						}, function(err) {
 							hideDialog('createEntityDialog');
 							writeError(err);
@@ -362,6 +366,7 @@
 							tabContainer.removeChild(entityTab);
 							entityTab.destroyRecursive();
 							createEntityTab(entityShortName, 'tab_entity_' + entityName, entitySource, tabIdx);
+							writeInfo('Entity [' + entityName + '] is updated');
 						}, function(err) {
 							hideDialog('updateEntityDialog');
 							writeError(err);
@@ -830,7 +835,8 @@
 							method: 'POST',
 							data: '{"name": "' + actionName + '"}'
 						}).then(function(resp){
-							createActionTab(actionShortName, 'tab_action_' + actionName, resp);	
+							createActionTab(actionShortName, 'tab_action_' + actionName, resp);
+							writeInfo('Action [' + actionName + '] is uploaded');
 						}, function(err) {
 							writeError(err, 'Failed to get action [' + actionName + '] info from server');
 						});

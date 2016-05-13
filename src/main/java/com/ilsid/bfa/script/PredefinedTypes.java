@@ -7,6 +7,7 @@ import com.ilsid.bfa.script.TypeValueResolver.PredefinedTypeResolver;
 import com.ilsid.bfa.script.TypeValueResolver.IntegerResolver;
 import com.ilsid.bfa.script.TypeValueResolver.DoubleResolver;
 import com.ilsid.bfa.script.TypeValueResolver.StringResolver;
+import com.ilsid.bfa.script.TypeValueResolver.BooleanResolver;
 
 /**
  * Predefined scripting types.
@@ -26,11 +27,13 @@ class PredefinedTypes {
 		types.put("Number", "java.lang.Integer");
 		types.put("Decimal", "java.lang.Double");
 		types.put("String", "java.lang.String");
+		types.put("Boolean", "java.lang.Boolean");
 		
 		resolvers = new HashMap<>();
-		resolvers.put("java.lang.Integer", new IntegerResolver("Number"));
-		resolvers.put("java.lang.Double", new DoubleResolver("Decimal"));
-		resolvers.put("java.lang.String", new StringResolver("String"));
+		resolvers.put("java.lang.Integer", new IntegerResolver());
+		resolvers.put("java.lang.Double", new DoubleResolver());
+		resolvers.put("java.lang.String", new StringResolver());
+		resolvers.put("java.lang.Boolean", new BooleanResolver());
 	}
 
 	static String getJavaType(String typeName) {

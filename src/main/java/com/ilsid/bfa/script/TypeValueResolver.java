@@ -57,8 +57,8 @@ public abstract class TypeValueResolver {
 
 	static class IntegerResolver extends PredefinedTypeResolver {
 
-		public IntegerResolver(String typeName) {
-			super(typeName);
+		public IntegerResolver() {
+			super("Number");
 		}
 
 		@Override
@@ -81,8 +81,8 @@ public abstract class TypeValueResolver {
 
 	static class DoubleResolver extends PredefinedTypeResolver {
 
-		public DoubleResolver(String typeName) {
-			super(typeName);
+		public DoubleResolver() {
+			super("Decimal");
 		}
 
 		@Override
@@ -105,13 +105,38 @@ public abstract class TypeValueResolver {
 
 	static class StringResolver extends PredefinedTypeResolver {
 
-		public StringResolver(String typeName) {
-			super(typeName);
+		public StringResolver() {
+			super("String");
 		}
 
 		@Override
 		public Object resolve(Object value) throws InvalidTypeException {
 			return value.toString();
+		}
+
+	}
+
+	static class BooleanResolver extends PredefinedTypeResolver {
+
+		public BooleanResolver() {
+			super("Boolean");
+		}
+
+		@Override
+		public Object resolve(Object value) throws InvalidTypeException {
+			if (Boolean.class.isInstance(value)) {
+				return value;
+			}
+
+			Boolean result;
+			try {
+				result = new BooleanExpression(value.toString()).getValue();
+			} catch (ScriptException e) {
+				// Intentionally "eating" exception here 
+				throw createInvalidTypeException(value);
+			}
+
+			return result;
 		}
 
 	}

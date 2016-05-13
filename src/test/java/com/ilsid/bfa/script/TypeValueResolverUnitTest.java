@@ -4,19 +4,22 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.generated.entity.test.SomeEntity;
+import com.ilsid.bfa.script.TypeValueResolver.BooleanResolver;
 import com.ilsid.bfa.script.TypeValueResolver.DoubleResolver;
 import com.ilsid.bfa.script.TypeValueResolver.EntityResolver;
 import com.ilsid.bfa.script.TypeValueResolver.IntegerResolver;
 import com.ilsid.bfa.script.TypeValueResolver.PredefinedTypeResolver;
-import com.ilsid.bfa.script.TypeValueResolver.StringResolver;;
+import com.ilsid.bfa.script.TypeValueResolver.StringResolver;
 
 public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 
-	private PredefinedTypeResolver integerResolver = new IntegerResolver("Number");
+	private PredefinedTypeResolver integerResolver = new IntegerResolver();
 
-	private PredefinedTypeResolver doubleResolver = new DoubleResolver("Decimal");
+	private PredefinedTypeResolver doubleResolver = new DoubleResolver();
 
-	private PredefinedTypeResolver stringResolver = new StringResolver("String");
+	private PredefinedTypeResolver stringResolver = new StringResolver();
+	
+	private PredefinedTypeResolver booleanResolver = new BooleanResolver();
 
 	@Test
 	public void integerValueIsResolvedToIntegerForNumberType() throws Exception {
@@ -63,7 +66,7 @@ public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 	public void integerValueAsStringIsResolvedToDoubleForDecimalType() throws Exception {
 		assertEquals(1.0, doubleResolver.resolve("1"));
 	}
-
+	
 	@Test
 	public void improperStringValueIsNotResolvedToDoubleForDecimalType() throws Exception {
 		exceptionRule.expect(InvalidTypeException.class);
@@ -87,6 +90,31 @@ public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 		String resolvedValue = (String) stringResolver.resolve(new Object());
 		assertTrue(resolvedValue.startsWith(Object.class.getName()));
 	}
+	
+	@Test
+	public void booleanValueIsResolvedToBooleanForBooleanType() throws Exception {
+		assertEquals(true, booleanResolver.resolve(true));
+		assertEquals(false, booleanResolver.resolve(false));
+	}
+	
+	@Test
+	public void booleanValueAsStringIsResolvedToBooleanForBooleanType() throws Exception {
+		assertEquals(true, booleanResolver.resolve("true"));
+		assertEquals(false, booleanResolver.resolve("false"));
+		assertEquals(true, booleanResolver.resolve("True"));
+		assertEquals(false, booleanResolver.resolve("False"));
+		assertEquals(true, booleanResolver.resolve("TruE"));
+		assertEquals(false, booleanResolver.resolve("FaLsE"));
+	}
+	
+	@Test
+	public void improperBooleanValueIsNotResolvedToBooleanForBooleanType() throws Exception {
+		exceptionRule.expect(InvalidTypeException.class);
+		exceptionRule.expectMessage("[abc] is not a value of type Boolean");
+
+		booleanResolver.resolve("abc");
+	}
+
 
 	@Test
 	public void enityValueIsResolvedToSameEntity() throws Exception {
@@ -118,6 +146,12 @@ public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 	@Test
 	public void stringResolverIsUsedForPredefinedStringType() {
 		assertSame(PredefinedTypes.getResolver("java.lang.String"), TypeValueResolver.getResolver("java.lang.String"));
+	}
+
+	@Test
+	public void booleanResolverIsUsedForPredefinedStringBoolean() {
+		assertSame(PredefinedTypes.getResolver("java.lang.Boolean"),
+				TypeValueResolver.getResolver("java.lang.Boolean"));
 	}
 
 	@Test

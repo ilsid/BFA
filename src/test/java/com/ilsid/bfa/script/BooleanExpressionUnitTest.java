@@ -8,12 +8,12 @@ import com.ilsid.bfa.script.BooleanExpression;
 
 public class BooleanExpressionUnitTest extends BaseUnitTestCase {
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = ScriptException.class)
 	public void exceptionIsThrownOnNullInput() throws Exception {
 		new BooleanExpression(null).getValue();
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = ScriptException.class)
 	public void exceptionIsThrownOnEmptyInput() throws Exception {
 		new BooleanExpression(StringUtils.EMPTY).getValue();
 	}
@@ -23,14 +23,14 @@ public class BooleanExpressionUnitTest extends BaseUnitTestCase {
 		new BooleanExpression("aaa").getValue();
 	}
 	
-	@Test(expected = ScriptException.class)
-	public void exceptionIsThrownOnLowerCaseTrueInput() throws Exception {
-		new BooleanExpression("true").getValue();
+	@Test
+	public void trueIsReturnedForLowerCaseTrueInput() throws Exception {
+		assertEquals(Boolean.TRUE, new BooleanExpression("true").getValue());
 	}
 	
-	@Test(expected = ScriptException.class)
-	public void exceptionIsThrownOnLowerCaseFalseInput() throws Exception {
-		new BooleanExpression("false").getValue();
+	@Test
+	public void falseIsReturnedForLowerCaseFalseInput() throws Exception {
+		assertEquals(Boolean.FALSE, new BooleanExpression("false").getValue());
 	}
 	
 	@Test

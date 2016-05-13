@@ -1,7 +1,5 @@
 package com.ilsid.bfa.script;
 
-import org.apache.commons.lang3.Validate;
-
 /**
  * Represents boolean expression.
  * 
@@ -10,15 +8,15 @@ import org.apache.commons.lang3.Validate;
  */
 class BooleanExpression implements ValueExpression<Boolean> {
 
-	private static final String VALID_TRUE_VALUE = "True";
+	private static final String VALID_TRUE_VALUE = "true";
 	
-	private static final String VALID_FALSE_VALUE = "False";
+	private static final String VALID_FALSE_VALUE = "false";
 	
 	private String input;
 
 	/**
 	 * Creates instance with specified string representation of boolean value.
-	 * The valid values are "True" and "False" (case-sensitive).
+	 * The valid values are "true" and "false" (case-insensitive).
 	 * 
 	 * @param input
 	 */
@@ -30,8 +28,7 @@ class BooleanExpression implements ValueExpression<Boolean> {
 	 * Returns corresponding {@link Boolean} instance.
 	 * 
 	 * @throws ScriptException
-	 *             if the passed value is not "True" or "False".
-	 * @see {@link BooleanExpression#BooleanExpression(String)}
+	 *             if the passed value is not "true" or "false" (case-insensitive).
 	 */
 	@Override
 	public Boolean getValue() throws ScriptException {
@@ -40,14 +37,8 @@ class BooleanExpression implements ValueExpression<Boolean> {
 	}
 
 	private void validateInput(String input) throws ScriptException {
-		if (input == null) {
-			throw new IllegalArgumentException("Input is null");
-		}
-
-		Validate.notEmpty(input, "Input is empty");
-
-		if (!input.equals(VALID_TRUE_VALUE) && !input.equals(VALID_FALSE_VALUE)) {
-			throw new ScriptException("Boolean value must be True or False: " + input);
+		if (!VALID_TRUE_VALUE.equalsIgnoreCase(input) && !VALID_FALSE_VALUE.equalsIgnoreCase(input)) {
+			throw new ScriptException("Boolean value must be true or false: " + input);
 		}
 	}
 

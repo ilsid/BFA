@@ -1,5 +1,6 @@
 package com.ilsid.bfa.script;
 
+import com.ilsid.bfa.common.BooleanUtil;
 import com.ilsid.bfa.common.ClassNameUtil;
 
 /**
@@ -128,15 +129,12 @@ public abstract class TypeValueResolver {
 				return value;
 			}
 
-			Boolean result;
-			try {
-				result = new BooleanExpression(value.toString()).getValue();
-			} catch (ScriptException e) {
-				// Intentionally "eating" exception here 
+			final String stringValue = value.toString();
+			if (!BooleanUtil.isBoolean(stringValue)) {
 				throw createInvalidTypeException(value);
 			}
 
-			return result;
+			return Boolean.valueOf(stringValue);
 		}
 
 	}

@@ -31,12 +31,11 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void arithmeticsWithTwoIntegerPrimitivesCanBeParsed() throws Exception {
 		assertOutput("2 - 1", "return Integer.valueOf(2 - 1);");
 	}
-	
+
 	@Test
 	public void oddSpacesCanBeParsed() throws Exception {
 		assertOutput(" 2  -  1 ", "return Integer.valueOf(2 - 1);");
 	}
-
 
 	@Test
 	public void arithmeticsWithThreeIntegerPrimitivesCanBeParsed() throws Exception {
@@ -57,8 +56,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void consequentIntegersWoOperandsAreNotAllowed() {
-		assertException("2 1",
-				"Could not parse expression [2 1]: One of the operands [+-/*] is expected after [2], but was [1]");
+		assertException("2 1", "Could not parse expression [2 1]: Operand is expected after [2], but was [1]");
 	}
 
 	@Test
@@ -91,7 +89,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void consequentDoublesWoOperandsAreNotAllowed() {
 		assertException("2.0 1.0",
-				"Could not parse expression [2.0 1.0]: One of the operands [+-/*] is expected after [2.0], but was [1.0]");
+				"Could not parse expression [2.0 1.0]: Operand is expected after [2.0], but was [1.0]");
 	}
 
 	@Test
@@ -108,18 +106,18 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void lastDoublePrimitiveOperandIsNotAllowed() {
 		assertException("1.0 +", "Could not parse expression [1.0 +]: Unexpected operand [+] at the end");
 	}
-	
+
 	@Test
 	public void singleIntegerVariableCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Integer", 3));
-		assertOutput("Var1", 
+		assertOutput("Var1",
 				"return Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue());");
 	}
 
 	@Test
 	public void arithmeticsWithTwoIntegerVariablesCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Integer", 3), new Variable("Var2", "java.lang.Integer", 1));
-		assertOutput("Var1 - Var2", 
+		assertOutput("Var1 - Var2",
 				"return Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue()"
 						+ " - ((Integer)scriptContext.getVar(\"Var2\").getValue()).intValue());");
 
@@ -129,27 +127,27 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void arithmeticsWithThreeIntegerVariablesCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Integer", 3), new Variable("Var2", "java.lang.Integer", 1),
 				new Variable("Var3", "java.lang.Integer", 2));
-		// System.out.println(invoke(input, output));
-		assertOutput("Var1 - Var2 + Var3", 
+		assertOutput("Var1 - Var2 + Var3",
 				"return Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue()"
-				+ " - ((Integer)scriptContext.getVar(\"Var2\").getValue()).intValue() + ((Integer)scriptContext.getVar(\"Var3\").getValue()).intValue());");
+						+ " - ((Integer)scriptContext.getVar(\"Var2\").getValue()).intValue()"
+						+ " + ((Integer)scriptContext.getVar(\"Var3\").getValue()).intValue());");
 	}
-	
+
 	@Test
 	public void arithmeticsWithIntegerVariableAndIntegerPrimitiveCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Integer", 3));
-		assertOutput("Var1 - 1", 
+		assertOutput("Var1 - 1",
 				"return Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue() - 1);");
 	}
-	
+
 	@Test
 	public void lastIntegerVariableOperandIsNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertException("Var1 +", "Could not parse expression [Var1 +]: Unexpected operand [+] at the end");
 	}
-	
+
 	@Test
-	public void arithmeticsWithIntegerVariableAndDoublePrimitivesIsNotAllowed() {
+	public void arithmeticsWithIntegerVariableAndDoublePrimitiveIsNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertException("Var1 - 1.0",
 				"Could not parse expression [Var1 - 1.0]: Integer value or variable is expected after operand [-], but was [1.0]");
@@ -166,20 +164,20 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void consequentIntegerVariablesWoOperandsAreNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Integer", 3), new Variable("Var2", "java.lang.Integer", 1));
 		assertException("Var1 Var2",
-				"Could not parse expression [Var1 Var2]: One of the operands [+-/*] is expected after [Var1], but was [Var2]");
+				"Could not parse expression [Var1 Var2]: Operand is expected after [Var1], but was [Var2]");
 	}
-	
+
 	@Test
 	public void singleDoubleVariableCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0));
-		assertOutput("Var1", 
+		assertOutput("Var1",
 				"return Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue());");
 	}
 
 	@Test
 	public void arithmeticsWithTwoDoubleVariablesCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0));
-		assertOutput("Var1 - Var2", 
+		assertOutput("Var1 - Var2",
 				"return Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue()"
 						+ " - ((Double)scriptContext.getVar(\"Var2\").getValue()).doubleValue());");
 
@@ -190,26 +188,27 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0),
 				new Variable("Var3", "java.lang.Double", 2.0));
 		// System.out.println(invoke(input, output));
-		assertOutput("Var1 - Var2 + Var3", 
+		assertOutput("Var1 - Var2 + Var3",
 				"return Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue()"
-				+ " - ((Double)scriptContext.getVar(\"Var2\").getValue()).doubleValue() + ((Double)scriptContext.getVar(\"Var3\").getValue()).doubleValue());");
+						+ " - ((Double)scriptContext.getVar(\"Var2\").getValue()).doubleValue()"
+						+ " + ((Double)scriptContext.getVar(\"Var3\").getValue()).doubleValue());");
 	}
-	
+
 	@Test
 	public void arithmeticsWithDoubleVariableAndDoublePrimitiveCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Double", 3));
-		assertOutput("Var1 - 1.0", 
+		assertOutput("Var1 - 1.0",
 				"return Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue() - 1.0);");
 	}
-	
+
 	@Test
 	public void lastDoubleVariableOperandIsNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0));
 		assertException("Var1 +", "Could not parse expression [Var1 +]: Unexpected operand [+] at the end");
 	}
-	
+
 	@Test
-	public void arithmeticsWithDoubleVariableAndIntegerPrimitivesIsNotAllowed() {
+	public void arithmeticsWithDoubleVariableAndIntegerPrimitiveIsNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0));
 		assertException("Var1 - 1",
 				"Could not parse expression [Var1 - 1]: Decimal value or variable is expected after operand [-], but was [1]");
@@ -226,117 +225,223 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void consequentDoubleVariablesWoOperandsAreNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0));
 		assertException("Var1 Var2",
-				"Could not parse expression [Var1 Var2]: One of the operands [+-/*] is expected after [Var1], but was [Var2]");
+				"Could not parse expression [Var1 Var2]: Operand is expected after [Var1], but was [Var2]");
 	}
-	
+
 	@Test
 	public void singleIntegerFieldCanBeParsed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
-		assertOutput("Contract.Days", 
+		assertOutput("Contract.Days",
 				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue());");
 	}
-	
+
 	@Test
 	public void arithmeticsWithTwoIntegerFieldsCanBeParsed() throws Exception {
-		createContext(new Variable("Contract", Contract.class.getName(), new Contract()), 
-					new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
-		
-		assertOutput("Contract.Days - Subscriber.PrepaidDays", 
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+
+		assertOutput("Contract.Days - Subscriber.PrepaidDays",
 				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue()"
 						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidDays.intValue());");
 	}
 
 	@Test
 	public void arithmeticsWithThreeIntegerFieldsCanBeParsed() throws Exception {
-		createContext(new Variable("Contract", Contract.class.getName(), new Contract()), 
-					new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
-	
-		assertOutput("Contract.Days + Contract.ProlongDays - Subscriber.PrepaidDays", 
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+
+		assertOutput("Contract.Days + Contract.ProlongDays - Subscriber.PrepaidDays",
 				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue()"
-						+ " + ((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).ProlongDays.intValue()" 
+						+ " + ((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).ProlongDays.intValue()"
 						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidDays.intValue());");
 	}
-	
-	@Test
-	public void arithmeticsWithIntegerFieldAndIntegerPrimitiveCanBeParsed() throws Exception {
-		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
-					new Variable("PrepaidDays", "java.lang.Integer", 30));
-		
-		assertOutput("Contract.Days - PrepaidDays", 
-				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue()" 
-						+ " - ((Integer)scriptContext.getVar(\"PrepaidDays\").getValue()).intValue());");
-						
-	}
-	
+
 	@Test
 	public void arithmeticsWithIntegerFieldAndIntegerVariableCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("PrepaidDays", "java.lang.Integer", 30));
+
+		assertOutput("Contract.Days - PrepaidDays",
+				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue()"
+						+ " - ((Integer)scriptContext.getVar(\"PrepaidDays\").getValue()).intValue());");
+
+	}
+
+	@Test
+	public void arithmeticsWithIntegerFieldAndIntegerPrimitiveCanBeParsed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
-		
-		assertOutput("Contract.Days - 1", 
+
+		assertOutput("Contract.Days - 1",
 				"return Integer.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).Days.intValue() - 1);");
 	}
-	
+
 	@Test
 	public void nonExsistenIntegerFieldIsNotAllowed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
-		
-		assertException("Contract.NonExistentField - 1", 
+
+		assertException("Contract.NonExistentField - 1",
 				"Could not parse expression [Contract.NonExistentField - 1]: Unexpected token [Contract.NonExistentField]");
 	}
 
-	
 	@Test
 	public void singleDoubleFieldCanBeParsed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
-		assertOutput("Contract.MonthlyFee", 
+		assertOutput("Contract.MonthlyFee",
 				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue());");
 	}
-	
+
 	@Test
 	public void arithmeticsWithTwoDoubleFieldsCanBeParsed() throws Exception {
-		createContext(new Variable("Contract", Contract.class.getName(), new Contract()), 
-					new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
-		
-		assertOutput("Contract.MonthlyFee - Subscriber.PrepaidAmount", 
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+
+		assertOutput("Contract.MonthlyFee - Subscriber.PrepaidAmount",
 				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue()"
 						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidAmount.doubleValue());");
 	}
 
 	@Test
 	public void arithmeticsWithThreeDoubleFieldsCanBeParsed() throws Exception {
-		createContext(new Variable("Contract", Contract.class.getName(), new Contract()), 
-					new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
-	
-		assertOutput("Contract.MonthlyFee - Subscriber.PrepaidAmount + Subscriber.PrepaidReserved", 
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+
+		assertOutput("Contract.MonthlyFee - Subscriber.PrepaidAmount + Subscriber.PrepaidReserved",
 				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue()"
-						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidAmount.doubleValue()" 
+						+ " - ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidAmount.doubleValue()"
 						+ " + ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).PrepaidReserved.doubleValue());");
 	}
-	
-	@Test
-	public void arithmeticsWithDoubleFieldAndDoublePrimitiveCanBeParsed() throws Exception {
-		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
-					new Variable("PrepaidAmount", "java.lang.Double", 30.0));
-		
-		assertOutput("Contract.MonthlyFee - PrepaidAmount", 
-				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue()" 
-						+ " - ((Double)scriptContext.getVar(\"PrepaidAmount\").getValue()).doubleValue());");
-	}
-	
+
 	@Test
 	public void arithmeticsWithDoubleFieldAndDoubleVariableCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("PrepaidAmount", "java.lang.Double", 30.0));
+
+		assertOutput("Contract.MonthlyFee - PrepaidAmount",
+				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue()"
+						+ " - ((Double)scriptContext.getVar(\"PrepaidAmount\").getValue()).doubleValue());");
+	}
+
+	@Test
+	public void arithmeticsWithDoubleFieldAndDoublePrimitiveCanBeParsed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
-		
-		assertOutput("Contract.MonthlyFee - 1.0", 
+
+		assertOutput("Contract.MonthlyFee - 1.0",
 				"return Double.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).MonthlyFee.doubleValue() - 1.0);");
 	}
-	
+
 	@Test
 	public void nonExsistenDoubleFieldIsNotAllowed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
-		
-		assertException("Contract.NonExistentField - 1.0", 
+
+		assertException("Contract.NonExistentField - 1.0",
 				"Could not parse expression [Contract.NonExistentField - 1.0]: Unexpected token [Contract.NonExistentField]");
+	}
+
+	@Test
+	public void singleTrueBooleanCanBeParsed() throws Exception {
+		assertOutput("true", "return Boolean.valueOf(true);");
+	}
+
+	@Test
+	public void singleFalseBooleanCanBeParsed() throws Exception {
+		assertOutput("false", "return Boolean.valueOf(false);");
+	}
+
+	@Test
+	public void logicalOperationWithTwoBooleanPrimitivesCanBeParsed() throws Exception {
+		assertOutput("false && true", "return Boolean.valueOf(false && true);");
+		assertOutput("false || true", "return Boolean.valueOf(false || true);");
+	}
+
+	@Test
+	public void logicalOperationWithThreeBooleanPrimitivesCanBeParsed() throws Exception {
+		assertOutput("false && true || true", "return Boolean.valueOf(false && true || true);");
+	}
+
+	@Test
+	public void logicalOperationWithBooleanAndIntegerPrimitivesIsNotAllowed() {
+		assertException("true && 1",
+				"Could not parse expression [true && 1]: Boolean value or variable is expected after operand [&&], but was [1]");
+	}
+
+	@Test
+	public void logicalOperationWithBooleanAndNonNumericIsNotAllowed() {
+		assertException("true && abc",
+				"Could not parse expression [true && abc]: Boolean value or variable is expected after operand [&&], but was [abc]");
+	}
+
+	@Test
+	public void consequentBooleansWoOperandsAreNotAllowed() {
+		assertException("true false",
+				"Could not parse expression [true false]: Operand is expected after [true], but was [false]");
+	}
+
+	@Test
+	public void lastBooleanPrimitiveOperandIsNotAllowed() {
+		assertException("false ||", "Could not parse expression [false ||]: Unexpected operand [||] at the end");
+	}
+
+	@Test
+	public void singleBooleanVariableCanBeParsed() throws Exception {
+		createContext(new Variable("Var1", "java.lang.Boolean", true));
+		assertOutput("Var1",
+				"return Boolean.valueOf(((Boolean)scriptContext.getVar(\"Var1\").getValue()).booleanValue());");
+	}
+
+	@Test
+	public void logicalOperationWithTwoBooleanVariablesCanBeParsed() throws Exception {
+		createContext(new Variable("Var1", "java.lang.Boolean", true),
+				new Variable("Var2", "java.lang.Boolean", false));
+		assertOutput("Var1 && Var2",
+				"return Boolean.valueOf(((Boolean)scriptContext.getVar(\"Var1\").getValue()).booleanValue()"
+						+ " && ((Boolean)scriptContext.getVar(\"Var2\").getValue()).booleanValue());");
+	}
+
+	@Test
+	public void logicalOperationWithThreeBooleanVariablesCanBeParsed() throws Exception {
+		createContext(new Variable("Var1", "java.lang.Boolean", true), new Variable("Var2", "java.lang.Boolean", false),
+				new Variable("Var3", "java.lang.Boolean", true));
+		assertOutput("Var1 && Var2 || Var3",
+				"return Boolean.valueOf(((Boolean)scriptContext.getVar(\"Var1\").getValue()).booleanValue()"
+						+ " && ((Boolean)scriptContext.getVar(\"Var2\").getValue()).booleanValue()"
+						+ " || ((Boolean)scriptContext.getVar(\"Var3\").getValue()).booleanValue());");
+	}
+
+	@Test
+	public void logicalOperationWithBooleanVariableAndBooleanPrimitiveCanBeParsed() throws Exception {
+		createContext(new Variable("Var1", "java.lang.Boolean", true));
+		assertOutput("Var1 && true",
+				"return Boolean.valueOf(((Boolean)scriptContext.getVar(\"Var1\").getValue()).booleanValue() && true);");
+	}
+
+	@Test
+	public void lastBooleanVariableOperandIsNotAllowed() {
+		createContext(new Variable("Var1", "java.lang.Boolean", true));
+		assertException("Var1 &&", "Could not parse expression [Var1 &&]: Unexpected operand [&&] at the end");
+	}
+
+	@Test
+	public void logicalOperationWithBooleanVariableAndIntegerPrimitiveIsNotAllowed() {
+		createContext(new Variable("Var1", "java.lang.Boolean", true));
+		assertException("Var1 && 1",
+				"Could not parse expression [Var1 && 1]: Boolean value or variable is expected after operand [&&], but was [1]");
+	}
+
+	@Test
+	public void singleBooleanFieldCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
+		assertOutput("Contract.IsValid",
+				"return Boolean.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).IsValid.booleanValue());");
+	}
+
+	@Test
+	public void logicalOperationWithTwoBooleanFieldsCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+
+		assertOutput("Contract.IsValid && Subscriber.IsPrepaid",
+				"return Boolean.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).IsValid.booleanValue()"
+						+ " && ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).IsPrepaid.booleanValue());");
 	}
 
 	private void createContext(final Variable... vars) {

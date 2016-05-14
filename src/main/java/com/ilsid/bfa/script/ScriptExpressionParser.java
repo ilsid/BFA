@@ -1,10 +1,13 @@
 package com.ilsid.bfa.script;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
+import com.ilsid.bfa.common.BooleanUtil;
 import com.ilsid.bfa.common.NumberUtil;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 
@@ -42,8 +45,7 @@ public class ScriptExpressionParser {
 		try {
 			parsingMachine.process();
 		} catch (ParsingStateException e) {
-			throw new ParsingException("Could not parse expression [" + scriptExpression + "]: " + e.getMessage(),
-					e);
+			throw new ParsingException("Could not parse expression [" + scriptExpression + "]: " + e.getMessage(), e);
 		}
 
 		return parsingMachine.getResult();
@@ -68,6 +70,12 @@ public class ScriptExpressionParser {
 
 	}
 
+	private interface NextStateProvider {
+
+		ParsingState getNextState(ParsingMachine context);
+
+	}
+
 	private class StartState implements ParsingState {
 
 		public void processToken(ParsingMachine context) throws ParsingStateException {
@@ -83,6 +91,9 @@ public class ScriptExpressionParser {
 			} else if (NumberUtil.isDouble(token)) {
 				javaExpression.append(" ").append(ParsingUtil.DOUBLE_VALUEOF_EXPR).append(token);
 				context.setState(context.DOUBLE_STATE);
+			} else if (BooleanUtil.isBoolean(token)) {
+				javaExpression.append(" ").append(ParsingUtil.BOOLEAN_VALUEOF_EXPR).append(token);
+				context.setState(context.BOOLEAN_STATE);
 			} else if (ParsingUtil.isIntegerVariable(token, context.getScriptContext())) {
 				javaExpression.append(" ").append(ParsingUtil.INTEGER_VALUEOF_EXPR);
 				javaExpression.append(String.format(ParsingUtil.INTEGER_VAR_EXPR_TEMPLATE, token));
@@ -90,9 +101,9 @@ public class ScriptExpressionParser {
 			} else if (ParsingUtil.isIntegerField(token, context.getScriptContext(),
 					fldInfo = new ParsingUtil.FieldInfo())) {
 				javaExpression.append(" ").append(ParsingUtil.INTEGER_VALUEOF_EXPR);
-				String intFieldExpr = String.format(ParsingUtil.INTEGER_FLD_EXPR_TEMPLATE, fldInfo.varType,
+				String fieldExpr = String.format(ParsingUtil.INTEGER_FLD_EXPR_TEMPLATE, fldInfo.varType,
 						fldInfo.varName, fldInfo.fieldName);
-				javaExpression.append(intFieldExpr);
+				javaExpression.append(fieldExpr);
 				context.setState(context.INTEGER_STATE);
 			} else if (ParsingUtil.isDoubleVariable(token, context.getScriptContext())) {
 				javaExpression.append(" ").append(ParsingUtil.DOUBLE_VALUEOF_EXPR);
@@ -101,10 +112,21 @@ public class ScriptExpressionParser {
 			} else if (ParsingUtil.isDoubleField(token, context.getScriptContext(),
 					fldInfo = new ParsingUtil.FieldInfo())) {
 				javaExpression.append(" ").append(ParsingUtil.DOUBLE_VALUEOF_EXPR);
-				String dblFieldExpr = String.format(ParsingUtil.DOUBLE_FLD_EXPR_TEMPLATE, fldInfo.varType,
+				String fieldExpr = String.format(ParsingUtil.DOUBLE_FLD_EXPR_TEMPLATE, fldInfo.varType,
 						fldInfo.varName, fldInfo.fieldName);
-				javaExpression.append(dblFieldExpr);
+				javaExpression.append(fieldExpr);
 				context.setState(context.DOUBLE_STATE);
+			} else if (ParsingUtil.isBooleanVariable(token, context.getScriptContext())) {
+				javaExpression.append(" ").append(ParsingUtil.BOOLEAN_VALUEOF_EXPR);
+				javaExpression.append(String.format(ParsingUtil.BOOLEAN_VAR_EXPR_TEMPLATE, token));
+				context.setState(context.BOOLEAN_STATE);
+			} else if (ParsingUtil.isBooleanField(token, context.getScriptContext(),
+					fldInfo = new ParsingUtil.FieldInfo())) {
+				javaExpression.append(" ").append(ParsingUtil.BOOLEAN_VALUEOF_EXPR);
+				String fieldExpr = String.format(ParsingUtil.BOOLEAN_FLD_EXPR_TEMPLATE, fldInfo.varType,
+						fldInfo.varName, fldInfo.fieldName);
+				javaExpression.append(fieldExpr);
+				context.setState(context.BOOLEAN_STATE);
 			} else {
 				throw new ParsingStateException("Unexpected token [" + token + "]");
 			}
@@ -122,19 +144,19 @@ public class ScriptExpressionParser {
 
 	}
 
-	private abstract class NumericState implements ParsingState {
+	private abstract class ValueState implements ParsingState, NextStateProvider {
 
 		public void processToken(ParsingMachine context) throws ParsingStateException {
 			StringBuilder javaExpression = context.getJavaExpression();
 
 			if (context.hasNextToken()) {
 				String token = context.getNextToken();
-				if (ParsingUtil.isOperand(token)) {
+				if (isProperOperand(token)) {
 					javaExpression.append(" ").append(token);
 					context.setState(getNextState(context));
 				} else {
-					throw new ParsingStateException("One of the operands [" + ParsingUtil.OPERANDS + "] is expected after ["
-							+ context.getCurrentToken() + "], but was [" + token + "]");
+					throw new ParsingStateException(
+							"Operand is expected after [" + context.getCurrentToken() + "], but was [" + token + "]");
 				}
 			} else {
 				javaExpression.append(ParsingUtil.RP);
@@ -144,11 +166,10 @@ public class ScriptExpressionParser {
 			context.process();
 		}
 
-		protected abstract ParsingState getNextState(ParsingMachine context);
-
+		protected abstract boolean isProperOperand(String token);
 	}
 
-	private abstract class OperandState implements ParsingState {
+	private abstract class OperandState implements ParsingState, NextStateProvider {
 
 		public void processToken(ParsingMachine context) throws ParsingStateException {
 			StringBuilder javaExpression = context.getJavaExpression();
@@ -193,21 +214,29 @@ public class ScriptExpressionParser {
 
 		protected abstract String getFieldExpressionTemplate();
 
-		protected abstract ParsingState getNextState(ParsingMachine context);
-
 		protected abstract String getTypeName();
 
 	}
 
-	private class IntegerState extends NumericState {
+	private class IntegerState extends ValueState {
 
 		@Override
-		protected ParsingState getNextState(ParsingMachine context) {
+		public ParsingState getNextState(ParsingMachine context) {
 			return context.INT_OPERAND_STATE;
+		}
+
+		@Override
+		protected boolean isProperOperand(String token) {
+			return ParsingUtil.NUMERIC_OPERANDS.contains(token);
 		}
 	}
 
 	private class IntegerOperandState extends OperandState {
+
+		@Override
+		public ParsingState getNextState(ParsingMachine context) {
+			return context.INTEGER_STATE;
+		}
 
 		@Override
 		protected boolean isProperPrimitiveType(String token) {
@@ -222,11 +251,6 @@ public class ScriptExpressionParser {
 		@Override
 		protected String getVarExpressionTemplate() {
 			return ParsingUtil.INTEGER_VAR_EXPR_TEMPLATE;
-		}
-
-		@Override
-		protected ParsingState getNextState(ParsingMachine context) {
-			return context.INTEGER_STATE;
 		}
 
 		@Override
@@ -248,16 +272,26 @@ public class ScriptExpressionParser {
 
 	}
 
-	private class DoubleState extends NumericState {
+	private class DoubleState extends ValueState {
 
 		@Override
-		protected ParsingState getNextState(ParsingMachine context) {
+		public ParsingState getNextState(ParsingMachine context) {
 			return context.DBL_OPERAND_STATE;
+		}
+
+		@Override
+		protected boolean isProperOperand(String token) {
+			return ParsingUtil.NUMERIC_OPERANDS.contains(token);
 		}
 
 	}
 
 	private class DoubleOperandState extends OperandState {
+
+		@Override
+		public ParsingState getNextState(ParsingMachine context) {
+			return context.DOUBLE_STATE;
+		}
 
 		@Override
 		protected boolean isProperPrimitiveType(String token) {
@@ -272,11 +306,6 @@ public class ScriptExpressionParser {
 		@Override
 		protected String getVarExpressionTemplate() {
 			return ParsingUtil.DOUBLE_VAR_EXPR_TEMPLATE;
-		}
-
-		@Override
-		protected ParsingState getNextState(ParsingMachine context) {
-			return context.DOUBLE_STATE;
 		}
 
 		@Override
@@ -295,6 +324,61 @@ public class ScriptExpressionParser {
 		protected String getFieldExpressionTemplate() {
 			return ParsingUtil.DOUBLE_FLD_EXPR_TEMPLATE;
 		}
+
+	}
+
+	private class BooleanState extends ValueState {
+
+		@Override
+		public ParsingState getNextState(ParsingMachine context) {
+			return context.BOOL_OPERAND_STATE;
+		}
+
+		@Override
+		protected boolean isProperOperand(String token) {
+			return ParsingUtil.BOOLEAN_OPERANDS.contains(token);
+		}
+
+	}
+
+	private class BooleanOperandState extends OperandState {
+
+		public ParsingState getNextState(ParsingMachine context) {
+			return context.BOOLEAN_STATE;
+		}
+
+		@Override
+		protected boolean isProperPrimitiveType(String token) {
+			return BooleanUtil.isBoolean(token);
+		}
+
+		@Override
+		protected boolean isProperVariableType(String token, ScriptContext scriptContext) {
+			return ParsingUtil.isBooleanVariable(token, scriptContext);
+		}
+
+		@Override
+		protected boolean isProperFieldType(String token, ScriptContext scriptContext,
+				ParsingUtil.FieldInfo fieldInfo) {
+
+			return ParsingUtil.isBooleanField(token, scriptContext, fieldInfo);
+		}
+
+		@Override
+		protected String getVarExpressionTemplate() {
+			return ParsingUtil.BOOLEAN_VAR_EXPR_TEMPLATE;
+		}
+
+		@Override
+		protected String getFieldExpressionTemplate() {
+			return ParsingUtil.BOOLEAN_FLD_EXPR_TEMPLATE;
+		}
+
+		@Override
+		protected String getTypeName() {
+			return ParsingUtil.BOOLEAN_TYPE_ALIAS;
+		}
+
 	}
 
 	private class ParsingMachine {
@@ -318,6 +402,8 @@ public class ScriptExpressionParser {
 		final IntegerOperandState INT_OPERAND_STATE = new IntegerOperandState();
 		final DoubleState DOUBLE_STATE = new DoubleState();
 		final DoubleOperandState DBL_OPERAND_STATE = new DoubleOperandState();
+		final BooleanState BOOLEAN_STATE = new BooleanState();
+		final BooleanOperandState BOOL_OPERAND_STATE = new BooleanOperandState();
 		final EndState END_STATE = new EndState();
 
 		public ParsingMachine(String scriptExpression, ScriptContext scriptContext) {
@@ -369,11 +455,15 @@ public class ScriptExpressionParser {
 
 	private static class ParsingUtil {
 
-		private static final String OPERANDS = "+-/*";
+		private static final List<String> NUMERIC_OPERANDS = Arrays.asList(new String[] { "+", "-", "/", "*" });
+
+		private static final List<String> BOOLEAN_OPERANDS = Arrays.asList(new String[] { "&&", "||" });
 
 		private static final String INTEGER_VALUEOF_EXPR = "Integer.valueOf(";
 
 		private static final String DOUBLE_VALUEOF_EXPR = "Double.valueOf(";
+
+		private static final String BOOLEAN_VALUEOF_EXPR = "Boolean.valueOf(";
 
 		private static final String RP = ")";
 
@@ -385,13 +475,15 @@ public class ScriptExpressionParser {
 
 		private static final String DOUBLE_FLD_EXPR_TEMPLATE = "((%s)scriptContext.getVar(\"%s\").getValue()).%s.doubleValue()";
 
+		private static final String BOOLEAN_VAR_EXPR_TEMPLATE = "((Boolean)scriptContext.getVar(\"%s\").getValue()).booleanValue()";
+
+		private static final String BOOLEAN_FLD_EXPR_TEMPLATE = "((%s)scriptContext.getVar(\"%s\").getValue()).%s.booleanValue()";
+
 		private static final String INTEGER_TYPE_ALIAS = "Integer";
 
 		private static final String DOUBLE_TYPE_ALIAS = "Decimal";
 
-		static boolean isOperand(String token) {
-			return token.length() == 1 && OPERANDS.contains(token);
-		}
+		private static final String BOOLEAN_TYPE_ALIAS = "Boolean";
 
 		static boolean isIntegerVariable(String token, ScriptContext context) {
 			return isVariable(token, context, Integer.class);
@@ -407,6 +499,14 @@ public class ScriptExpressionParser {
 
 		static boolean isDoubleField(String token, ScriptContext context, FieldInfo info) {
 			return isField(token, context, Double.class, info);
+		}
+
+		static boolean isBooleanVariable(String token, ScriptContext context) {
+			return isVariable(token, context, Boolean.class);
+		}
+
+		static boolean isBooleanField(String token, ScriptContext context, FieldInfo info) {
+			return isField(token, context, Boolean.class, info);
 		}
 
 		private static boolean isField(String token, ScriptContext context, Class<?> fieldType, FieldInfo info) {

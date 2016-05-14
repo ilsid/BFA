@@ -8,4 +8,6 @@ public class Subscriber {
 	
 	public Integer PrepaidDays = 0;
 	
+	public Boolean IsPrepaid = true;
+	
 }

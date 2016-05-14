@@ -1,5 +1,7 @@
 package com.ilsid.bfa.script;
 
+import com.ilsid.bfa.common.BooleanUtil;
+
 /**
  * Represents boolean expression.
  * 
@@ -8,15 +10,11 @@ package com.ilsid.bfa.script;
  */
 class BooleanExpression implements ValueExpression<Boolean> {
 
-	private static final String VALID_TRUE_VALUE = "true";
-	
-	private static final String VALID_FALSE_VALUE = "false";
-	
 	private String input;
 
 	/**
-	 * Creates instance with specified string representation of boolean value.
-	 * The valid values are "true" and "false" (case-insensitive).
+	 * Creates instance with specified string representation of boolean value. The valid values are "true" and "false"
+	 * (case-insensitive).
 	 * 
 	 * @param input
 	 */
@@ -37,7 +35,7 @@ class BooleanExpression implements ValueExpression<Boolean> {
 	}
 
 	private void validateInput(String input) throws ScriptException {
-		if (!VALID_TRUE_VALUE.equalsIgnoreCase(input) && !VALID_FALSE_VALUE.equalsIgnoreCase(input)) {
+		if (!BooleanUtil.isBoolean(input)) {
 			throw new ScriptException("Boolean value must be true or false: " + input);
 		}
 	}

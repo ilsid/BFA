@@ -7,5 +7,7 @@ public class Contract {
 	public Integer ProlongDays = 0;
 	
 	public Double MonthlyFee = 0.0;
+	
+	public Boolean IsValid = true;
 
 }

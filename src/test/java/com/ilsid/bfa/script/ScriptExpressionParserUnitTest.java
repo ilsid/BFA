@@ -444,6 +444,36 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 						+ " && ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).IsPrepaid.booleanValue());");
 	}
 
+	@Test
+	public void logicalOperationWithThreeBooleanFieldsCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+
+		assertOutput("Contract.IsValid && Contract.IsAnnual && Subscriber.IsPrepaid",
+				"return Boolean.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).IsValid.booleanValue()"
+						+ " && ((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).IsAnnual.booleanValue()"
+						+ " && ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).IsPrepaid.booleanValue());");
+	}
+
+	@Test
+	public void logicalOperationWithBooleanFieldAndBooleanVariableCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("IsPrepaid", "java.lang.Boolean", true));
+
+		assertOutput("Contract.IsValid && IsPrepaid",
+				"return Boolean.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).IsValid.booleanValue()"
+						+ " && ((Boolean)scriptContext.getVar(\"IsPrepaid\").getValue()).booleanValue());");
+
+	}
+
+	@Test
+	public void logicalOperationWithBooleanFieldAndBooleanPrimitiveCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
+
+		assertOutput("Contract.IsValid && true",
+				"return Boolean.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).IsValid.booleanValue() && true);");
+	}
+
 	private void createContext(final Variable... vars) {
 		context = ScriptContextUtil.createContext(vars);
 		parser = new ScriptExpressionParser(context);

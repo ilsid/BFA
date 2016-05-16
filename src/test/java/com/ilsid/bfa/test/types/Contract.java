@@ -9,5 +9,7 @@ public class Contract {
 	public Double MonthlyFee = 0.0;
 	
 	public Boolean IsValid = true;
+	
+	public Boolean IsAnnual = true;
 
 }

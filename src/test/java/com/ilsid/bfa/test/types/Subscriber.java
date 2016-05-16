@@ -10,4 +10,6 @@ public class Subscriber {
 	
 	public Boolean IsPrepaid = true;
 	
+	public String MSISDN;
+	
 }

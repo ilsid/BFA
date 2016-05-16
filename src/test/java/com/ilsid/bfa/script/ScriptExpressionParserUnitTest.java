@@ -4,8 +4,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.script.ScriptExpressionParser;
-import com.ilsid.bfa.script.Variable;
 import com.ilsid.bfa.test.types.Contract;
 import com.ilsid.bfa.test.types.Subscriber;
 
@@ -472,6 +470,126 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 
 		assertOutput("Contract.IsValid && true",
 				"return Boolean.valueOf(((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).IsValid.booleanValue() && true);");
+	}
+
+	@Test
+	public void singleStringLiteralCanBeParsed() throws Exception {
+		assertOutput("'abc'", "return (\"abc\");");
+	}
+
+	@Test
+	public void emptyStringLiteralCanBeParsed() throws Exception {
+		assertOutput("''", "return (\"\");");
+	}
+
+	@Test
+	public void blankStringLiteralCanBeParsed() throws Exception {
+		assertOutput("' '", "return (\" \");");
+		assertOutput("'   '", "return (\"   \");");
+	}
+
+	@Test
+	public void stringLiteralWithLeadingBlankCanBeParsed() throws Exception {
+		assertOutput("' abc'", "return (\" abc\");");
+		assertOutput("'   abc'", "return (\"   abc\");");
+	}
+
+	@Test
+	public void stringLiteralWithTrailingBlankCanBeParsed() throws Exception {
+		assertOutput("'abc '", "return (\"abc \");");
+		assertOutput("'abc   '", "return (\"abc   \");");
+	}
+
+	@Test
+	public void stringLiteralWithBlankInTheMiddleCanBeParsed() throws Exception {
+		assertOutput("'ab c'", "return (\"ab c\");");
+		assertOutput("'ab   c'", "return (\"ab   c\");");
+	}
+
+	@Test
+	public void concatenationOfTwoStringLiteralsCanBeParsed() throws Exception {
+		assertOutput("'abc' + 'fgh'", "return (\"abc\" + \"fgh\");");
+	}
+
+	@Test
+	public void concatenationOfThreeStringLiteralsCanBeParsed() throws Exception {
+		assertOutput("'abc' + 'fgh' + '123'", "return (\"abc\" + \"fgh\" + \"123\");");
+	}
+
+	@Test
+	public void singleStringLiteralWithDoubleQuotesIsNotAllowed() throws Exception {
+		assertException("\"abc\"", "Could not parse expression [\"abc\"]: Unexpected token [\"abc\"]");
+	}
+
+	@Test
+	public void consequentStringsWoOperandsAreNotAllowed() {
+		assertException("'abc' 'fgh'",
+				"Could not parse expression ['abc' 'fgh']: Operand is expected after ['abc'], but was ['fgh']");
+	}
+
+	@Test
+	public void lastStringConcatenationOperandIsNotAllowed() {
+		assertException("'abc' +", "Could not parse expression ['abc' +]: Unexpected operand [+] at the end");
+	}
+
+	@Test
+	public void concatenationOfStringLiteralAndNonStringIsNotAllowed() {
+		assertException("'abc' + 1",
+				"Could not parse expression ['abc' + 1]: String value or variable is expected after operand [+], but was [1]");
+	}
+
+	@Test
+	public void singleStringVariableCanBeParsed() throws Exception {
+		createContext(new Variable("Var1", "java.lang.String", "abc"));
+		assertOutput("Var1", "return ((String)scriptContext.getVar(\"Var1\").getValue());");
+	}
+
+	@Test
+	public void concatenationOfTwoStringVariablesCanBeParsed() throws Exception {
+		createContext(new Variable("Var1", "java.lang.String", "abc"), new Variable("Var2", "java.lang.String", "fgh"));
+		assertOutput("Var1 + Var2", "return ((String)scriptContext.getVar(\"Var1\").getValue() "
+				+ "+ (String)scriptContext.getVar(\"Var2\").getValue());");
+	}
+
+	@Test
+	public void concatenationOfThreeStringVariablesCanBeParsed() throws Exception {
+		createContext(new Variable("Var1", "java.lang.String", "abc"), new Variable("Var2", "java.lang.String", "fgh"),
+				new Variable("Var3", "java.lang.String", "xyz"));
+		assertOutput("Var1 + Var2 + Var3",
+				"return ((String)scriptContext.getVar(\"Var1\").getValue() "
+						+ "+ (String)scriptContext.getVar(\"Var2\").getValue() "
+						+ "+ (String)scriptContext.getVar(\"Var3\").getValue());");
+	}
+
+	@Test
+	public void concatenationOfStringVariableAndStringLiteralCanBeParsed() throws Exception {
+		createContext(new Variable("Var1", "java.lang.String", "abc"));
+		assertOutput("Var1 + 'xyz'", "return ((String)scriptContext.getVar(\"Var1\").getValue() + \"xyz\");");
+	}
+
+	@Test
+	public void singleStringFieldCanBeParsed() throws Exception {
+		createContext(new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+		assertOutput("Subscriber.MSISDN",
+				"return (((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).MSISDN);");
+	}
+
+	@Test
+	public void concatenationOfStringFieldsAndStringLiteralsCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+		assertOutput("'{' + Contract.ID + ': ' + Subscriber.MSISDN + '}'",
+				"return (\"{\" + ((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).ID "
+						+ "+ \": \" + ((com.ilsid.bfa.test.types.Subscriber)scriptContext.getVar(\"Subscriber\").getValue()).MSISDN + \"}\");");
+	}
+
+	@Test
+	public void concatenationOfStringFieldStringLiteralAndStringVariableCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("Var1", "java.lang.String", "abc"));
+		assertOutput("Contract.ID + ': ' + Var1",
+				"return (((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).ID "
+						+ "+ \": \" + (String)scriptContext.getVar(\"Var1\").getValue());");
 	}
 
 	private void createContext(final Variable... vars) {

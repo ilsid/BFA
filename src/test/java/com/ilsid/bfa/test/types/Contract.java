@@ -11,5 +11,7 @@ public class Contract {
 	public Boolean IsValid = true;
 	
 	public Boolean IsAnnual = true;
+	
+	public String ID;
 
 }

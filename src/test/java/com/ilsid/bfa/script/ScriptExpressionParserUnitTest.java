@@ -58,6 +58,11 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void spaceIsRequiredForArithmeticsWithTwoIntegers() {
+		assertException("2-1", "Could not parse expression [2-1]: Unexpected token [2-1]");
+	}
+
+	@Test
 	public void singleDoubleCanBeParsed() throws Exception {
 		assertOutput("1.0", "return Double.valueOf(1.0);");
 	}
@@ -514,6 +519,14 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void concatenationOfThreeStringLiteralsCanBeParsed() throws Exception {
 		assertOutput("'abc' + 'fgh' + '123'", "return (\"abc\" + \"fgh\" + \"123\");");
+	}
+
+	@Test
+	public void spaceOnBothSidesIsRequiredForConcatenationOfTwoStringLiterals() throws Exception {
+		assertException("'abc'+'fgh'", "Could not parse expression ['abc'+'fgh']: Unexpected token ['abc'+'fgh']");
+		assertException("'abc'+ 'fgh'", "Could not parse expression ['abc'+ 'fgh']: Unexpected token ['abc'+]");
+		assertException("'abc' +'fgh'",
+				"Could not parse expression ['abc' +'fgh']: Operand is expected after ['abc'], but was [+'fgh']");
 	}
 
 	@Test

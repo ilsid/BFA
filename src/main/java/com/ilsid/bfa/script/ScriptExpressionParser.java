@@ -490,7 +490,7 @@ public class ScriptExpressionParser {
 		final EndState END_STATE = new EndState();
 
 		public ParsingMachine(String scriptExpression, ScriptContext scriptContext) {
-			tokens = ParsingUtil.escapeStringLiteralBlanks(scriptExpression.trim()).split(ParsingUtil.BLANK_REGEX);
+			tokens = ParsingUtil.splitIntoTokens(scriptExpression);
 			this.scriptContext = scriptContext;
 			length = tokens.length;
 			javaExpression = new StringBuilder();
@@ -623,7 +623,8 @@ public class ScriptExpressionParser {
 		}
 
 		static boolean isStringLiteral(String token) {
-			return token.length() > 1 && token.startsWith(SQ) && token.endsWith(SQ);
+			return token.length() > 1 && token.startsWith(SQ) && token.endsWith(SQ)
+					&& !token.substring(1, token.length() - 1).contains(SQ);
 		}
 
 		static String toJavaStringExpr(String stringLiteral) {
@@ -633,9 +634,12 @@ public class ScriptExpressionParser {
 					.toString();
 		}
 
-		// String literals with blanks are escaped: ' abc ' -> '%20%abc%20'. It is needed for splitting expression into
-		// tokens. The splitting regex is "\\s+".
-		static String escapeStringLiteralBlanks(final String scriptExpression) {
+		static String[] splitIntoTokens(String expression) {
+			// String literals with blanks are escaped before splitting (by blanks): ' abc ' -> '%20%abc%20'
+			return escapeStringLiteralBlanks(expression.trim()).split(BLANK_REGEX);
+		}
+
+		private static String escapeStringLiteralBlanks(final String scriptExpression) {
 			Matcher matcher = STRING_LITERAL_PATTERN.matcher(scriptExpression);
 			String escapedExpression = scriptExpression;
 

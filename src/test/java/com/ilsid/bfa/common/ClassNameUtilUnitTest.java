@@ -60,4 +60,10 @@ public class ClassNameUtilUnitTest extends BaseUnitTestCase {
 		assertEquals(toNativeFS("com/foo/bar/MyClass.class"), ClassNameUtil.getPath("com.foo.bar.MyClass"));
 	}
 
+	@Test
+	public void reservedSymbolsAreEscapedInGeneratedClassName() {
+		assertEquals("_sq_abc_sq__x20__Pls__x20__sq_fgh_sq_",
+				ClassNameUtil.generateSimpleClassName("'abc' + 'fgh'", ClassNameUtil.BLANK_CODE));
+	}
+
 }

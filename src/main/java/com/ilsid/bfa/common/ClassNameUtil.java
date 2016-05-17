@@ -76,6 +76,7 @@ public class ClassNameUtil {
 		escapeSymbols.put("*", "_Mlt_");
 		escapeSymbols.put("/", "_Div_");
 		escapeSymbols.put(".", "_dt_");
+		escapeSymbols.put("'", "_sq_");
 	}
 
 	/**
@@ -125,11 +126,7 @@ public class ClassNameUtil {
 	 * @return a class name
 	 */
 	public static String generateSimpleClassName(String expression, String blankReplacement) {
-		String expr = expression.replaceAll(WHITESPACE_REGEXP, blankReplacement);
-		for (String smb : escapeSymbols.keySet()) {
-			expr = expr.replace(smb, escapeSymbols.get(smb));
-		}
-
+		String expr = escape(expression.replaceAll(WHITESPACE_REGEXP, blankReplacement));
 		return expr;
 	}
 

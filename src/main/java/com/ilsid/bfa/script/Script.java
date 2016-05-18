@@ -128,14 +128,6 @@ public abstract class Script {
 		return actionResult;
 	}
 
-	public ValueExpression<Boolean> AsBoolean(String input) {
-		return new BooleanExpression(input);
-	}
-
-	public ValueExpression<String> AsString(String input) {
-		return new StringLiteralExpression(input);
-	}
-
 	public long getRuntimeId() {
 		return runtimeId;
 	}

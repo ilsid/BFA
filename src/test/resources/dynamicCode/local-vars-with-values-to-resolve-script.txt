@@ -1,18 +1,14 @@
 // String is resolved to Number
-DeclareLocalVar("Var1", "Number", AsString("1"));
+DeclareLocalVar("Var1", "Number", "1");
 DeclareLocalVar("Var2", "Decimal");
 DeclareLocalVar("Var3", "Decimal");
-DeclareLocalVar("Var4", "Decimal");
 // Number is resolved to Decimal
 DeclareLocalVar("Var5", "Decimal", "33");
 
 // String is resolved to Number
-SetLocalVar("Var1", AsString("1"));
+SetLocalVar("Var1", "1");
 // Number is resolved to Decimal
 SetLocalVar("Var2", "2");
 
-// FIXME: This is legal in compile-time, but causes error in runtime
-SetLocalVar("Var3", AsString("abcd"));
-
-// String representation of Number is resolved to Decimal
-SetLocalVar("Var4", AsString("2"));
+// String is resolved to Decimal
+SetLocalVar("Var3", "55.77");

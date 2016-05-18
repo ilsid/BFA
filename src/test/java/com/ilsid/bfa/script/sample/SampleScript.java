@@ -31,7 +31,7 @@ public class SampleScript extends Script {
 
 		SetLocalVar("TempAmount", "Amount");
 
-		if (Equal("GlobalConfig.EnablePrepaidAccounting", AsBoolean("True"), 
+		if (Equal("GlobalConfig.EnablePrepaidAccounting", "true", 
 			"Is prepaid subscriber?")) {
 			
 			if (LessOrEqual("Amount", "Subscriber.PrepaidAmount - Subscriber.PrepaidReservedAmount", 
@@ -44,7 +44,7 @@ public class SampleScript extends Script {
 						"Subscriber.SI", 
 						"Subscriber.Address", 
 						"AmountToReserve", 
-						AsString("EVENT_DRIVEN"), 
+						"'EVENT_DRIVEN'", 
 						"AccessType")
 						.SetLocalVar("SessionID")
 						.SetLocalVar("ReservedAmount")

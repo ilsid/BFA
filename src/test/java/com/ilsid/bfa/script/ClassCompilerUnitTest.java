@@ -238,10 +238,12 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithValuesToResolve",
 				"local-vars-with-values-to-resolve-script.txt");
 
-		assertEquals(2, expressions.length);
-
-		assertExpressionShortClassName("TestScriptWithValuesToResolve$$33", expressions[0].getClassName());
-		assertExpressionShortClassName("TestScriptWithValuesToResolve$$2", expressions[1].getClassName());
+		assertEquals(4, expressions.length);
+		
+		assertExpressionShortClassName("TestScriptWithValuesToResolve$$1", expressions[0].getClassName());
+		assertExpressionShortClassName("TestScriptWithValuesToResolve$$33", expressions[1].getClassName());
+		assertExpressionShortClassName("TestScriptWithValuesToResolve$$2", expressions[2].getClassName());
+		assertExpressionShortClassName("TestScriptWithValuesToResolve$$55_dt_77", expressions[3].getClassName());
 	}
 
 	@Test

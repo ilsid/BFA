@@ -15,7 +15,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.slf4j.Logger;
 
 import com.github.javaparser.JavaParser;
@@ -481,29 +480,14 @@ public class ClassCompiler {
 
 		private Object extractValue(Expression expression) throws ScriptException {
 			Object result;
-			if (MethodCallExpr.class.isInstance(expression)) {
-				MethodCallExpr methodCall = (MethodCallExpr) expression;
 
-				// Expected only methods that return ValueExpression instances
-				if (isValueExpressionMethodWithSingleStringParameter(methodCall)) {
-					Expression[] methodParams = methodCall.getArgs().toArray(new Expression[] {});
-					// ValueExpression method must have a single string parameter (see AsString(), AsBoolean() methods)
-					result = ((StringLiteralExpr) methodParams[0]).getValue();
-				} else {
-					throw new ScriptException(String.format("Unexpected expression [%s]", methodCall.getName()));
-				}
-			} else if (StringLiteralExpr.class.isInstance(expression)) {
+			if (StringLiteralExpr.class.isInstance(expression)) {
 				result = ((StringLiteralExpr) expression).getValue();
 			} else {
 				throw new ScriptException(String.format("Unexpected expression [%s]", expression));
 			}
 
 			return result;
-		}
-
-		private boolean isValueExpressionMethodWithSingleStringParameter(MethodCallExpr expression) {
-			Method method = MethodUtils.getAccessibleMethod(Script.class, expression.getName(), String.class);
-			return method != null && ValueExpression.class.isAssignableFrom(method.getReturnType());
 		}
 
 		private void checkVarType(String varName, String varType, String javaType,

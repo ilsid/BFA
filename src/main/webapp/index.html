@@ -934,83 +934,83 @@
 					});
 					
 					tree = new Tree({
-					id: objectType + 'Tree',
-					model: treeModel,
-					showRoot: false,
-					openOnClick: false,
-					rootName: rootName,
-					
-					onFocus: function() {
-						var btnNew = registry.byId(objectType + 'Toolbar_new');
-						if (btnNew.disabled) {
-							btnNew.set('disabled', false);
-						}
-					},
-					
-					onClick: function(item, node) {
-						//Warning! Depends on internal implementation of Tree: _expandNode() function
-						if (this.model.mayHaveChildren(item)) {
-							if (node.isExpanded) {
-								node.collapse();	
-							} else {
-								this._expandNode(node);
+						id: objectType + 'Tree',
+						model: treeModel,
+						showRoot: false,
+						openOnClick: false,
+						rootName: rootName,
+						
+						onFocus: function() {
+							var btnNew = registry.byId(objectType + 'Toolbar_new');
+							if (btnNew.disabled) {
+								btnNew.set('disabled', false);
 							}
-						}
+						},
 						
-						var btnDeleteGroup = registry.byId(objectType + 'Toolbar_deleteGroup');
-						var btnDelete = registry.byId(objectType + 'Toolbar_delete');
-						if (this.model.mayHaveChildren(item)) {
-							btnDeleteGroup.set('disabled', false);
-							btnDelete.set('disabled', true);
-						} else {
-							btnDeleteGroup.set('disabled', true);
-							btnDelete.set('disabled', false);
+						onClick: function(item, node) {
+							//Warning! Depends on internal implementation of Tree: _expandNode() function
+							if (this.model.mayHaveChildren(item)) {
+								if (node.isExpanded) {
+									node.collapse();	
+								} else {
+									this._expandNode(node);
+								}
+							}
+							
+							var btnDeleteGroup = registry.byId(objectType + 'Toolbar_deleteGroup');
+							var btnDelete = registry.byId(objectType + 'Toolbar_delete');
+							if (this.model.mayHaveChildren(item)) {
+								btnDeleteGroup.set('disabled', false);
+								btnDelete.set('disabled', true);
+							} else {
+								btnDeleteGroup.set('disabled', true);
+								btnDelete.set('disabled', false);
+							}
+						},
+						
+						onDblClick: function(item) {
+							if (this.model.mayHaveChildren(item)) {
+								return;
+							}
+							
+							var tabContainer = registry.byId('tabContainer');
+							var tabId = 'tab_' + objectType + '_' + item.name;
+							
+							var oldTab = registry.byId(tabId);
+							if (oldTab) {
+								tabContainer.selectChild(oldTab);
+								return;
+							}
+							
+							request('service/' + objectType + '/admin/' + itemDblClickOperationName, {
+								headers: { 'Content-Type': 'application/json' },
+								method: 'POST',
+								data: '{"name": "' + item.name + '"}'
+							}).then(function(resp){
+								itemDblClickHandler(item.title, tabId, resp);
+							}, function(err) {
+								writeError(err);
+							});
+						},
+
+						refreshChildrenSubTree: function(itemId) {
+							//Warning! Depends on internal implementation of Tree and ObjectStoreModel
+							delete this.model.childrenCache[itemId];
+							var node = this._itemNodesMap[itemId][0];
+							delete node._loadDeferred;
+							this._expandNode(node);
 						}
-					},
+					});
 					
-					onDblClick: function(item) {
-						if (this.model.mayHaveChildren(item)) {
-							return;
-						}
-						
-						var tabContainer = registry.byId('tabContainer');
-						var tabId = 'tab_' + objectType + '_' + item.name;
-						
-						var oldTab = registry.byId(tabId);
-						if (oldTab) {
-							tabContainer.selectChild(oldTab);
-							return;
-						}
-						
-						request('service/' + objectType + '/admin/' + itemDblClickOperationName, {
-							headers: { 'Content-Type': 'application/json' },
-							method: 'POST',
-							data: '{"name": "' + item.name + '"}'
-						}).then(function(resp){
-							itemDblClickHandler(item.title, tabId, resp);
-						}, function(err) {
-							writeError(err);
-						});
-					},
-
-					refreshChildrenSubTree: function(itemId) {
-						//Warning! Depends on internal implementation of Tree and ObjectStoreModel
-						delete this.model.childrenCache[itemId];
-						var node = this._itemNodesMap[itemId][0];
-						delete node._loadDeferred;
-						this._expandNode(node);
+					if (leafIconClass) {
+						tree.getIconClass = function(item, opened) {
+							return this.model.mayHaveChildren(item) ? 
+								(opened ? 'dijitFolderOpened' : 'dijitFolderClosed') : leafIconClass;
+						}	
 					}
-				});
-				
-				if (leafIconClass) {
-					tree.getIconClass = function(item, opened) {
-						return this.model.mayHaveChildren(item) ? 
-							(opened ? 'dijitFolderOpened' : 'dijitFolderClosed') : leafIconClass;
-					}	
-				}
 
-				tree.placeAt(dom.byId(objectType + 'TreeContainer'));
-				tree.startup();
+					tree.placeAt(dom.byId(objectType + 'TreeContainer'));
+					tree.startup();
 			});	
 		}
 		

@@ -3,6 +3,7 @@ package com.ilsid.bfa.script;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
@@ -171,12 +172,18 @@ public class ClassCompiler {
 				CtClass fieldTypeClass = classPool.get(fieldType);
 				CtField field = new CtField(fieldTypeClass, fieldName, clazz);
 				field.setModifiers(Modifier.PUBLIC);
-				clazz.addField(field);
+
+				if (hasDefaultPublicConstructor(fieldType)) {
+					clazz.addField(field, "new " + fieldType + "();");
+				} else {
+					clazz.addField(field);
+				}
 			}
 
 			result = toBytecode(clazz);
 
-		} catch (NotFoundException | CannotCompileException | IOException | IllegalStateException e) {
+		} catch (NotFoundException | CannotCompileException | IOException | IllegalStateException
+				| ClassNotFoundException e) {
 
 			throw new ClassCompilationException(String.format("Compilation of Entity [%s] failed", className), e);
 
@@ -203,7 +210,7 @@ public class ClassCompiler {
 
 	// DeclareLocalVar("Var5", "Number");
 	// SetLocalVar("Var5", "1.77");
-	
+
 	public static ScriptExpressionsUnit compileScriptExpressions(String scriptSourceCode)
 			throws ClassCompilationException, IllegalArgumentException {
 		CompilationUnit compilationUnit;
@@ -390,6 +397,19 @@ public class ClassCompiler {
 		}
 
 		return messages.toString();
+	}
+
+	private static boolean hasDefaultPublicConstructor(String className)
+			throws ClassNotFoundException, IllegalStateException {
+		Class<?> clazz = DynamicClassLoader.getInstance().loadClass(className);
+
+		for (Constructor<?> constructor : clazz.getConstructors()) {
+			if (constructor.getParameterTypes().length == 0) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private static class MethodCallVisitorContext {

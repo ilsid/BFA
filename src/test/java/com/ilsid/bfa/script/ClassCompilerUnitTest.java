@@ -1,5 +1,6 @@
 package com.ilsid.bfa.script;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -239,7 +240,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 				"local-vars-with-values-to-resolve-script.txt");
 
 		assertEquals(4, expressions.length);
-		
+
 		assertExpressionShortClassName("TestScriptWithValuesToResolve$$1", expressions[0].getClassName());
 		assertExpressionShortClassName("TestScriptWithValuesToResolve$$33", expressions[1].getClassName());
 		assertExpressionShortClassName("TestScriptWithValuesToResolve$$2", expressions[2].getClassName());
@@ -248,17 +249,17 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void errorDetailsAreProvidedIfScriptContainsLocalVarsThatCanNotBeResolved() throws Exception {
-		 exceptionRule.expect(ClassCompilationException.class);
-		 StringBuilder msg = new StringBuilder();
-		 msg.append("Compilation of the script [TestScriptWithUnresolvedValues] failed").append(StringUtils.LF);
-		 msg.append("[1.2] is not a value of type Number").append(StringUtils.LF);
-		 msg.append("[abc] is not a value of type Decimal").append(StringUtils.LF);
-		 msg.append("Could not parse expression [abc]: Unexpected token [abc]").append(StringUtils.LF);
-		 msg.append("   Caused by: Unexpected token [abc]");
-		 
-		 exceptionRule.expectMessage(msg.toString());
-		
-		 compileScriptExpressions("TestScriptWithUnresolvedValues", "local-vars-with-unresolved-values-script.txt");
+		exceptionRule.expect(ClassCompilationException.class);
+		StringBuilder msg = new StringBuilder();
+		msg.append("Compilation of the script [TestScriptWithUnresolvedValues] failed").append(StringUtils.LF);
+		msg.append("[1.2] is not a value of type Number").append(StringUtils.LF);
+		msg.append("[abc] is not a value of type Decimal").append(StringUtils.LF);
+		msg.append("Could not parse expression [abc]: Unexpected token [abc]").append(StringUtils.LF);
+		msg.append("   Caused by: Unexpected token [abc]");
+
+		exceptionRule.expectMessage(msg.toString());
+
+		compileScriptExpressions("TestScriptWithUnresolvedValues", "local-vars-with-unresolved-values-script.txt");
 	}
 
 	@Test
@@ -293,7 +294,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
 		assertEquals(1, clazz.getFields().length);
-		assertSame(Integer.class, clazz.getField("testField").getType());
+		final Field field = clazz.getField("testField");
+		assertSame(Integer.class, field.getType());
+		assertFieldIsNotInitialized(field);
 	}
 
 	@Test
@@ -304,9 +307,15 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
 		assertEquals(3, clazz.getFields().length);
-		assertSame(Integer.class, clazz.getField("testField1").getType());
-		assertSame(Double.class, clazz.getField("testField2").getType());
-		assertSame(Integer.class, clazz.getField("testField3").getType());
+
+		final Field field1 = clazz.getField("testField1");
+		final Field field2 = clazz.getField("testField2");
+		final Field field3 = clazz.getField("testField3");
+		assertSame(Integer.class, field1.getType());
+		assertSame(Double.class, field2.getType());
+		assertSame(Integer.class, field3.getType());
+
+		assertFieldsAreNotInitialized(field1, field2, field3);
 	}
 
 	@Test
@@ -318,7 +327,10 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
 		assertEquals(1, clazz.getFields().length);
-		assertEquals(fieldTypeName, clazz.getField("contract").getType().getName());
+		final Field contractField = clazz.getField("contract");
+		assertEquals(fieldTypeName, contractField.getType().getName());
+
+		assertFieldIsInitialized(contractField);
 	}
 
 	@Test
@@ -331,8 +343,14 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
 		assertEquals(2, clazz.getFields().length);
-		assertEquals(fieldTypeName, clazz.getField("contract1").getType().getName());
-		assertEquals(fieldTypeName, clazz.getField("contract2").getType().getName());
+
+		final Field contract1Field = clazz.getField("contract1");
+		final Field contract2Field = clazz.getField("contract2");
+		assertEquals(fieldTypeName, contract1Field.getType().getName());
+		assertEquals(fieldTypeName, contract2Field.getType().getName());
+
+		assertFieldIsInitialized(contract1Field);
+		assertFieldIsInitialized(contract2Field);
 	}
 
 	@Test
@@ -346,8 +364,14 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
 		assertEquals(2, clazz.getFields().length);
-		assertEquals(fieldTypeName1, clazz.getField("contract1").getType().getName());
-		assertEquals(fieldTypeName2, clazz.getField("contract2").getType().getName());
+
+		final Field contract1Field = clazz.getField("contract1");
+		final Field contract2Field = clazz.getField("contract2");
+		assertEquals(fieldTypeName1, contract1Field.getType().getName());
+		assertEquals(fieldTypeName2, contract2Field.getType().getName());
+
+		assertFieldIsInitialized(contract1Field);
+		assertFieldIsInitialized(contract2Field);
 	}
 
 	@Test
@@ -361,8 +385,14 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
 		assertEquals(2, clazz.getFields().length);
-		assertEquals(fieldTypeName1, clazz.getField("contract").getType().getName());
-		assertEquals(fieldTypeName2, clazz.getField("days").getType().getName());
+
+		final Field contractField = clazz.getField("contract");
+		final Field intField = clazz.getField("days");
+		assertEquals(fieldTypeName1, contractField.getType().getName());
+		assertEquals(fieldTypeName2, intField.getType().getName());
+
+		assertFieldIsInitialized(contractField);
+		assertFieldIsNotInitialized(intField);
 	}
 
 	@Test
@@ -440,6 +470,22 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	private void failCausedByUnexpectedException(Exception e) {
 		fail("Unexpected exception was thrown: " + e.getMessage());
+	}
+
+	private void assertFieldIsInitialized(Field field) throws Exception {
+		Object classInst = field.getDeclaringClass().newInstance();
+		assertNotNull(field.get(classInst));
+	}
+
+	private void assertFieldIsNotInitialized(Field field) throws Exception {
+		Object classInst = field.getDeclaringClass().newInstance();
+		assertNull(field.get(classInst));
+	}
+
+	private void assertFieldsAreNotInitialized(Field... fields) throws Exception {
+		for (Field field : fields) {
+			assertFieldIsNotInitialized(field);
+		}
 	}
 
 }

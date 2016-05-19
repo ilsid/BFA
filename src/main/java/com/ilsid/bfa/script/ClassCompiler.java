@@ -53,6 +53,8 @@ public class ClassCompiler {
 
 	private static final String EXPRESSION_ERROR_MESSAGE_TEMPLATE = "Failed to compile the expression in the script [{}]";
 
+	private static final String DEFAULT_CONSTRUCTOR_TEMPLATE = "new %s();";
+
 	private static final CtClass[] NO_ARGS = {};
 
 	private static final ClassPool classPool;
@@ -174,7 +176,7 @@ public class ClassCompiler {
 				field.setModifiers(Modifier.PUBLIC);
 
 				if (hasDefaultPublicConstructor(fieldType)) {
-					clazz.addField(field, "new " + fieldType + "();");
+					clazz.addField(field, String.format(DEFAULT_CONSTRUCTOR_TEMPLATE, fieldType));
 				} else {
 					clazz.addField(field);
 				}

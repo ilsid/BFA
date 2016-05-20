@@ -8,6 +8,8 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.test.types.Contract;
+import com.ilsid.bfa.test.types.ContractHolder;
 
 public class JsonUtilUnitTest extends BaseUnitTestCase {
 
@@ -47,6 +49,45 @@ public class JsonUtilUnitTest extends BaseUnitTestCase {
 		};
 
 		assertEquals("{\"var1\":\"Integer\",\"var2\":\"Double\",\"var3\":\"String\"}", JsonUtil.toJsonString(map));
+	}
+
+	@Test
+	public void jsonStringCanBeConvertedToObject() throws Exception {
+		String json = "{\"Days\":\"33\",\"MonthlyFee\":\"77.99\",\"ID\":\"abc\"}";
+		Contract contract = JsonUtil.toObject(json, Contract.class);
+
+		assertEquals(33, contract.Days);
+		assertEquals(77.99, contract.MonthlyFee);
+		assertEquals("abc", contract.ID);
+	}
+
+	@Test
+	public void jsonStringCanBeConvertedToComposedObject() throws Exception {
+		String json = "{\"ID\":\"44\", \"Contract\":{\"Days\":\"55\",\"MonthlyFee\":\"77.99\"}}";
+		ContractHolder holder = JsonUtil.toObject(json, ContractHolder.class);
+
+		assertEquals(44, holder.ID);
+		assertEquals(55, holder.Contract.Days);
+		assertEquals(77.99, holder.Contract.MonthlyFee);
+	}
+
+	@Test
+	public void invalidJsonStringIsNotRecognized() {
+		assertFalse(JsonUtil.isValidJsonString(""));
+		assertFalse(JsonUtil.isValidJsonString("abc"));
+		assertFalse(JsonUtil.isValidJsonString("{name:value}"));
+		assertFalse(JsonUtil.isValidJsonString("{"));
+		assertFalse(JsonUtil.isValidJsonString("}"));
+		// No closing bracket
+		assertFalse(JsonUtil.isValidJsonString("{\"Days\":\"33\",\"MonthlyFee\":\"77.99\""));
+	}
+
+	@Test
+	public void validJsonStringIsRecognized() {
+		assertTrue(JsonUtil.isValidJsonString("{}"));
+		assertTrue(JsonUtil.isValidJsonString("{\"Days\":\"33\",\"MonthlyFee\":\"77.99\"}"));
+		assertTrue(
+				JsonUtil.isValidJsonString("{\"ID\":\"44\", \"Contract\":{\"Days\":\"55\",\"MonthlyFee\":\"77.99\"}}"));
 	}
 
 }

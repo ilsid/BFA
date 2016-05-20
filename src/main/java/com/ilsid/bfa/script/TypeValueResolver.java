@@ -1,7 +1,11 @@
 package com.ilsid.bfa.script;
 
+import java.io.IOException;
+
 import com.ilsid.bfa.common.BooleanUtil;
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.JsonUtil;
+import com.ilsid.bfa.persistence.DynamicClassLoader;
 
 /**
  * Resolves variable types.
@@ -10,6 +14,8 @@ import com.ilsid.bfa.common.ClassNameUtil;
  *
  */
 public abstract class TypeValueResolver {
+
+	protected static final String INVALID_VALUE_MSG_TPLT = "[%s] is not a value of type %s";
 
 	protected String typeName;
 
@@ -47,7 +53,7 @@ public abstract class TypeValueResolver {
 	static abstract class PredefinedTypeResolver extends TypeValueResolver {
 
 		protected InvalidTypeException createInvalidTypeException(Object value) {
-			return new InvalidTypeException(String.format("[%s] is not a value of type %s", value, typeName));
+			return new InvalidTypeException(String.format(INVALID_VALUE_MSG_TPLT, value, typeName));
 		}
 
 		public PredefinedTypeResolver(String typeName) {
@@ -147,12 +153,33 @@ public abstract class TypeValueResolver {
 
 		@Override
 		public Object resolve(Object value) throws InvalidTypeException {
-			if (!value.getClass().getName().equals(typeName)) {
-				throw new InvalidTypeException(String.format("[%s] is not a value of type %s", value,
-						ClassNameUtil.getShortClassName(typeName)));
+			if (value.getClass().getName().equals(typeName)) {
+				return value;
+			} else {
+				final String valueAsString = value.toString();
+				if (JsonUtil.isValidJsonString(valueAsString)) {
+					final Object actualValue = tryGetActualValue(valueAsString);
+					return actualValue;
+				}
 			}
 
-			return value;
+			throw new InvalidTypeException(
+					String.format(INVALID_VALUE_MSG_TPLT, value, ClassNameUtil.getShortClassName(typeName)));
+		}
+
+		private Object tryGetActualValue(String stringValue) throws InvalidTypeException {
+			Object result;
+			try {
+				Class<?> typeClass = DynamicClassLoader.getInstance().loadClass(typeName);
+				result = JsonUtil.toObject(stringValue.toString(), typeClass);
+			} catch (ClassNotFoundException | IllegalStateException | IOException e) {
+
+				throw new InvalidTypeException(
+						String.format(INVALID_VALUE_MSG_TPLT, stringValue, ClassNameUtil.getShortClassName(typeName)),
+						e);
+			}
+
+			return result;
 		}
 
 	}

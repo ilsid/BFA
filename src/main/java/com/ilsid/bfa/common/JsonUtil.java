@@ -60,4 +60,37 @@ public class JsonUtil {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(map);
 	}
+
+	/**
+	 * Converts JSON string to an object of the specified type.
+	 * 
+	 * @param json
+	 *            JSON string
+	 * @param type
+	 *            object's type
+	 * @return
+	 * @throws IOException
+	 *             in case the string can't be converted
+	 */
+	public static <T> T toObject(String json, Class<T> type) throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.readValue(json, type);
+	}
+
+	/**
+	 * Checks whether a passed content is a valid JSON string.
+	 * 
+	 * @param content
+	 *            string to examine
+	 * @return <code>true</code> if content is valid and <code>false</code> otherwise
+	 */
+	public static boolean isValidJsonString(String content) {
+		try {
+			new ObjectMapper().readTree(content);
+		} catch (IOException e) {
+			return false;
+		}
+
+		return true;
+	}
 }

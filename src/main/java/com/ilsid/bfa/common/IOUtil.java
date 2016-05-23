@@ -1,6 +1,7 @@
 package com.ilsid.bfa.common;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,6 +49,24 @@ public class IOUtil {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Loads binary file contents.
+	 * 
+	 * @param file
+	 *            file to load
+	 * @return binary representation
+	 * @throws IOException
+	 *             in case of the operation failure
+	 */
+	public static byte[] loadContents(File file) throws IOException {
+		byte[] result;
+		try (InputStream is = new FileInputStream(file);) {
+			result = IOUtils.toByteArray(is);
+		}
+
+		return result;
 	}
 
 }

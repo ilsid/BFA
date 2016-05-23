@@ -4,15 +4,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.common.IOUtil;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.TransactionManager;
@@ -24,6 +28,8 @@ import com.ilsid.bfa.persistence.TransactionManager;
  *
  */
 public class FilesystemScriptingRepository extends ConfigurableRepository implements ScriptingRepository {
+
+	private static final String[] CLASS_FILES_FILTER = new String[] { "class" };
 
 	private static final char DOT = '.';
 
@@ -54,14 +60,27 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 			return null;
 		}
 
-		byte[] result;
+		byte[] result = loadClassContents(classFile, className);
 
-		try {
-			try (InputStream is = new FileInputStream(classFile);) {
-				result = IOUtils.toByteArray(is);
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadClasses(java.lang.String)
+	 */
+	public List<Entry<String, byte[]>> loadClasses(String packageName) throws PersistenceException {
+		List<Entry<String, byte[]>> result = new LinkedList<>();
+		File packageDir = getPackageDir(packageName);
+
+		if (packageDir.isDirectory()) {
+			Collection<File> classFiles = FileUtils.listFiles(packageDir, CLASS_FILES_FILTER, true);
+			for (File classFile : classFiles) {
+				String className = extractClassName(classFile, packageName);
+				byte[] byteCode = loadClassContents(classFile, className);
+				result.add(new SimpleImmutableEntry<String, byte[]>(className, byteCode));
 			}
-		} catch (IOException e) {
-			throw new PersistenceException(String.format("Failed to load the class [%s]", className), e);
 		}
 
 		return result;
@@ -332,6 +351,26 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		return FSTransactionManager.getInstance();
 	}
 
+	private byte[] loadClassContents(File classFile, String className) throws PersistenceException {
+		byte[] result;
+		try {
+			result = IOUtil.loadContents(classFile);
+		} catch (IOException e) {
+			throw new PersistenceException(String.format("Failed to load the class [%s]", className), e);
+		}
+
+		return result;
+	}
+
+	private String extractClassName(File classFile, String packageName) {
+		String convertedPath = classFile.getPath().replace(File.separatorChar, DOT);
+		int packageIdx = convertedPath.lastIndexOf(packageName);
+		int classExtIdx = convertedPath.lastIndexOf(ClassNameUtil.CLASS_FILE_EXTENSION);
+		String className = convertedPath.substring(packageIdx, classExtIdx);
+
+		return className;
+	}
+
 	private void doSave(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
 		if (rootDirPath == null) {
 			throw new IllegalStateException("Root directory is not set");
@@ -398,7 +437,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	}
 
 	private File getPackageDir(String packageName) {
-		return new File(rootDirPath + File.separatorChar + packageName.replace(DOT, File.separatorChar));
+		return new File(rootDirPath, packageName.replace(DOT, File.separatorChar));
 	}
 
 	private String[] defineTypesToCollect(String[] types) {

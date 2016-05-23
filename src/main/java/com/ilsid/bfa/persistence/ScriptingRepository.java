@@ -1,5 +1,6 @@
 package com.ilsid.bfa.persistence;
 
+import java.util.Map.Entry;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,18 @@ public interface ScriptingRepository extends Configurable {
 	 * 
 	 */
 	byte[] load(String className) throws PersistenceException;
+
+	/**
+	 * Loads classes under a given package, including sub-packages.
+	 * 
+	 * @param packageName
+	 *            package name
+	 * @return a list of entries. Each entry contains class name and byte code. If a package with such name does not
+	 *         exist or has no classes, then an empty list is returned
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	List<Entry<String, byte[]>> loadClasses(String packageName) throws PersistenceException;
 
 	/**
 	 * Saves new class. Source code here is not the whole code of the class, but the variable part only (for example, a

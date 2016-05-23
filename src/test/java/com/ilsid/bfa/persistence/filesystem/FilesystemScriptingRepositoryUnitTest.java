@@ -35,7 +35,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	private final static String SCRIPT_CLASS_NAME = CompileHelper.GENERATED_SCRIPT_PACKAGE
 			+ FilesystemScriptingRepositoryUnitTest.class.getSimpleName() + "Script01";
 
-	private final static String PATH_WO_EXTENSION = REPOSITORY_ROOT_DIR_PATH + "/" + SCRIPT_CLASS_NAME.replace('.', '/');
+	private final static String PATH_WO_EXTENSION = REPOSITORY_ROOT_DIR_PATH + "/"
+			+ SCRIPT_CLASS_NAME.replace('.', '/');
 
 	private final static File SAVED_SCRIPT_CLASS_FILE = new File(PATH_WO_EXTENSION + ".class");
 
@@ -63,7 +64,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void defaultScripGroupMetadataFileExists() throws Exception {
 		String metaData = IOHelper.loadFileContents(
-				REPOSITORY_ROOT_DIR_PATH + "/" + ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE.replace('.', '/'),
+				REPOSITORY_ROOT_DIR_PATH + "/"
+						+ ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE.replace('.', '/'),
 				ClassNameUtil.METADATA_FILE_NAME);
 
 		assertEquals("{\"type\":\"SCRIPT_GROUP\",\"name\":\"default_group\",\"title\":\"Default Group\"}", metaData);
@@ -225,6 +227,38 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void classesForExistingPackageCanBeLoaded() throws Exception {
+		createCodeRepository();
+
+		List<Map.Entry<String, byte[]>> classes = repository.loadClasses("com.ilsid.bfa.generated.entity");
+		assertEquals(2, classes.size());
+
+		Map<String, byte[]> loadedClasses = new HashMap<>();
+		for (Map.Entry<String, byte[]> entry : classes) {
+			loadedClasses.put(entry.getKey(), entry.getValue());
+		}
+
+		final String className1 = "com.ilsid.bfa.generated.entity.default_group.Entity001";
+		final String className2 = "com.ilsid.bfa.generated.entity.default_group.Contract";
+
+		assertTrue(loadedClasses.containsKey(className1));
+		assertTrue(loadedClasses.containsKey(className2));
+
+		final String entityDir = TestConstants.TEST_RESOURCES_DIR
+				+ "/code_repository/com/ilsid/bfa/generated/entity/default_group";
+
+		assertTrue(Arrays.equals(IOHelper.loadClass(entityDir, "Entity001.class"), loadedClasses.get(className1)));
+		assertTrue(Arrays.equals(IOHelper.loadClass(entityDir, "Contract.class"), loadedClasses.get(className2)));
+	}
+
+	@Test
+	public void noClassesAreLoadedForNonExistingPackage() throws Exception {
+		createCodeRepository();
+
+		assertEquals(0, repository.loadClasses("com.ilsid.bfa.generated.non_existing_pkg").size());
+	}
+
+	@Test
 	public void classAndItsSourceCanBeDeleted() throws Exception {
 		createCodeRepository();
 
@@ -316,8 +350,9 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		boolean result = repository.saveMetadata(className, createEntityMetadata());
 		assertFalse(result);
-		assertFalse(new File(REPOSITORY_ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.entity.default_group".replace('.', '/')
-				+ "/" + "SomeNonExistingEntity_" + ClassNameUtil.METADATA_FILE_NAME).exists());
+		assertFalse(new File(
+				REPOSITORY_ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.entity.default_group".replace('.', '/') + "/"
+						+ "SomeNonExistingEntity_" + ClassNameUtil.METADATA_FILE_NAME).exists());
 	}
 
 	@Test
@@ -330,7 +365,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		assertTrue(result);
 
 		String savedMetadata = IOHelper.loadFileContents(
-				REPOSITORY_ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/'),
+				REPOSITORY_ROOT_DIR_PATH + "/"
+						+ "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/'),
 				ClassNameUtil.METADATA_FILE_NAME);
 
 		assertEquals("{\"type\":\"SCRIPT\",\"name\":\"Test_Script_001\",\"title\":\"Test Script 001\"}", savedMetadata);

@@ -171,7 +171,7 @@ public abstract class TypeValueResolver {
 			Object result;
 			try {
 				Class<?> typeClass = DynamicClassLoader.getInstance().loadClass(typeName);
-				result = JsonUtil.toObject(stringValue.toString(), typeClass);
+				result = JsonUtil.toObject(stringValue, typeClass);
 			} catch (ClassNotFoundException | IllegalStateException | IOException e) {
 
 				throw new InvalidTypeException(

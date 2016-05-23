@@ -94,21 +94,28 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 
 	@Test
 	public void scriptWithInputParametersIsRun() throws Exception {
-		verifyScriptWithInputParametersCanBeRun(55, 9.99);
+		verifyScriptWithInputParametersCanBeRun("Script with Params", 55, 9.99);
 	}
 
 	@Test
 	public void scriptWithInputStringParametersIsRun() throws Exception {
 		// Parameters can be represented as strings
-		verifyScriptWithInputParametersCanBeRun("55", "9.99");
+		verifyScriptWithInputParametersCanBeRun("Script with Params", "55", "9.99");
 	}
 
-	private void verifyScriptWithInputParametersCanBeRun(Object... params) throws Exception {
+	@Test
+	public void scriptWithInputJsonStringParameterIsRun() throws Exception {
+		// First input param conforms Contract entity in the repository
+		verifyScriptWithInputParametersCanBeRun("Custom Group 02::Script with Entity Param", "{\"Days\":\"55\"}",
+				"9.99");
+	}
+
+	private void verifyScriptWithInputParametersCanBeRun(String scriptName, Object... params) throws Exception {
 		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
 
 		// The script invokes "Write System Property" action that sets "test.action.sys.property" system property
 		assertNull(System.getProperty(TEST_SYSTEM_PROP_NAME));
-		verifyScriptCanBeRun("Script with Params", params);
+		verifyScriptCanBeRun(scriptName, params);
 		// "Write System Property" accepts two values from script's input parameters. Their values are 55 and 9.99. The
 		// values are appended to the initial system property value "Test Action Value".
 		assertEquals("Test Action Value 55 9.99", System.getProperty(TEST_SYSTEM_PROP_NAME));

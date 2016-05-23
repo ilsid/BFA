@@ -133,7 +133,7 @@ public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void enityValueIsResolvedForValidJsonString() throws Exception {
+	public void jsonStringValueIsResolvedToEntity() throws Exception {
 		EntityResolver resolver = new EntityResolver(Contract.class.getName());
 		Contract contract = (Contract) resolver.resolve("{\"Days\":\"33\",\"MonthlyFee\":\"77.99\",\"ID\":\"abc\"}");
 
@@ -143,12 +143,12 @@ public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void enityValueIsNotResolvedForInvalidJsonString() throws Exception {
+	public void invalidJsonStringValueIsNotResolvedToEntity() throws Exception {
 		exceptionRule.expect(InvalidTypeException.class);
-		exceptionRule.expectMessage("[{abcd}] is not a value of type Contract");
+		exceptionRule.expectMessage("[{\"nonContractField\":\"someValue\"}] is not a value of type Contract");
 
 		EntityResolver resolver = new EntityResolver(Contract.class.getName());
-		resolver.resolve("{abcd}");
+		resolver.resolve("{\"nonContractField\":\"someValue\"}");
 	}
 
 	@Test

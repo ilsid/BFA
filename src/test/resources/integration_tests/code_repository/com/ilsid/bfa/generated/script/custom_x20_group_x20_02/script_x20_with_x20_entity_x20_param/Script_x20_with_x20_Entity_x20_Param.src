@@ -1,0 +1,4 @@
+DeclareInputVar("Contract", "Contract"); 
+DeclareInputVar("Var1", "Decimal");
+
+Action("Write System Property", "Contract.Days", "Var1");

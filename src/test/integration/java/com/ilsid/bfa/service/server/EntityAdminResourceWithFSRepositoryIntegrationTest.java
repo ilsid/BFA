@@ -1,6 +1,9 @@
 package com.ilsid.bfa.service.server;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -8,9 +11,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ilsid.bfa.IntegrationTestConstants;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.Metadata;
@@ -27,7 +32,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	private static final String GENERATED_ENTITY_DEFAULT_GROUP_PATH = ClassNameUtil.GENERATED_ENTITIES_DEFAULT_GROUP_PACKAGE
 			.replace('.', '/');
 
-	private static final String ENTITY_REPOSITORY_DEFAULT_GROUP_PATH = CODE_REPOSITORY_PATH + "/" + GENERATED_ENTITY_DEFAULT_GROUP_PATH;
+	private static final String ENTITY_REPOSITORY_DEFAULT_GROUP_PATH = CODE_REPOSITORY_PATH + "/"
+			+ GENERATED_ENTITY_DEFAULT_GROUP_PATH;
 
 	private static final File ENTITY_REPOSITORY_DEFAULT_GROUP_DIR = new File(ENTITY_REPOSITORY_DEFAULT_GROUP_PATH);
 
@@ -249,7 +255,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void subGroupAndEntityItemsWithDefinedMetadataAreLoaded() throws Exception {
-		copyEntityDirectoryToRepository(Metadata.DEFAULT_GROUP_NAME, Metadata.DEFAULT_GROUP_NAME);
+		copyEntityDirectoryToRepository(Metadata.DEFAULT_GROUP_NAME);
 
 		WebResource webResource = getWebResource(Paths.ENTITY_GET_ITEMS_SERVICE);
 		ClientResponse response = webResource.post(ClientResponse.class, Metadata.DEFAULT_GROUP_NAME);
@@ -280,6 +286,50 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals("EntityToUpdate", metaData.get(Metadata.NAME));
 		assertEquals("EntityToUpdate", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
+	}
+
+	@Test
+	public void enitiesLibraryIsLoaded() throws Exception {
+		copyEntityDirectoryToRepository(Metadata.DEFAULT_GROUP_NAME);
+		copyEntityDirectoryToRepository("custom_x20_group_x20_01");
+
+		WebResource webResource = getWebResource(Paths.ENTITY_GET_LIBRARY_SERVICE);
+		ClientResponse response = webResource.get(ClientResponse.class);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		InputStream is = response.getEntityInputStream();
+		String jarName = extractEntitiesJarName(response);
+		assertEquals("bfa-entities.jar", jarName);
+		final File jarFile = new File(IntegrationTestConstants.CODE_REPOSITORY_DIR, jarName);
+		OutputStream os = new FileOutputStream(jarFile);
+		IOUtils.copyLarge(is, os);
+
+		verifyEntitiesJar(jarFile);
+	}
+
+	private String extractEntitiesJarName(ClientResponse response) {
+		String header = response.getHeaders().get("Content-Disposition").get(0);
+		final String fileNameExpr = "filename=";
+		int fileNameIdx = header.lastIndexOf(fileNameExpr);
+		String jarName = header.substring(fileNameIdx + fileNameExpr.length());
+
+		return jarName;
+	}
+
+	private void verifyEntitiesJar(File jarFile) throws Exception {
+		final File jarDir = new File(IntegrationTestConstants.CODE_REPOSITORY_DIR, "__tmp_jar");
+		List<File> jarFiles = IOHelper.unzip(jarFile, jarDir);
+
+		assertEquals(5, jarFiles.size());
+		
+		assertTrue(jarFiles.contains(new File(jarDir, "META-INF/MANIFEST.MF")));
+		assertTrue(jarFiles
+				.contains(new File(jarDir, "com/ilsid/bfa/generated/entity/custom_x20_group_x20_01/Subscriber.class")));
+		assertTrue(jarFiles.contains(new File(jarDir, "com/ilsid/bfa/generated/entity/default_group/Contract.class")));
+		assertTrue(
+				jarFiles.contains(new File(jarDir, "com/ilsid/bfa/generated/entity/default_group/EntityToRead.class")));
+		assertTrue(jarFiles
+				.contains(new File(jarDir, "com/ilsid/bfa/generated/entity/default_group/EntityToUpdate.class")));
 	}
 
 	private void entityGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

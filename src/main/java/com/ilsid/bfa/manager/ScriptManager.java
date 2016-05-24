@@ -1,15 +1,29 @@
 package com.ilsid.bfa.manager;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.JsonUtil;
@@ -35,6 +49,10 @@ import com.ilsid.bfa.script.TypeNameResolver;
 // TODO: write unit tests
 @Singleton
 public class ScriptManager {
+
+	private static final String MANIFEST_VERSION = "1.0";
+
+	private static final String TMP_JAR_NAME_TEMPLATE = "__tmp-bfa-entities-%s.jar";
 
 	private static final Map<String, String> EMPTY_MAP = Collections.unmodifiableMap(new HashMap<String, String>());
 
@@ -437,6 +455,73 @@ public class ScriptManager {
 		} catch (PersistenceException e) {
 			throw new ManagementException(String.format("Failed to create the entity group [%s]", groupName), e);
 		}
+	}
+
+	/**
+	 * Returns JAR archive with all Entity classes from the repository.
+	 * 
+	 * @return {@link InputStream} instance for JAR archive
+	 * @throws ManagementException
+	 *             in case of any repository access issues
+	 */
+	public InputStream getEnitiesLibrary() throws ManagementException {
+		List<Entry<String, byte[]>> entityClasses;
+		try {
+			entityClasses = repository.loadClasses(ClassNameUtil.GENERATED_ENTITIES_ROOT_PACKAGE);
+		} catch (PersistenceException e) {
+			throw new ManagementException("Failed to load entity classes", e);
+		}
+
+		File tempJar = createTempJar(entityClasses);
+		byte[] jarContent;
+		try {
+			jarContent = FileUtils.readFileToByteArray(tempJar);
+		} catch (IOException e) {
+			throw new ManagementException("Failed to get entities library", e);
+		} finally {
+			FileUtils.deleteQuietly(tempJar);
+		}
+
+		return new ByteArrayInputStream(jarContent);
+	}
+
+	private File createTempJar(List<Entry<String, byte[]>> entityClasses) throws ManagementException {
+		Manifest manifest = new Manifest();
+		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, MANIFEST_VERSION);
+
+		final String jarName = String.format(TMP_JAR_NAME_TEMPLATE, System.currentTimeMillis());
+		final File jarFile = new File(jarName);
+
+		try {
+			JarOutputStream jar = new JarOutputStream(new FileOutputStream(jarName), manifest);
+
+			Set<String> processedPackages = new HashSet<>();
+			for (Entry<String, byte[]> classEntry : entityClasses) {
+				String className = classEntry.getKey();
+
+				// Create dir within JAR, if it is not already there
+				if (processedPackages.add(ClassNameUtil.getPackageName(className))) {
+					// Make sure dir path contains UNIX slashes and ends with '/' (according to Jar spec)
+					String classDir = ClassNameUtil.getDirs(className).replace(File.separatorChar, '/').concat("/");
+					jar.putNextEntry(new JarEntry(classDir));
+					jar.closeEntry();
+				}
+				
+				// Create class within JAR
+				JarEntry jarClass = new JarEntry(ClassNameUtil.getPath(className).replace(File.separatorChar, '/'));
+				jar.putNextEntry(jarClass);
+				byte[] byteCode = classEntry.getValue();
+				IOUtils.copyLarge(new ByteArrayInputStream(byteCode), jar);
+				jar.closeEntry();
+			}
+
+			jar.close();
+		} catch (IOException e) {
+			FileUtils.deleteQuietly(jarFile);
+			throw new ManagementException("Failed to create entities library", e);
+		}
+
+		return jarFile;
 	}
 
 	/**

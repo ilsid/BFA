@@ -1,15 +1,23 @@
 package com.ilsid.bfa.service.server;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
+
+import org.apache.commons.io.IOUtils;
 
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.manager.ManagementException;
@@ -24,8 +32,10 @@ import com.ilsid.bfa.service.dto.EntityAdminParams;
  */
 
 @Path(Paths.ENTITY_SERVICE_ADMIN_ROOT)
-// FIXME: Handle non-default entity groups
 public class EntityAdminResource extends AbstractAdminResource {
+
+	private static final String HTTP_HEADER_CONTENT_DISPOSITION = "Content-Disposition";
+	private static final String ENTITIES_JAR_NAME = "bfa-entities.jar";
 
 	/**
 	 * Creates the entity and saves it in the code repository. If the entity's group is not specified, it is created
@@ -180,10 +190,39 @@ public class EntityAdminResource extends AbstractAdminResource {
 		try {
 			scriptManager.createEntityGroup(groupName);
 		} catch (ManagementException e) {
-			throw new ResourceException(Paths.CREATE_GROUP_OPERATION, e);
+			throw new ResourceException(Paths.ENTITY_CREATE_GROUP_SERVICE, e);
 		}
 
 		return Response.status(Status.OK).build();
+	}
+
+	/**
+	 * Downloads JAR archive with all Entity classes from the repository.
+	 * 
+	 * @return the response with JAR contents
+	 */
+	@GET
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	@Path(Paths.GET_LIBRARY_OPERATION)
+	public Response getEntitiesLibrary() {
+		final InputStream input;
+		try {
+			input = scriptManager.getEnitiesLibrary();
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.ENTITY_GET_LIBRARY_SERVICE, e);
+		}
+
+		StreamingOutput jarStream = new StreamingOutput() {
+
+			public void write(OutputStream output) throws IOException, WebApplicationException {
+				IOUtils.copyLarge(input, output);
+			}
+
+		};
+
+		return Response.status(Status.OK)
+				.header(HTTP_HEADER_CONTENT_DISPOSITION, String.format("attachment; filename=%s", ENTITIES_JAR_NAME))
+				.entity(jarStream).build();
 	}
 
 }

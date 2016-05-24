@@ -80,6 +80,8 @@ public final class Paths {
 
 	public final static String ENTITY_SERVICE_ADMIN_ROOT = ENTITY_SERVICE_ROOT + "/admin";
 
+	public final static String GET_LIBRARY_OPERATION = "getLibrary";
+
 	public final static String ENTITY_CREATE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + CREATE_OPERATION;
 
 	public final static String ENTITY_UPDATE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + UPDATE_OPERATION;
@@ -89,6 +91,8 @@ public final class Paths {
 	public final static String ENTITY_GET_ITEMS_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + GET_ITEMS_OPERATION;
 
 	public final static String ENTITY_CREATE_GROUP_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + CREATE_GROUP_OPERATION;
+
+	public final static String ENTITY_GET_LIBRARY_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + GET_LIBRARY_OPERATION;
 
 	/*
 	 * Action Administration

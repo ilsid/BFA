@@ -360,9 +360,9 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 			IOUtil.unzip(tmpPackageFile, actionDir);
 		} catch (IOException e) {
 			throw new PersistenceException(String.format("Failed to save the action [%s]", actionName), e);
+		} finally {
+			FileUtils.deleteQuietly(tmpPackageFile);
 		}
-
-		FileUtils.deleteQuietly(tmpPackageFile);
 
 		validatePackageFormat(actionDir);
 		saveActionMetadata(actionName, actionDir);

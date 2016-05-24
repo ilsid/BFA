@@ -485,45 +485,6 @@ public class ScriptManager {
 		return new ByteArrayInputStream(jarContent);
 	}
 
-	private File createTempJar(List<Entry<String, byte[]>> entityClasses) throws ManagementException {
-		Manifest manifest = new Manifest();
-		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, MANIFEST_VERSION);
-
-		final String jarName = String.format(TMP_JAR_NAME_TEMPLATE, System.currentTimeMillis());
-		final File jarFile = new File(jarName);
-
-		try {
-			JarOutputStream jar = new JarOutputStream(new FileOutputStream(jarName), manifest);
-
-			Set<String> processedPackages = new HashSet<>();
-			for (Entry<String, byte[]> classEntry : entityClasses) {
-				String className = classEntry.getKey();
-
-				// Create dir within JAR, if it is not already there
-				if (processedPackages.add(ClassNameUtil.getPackageName(className))) {
-					// Make sure dir path contains UNIX slashes and ends with '/' (according to Jar spec)
-					String classDir = ClassNameUtil.getDirs(className).replace(File.separatorChar, '/').concat("/");
-					jar.putNextEntry(new JarEntry(classDir));
-					jar.closeEntry();
-				}
-				
-				// Create class within JAR
-				JarEntry jarClass = new JarEntry(ClassNameUtil.getPath(className).replace(File.separatorChar, '/'));
-				jar.putNextEntry(jarClass);
-				byte[] byteCode = classEntry.getValue();
-				IOUtils.copyLarge(new ByteArrayInputStream(byteCode), jar);
-				jar.closeEntry();
-			}
-
-			jar.close();
-		} catch (IOException e) {
-			FileUtils.deleteQuietly(jarFile);
-			throw new ManagementException("Failed to create entities library", e);
-		}
-
-		return jarFile;
-	}
-
 	/**
 	 * Defines a code repository implementation.
 	 * 
@@ -774,6 +735,45 @@ public class ScriptManager {
 		}
 
 		return result;
+	}
+
+	private File createTempJar(List<Entry<String, byte[]>> entityClasses) throws ManagementException {
+		Manifest manifest = new Manifest();
+		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, MANIFEST_VERSION);
+
+		final String jarName = String.format(TMP_JAR_NAME_TEMPLATE, System.currentTimeMillis());
+		final File jarFile = new File(jarName);
+
+		try {
+			JarOutputStream jar = new JarOutputStream(new FileOutputStream(jarName), manifest);
+
+			Set<String> processedPackages = new HashSet<>();
+			for (Entry<String, byte[]> classEntry : entityClasses) {
+				String className = classEntry.getKey();
+
+				// Create dir within JAR, if it is not already there
+				if (processedPackages.add(ClassNameUtil.getPackageName(className))) {
+					// Make sure dir path contains UNIX slashes and ends with '/' (according to Jar spec)
+					String classDir = ClassNameUtil.getDirs(className).replace(File.separatorChar, '/').concat("/");
+					jar.putNextEntry(new JarEntry(classDir));
+					jar.closeEntry();
+				}
+
+				// Create class within JAR
+				JarEntry jarClass = new JarEntry(ClassNameUtil.getPath(className).replace(File.separatorChar, '/'));
+				jar.putNextEntry(jarClass);
+				byte[] byteCode = classEntry.getValue();
+				IOUtils.copyLarge(new ByteArrayInputStream(byteCode), jar);
+				jar.closeEntry();
+			}
+
+			jar.close();
+		} catch (IOException e) {
+			FileUtils.deleteQuietly(jarFile);
+			throw new ManagementException("Failed to create entities library", e);
+		}
+
+		return jarFile;
 	}
 
 	private void startTransaction() throws PersistenceException {

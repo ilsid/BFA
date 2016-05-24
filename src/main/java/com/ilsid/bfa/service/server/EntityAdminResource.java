@@ -216,6 +216,7 @@ public class EntityAdminResource extends AbstractAdminResource {
 
 			public void write(OutputStream output) throws IOException, WebApplicationException {
 				IOUtils.copyLarge(input, output);
+				input.close();
 			}
 
 		};

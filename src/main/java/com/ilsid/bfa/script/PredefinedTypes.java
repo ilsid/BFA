@@ -43,5 +43,9 @@ class PredefinedTypes {
 	static TypeValueResolver getResolver(String className) {
 		return resolvers.get(className);
 	}
+	
+	static boolean isPredefinedJavaType(String className) {
+		return types.containsValue(className);
+	}
 
 }

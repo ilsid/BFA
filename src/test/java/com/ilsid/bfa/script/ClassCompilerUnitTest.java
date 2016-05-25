@@ -379,20 +379,24 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity06";
 		String fieldTypeName1 = "com.ilsid.bfa.generated.compilertest.GeneratedContract";
 		String fieldTypeName2 = "java.lang.Integer";
+		String fieldTypeName3 = "java.lang.String";
 
 		byte[] byteCode = ClassCompiler.compileEntity(className,
-				fieldTypeName1 + " contract;" + fieldTypeName2 + " days;");
+				fieldTypeName1 + " contract;" + fieldTypeName2 + " days;" + fieldTypeName3 + " id;");
 		Class<?> clazz = loadFromBytecode(className, byteCode);
 
-		assertEquals(2, clazz.getFields().length);
+		assertEquals(3, clazz.getFields().length);
 
 		final Field contractField = clazz.getField("contract");
 		final Field intField = clazz.getField("days");
+		final Field strField = clazz.getField("id");
 		assertEquals(fieldTypeName1, contractField.getType().getName());
 		assertEquals(fieldTypeName2, intField.getType().getName());
+		assertEquals(fieldTypeName3, strField.getType().getName());
 
 		assertFieldIsInitialized(contractField);
 		assertFieldIsNotInitialized(intField);
+		assertFieldIsNotInitialized(strField);
 	}
 
 	@Test

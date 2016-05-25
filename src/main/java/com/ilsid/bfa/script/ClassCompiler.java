@@ -175,7 +175,7 @@ public class ClassCompiler {
 				CtField field = new CtField(fieldTypeClass, fieldName, clazz);
 				field.setModifiers(Modifier.PUBLIC);
 
-				if (hasDefaultPublicConstructor(fieldType)) {
+				if (hasDefaultPublicConstructorAndIsNotPredefined(fieldType)) {
 					clazz.addField(field, String.format(DEFAULT_CONSTRUCTOR_TEMPLATE, fieldType));
 				} else {
 					clazz.addField(field);
@@ -401,8 +401,13 @@ public class ClassCompiler {
 		return messages.toString();
 	}
 
-	private static boolean hasDefaultPublicConstructor(String className)
+	private static boolean hasDefaultPublicConstructorAndIsNotPredefined(String className)
 			throws ClassNotFoundException, IllegalStateException {
+
+		if (PredefinedTypes.isPredefinedJavaType(className)) {
+			return false;
+		}
+
 		Class<?> clazz = DynamicClassLoader.getInstance().loadClass(className);
 
 		for (Constructor<?> constructor : clazz.getConstructors()) {

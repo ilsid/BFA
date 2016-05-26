@@ -190,7 +190,6 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void arithmeticsWithThreeDoubleVariablesCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0),
 				new Variable("Var3", "java.lang.Double", 2.0));
-		// System.out.println(invoke(input, output));
 		assertOutput("Var1 - Var2 + Var3",
 				"return Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue()"
 						+ " - ((Double)scriptContext.getVar(\"Var2\").getValue()).doubleValue()"
@@ -603,6 +602,25 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 		assertOutput("Contract.ID + ': ' + Var1",
 				"return (((com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()).ID "
 						+ "+ \": \" + (String)scriptContext.getVar(\"Var1\").getValue());");
+	}
+
+	@Test
+	public void entityVariableCanBeParsed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
+		assertOutput("Contract",
+				"return (com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue();");
+	}
+
+	@Test
+	public void entityVariableWithConsequentTokensAreNotAllowed() throws Exception {
+		createContext(new Variable("Contract", Contract.class.getName(), new Contract()),
+				new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+
+		assertException("Contract - 1", "Could not parse expression [Contract - 1]: Unexpected token [-]");
+		assertException("Contract + Subscriber",
+				"Could not parse expression [Contract + Subscriber]: Unexpected token [+]");
+		assertException("Contract + Subscriber.MSISDN",
+				"Could not parse expression [Contract + Subscriber.MSISDN]: Unexpected token [+]");
 	}
 
 	private void createContext(final Variable... vars) {

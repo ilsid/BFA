@@ -86,6 +86,7 @@ public class ScriptExpressionParser {
 			javaExpression.append("return");
 
 			ParsingUtil.FieldInfo fldInfo;
+			ParsingUtil.EntityInfo entInfo;
 
 			if (NumberUtil.isInteger(token)) {
 				javaExpression.append(" ").append(ParsingUtil.INTEGER_VALUEOF_EXPR).append(token);
@@ -144,6 +145,11 @@ public class ScriptExpressionParser {
 						fldInfo.fieldName);
 				javaExpression.append(fieldExpr);
 				context.setState(context.STRING_STATE);
+			} else if (ParsingUtil.isEntityVariable(token, context.getScriptContext(),
+					entInfo = new ParsingUtil.EntityInfo())) {
+				String entityExpr = String.format(ParsingUtil.ENTITY_VAR_EXPR_TEMPLATE, entInfo.varType, token);
+				javaExpression.append(" ").append(entityExpr);
+				context.setState(context.ENTITY_STATE);
 			} else {
 				throw new ParsingStateException("Unexpected token [" + token + "]");
 			}
@@ -462,6 +468,19 @@ public class ScriptExpressionParser {
 
 	}
 
+	private class EntityState implements ParsingState {
+
+		public void processToken(ParsingMachine context) throws ParsingStateException {
+			if (context.hasNextToken()) {
+				throw new ParsingStateException(String.format("Unexpected token [%s]", context.getNextToken()));
+			} else {
+				context.setState(context.END_STATE);
+				context.process();
+			}
+		}
+
+	}
+
 	private class ParsingMachine {
 
 		private ParsingState state;
@@ -487,6 +506,7 @@ public class ScriptExpressionParser {
 		final BooleanOperandState BOOL_OPERAND_STATE = new BooleanOperandState();
 		final StringState STRING_STATE = new StringState();
 		final StringOperandState STR_OPERAND_STATE = new StringOperandState();
+		final EntityState ENTITY_STATE = new EntityState();
 		final EndState END_STATE = new EndState();
 
 		public ParsingMachine(String scriptExpression, ScriptContext scriptContext) {
@@ -582,6 +602,8 @@ public class ScriptExpressionParser {
 
 		private static final String STRING_FLD_EXPR_TEMPLATE = "((%s)scriptContext.getVar(\"%s\").getValue()).%s";
 
+		private static final String ENTITY_VAR_EXPR_TEMPLATE = "(%s)scriptContext.getVar(\"%s\").getValue()";
+
 		private static final String INTEGER_TYPE_ALIAS = "Integer";
 
 		private static final String DOUBLE_TYPE_ALIAS = "Decimal";
@@ -625,6 +647,20 @@ public class ScriptExpressionParser {
 		static boolean isStringLiteral(String token) {
 			return token.length() > 1 && token.startsWith(SQ) && token.endsWith(SQ)
 					&& !token.substring(1, token.length() - 1).contains(SQ);
+		}
+
+		private static boolean isEntityVariable(String token, ScriptContext context, EntityInfo info) {
+			if (isVariable(token, context)) {
+				Variable var = context.getVar(token);
+				Class<?> varClass = resolveClass(var.getJavaType());
+				if (varClass != null) {
+					info.varType = varClass.getName();
+
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		static String toJavaStringExpr(String stringLiteral) {
@@ -720,6 +756,10 @@ public class ScriptExpressionParser {
 		static class FieldInfo {
 			String varName;
 			String fieldName;
+			String varType;
+		}
+
+		static class EntityInfo {
 			String varType;
 		}
 	}

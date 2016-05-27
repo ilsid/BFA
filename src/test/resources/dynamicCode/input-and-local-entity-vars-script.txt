@@ -1,0 +1,10 @@
+// com.ilsid.bfa.generated.entity.default_group.Contract class is expected in the code repository
+DeclareInputVar("Var1", "Contract");
+
+DeclareLocalVar("Var2", "Contract");
+DeclareLocalVar("Var3", "Contract");
+
+SetLocalVar("Var2", "Var1");
+
+//FIXME: Action names are not resolved in compile-time
+Action("Reserve Amount").SetLocalVar("Var3");

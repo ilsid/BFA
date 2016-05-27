@@ -286,6 +286,16 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		compileScriptExpressions(TEST_SCRIPT_CLASS_SHORT_NAME + "DuplicatedInputAndLocalVars",
 				"duplicated-input-and-local-vars-script.txt");
 	}
+	
+	@Test
+	public void scriptInputAndLocalVarsOfEntityTypesCanBeResolved() throws Exception {
+		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithInputAndLocalEntityVars",
+				"input-and-local-entity-vars-script.txt");
+
+		assertEquals(1, expressions.length);
+
+		assertExpressionShortClassName("TestScriptWithInputAndLocalEntityVars$$Var1", expressions[0].getClassName());
+	}
 
 	@Test
 	public void entityWithSingleFieldOfPredefinedTypeCanBeCompiled() throws Exception {

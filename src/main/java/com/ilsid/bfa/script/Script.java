@@ -15,13 +15,13 @@ public abstract class Script {
 	private ScriptContext scriptContext;
 
 	private Queue<Object> inputParams = new LinkedList<>();
-	
+
 	private Deque<String> callStack = new LinkedList<>();
 
 	private ScriptRuntime runtime;
 
 	private long runtimeId = -1;
-	
+
 	private String name;
 
 	private ActionLocator actionLocator;
@@ -55,7 +55,7 @@ public abstract class Script {
 	public void DeclareLocalVar(String name, String type, @ExprParam Object initValue) throws ScriptException {
 		scriptContext.addLocalVar(name, TypeNameResolver.resolveEntityClassName(type), getValue(initValue));
 	}
-	
+
 	public void SetLocalVar(@ExprParam(compile = false) String name, @ExprParam Object expr) throws ScriptException {
 		scriptContext.updateLocalVar(name, getValue(expr));
 	}
@@ -123,7 +123,7 @@ public abstract class Script {
 		} catch (ActionException e) {
 			throw new ScriptException(String.format("Execution of the action [%s] failed", name), e);
 		}
-		ActionResult actionResult = new ActionResultImpl(result);
+		ActionResult actionResult = new ActionResultImpl(result, name);
 
 		return actionResult;
 	}
@@ -135,7 +135,7 @@ public abstract class Script {
 	public void setRuntimeId(long runtimeId) {
 		this.runtimeId = runtimeId;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -144,7 +144,7 @@ public abstract class Script {
 		this.name = name;
 		scriptContext.setScriptName(name);
 	}
-	
+
 	void setCallStack(Deque<String> callStack) {
 		this.callStack = callStack;
 	}
@@ -198,12 +198,12 @@ public abstract class Script {
 	private void setLocalVarValue(String name, Object value) throws ScriptException {
 		scriptContext.updateLocalVar(name, value);
 	}
-	
+
 	private Deque<String> createSubflowCallStack() {
 		// This script's name is added to the call stack of its sub-flow
 		Deque<String> result = new LinkedList<>(callStack);
 		result.addFirst(name);
-		
+
 		return result;
 	}
 
@@ -211,18 +211,23 @@ public abstract class Script {
 
 		private Object[] input;
 
+		private String actionName;
+
 		private int size;
 
 		private int index;
 
-		ActionResultImpl(Object[] input) {
+		ActionResultImpl(Object[] input, String actionName) {
 			this.input = input;
+			this.actionName = actionName;
 			size = input.length;
 		}
 
 		public ActionResult SetLocalVar(String name) throws ScriptException {
 			if (index == size) {
-				throw new ScriptException("No more elements found in action result");
+				throw new ScriptException(
+						String.format("No more elements found in action [%s] result. Actual result size is [%s]",
+								actionName, size));
 			}
 			Script.this.setLocalVarValue(name, input[index++]);
 

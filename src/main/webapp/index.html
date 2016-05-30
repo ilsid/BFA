@@ -877,7 +877,9 @@
 					registry.byId('updateActionDialog_textGroupName').set('value', tab.objectInfo.group);
 					registry.byId('updateActionDialog_textActionName').set('value', tab.objectInfo.name);
 					
-					var fileText = registry.byId('updateActionDialog_textFileName').set('value', '');
+					var fileText = registry.byId('updateActionDialog_textFileName');
+					fileText.set('value', '');
+					fileText.reset();
 					registry.byId('updateActionPackageUploader').reset();
 					registry.byId('updateActionDialog').show();
 				});

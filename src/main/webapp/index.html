@@ -434,7 +434,7 @@
 							id: 'txtScriptInputParam_' + paramName,
 							required: true,
 							title: paramName + ' (' + paramType + '):',
-							style: 'width: 100px;',
+							style: 'width: 300px;',
 							missingMessage: 'The value is required'
 						});
 						
@@ -731,28 +731,29 @@
 					'dijit/form/Button', 'dijit/form/TextBox', 'dojo/dom-construct', 'dojo/domReady!'],
 				function(registry, ContentPane, Toolbar, Button, TextBox, domConstruct) {
 					var tabContainer = registry.byId('tabContainer');
+					var groupName = getSelectedGroupName(registry.byId('actionTree'), 'ACTION_GROUP');
 					
 					var tab = new ContentPane({
 						id: tabId,
 						title: tabTitle,
 						closable: true,
 						iconClass: 'toolbarIconAction',
-						style: 'overflow: auto;'
+						style: 'overflow: auto;',
+						objectInfo: {name: tabTitle, group: groupName}
 					});
 					
 					var isExistingAction = (tabId != undefined);
 					
 					var btnSave = new Button({
-						label: 'Save',
+						label: 'Update',
 						showLabel: false,
-						iconClass: 'dijitIconSave',
+						iconClass: 'toolbarIconUpdate',
 						onClick: function() {
-							//TODO: implement;
+							showUpdateActionDialog();
 						}
 					});
 					if (isExistingAction) {
-						// TODO: Support of action update
-						btnSave.set('disabled', true);
+						btnSave.set('disabled', false);
 					}
 										
 					var toolBar = new Toolbar({ className: 'nestedPane' });
@@ -803,7 +804,7 @@
 					nameText.reset();
 					fileText.set('value', '');
 					fileText.reset();
-					registry.byId('actionPackageUploader').reset();
+					registry.byId('createActionPackageUploader').reset();
 					registry.byId('createActionDialog').show();
 				});
 		}
@@ -849,8 +850,8 @@
 		}
 		
 		function onCreateActionForm_btnOk() {
-			require([ 'dijit/registry', 'dojo/request/iframe' ],
-				function(registry, iframe) {
+			require([ 'dijit/registry' ],
+				function(registry) {
 					var form = registry.byId('createActionForm');
 					
 					if (form.validate()) {					
@@ -863,7 +864,81 @@
 						// Setting form's "name" parameter
 						registry.byId('createActionDialog_actionFullName').set('value', actionName);
 						
-						var uploader = registry.byId('actionPackageUploader');
+						var uploader = registry.byId('createActionPackageUploader');
+						uploader.submit(form);
+					}
+			});	
+		}
+		
+		function showUpdateActionDialog() {
+			require([ 'dijit/registry'],
+				function(registry) {
+					var tab = registry.byId('tabContainer').selectedChildWidget;
+					registry.byId('updateActionDialog_textGroupName').set('value', tab.objectInfo.group);
+					registry.byId('updateActionDialog_textActionName').set('value', tab.objectInfo.name);
+					
+					var fileText = registry.byId('updateActionDialog_textFileName').set('value', '');
+					registry.byId('updateActionPackageUploader').reset();
+					registry.byId('updateActionDialog').show();
+				});
+		}
+		
+		function onUpdateActionForm_selectFile(files, uploader) {
+			require([ 'dijit/registry' ],
+				function(registry) {
+					registry.byId('updateActionDialog_textFileName').set('value', files[0].name);
+			});
+		}
+		
+		function onUpdateActionForm_uploadCompele(event, uploader) {
+			require([ 'dijit/registry', 'dojo/request/xhr' ],
+				function(registry, request) {
+					// event is a response from server
+					var status = event.value;
+					
+					if (status === 'OK') {
+						hideDialog('updateActionDialog');
+						
+						var groupName = registry.byId('updateActionDialog_textGroupName').get('value');
+						var actionShortName = registry.byId('updateActionDialog_textActionName').get('value');
+						var actionName = groupName + '::' + actionShortName;
+
+						request('service/action/admin/getInfo', {
+							headers: { 'Content-Type': 'application/json' },
+							method: 'POST',
+							data: '{"name": "' + actionName + '"}'
+						}).then(function(resp){
+							// Re-creating action tab
+							var tabContainer = registry.byId('tabContainer');
+							var actionTab = tabContainer.selectedChildWidget;
+							var tabIdx = tabContainer.getIndexOfChild(actionTab);
+							tabContainer.removeChild(actionTab);
+							actionTab.destroyRecursive();
+							createActionTab(actionShortName, 'tab_action_' + actionName, resp, tabIdx);
+							writeInfo('Action [' + actionName + '] is updated');
+						}, function(err) {
+							writeError(err, 'Failed to get action [' + actionName + '] info from server');
+						});
+					} else {
+						hideDialog('updateActionDialog');
+						writeErrorMessage(status);
+					}
+			});
+		}
+		
+		function onUpdateActionForm_btnOk() {
+			require([ 'dijit/registry' ],
+				function(registry) {
+					var form = registry.byId('updateActionForm');
+					
+					if (form.validate()) {	
+						var groupName = registry.byId('updateActionDialog_textGroupName').get('value');
+						var actionShortName = registry.byId('updateActionDialog_textActionName').get('value');
+						var actionName = groupName + '::' + actionShortName;
+						// Setting form's "name" parameter
+						registry.byId('updateActionDialog_actionFullName').set('value', actionName);
+						
+						var uploader = registry.byId('updateActionPackageUploader');
 						uploader.submit(form);
 					}
 			});	
@@ -1152,7 +1227,7 @@
 				</tr>
 				<tr>
 					<td>
-						<div data-dojo-type="dojox/form/Uploader" id="actionPackageUploader" name="file" multiple="false" type="file" 
+						<div data-dojo-type="dojox/form/Uploader" id="createActionPackageUploader" name="file" multiple="false" type="file" 
 							data-dojo-props="label: 'File...'">
 							<script type="dojo/method" data-dojo-event="onComplete" data-dojo-args="evt">
 								onCreateActionForm_uploadCompele(evt, this);
@@ -1171,6 +1246,42 @@
 			<div class="dijitDialogPaneActionBar">
 				<button data-dojo-type="dijit/form/Button" type="button" id="createActionDialog_btnOk" onclick="onCreateActionForm_btnOk();">Save</button>
 				<button data-dojo-type="dijit/form/Button" type="button" id="createActionDialog_btnCancel" onclick="hideDialog('createActionDialog');">Cancel</button>
+			</div>
+		</form>
+	</div>
+	
+	<div data-dojo-type="dijit/Dialog" id="updateActionDialog" title="Update action" style="display: none">
+		<form data-dojo-type="dijit/form/Form" id="updateActionForm" enctype="multipart/form-data" action="service/action/admin/updateQuietly" method="post">
+			<table class="dijitDialogPaneContentArea">
+				<tr>
+					<td><label for="updateActionDialog_textGroupName">Group:</label></td>
+					<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="updateActionDialog_textGroupName" name="updateActionDialog_textGroupName" /></td>
+				</tr>
+				<tr>
+					<td><label for="updateActionDialog_textActionName">Name:</label></td>
+					<td><input data-dojo-type="dijit/form/TextBox" data-dojo-props="disabled:true" id="updateActionDialog_textActionName" name="updateActionDialog_textActionName" /></td>
+				</tr>
+				<tr>
+					<td>
+						<div data-dojo-type="dojox/form/Uploader" id="updateActionPackageUploader" name="file" multiple="false" type="file" 
+							data-dojo-props="label: 'File...'">
+							<script type="dojo/method" data-dojo-event="onComplete" data-dojo-args="evt">
+								onUpdateActionForm_uploadCompele(evt, this);
+							</script>
+							<script type="dojo/method" data-dojo-event="onChange" data-dojo-args="files">
+								onUpdateActionForm_selectFile(files, this);
+							</script>
+						</div>
+					</td>
+					<td><input data-dojo-type="dijit/form/ValidationTextBox" data-dojo-props="disabled:false" id="updateActionDialog_textFileName" name="updateActionDialog_textFileName" 
+						required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+				</tr>
+			</table>
+			<input data-dojo-type="dijit/form/TextBox" type="hidden" name="name" id="updateActionDialog_actionFullName" />
+			
+			<div class="dijitDialogPaneActionBar">
+				<button data-dojo-type="dijit/form/Button" type="button" id="updateActionDialog_btnOk" onclick="onUpdateActionForm_btnOk();">Save</button>
+				<button data-dojo-type="dijit/form/Button" type="button" id="updateActionDialog_btnCancel" onclick="hideDialog('updateActionDialog');">Cancel</button>
 			</div>
 		</form>
 	</div>

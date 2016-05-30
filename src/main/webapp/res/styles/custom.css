@@ -6,7 +6,8 @@
 .toolbarIconAction,
 .toolbarIconRun,
 .toolbarIconError,
-.toolbarIconInfo
+.toolbarIconInfo,
+.toolbarIconUpdate
  {
   background-repeat: no-repeat;
   width: 16px;
@@ -48,6 +49,10 @@
 
 .toolbarIconInfo {
   background-image: url("../icons/info_16x16.png");
+}
+
+.toolbarIconUpdate {
+  background-image: url("../icons/update_16x16.png");
 }
 
 .fixedTextArea{

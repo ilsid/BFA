@@ -127,4 +127,16 @@ public interface ActionRepository extends Configurable {
 	 *             in case of any repository access issues
 	 */
 	ActionInfo loadInfo(String actionName) throws PersistenceException;
+
+	/**
+	 * Deletes action from the repository.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @return <code>true</code> if action was deleted, and <code>false</code> if action with such name was not found in
+	 *         the repository
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	boolean delete(String actionName) throws PersistenceException;
 }

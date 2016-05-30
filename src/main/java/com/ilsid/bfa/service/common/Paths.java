@@ -26,6 +26,8 @@ public final class Paths {
 
 	public final static String UPDATE_OPERATION = "update";
 
+	public final static String UPDATE_QUIETLY_OPERATION = "updateQuietly";
+
 	public final static String GET_SOURCE_OPERATION = "getSource";
 
 	public final static String CREATE_GROUP_OPERATION = "createGroup";
@@ -106,8 +108,13 @@ public final class Paths {
 
 	public final static String ACTION_CREATE_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + CREATE_OPERATION;
 
+	public final static String ACTION_UPDATE_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + UPDATE_OPERATION;
+
 	public final static String ACTION_CREATE_QUIETLY_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/"
 			+ CREATE_QUIETLY_OPERATION;
 
 	public final static String ACTION_GET_INFO_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + GET_INFO_OPERATION;
+
+	public final static String ACTION_UPDATE_QUIETLY_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/"
+			+ UPDATE_QUIETLY_OPERATION;
 }

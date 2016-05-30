@@ -85,7 +85,7 @@ public class ActionAdminResource extends AbstractAdminResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.CREATE_GROUP_OPERATION)
 	public Response createGroup(String groupName) {
-		validateNonEmptyParameter(Paths.CREATE_GROUP_OPERATION, GROUP_PARAM, groupName);
+		validateNonEmptyParameter(Paths.ACTION_CREATE_GROUP_SERVICE, GROUP_PARAM, groupName);
 
 		try {
 			actionManager.createGroup(groupName);
@@ -121,8 +121,8 @@ public class ActionAdminResource extends AbstractAdminResource {
 	public Response createAction(@FormDataParam(NAME_PARAM) String actionName,
 			@FormDataParam(FILE_PARAM) InputStream actionPackage) {
 
-		validateNonEmptyParameter(Paths.CREATE_OPERATION, NAME_PARAM, actionName);
-		validateNonNullParameter(Paths.CREATE_OPERATION, FILE_PARAM, actionPackage);
+		validateNonEmptyParameter(Paths.ACTION_CREATE_SERVICE, NAME_PARAM, actionName);
+		validateNonNullParameter(Paths.ACTION_CREATE_SERVICE, FILE_PARAM, actionPackage);
 
 		try {
 			actionManager.createAction(actionName, actionPackage);
@@ -190,6 +190,71 @@ public class ActionAdminResource extends AbstractAdminResource {
 		}
 
 		return Response.status(Status.OK).entity(info).build();
+	}
+
+	/**
+	 * 
+	 * Updates action in the repository.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @param actionPackage
+	 *            action package
+	 * @return the {@link Status#OK} response
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if action with the given name does not exist in the repository</li>
+	 *             <li>if action package has invalid format</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@POST
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.UPDATE_OPERATION)
+	public Response updateAction(@FormDataParam(NAME_PARAM) String actionName,
+			@FormDataParam(FILE_PARAM) InputStream actionPackage) {
+
+		validateNonEmptyParameter(Paths.ACTION_UPDATE_SERVICE, NAME_PARAM, actionName);
+		validateNonNullParameter(Paths.ACTION_UPDATE_SERVICE, FILE_PARAM, actionPackage);
+
+		try {
+			actionManager.updateAction(actionName, actionPackage);
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.ACTION_UPDATE_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).entity(OperationStatus.SUCCESS).build();
+	}
+
+	/**
+	 * Does the same as {@link #updateAction(String, InputStream)} but in case of failure always throws
+	 * {@link ResourceException} with {@link Status#OK} status.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @param actionPackage
+	 *            action package
+	 * @return the {@link Status#OK} response
+	 * @see #updateAction(String, InputStream)
+	 * @see WebApplicationExceptionMapper
+	 * 
+	 */
+	@POST
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.UPDATE_QUIETLY_OPERATION)
+	public Response updateActionQuietly(@FormDataParam(NAME_PARAM) String actionName,
+			@FormDataParam(FILE_PARAM) InputStream actionPackage) {
+
+		try {
+			return updateAction(actionName, actionPackage);
+		} catch (ResourceException e) {
+			final String failureMsg = ExceptionUtil.getExceptionMessageChain(e.getActualCause());
+			final OperationStatus.Failure failureStatus = new OperationStatus.Failure(failureMsg);
+			throw new ResourceException(e.getPath(), e.getActualCause(), Status.OK, failureStatus);
+		}
 	}
 
 	@Inject

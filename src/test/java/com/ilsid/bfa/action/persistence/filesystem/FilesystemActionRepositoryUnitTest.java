@@ -73,8 +73,8 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(3, urls.size());
 		assertTrue(urls
 				.contains(toURL(new File(REPOSITORY_ROOT_DIR, "action/default_group/reserve_x20_amount/classes/"))));
-		assertTrue(urls.contains(toURL(new File(REPOSITORY_ROOT_DIR,
-				"action/default_group/reserve_x20_amount/lib/joda-time-1.6.jar"))));
+		assertTrue(urls.contains(
+				toURL(new File(REPOSITORY_ROOT_DIR, "action/default_group/reserve_x20_amount/lib/joda-time-1.6.jar"))));
 		assertTrue(urls.contains(
 				toURL(new File(REPOSITORY_ROOT_DIR, "action/default_group/reserve_x20_amount/lib/mail-1.4.1.jar"))));
 	}
@@ -172,11 +172,11 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 	public void metadataForChildGroupsInNonExistingGroupCanNotBeLoaded() throws Exception {
 		assertEquals(0, repository.loadMetadataForChildGroups("Some Non-Existing Group").size());
 	}
-	
+
 	@Test
 	public void metadataForActionsInExistingGroupCanBeLoaded() throws Exception {
 		List<Map<String, String>> metaDatas = repository.loadMetadataForActions(ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE);
-		
+
 		assertEquals(2, metaDatas.size());
 
 		Map<String, String> metaData = metaDatas.get(0);
@@ -191,8 +191,8 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals("Write System Property", metaData.get(Metadata.NAME));
 		assertEquals("Write System Property", metaData.get(Metadata.TITLE));
 
-	}	
-	
+	}
+
 	@Test
 	public void metadataForActionsInNonExistingGroupCanNotBeLoaded() throws Exception {
 		assertEquals(0, repository.loadMetadataForActions("Some Non-Existing Group").size());
@@ -255,7 +255,7 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 			implClassFileBackup.delete();
 		}
 	}
-	
+
 	@Test
 	public void infoForExistingActionCanBeLoaded() throws Exception {
 		ActionInfo info = repository.loadInfo(EXISTING_ACTION_NAME);
@@ -265,10 +265,23 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		assertTrue(dependencies.contains("joda-time-1.6.jar"));
 		assertTrue(dependencies.contains("mail-1.4.1.jar"));
 	}
-	
+
 	@Test
 	public void infoForNonExistingActionCanNotBeLoaded() throws Exception {
 		assertNull(repository.loadInfo(NON_EXISTING_ACTION_NAME));
+	}
+
+	@Test
+	public void existingActionCanBeDeleted() throws Exception {
+		final File actionDir = new File(REPOSITORY_ROOT_DIR, "action/default_group/reserve_x20_amount");
+		assertTrue(actionDir.isDirectory());
+		assertTrue(repository.delete(EXISTING_ACTION_NAME));
+		assertFalse(actionDir.exists());
+	}
+	
+	@Test
+	public void nonExistingActionCanNotBeDeleted() throws Exception {
+		assertFalse(repository.delete(NON_EXISTING_ACTION_NAME));
 	}
 
 	private void verifyActionCanBeSaved(String name, String title, String path) throws Exception {

@@ -80,6 +80,25 @@ public class ActionClassLoader extends ClassLoader {
 	}
 
 	/**
+	 * Releases resources (like jar files) locked by the given action. The consequent invocation of
+	 * {@linkplain #getLoader(String)} will return new loader for this action. Does nothing if the action with the given
+	 * name has been never loaded before.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @see #getLoader(String)
+	 */
+	public static void releaseResources(String actionName) {
+		synchronized (actionName.intern()) {
+			ActionClassLoader loader = loaders.get(actionName);
+			if (loader != null) {
+				loaders.remove(actionName);
+				loader.close();
+			}
+		}
+	}
+
+	/**
 	 * Searches the class in the repository first. The class location is defined by the action name. If the class is not
 	 * found in the repository, delegates the loading to the context class loader of {@link Thread#currentThread() the
 	 * current thread}.

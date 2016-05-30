@@ -13,6 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.ilsid.bfa.IntegrationTestConstants;
+import com.ilsid.bfa.action.persistence.ActionClassLoader;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.Metadata;
@@ -29,7 +30,11 @@ import com.sun.jersey.multipart.file.StreamDataBodyPart;
 
 public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRepositoryIntegrationTest {
 
+	private static final String EXISTING_ACTION_IMPL_CLASS_NAME = "com.some.action.impl.WriteSystemProperty";
+
 	private static final String NEW_ACTION_NAME = "Top Level Group 01::New Action 01";
+
+	private static final String EXISTING_ACTION_NAME = "Write System Property";
 
 	private static final String ACTIONS_DIR = "action";
 
@@ -174,7 +179,7 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		ActionDetails info = response.getEntity(ActionDetails.class);
-		assertEquals("com.some.action.impl.WriteSystemProperty", info.getImplementationClassName());
+		assertEquals(EXISTING_ACTION_IMPL_CLASS_NAME, info.getImplementationClassName());
 		final List<String> dependencies = info.getDependencies();
 		assertEquals(2, dependencies.size());
 		assertTrue(dependencies.contains("commons-collections-3.2.1.jar"));
@@ -188,6 +193,16 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 				new ActionAdminParams());
 
 		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+	}
+
+	@Test
+	public void existingActionCanBeUpdatedInFileSystemAndActionClassesAreReloaded() throws Exception {
+		updateAndVerifyAction(Paths.ACTION_UPDATE_SERVICE);
+	}
+	
+	@Test
+	public void existingActionCanBeUpdatedQuietlyInFileSystemAndActionClassesAreReloaded() throws Exception {
+		updateAndVerifyAction(Paths.ACTION_UPDATE_QUIETLY_SERVICE);
 	}
 
 	private void actionGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {
@@ -237,7 +252,7 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 				assertEquals(3, metaData.size());
 				assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
-				assertEquals(NEW_ACTION_NAME, metaData.get(Metadata.NAME));
+				assertEquals(actionName, metaData.get(Metadata.NAME));
 				assertEquals("New Action 01", metaData.get(Metadata.TITLE));
 			}
 		} finally {
@@ -247,5 +262,48 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		}
 
 		return response;
+	}
+	
+	private void updateAndVerifyAction(String serviceName) throws Exception {
+		try {
+			Class<?> oldActionImplClazz = ActionClassLoader.getLoader(EXISTING_ACTION_NAME)
+					.loadClass(EXISTING_ACTION_IMPL_CLASS_NAME);
+			// One of classes in dependency mail-1.4.1.jar
+			final String dependencyClassName = "javax.mail.util.ByteArrayDataSource";
+			Class<?> oldActionDependencyClazz = ActionClassLoader.getLoader(EXISTING_ACTION_NAME)
+					.loadClass(dependencyClassName);
+
+			// Archives the existing action and saves it again
+			File actionZipFile = new File(ACTIONS_ROOT_DIR, "default_group/tmp_validAction.zip");
+			IOHelper.zipDirectory(VALID_ACTION_DIR, actionZipFile);
+			final File expectedActionDir = new File(ACTIONS_ROOT_DIR, "default_group/__tmp_unpacked_action");
+			IOHelper.unzip(actionZipFile, expectedActionDir);
+
+			WebResource webResource = getWebResource(serviceName);
+			ClientResponse response;
+			try (InputStream is = new FileInputStream(actionZipFile)) {
+				StreamDataBodyPart streamPart = new StreamDataBodyPart("file", is);
+				@SuppressWarnings("resource")
+				MultiPart entity = new FormDataMultiPart().field("name", EXISTING_ACTION_NAME).bodyPart(streamPart);
+				response = webResource.type(MediaType.MULTIPART_FORM_DATA).post(ClientResponse.class, entity);
+
+				assertEquals(Status.OK.getStatusCode(), response.getStatus());
+			}
+
+			assertTrue(VALID_ACTION_DIR.isDirectory());
+			IOHelper.assertEqualDirs(VALID_ACTION_DIR, expectedActionDir);
+
+			Class<?> updatedActionImplClazz = ActionClassLoader.getLoader(EXISTING_ACTION_NAME)
+					.loadClass(EXISTING_ACTION_IMPL_CLASS_NAME);
+			Class<?> updatedActionDependencyClazz = ActionClassLoader.getLoader(EXISTING_ACTION_NAME)
+					.loadClass(dependencyClassName);
+
+			// Action implementation class and its dependencies are reloaded
+			assertFalse(oldActionImplClazz == updatedActionImplClazz);
+			assertFalse(oldActionDependencyClazz == updatedActionDependencyClazz);
+		} finally {
+			// Resources occupied by the action loader are released
+			ActionClassLoader.releaseResources(EXISTING_ACTION_NAME);
+		}
 	}
 }

@@ -21,7 +21,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.action.persistence.ActionInfo;
@@ -29,6 +28,7 @@ import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.GroupNameUtil;
 import com.ilsid.bfa.common.IOUtil;
+import com.ilsid.bfa.common.JsonUtil;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.RepositoryConfig;
@@ -59,8 +59,6 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	private static final String LIB_DIR = "lib";
 
 	private File actionRootDir;
-
-	private ObjectMapper jsonMapper = new ObjectMapper();
 
 	/*
 	 * (non-Javadoc)
@@ -201,7 +199,7 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		if (!actionDir.isDirectory()) {
 			return null;
 		}
-		
+
 		String implClassName = getActionClassName(actionDir);
 
 		List<String> dependencies;
@@ -211,8 +209,29 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 		} else {
 			dependencies = new LinkedList<>();
 		}
-		
+
 		return new ActionInfo(implClassName, dependencies);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.action.persistence.ActionRepository#delete(java.lang.String)
+	 */
+	public boolean delete(String actionName) throws PersistenceException {
+		if (!actionExists(actionName)) {
+			return false;
+		}
+
+		File actionDir = getActionDir(actionName);
+		try {
+			FileUtils.forceDelete(actionDir);
+		} catch (IOException e) {
+			throw new PersistenceException(String.format("Failed to delete the action [%s]", actionName), e);
+		}
+
+		return true;
+
 	}
 
 	/*
@@ -255,7 +274,7 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	private void saveMetadata(String groupName, File groupDir, Map<String, String> metaData)
 			throws PersistenceException {
 		try {
-			String json = jsonMapper.writeValueAsString(metaData);
+			String json = JsonUtil.toJsonString(metaData);
 			FileUtils.writeStringToFile(new File(groupDir, ClassNameUtil.METADATA_FILE_NAME), json);
 		} catch (IOException e) {
 			throw new PersistenceException(
@@ -385,7 +404,7 @@ public class FilesystemActionRepository extends ConfigurableRepository implement
 	private void saveActionMetadata(String actionName, File actionDir) throws PersistenceException {
 		Map<String, String> metaData = createActionMetadata(actionName);
 		try {
-			String json = jsonMapper.writeValueAsString(metaData);
+			String json = JsonUtil.toJsonString(metaData);
 			FileUtils.writeStringToFile(new File(actionDir, ClassNameUtil.METADATA_FILE_NAME), json);
 		} catch (IOException e) {
 			throw new PersistenceException(

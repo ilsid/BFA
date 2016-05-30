@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.ilsid.bfa.action.persistence.ActionClassLoader;
 import com.ilsid.bfa.action.persistence.ActionInfo;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.GroupNameUtil;
@@ -156,6 +157,38 @@ public class ActionManager {
 	}
 
 	/**
+	 * Updates action in the repository.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @param actionPackage
+	 *            action package
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if action with the given name does not exist in the repository</li>
+	 *             <li>if action package has invalid format</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	// FIXME: action package validation logic must be present before actual update
+	public void updateAction(String actionName, InputStream actionPackage) throws ManagementException {
+		ActionClassLoader.releaseResources(actionName);
+
+		try {
+			if (repository.delete(actionName)) {
+				repository.save(actionName, actionPackage);
+			} else {
+				throw new ManagementException(
+						String.format("The action [%s] does not exist in the repository", actionName));
+			}
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to save the action [%s]", actionName), e);
+		}
+
+		ActionClassLoader.reload(actionName);
+	}
+
+	/**
 	 * Defines a repository implementation.
 	 * 
 	 * @param repository
@@ -182,12 +215,12 @@ public class ActionManager {
 		public List<String> getDependencies() {
 			return dependencies;
 		}
-		
+
 		void setImplementationClassName(String implementationClassName) {
 			this.implementationClassName = implementationClassName;
 		}
 
-	    void setDependencies(List<String> dependencies) {
+		void setDependencies(List<String> dependencies) {
 			this.dependencies = dependencies;
 		}
 	}

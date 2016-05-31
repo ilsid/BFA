@@ -706,8 +706,8 @@
 		}
 		
 		function onNewEntityFieldDialog_btnOk() {
-			require([ 'dijit/registry', 'dojo/request/xhr'],
-				function(registry, request) {
+			require([ 'dijit/registry' ],
+				function(registry) {
 					var txtName = registry.byId('newEntityFieldDialog_textName');
 					var txtType = registry.byId('newEntityFieldDialog_textType');
 					
@@ -1347,6 +1347,9 @@
 								disabled="true">Delete Group</div>
 							<div data-dojo-type="dijit/form/Button" id="entityToolbar_delete" data-dojo-props="iconClass:'toolbarIconDeleteEntity', showLabel:false"
 								disabled="true">Delete Entity</div>
+							<div data-dojo-type="dijit/ToolbarSeparator"></div>	
+							<div data-dojo-type="dijit/form/Button" id="entityToolbar_download" data-dojo-props="iconClass:'toolbarIconDownload', showLabel:false"
+								onclick="window.location.href='service/entity/admin/getLibrary'">Download Library</div>	
 						</div>
 					</div>
 					<div data-dojo-type="dijit/layout/ContentPane"  data-dojo-props="region:'center'" style="border: none; margin: 0; padding: 0;">

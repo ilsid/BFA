@@ -8,22 +8,27 @@ package com.ilsid.bfa.script;
  */
 abstract class AbstractCondition implements Condition {
 
-	private Object leftValue;
+	private static final Object NULL_VALUE = new NullValue();
 
-	private Object rightValue;
+	private Object leftValue = NULL_VALUE;
+
+	private Object rightValue = NULL_VALUE;
 
 	private String description;
 
 	/**
-	 * Constructs instance with left and right values to check for some
-	 * condition.
+	 * Constructs instance with left and right values to check for some condition.
 	 * 
 	 * @param leftValue
 	 * @param rightValue
 	 */
 	public AbstractCondition(Object leftValue, Object rightValue) {
-		this.leftValue = leftValue;
-		this.rightValue = rightValue;
+		if (leftValue != null) {
+			this.leftValue = leftValue;
+		}
+		if (rightValue != null) {
+			this.rightValue = rightValue;
+		}
 	}
 
 	/**
@@ -60,6 +65,16 @@ abstract class AbstractCondition implements Condition {
 	 */
 	protected Object getRightValue() {
 		return rightValue;
+	}
+
+	private static final class NullValue {
+
+		private static final String NULL_VALUE_STR = "Null";
+
+		@Override
+		public String toString() {
+			return NULL_VALUE_STR;
+		}
 	}
 
 }

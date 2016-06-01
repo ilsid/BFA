@@ -623,6 +623,21 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 				"Could not parse expression [Contract + Subscriber.MSISDN]: Unexpected token [+]");
 	}
 
+	@Test
+	public void nullExpressionCanBeParsed() throws Exception {
+		assertOutput("null", "return null;");
+	}
+
+	@Test
+	public void nullExpressionWithConsequentTokensAreNotAllowed() throws Exception {
+		createContext(new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+
+		assertException("null - 1", "Could not parse expression [null - 1]: Unexpected token [-]");
+		assertException("null + Subscriber", "Could not parse expression [null + Subscriber]: Unexpected token [+]");
+		assertException("null + Subscriber.MSISDN",
+				"Could not parse expression [null + Subscriber.MSISDN]: Unexpected token [+]");
+	}
+
 	private void createContext(final Variable... vars) {
 		context = ScriptContextUtil.createContext(vars);
 		parser = new ScriptExpressionParser(context);

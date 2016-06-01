@@ -83,64 +83,64 @@ public class ScriptExpressionParser {
 		public void processToken(ParsingMachine context) throws ParsingStateException {
 			String token = context.getNextToken();
 			StringBuilder javaExpression = context.getJavaExpression();
-			javaExpression.append("return");
+			javaExpression.append(ParsingUtil.RETURN_EXPR);
 
 			ParsingUtil.FieldInfo fldInfo;
 			ParsingUtil.EntityInfo entInfo;
 
 			if (NumberUtil.isInteger(token)) {
-				javaExpression.append(" ").append(ParsingUtil.INTEGER_VALUEOF_EXPR).append(token);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.INTEGER_VALUEOF_EXPR).append(token);
 				context.setState(context.INTEGER_STATE);
 			} else if (NumberUtil.isDouble(token)) {
-				javaExpression.append(" ").append(ParsingUtil.DOUBLE_VALUEOF_EXPR).append(token);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.DOUBLE_VALUEOF_EXPR).append(token);
 				context.setState(context.DOUBLE_STATE);
 			} else if (BooleanUtil.isBoolean(token)) {
-				javaExpression.append(" ").append(ParsingUtil.BOOLEAN_VALUEOF_EXPR).append(token);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.BOOLEAN_VALUEOF_EXPR).append(token);
 				context.setState(context.BOOLEAN_STATE);
 			} else if (ParsingUtil.isStringLiteral(token)) {
-				javaExpression.append(" ").append(ParsingUtil.LP);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.LP);
 				javaExpression.append(ParsingUtil.toJavaStringExpr(token));
 				context.setState(context.STRING_STATE);
 			} else if (ParsingUtil.isIntegerVariable(token, context.getScriptContext())) {
-				javaExpression.append(" ").append(ParsingUtil.INTEGER_VALUEOF_EXPR);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.INTEGER_VALUEOF_EXPR);
 				javaExpression.append(String.format(ParsingUtil.INTEGER_VAR_EXPR_TEMPLATE, token));
 				context.setState(context.INTEGER_STATE);
 			} else if (ParsingUtil.isIntegerField(token, context.getScriptContext(),
 					fldInfo = new ParsingUtil.FieldInfo())) {
-				javaExpression.append(" ").append(ParsingUtil.INTEGER_VALUEOF_EXPR);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.INTEGER_VALUEOF_EXPR);
 				String fieldExpr = String.format(ParsingUtil.INTEGER_FLD_EXPR_TEMPLATE, fldInfo.varType,
 						fldInfo.varName, fldInfo.fieldName);
 				javaExpression.append(fieldExpr);
 				context.setState(context.INTEGER_STATE);
 			} else if (ParsingUtil.isDoubleVariable(token, context.getScriptContext())) {
-				javaExpression.append(" ").append(ParsingUtil.DOUBLE_VALUEOF_EXPR);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.DOUBLE_VALUEOF_EXPR);
 				javaExpression.append(String.format(ParsingUtil.DOUBLE_VAR_EXPR_TEMPLATE, token));
 				context.setState(context.DOUBLE_STATE);
 			} else if (ParsingUtil.isDoubleField(token, context.getScriptContext(),
 					fldInfo = new ParsingUtil.FieldInfo())) {
-				javaExpression.append(" ").append(ParsingUtil.DOUBLE_VALUEOF_EXPR);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.DOUBLE_VALUEOF_EXPR);
 				String fieldExpr = String.format(ParsingUtil.DOUBLE_FLD_EXPR_TEMPLATE, fldInfo.varType, fldInfo.varName,
 						fldInfo.fieldName);
 				javaExpression.append(fieldExpr);
 				context.setState(context.DOUBLE_STATE);
 			} else if (ParsingUtil.isBooleanVariable(token, context.getScriptContext())) {
-				javaExpression.append(" ").append(ParsingUtil.BOOLEAN_VALUEOF_EXPR);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.BOOLEAN_VALUEOF_EXPR);
 				javaExpression.append(String.format(ParsingUtil.BOOLEAN_VAR_EXPR_TEMPLATE, token));
 				context.setState(context.BOOLEAN_STATE);
 			} else if (ParsingUtil.isBooleanField(token, context.getScriptContext(),
 					fldInfo = new ParsingUtil.FieldInfo())) {
-				javaExpression.append(" ").append(ParsingUtil.BOOLEAN_VALUEOF_EXPR);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.BOOLEAN_VALUEOF_EXPR);
 				String fieldExpr = String.format(ParsingUtil.BOOLEAN_FLD_EXPR_TEMPLATE, fldInfo.varType,
 						fldInfo.varName, fldInfo.fieldName);
 				javaExpression.append(fieldExpr);
 				context.setState(context.BOOLEAN_STATE);
 			} else if (ParsingUtil.isStringVariable(token, context.getScriptContext())) {
-				javaExpression.append(" ").append(ParsingUtil.LP);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.LP);
 				javaExpression.append(String.format(ParsingUtil.STRING_VAR_EXPR_TEMPLATE, token));
 				context.setState(context.STRING_STATE);
 			} else if (ParsingUtil.isStringField(token, context.getScriptContext(),
 					fldInfo = new ParsingUtil.FieldInfo())) {
-				javaExpression.append(" ").append(ParsingUtil.LP);
+				javaExpression.append(ParsingUtil.BLANK).append(ParsingUtil.LP);
 				String fieldExpr = String.format(ParsingUtil.STRING_FLD_EXPR_TEMPLATE, fldInfo.varType, fldInfo.varName,
 						fldInfo.fieldName);
 				javaExpression.append(fieldExpr);
@@ -148,8 +148,12 @@ public class ScriptExpressionParser {
 			} else if (ParsingUtil.isEntityVariable(token, context.getScriptContext(),
 					entInfo = new ParsingUtil.EntityInfo())) {
 				String entityExpr = String.format(ParsingUtil.ENTITY_VAR_EXPR_TEMPLATE, entInfo.varType, token);
-				javaExpression.append(" ").append(entityExpr);
-				context.setState(context.ENTITY_STATE);
+				javaExpression.append(ParsingUtil.BLANK).append(entityExpr);
+				context.setState(context.TERMINATION_STATE);
+			} else if (ParsingUtil.isNull(token)) {
+				javaExpression.append(ParsingUtil.BLANK).append(token);
+				context.setState(context.TERMINATION_STATE);
+
 			} else {
 				throw new ParsingStateException("Unexpected token [" + token + "]");
 			}
@@ -468,7 +472,7 @@ public class ScriptExpressionParser {
 
 	}
 
-	private class EntityState implements ParsingState {
+	private class TerminationState implements ParsingState {
 
 		public void processToken(ParsingMachine context) throws ParsingStateException {
 			if (context.hasNextToken()) {
@@ -506,7 +510,7 @@ public class ScriptExpressionParser {
 		final BooleanOperandState BOOL_OPERAND_STATE = new BooleanOperandState();
 		final StringState STRING_STATE = new StringState();
 		final StringOperandState STR_OPERAND_STATE = new StringOperandState();
-		final EntityState ENTITY_STATE = new EntityState();
+		final TerminationState TERMINATION_STATE = new TerminationState();
 		final EndState END_STATE = new EndState();
 
 		public ParsingMachine(String scriptExpression, ScriptContext scriptContext) {
@@ -573,6 +577,10 @@ public class ScriptExpressionParser {
 		private static final List<String> BOOLEAN_OPERANDS = Arrays.asList(new String[] { "&&", "||" });
 
 		private static final List<String> STRING_OPERANDS = Arrays.asList(new String[] { "+" });
+
+		private static final String RETURN_EXPR = "return";
+
+		private static final String NULL_EXPR = "null";
 
 		private static final String INTEGER_VALUEOF_EXPR = "Integer.valueOf(";
 
@@ -647,6 +655,10 @@ public class ScriptExpressionParser {
 		static boolean isStringLiteral(String token) {
 			return token.length() > 1 && token.startsWith(SQ) && token.endsWith(SQ)
 					&& !token.substring(1, token.length() - 1).contains(SQ);
+		}
+
+		static boolean isNull(String token) {
+			return NULL_EXPR.equals(token);
 		}
 
 		private static boolean isEntityVariable(String token, ScriptContext context, EntityInfo info) {

@@ -1,12 +1,18 @@
 package com.ilsid.bfa.action;
 
 /**
- * Action abstraction.
+ * Action base class.
  * 
  * @author illia.sydorovych
  *
  */
-public interface Action {
+public abstract class Action {
+	
+	private Object[] params; 
+	
+	protected Object[] getInputParameters() {
+		return params;
+	}
 
 	/**
 	 * Executes an action.
@@ -15,7 +21,7 @@ public interface Action {
 	 * @throws ActionException
 	 *             in case of any failures
 	 */
-	Object[] execute() throws ActionException;
+	public abstract Object[] execute() throws ActionException;
 
 	/**
 	 * Defines input parameters for this action, if any.
@@ -23,6 +29,8 @@ public interface Action {
 	 * @param params
 	 *            action input
 	 */
-	void setInputParameters(Object[] params);
+	public void setInputParameters(Object[] params) {
+		this.params = params;
+	}
 
 }

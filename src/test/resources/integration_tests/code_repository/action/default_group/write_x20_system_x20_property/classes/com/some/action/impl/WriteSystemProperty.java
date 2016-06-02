@@ -12,9 +12,7 @@ import javax.mail.internet.InternetAddress;
 import com.ilsid.bfa.action.Action;
 import com.ilsid.bfa.action.ActionException;
 
-public class WriteSystemProperty implements Action {
-
-	private Object[] params;
+public class WriteSystemProperty extends Action {
 
 	@SuppressWarnings("unused")
 	public Object[] execute() throws ActionException {
@@ -22,6 +20,8 @@ public class WriteSystemProperty implements Action {
 		Address address = new InternetAddress();
 
 		String value = "Test Action Value";
+		Object[] params = getInputParameters();
+		
 		if (params.length > 0) {
 			value = value + " " + params[0];
 		}
@@ -32,10 +32,6 @@ public class WriteSystemProperty implements Action {
 		System.setProperty("test.action.sys.property", value);
 
 		return new Object[] { new ResultProvider().getResult() };
-	}
-
-	public void setInputParameters(Object[] params) {
-		this.params = params;
 	}
 
 }

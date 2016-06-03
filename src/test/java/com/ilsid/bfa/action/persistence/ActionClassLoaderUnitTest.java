@@ -16,6 +16,7 @@ import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.action.Action;
 import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
+import com.ilsid.bfa.script.CodeRepositoryInitializer;
 
 public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
@@ -26,13 +27,15 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
 	private static final File TMP_ACTION_CODE_REPOSITORY_DIR = new File(TMP_CODE_REPOSITORY_PATH + "/action");
 
-	private static final String LOADER_CLASS_NAME = "com.ilsid.bfa.action.persistence.ActionClassLoader$ChildFirstURLClassLoader";
+	private static final String LOADER_CLASS_NAME = "com.ilsid.bfa.action.persistence.ActionClassLoader$SearchURLsFirstClassLoader";
 
 	private static final String TEST_ACTION_RESULT = "Test Action Result";
 
 	private static final String ACTION_IMPL_CLASS_NAME = "com.some.action.impl.SomeAction";
 
 	private static final String ACTION_NAME = "Reserve Amount";
+
+	private static final String ENTITY_CLASS_NAME = "com.ilsid.bfa.generated.entity.default_group.Contract";
 
 	private static ActionRepository repository = new FilesystemActionRepository();
 
@@ -50,6 +53,8 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 		});
 
 		ActionClassLoader.setRepository(repository);
+
+		CodeRepositoryInitializer.init();
 	}
 
 	@AfterClass
@@ -143,6 +148,12 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 		Action reloadedAction = reloadedClazz.newInstance();
 		String newActionResult = TEST_ACTION_RESULT + " Updated";
 		assertEquals(newActionResult, reloadedAction.execute()[0]);
+	}
+
+	@Test
+	public void generatedClassCanBeLoadedFromScriptingRepository() throws Exception {
+		Class<?> clazz = loader.loadClass(ENTITY_CLASS_NAME);
+		assertEquals(ENTITY_CLASS_NAME, clazz.getName());
 	}
 
 	private void makeSureClassIsNotInClasspathOfCurrentLoader(String className) {

@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 
 import com.ilsid.bfa.action.Action;
+import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 
@@ -99,9 +100,8 @@ public class ActionClassLoader extends ClassLoader {
 	}
 
 	/**
-	 * Searches the class in the repository first. The class location is defined by the action name. If the class is not
-	 * found in the repository, delegates the loading to the context class loader of {@link Thread#currentThread() the
-	 * current thread}.
+	 * Searches the class in the action repository first. The class location is defined by the action name. If the class
+	 * is not found in the repository, the loading is delegated to {@link DynamicClassLoader}.
 	 * 
 	 * @param className
 	 *            the class name
@@ -166,20 +166,17 @@ public class ActionClassLoader extends ClassLoader {
 					String.format("Failed to obtain dependencies for the action [%s]", actionName), e);
 		}
 		URL[] urls = dependencies.toArray(new URL[dependencies.size()]);
-		actionClassesLoader = new ChildFirstURLClassLoader(urls, getParent());
+		actionClassesLoader = new SearchURLsFirstClassLoader(urls);
 	}
 
 	/*
-	 * This loader breaks the parent delegation model. A class is searched within URLs first. If a class is not found,
-	 * the loading is delegated to the parent loader.
+	 * The loader searches class within URLs first. If a class is not found, the loading is delegated to
+	 * DynamicClassLoader.
 	 */
-	private static class ChildFirstURLClassLoader extends URLClassLoader {
+	private static class SearchURLsFirstClassLoader extends URLClassLoader {
 
-		private ClassLoader parent;
-
-		public ChildFirstURLClassLoader(URL[] urls, ClassLoader parent) {
+		public SearchURLsFirstClassLoader(URL[] urls) {
 			super(urls, null);
-			this.parent = parent;
 		}
 
 		@Override
@@ -187,7 +184,7 @@ public class ActionClassLoader extends ClassLoader {
 			try {
 				return super.findClass(name);
 			} catch (ClassNotFoundException e) {
-				return parent.loadClass(name);
+				return DynamicClassLoader.getInstance().loadClass(name);
 			}
 		}
 

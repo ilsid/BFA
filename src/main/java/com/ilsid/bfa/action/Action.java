@@ -7,10 +7,26 @@ package com.ilsid.bfa.action;
  *
  */
 public abstract class Action {
-	
-	private Object[] params; 
-	
-	protected Object[] getInputParameters() {
+
+	private static final Object[] EMPTY_PARAMS = new Object[] {};
+
+	private Object[] params = EMPTY_PARAMS;
+
+	/**
+	 * Returns a context for this action.
+	 * 
+	 * @return context
+	 */
+	protected final ActionContext getContext() {
+		return ActionContext.getInstance();
+	}
+
+	/**
+	 * Returns input parameters for this action.
+	 * 
+	 * @return input parameters or an empty array if no parameters were passed
+	 */
+	protected final Object[] getInputParameters() {
 		return params;
 	}
 
@@ -24,13 +40,14 @@ public abstract class Action {
 	public abstract Object[] execute() throws ActionException;
 
 	/**
-	 * Defines input parameters for this action, if any.
+	 * Defines input parameters for this action.
 	 * 
 	 * @param params
 	 *            action input
 	 */
-	public void setInputParameters(Object[] params) {
-		this.params = params;
+	public final void setInputParameters(Object[] params) {
+		if (params != null) {
+			this.params = params;
+		}
 	}
-
 }

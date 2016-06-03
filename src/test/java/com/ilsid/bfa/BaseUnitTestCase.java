@@ -49,6 +49,10 @@ public abstract class BaseUnitTestCase {
 	protected void assertSame(Object expected, Object actual) {
 		Assert.assertSame(expected, actual);
 	}
+	
+	protected void assertNotSame(Object expected, Object actual) {
+		Assert.assertNotSame(expected, actual);
+	}
 
 	protected void assertNull(Object object) {
 		Assert.assertNull(object);

@@ -121,13 +121,15 @@ public class ScriptRuntime {
 		} catch (ScriptException e) {
 			updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
 					.setStatus(RuntimeStatusType.FAILED).setError(e).setEndTime(new Date()));
-			
+
 			throw e;
 		} catch (RuntimeException e) {
 			updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
 					.setStatus(RuntimeStatusType.FAILED).setError(e).setEndTime(new Date()));
-			
+
 			throw new ScriptException(String.format("Script [%s] failed", scriptName), e);
+		} finally {
+			script.cleanup();
 		}
 
 		updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)

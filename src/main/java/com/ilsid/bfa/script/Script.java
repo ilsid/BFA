@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import com.ilsid.bfa.action.Action;
+import com.ilsid.bfa.action.ActionContext;
 import com.ilsid.bfa.action.ActionException;
 import com.ilsid.bfa.action.persistence.ActionLocator;
 
@@ -145,10 +146,6 @@ public abstract class Script {
 		scriptContext.setScriptName(name);
 	}
 
-	void setCallStack(Deque<String> callStack) {
-		this.callStack = callStack;
-	}
-
 	public void setActionLocator(ActionLocator actionResolver) {
 		this.actionLocator = actionResolver;
 	}
@@ -159,6 +156,10 @@ public abstract class Script {
 
 	}
 
+	void setCallStack(Deque<String> callStack) {
+		this.callStack = callStack;
+	}
+
 	void setRuntime(ScriptRuntime runtime) {
 		this.runtime = runtime;
 	}
@@ -166,6 +167,14 @@ public abstract class Script {
 	void setInputParameters(Object[] params) {
 		for (Object param : params) {
 			inputParams.add(param);
+		}
+	}
+
+	void cleanup() {
+		// Top-level flow and its sub-flows share the same action context. The context cleanup must be performed only at
+		// the top-level one (after completion of all sub-flows).
+		if (isTopLevel()) {
+			ActionContext.cleanup();
 		}
 	}
 
@@ -207,6 +216,10 @@ public abstract class Script {
 		return result;
 	}
 
+	private boolean isTopLevel() {
+		return callStack.isEmpty();
+	}
+
 	private class ActionResultImpl implements ActionResult {
 
 		private Object[] input;
@@ -225,9 +238,8 @@ public abstract class Script {
 
 		public ActionResult SetLocalVar(String name) throws ScriptException {
 			if (index == size) {
-				throw new ScriptException(
-						String.format("No more elements found in action [%s] result. Actual result size is [%s]",
-								actionName, size));
+				throw new ScriptException(String.format(
+						"No more elements found in action [%s] result. Actual result size is [%s]", actionName, size));
 			}
 			Script.this.setLocalVarValue(name, input[index++]);
 

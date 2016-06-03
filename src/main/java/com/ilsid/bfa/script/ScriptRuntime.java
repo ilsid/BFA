@@ -119,15 +119,14 @@ public class ScriptRuntime {
 		try {
 			script.execute();
 		} catch (ScriptException e) {
-			updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
-					.setStatus(RuntimeStatusType.FAILED).setError(e).setEndTime(new Date()));
-
+			updateRuntimeRecord(createErrorDTO(flowRuntimeId, scriptName, e));
 			throw e;
 		} catch (RuntimeException e) {
-			updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
-					.setStatus(RuntimeStatusType.FAILED).setError(e).setEndTime(new Date()));
-
+			updateRuntimeRecord(createErrorDTO(flowRuntimeId, scriptName, e));
 			throw new ScriptException(String.format("Script [%s] failed", scriptName), e);
+		} catch (Error e) {
+			updateRuntimeRecord(createErrorDTO(flowRuntimeId, scriptName, new Exception("System error occurred", e)));
+			throw new ScriptException(String.format("Script [%s] failed with system error", scriptName), e);
 		} finally {
 			script.cleanup();
 		}
@@ -159,6 +158,11 @@ public class ScriptRuntime {
 		}
 
 		return script;
+	}
+
+	private ScriptRuntimeDTO createErrorDTO(long flowRuntimeId, String scriptName, Exception exception) {
+		return new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
+				.setStatus(RuntimeStatusType.FAILED).setError(exception).setEndTime(new Date());
 	}
 
 	private long generatedRuntimeId(String scriptName) throws ScriptException {

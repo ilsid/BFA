@@ -45,6 +45,18 @@ public abstract class ActionContext {
 	public abstract void putParameter(String name, Object value);
 
 	/**
+	 * Removes parameter from the context.
+	 * 
+	 * @param name
+	 *            parameter name
+	 * @return <code>true</code>, if parameter was removed and <code>false</code>, if parameter with such name was not
+	 *         found in the context.
+	 * @throws IllegalArgumentException
+	 *             if the passed name is <code>null</code>
+	 */
+	public abstract boolean removeParameter(String name);
+
+	/**
 	 * Returns instance for the current thread. Creates new instance on the first invocation or if
 	 * {@linkplain #cleanup()} has been invoked right before. Returns the same instance on the consequent invocations.
 	 * 
@@ -84,6 +96,12 @@ public abstract class ActionContext {
 			Validate.notNull(name, NAME_IS_NULL_ERR_MSG);
 			Validate.notNull(value, VALUE_IS_NULL_ERR_MSG);
 			params.put(name, value);
+		}
+
+		@Override
+		public boolean removeParameter(String name) {
+			Validate.notNull(name, NAME_IS_NULL_ERR_MSG);
+			return params.remove(name) != null;
 		}
 
 	}

@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +20,7 @@ import javax.inject.Inject;
 
 import com.ilsid.bfa.BFAError;
 import com.ilsid.bfa.common.ClassNameUtil;
+import com.ilsid.bfa.script.TypeNameResolver;
 
 /**
  * The class loader for the generated classes. Supports the reloading of the already loaded generated classes.
@@ -33,6 +35,9 @@ public class DynamicClassLoader extends ClassLoader {
 	private static final String GENERATED_CLASSES_DIR = ClassNameUtil.GENERATED_CLASSES_PACKAGE.replace('.', '/');
 
 	private static Map<String, Class<?>> cache = new ConcurrentHashMap<>();
+
+	private static Set<ReloadListener> reloadListeners = Collections
+			.newSetFromMap(new ConcurrentHashMap<ReloadListener, Boolean>());
 
 	private static DynamicClassLoader instance = new DynamicClassLoader();
 
@@ -105,27 +110,34 @@ public class DynamicClassLoader extends ClassLoader {
 	/**
 	 * New {@link DynamicClassLoader} instance is created. All classes that have been loaded by the old class loader are
 	 * reloaded by the new one and are put into the cache. The old classes are removed from the cache.
-	 * {@link DynamicClassLoader#getInstance()} will return this new instance.
+	 * {@link DynamicClassLoader#getInstance()} will return this new instance. All registered reloading listeners are
+	 * triggered.
+	 * 
+	 * @see #addReloadListener(ReloadListener)
 	 */
 	public static void reloadClasses() {
 		WRITE_RELOAD_LOCK.lock();
 		try {
-			instance = new DynamicClassLoader();
-
-			// Force reloading of all cached classes
-			Set<String> cachedClassNames = new HashSet<>(cache.keySet());
-			cache.clear();
-			for (String className : cachedClassNames) {
-				try {
-					instance.loadClass(className);
-				} catch (ClassNotFoundException e) {
-					// It is possible that classes residing in the old cache have been already removed from the
-					// repository
-					// TODO: log WARN message
-				}
-			}
+			doReload();
 		} finally {
 			WRITE_RELOAD_LOCK.unlock();
+		}
+	}
+
+	/**
+	 * Registers a listener that is triggered right after classes reloading. There is no effect, if such listener has
+	 * been already registered (according to {@linkplain Set#add(Object)} contract).
+	 * 
+	 * @param listener
+	 *            reloading listener
+	 * @see #reloadClasses()
+	 */
+	public void addReloadListener(ReloadListener listener) {
+		READ_RELOAD_LOCK.lock();
+		try {
+			reloadListeners.add(listener);
+		} finally {
+			READ_RELOAD_LOCK.unlock();
 		}
 	}
 
@@ -138,6 +150,40 @@ public class DynamicClassLoader extends ClassLoader {
 	@Inject
 	public static void setRepository(ScriptingRepository codeRepository) {
 		repository = codeRepository;
+	}
+
+	/**
+	 * Listener that is triggered right after classes reloading.
+	 * 
+	 * @author illia.sydorovych
+	 *
+	 */
+	public interface ReloadListener {
+
+		void execute();
+
+	}
+
+	private static void doReload() {
+		instance = new DynamicClassLoader();
+
+		// Force reloading of all cached classes
+		Set<String> cachedClassNames = new HashSet<>(cache.keySet());
+		cache.clear();
+		for (String className : cachedClassNames) {
+			try {
+				instance.loadClass(className);
+			} catch (ClassNotFoundException e) {
+				// It is possible that classes residing in the old cache have been already removed from the
+				// repository
+				// TODO: log WARN message
+			}
+		}
+
+		for (ReloadListener action : reloadListeners) {
+			action.execute();
+		}
+		reloadListeners.clear();
 	}
 
 	private URL doFindResource(String name) {

@@ -104,7 +104,7 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 		assertEquals("byte", url.getProtocol());
 		assertEquals("/" + classPath, url.getPath());
 	}
-	
+
 	@Test
 	public void nonExistingClassFromGeneratedPackageCanNotBeObtainedAsURL() throws Exception {
 		String classPath = "com/ilsid/bfa/generated/classloadertest/NonExisting.class";
@@ -112,13 +112,101 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 
 		assertNull(url);
 	}
-	
+
 	@Test
 	public void existingClassFromStaticPackageCanNotBeObtainedAsURL() throws Exception {
 		String classPath = "com/ilsid/bfa/test/types/ContractForCustomClassloaderTesting.class";
 		URL url = DynamicClassLoader.getInstance().findResource(classPath);
 
 		assertNull(url);
+	}
+
+	@Test
+	public void reloadListenerIsTriggeredOnceAfterClassesReloading() {
+		ReloadListenerImpl listener = new ReloadListenerImpl("aaa");
+		assertFalse(listener.wasInvoked());
+		
+		DynamicClassLoader.getInstance().addReloadListener(listener);
+		
+		DynamicClassLoader.reloadClasses();
+		assertTrue(listener.wasInvoked());
+		
+		listener.reset();
+		assertFalse(listener.wasInvoked());
+		
+		DynamicClassLoader.reloadClasses();
+		assertFalse(listener.wasInvoked());
+	}
+	
+	@Test
+	public void uniqueReloadListenersOnlyAreTriggeredAfterClassesReloading() {
+		ReloadListenerImpl listener1 = new ReloadListenerImpl("aaa");
+		ReloadListenerImpl listener2 = new ReloadListenerImpl("aaa");
+		ReloadListenerImpl listener3 = new ReloadListenerImpl("bbb");
+		assertEquals(listener1, listener2);
+		assertNotEquals(listener1, listener3);
+		assertFalse(listener1.wasInvoked());
+		assertFalse(listener2.wasInvoked());
+		assertFalse(listener3.wasInvoked());
+		
+		DynamicClassLoader.getInstance().addReloadListener(listener1);
+		DynamicClassLoader.getInstance().addReloadListener(listener2);
+		DynamicClassLoader.getInstance().addReloadListener(listener3);
+		
+		DynamicClassLoader.reloadClasses();
+		assertTrue(listener1.wasInvoked());
+		assertFalse(listener2.wasInvoked());
+		assertTrue(listener3.wasInvoked());
+		
+	}
+
+	private static class ReloadListenerImpl implements DynamicClassLoader.ReloadListener {
+
+		private String name;
+		
+		private boolean wasInvoked;
+
+		ReloadListenerImpl(String name) {
+			this.name = name;
+		}
+
+		public void execute() {
+			wasInvoked = true;
+		}
+		
+		boolean wasInvoked() {
+			return wasInvoked;
+		}
+		
+		void reset() {
+			wasInvoked = false;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			ReloadListenerImpl other = (ReloadListenerImpl) obj;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			return true;
+		}
+
 	}
 
 }

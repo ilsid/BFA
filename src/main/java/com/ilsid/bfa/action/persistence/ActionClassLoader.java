@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 
 import com.ilsid.bfa.action.Action;
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.PersistenceLogger;
@@ -166,7 +167,7 @@ public class ActionClassLoader extends ClassLoader {
 					String.format("Failed to obtain dependencies for the action [%s]", actionName), e);
 		}
 		URL[] urls = dependencies.toArray(new URL[dependencies.size()]);
-		actionClassesLoader = new SearchURLsFirstClassLoader(urls);
+		actionClassesLoader = new SearchURLsFirstClassLoader(urls, actionName);
 	}
 
 	/*
@@ -175,8 +176,11 @@ public class ActionClassLoader extends ClassLoader {
 	 */
 	private static class SearchURLsFirstClassLoader extends URLClassLoader {
 
-		public SearchURLsFirstClassLoader(URL[] urls) {
+		private String actionName;
+
+		public SearchURLsFirstClassLoader(URL[] urls, String actionName) {
 			super(urls, null);
+			this.actionName = actionName;
 		}
 
 		@Override
@@ -184,10 +188,55 @@ public class ActionClassLoader extends ClassLoader {
 			try {
 				return super.findClass(name);
 			} catch (ClassNotFoundException e) {
+				if (name.startsWith(ClassNameUtil.GENERATED_CLASSES_PACKAGE)) {
+					// Reload listener is registered in case of generated class, because this class may be reloaded in
+					// future. This is needed because generated classes used in actions must be loaded by the actual
+					// (most recent) dynamic class loader instance to avoid ClassCastException issues
+					DynamicClassLoader.getInstance().addReloadListener(new ReloadActionListener(actionName));
+				}
+
 				return DynamicClassLoader.getInstance().loadClass(name);
 			}
 		}
 
+	}
+
+	private static class ReloadActionListener implements DynamicClassLoader.ReloadListener {
+
+		private String actionName;
+
+		ReloadActionListener(String actionName) {
+			this.actionName = actionName;
+		}
+
+		public void execute() {
+			ActionClassLoader.reload(actionName);
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((actionName == null) ? 0 : actionName.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			ReloadActionListener other = (ReloadActionListener) obj;
+			if (actionName == null) {
+				if (other.actionName != null)
+					return false;
+			} else if (!actionName.equals(other.actionName))
+				return false;
+			return true;
+		}
 	}
 
 }

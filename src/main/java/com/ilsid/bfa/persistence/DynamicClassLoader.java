@@ -20,7 +20,6 @@ import javax.inject.Inject;
 
 import com.ilsid.bfa.BFAError;
 import com.ilsid.bfa.common.ClassNameUtil;
-import com.ilsid.bfa.script.TypeNameResolver;
 
 /**
  * The class loader for the generated classes. Supports the reloading of the already loaded generated classes.
@@ -54,7 +53,7 @@ public class DynamicClassLoader extends ClassLoader {
 	}
 
 	/**
-	 * Returns the actual loader that loads the classes with {@link TypeNameResolver#GENERATED_CLASSES_PACKAGE} package
+	 * Returns the actual loader that loads the classes with {@link ClassNameUtil#GENERATED_CLASSES_PACKAGE} package
 	 * from the specified code repository. All other classes are loaded by the context class loader of the current
 	 * thread. This method returns new loader instance after {@link DynamicClassLoader#reloadClasses()} invocation.
 	 * 
@@ -74,7 +73,7 @@ public class DynamicClassLoader extends ClassLoader {
 	 * Provides URL for a generated class.
 	 * 
 	 * @return URL for a resource name that represents a generated class (belonging to
-	 *         {@link TypeNameResolver#GENERATED_CLASSES_PACKAGE} package) or <code>null</code> otherwise
+	 *         {@link ClassNameUtil#GENERATED_CLASSES_PACKAGE} package) or <code>null</code> otherwise
 	 */
 	@Override
 	protected URL findResource(String name) {
@@ -87,7 +86,7 @@ public class DynamicClassLoader extends ClassLoader {
 	};
 
 	/**
-	 * Loads the class with {@link TypeNameResolver#GENERATED_CLASSES_PACKAGE} package from the specified code
+	 * Loads the class with {@link ClassNameUtil#GENERATED_CLASSES_PACKAGE} package from the specified code
 	 * repository. If the class has been already loaded, it is got from the loader's cache. All other classes are loaded
 	 * by the context class loader of the current thread.
 	 * 

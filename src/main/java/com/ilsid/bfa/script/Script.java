@@ -1,5 +1,6 @@
 package com.ilsid.bfa.script;
 
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -11,9 +12,10 @@ import com.ilsid.bfa.action.persistence.ActionLocator;
 
 //TODO: complete implementation
 //TODO: complete javadocs
+//TODO: refactor logging
 public abstract class Script {
 
-	private ScriptContext scriptContext;
+	protected ScriptContext scriptContext;
 
 	private Queue<Object> inputParams = new LinkedList<>();
 
@@ -26,6 +28,8 @@ public abstract class Script {
 	private String name;
 
 	private ActionLocator actionLocator;
+
+	private RuntimeLogger runtimeLogger;
 
 	protected abstract void doExecute() throws ScriptException;
 
@@ -74,6 +78,10 @@ public abstract class Script {
 	}
 
 	public boolean Equal(@ExprParam Object expr1, @ExprParam Object expr2, String description) throws ScriptException {
+		if (runtimeLogger != null) {
+			runtimeLogger.debug(new StringBuilder("Equal: ").append(expr1).append(", ").append(expr2).toString());
+		}
+
 		AbstractCondition condition = new EqualCondition(getValue(expr1), getValue(expr2));
 		if (description != null) {
 			condition.setDescription(description);
@@ -88,6 +96,10 @@ public abstract class Script {
 
 	public boolean LessOrEqual(@ExprParam Object expr1, @ExprParam Object expr2, String description)
 			throws ScriptException {
+		if (runtimeLogger != null) {
+			runtimeLogger.debug(new StringBuilder("LessOrEqual: ").append(expr1).append(", ").append(expr2).toString());
+		}
+
 		AbstractCondition condition = new LessOrEqualCondition(getValue(expr1), getValue(expr2));
 		if (description != null) {
 			condition.setDescription(description);
@@ -97,18 +109,40 @@ public abstract class Script {
 	}
 
 	public void SubFlow(String name) throws ScriptException {
+		if (runtimeLogger != null) {
+			runtimeLogger.debug("SubFlow: ".concat(name));
+		}
+
 		runtime.runScript(name, runtimeId, createSubflowCallStack());
 	}
 
 	public void SubFlow(String name, @ExprParam Object... params) throws ScriptException {
-		runtime.runScript(name, toValues(params), runtimeId, createSubflowCallStack());
+		final Object[] paramValues = toValues(params);
+
+		if (runtimeLogger != null) {
+			runtimeLogger.debug(new StringBuilder("SubFlow: ").append(name).append(", parameters: ")
+					.append(Arrays.toString(paramValues)).toString());
+		}
+
+		runtime.runScript(name, paramValues, runtimeId, createSubflowCallStack());
 	}
 
 	public ActionResult Action(String name) throws ScriptException {
+		if (runtimeLogger != null) {
+			runtimeLogger.debug("Action: ".concat(name));
+		}
+
 		return Action(name, new Object[] {});
 	}
 
 	public ActionResult Action(String name, @ExprParam Object... params) throws ScriptException {
+		final Object[] paramValues = toValues(params);
+
+		if (runtimeLogger != null) {
+			runtimeLogger.debug(new StringBuilder("Action: ").append(name).append(", parameters: ")
+					.append(Arrays.toString(paramValues)).toString());
+		}
+
 		Action action;
 		try {
 			action = actionLocator.lookup(name);
@@ -116,7 +150,7 @@ public abstract class Script {
 			throw new ScriptException(String.format("Lookup of the action [%s] failed", name), e);
 		}
 
-		action.setInputParameters(toValues(params));
+		action.setInputParameters(paramValues);
 
 		Object[] result;
 		try {
@@ -146,8 +180,8 @@ public abstract class Script {
 		scriptContext.setScriptName(name);
 	}
 
-	public void setActionLocator(ActionLocator actionResolver) {
-		this.actionLocator = actionResolver;
+	public void setActionLocator(ActionLocator actionLocator) {
+		this.actionLocator = actionLocator;
 	}
 
 	public interface ActionResult {
@@ -160,6 +194,10 @@ public abstract class Script {
 		this.callStack = callStack;
 	}
 
+	int getCallStackSize() {
+		return callStack.size();
+	}
+
 	void setRuntime(ScriptRuntime runtime) {
 		this.runtime = runtime;
 	}
@@ -168,6 +206,10 @@ public abstract class Script {
 		for (Object param : params) {
 			inputParams.add(param);
 		}
+	}
+
+	void setRuntimeLogger(RuntimeLogger runtimeLogger) {
+		this.runtimeLogger = runtimeLogger;
 	}
 
 	void cleanup() {

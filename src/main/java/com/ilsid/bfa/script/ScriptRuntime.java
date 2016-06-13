@@ -1,14 +1,21 @@
 package com.ilsid.bfa.script;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ilsid.bfa.action.persistence.ActionLocator;
+import com.ilsid.bfa.common.LoggingConfig;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
@@ -24,11 +31,17 @@ import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 @Singleton
 public class ScriptRuntime {
 
+	private static final String RUNTIME_DEBUG_LOGGING_FLAG = "bfa.logging.runtime_debug";
+
 	private static final Object[] EMPTY_PARAMS = new Object[] {};
+
+	private final Logger runtimeLogger = LoggerFactory.getLogger("runtime_debug_logger");
 
 	private RuntimeRepository repository;
 
 	private ActionLocator actionLocator;
+
+	private boolean runtimeDebugEnabled;
 
 	/**
 	 * Runs the script with the given name.
@@ -88,6 +101,23 @@ public class ScriptRuntime {
 		this.actionLocator = actionLocator;
 	}
 
+	/**
+	 * Defines a logging configuration.
+	 * 
+	 * @param loggingConfig
+	 *            logging configuration
+	 */
+	@Inject
+	public void setLoggingConfig(@LoggingConfig Map<String, String> loggingConfig) {
+		final String configValue = loggingConfig.get(RUNTIME_DEBUG_LOGGING_FLAG);
+		// Config property has more priority over system property
+		if (configValue != null) {
+			runtimeDebugEnabled = Boolean.parseBoolean(configValue);
+		} else {
+			runtimeDebugEnabled = Boolean.getBoolean(RUNTIME_DEBUG_LOGGING_FLAG);
+		}
+	}
+
 	long runScript(String scriptName, long runtimeId, Deque<String> callStack) throws ScriptException {
 		return runScript(scriptName, EMPTY_PARAMS, runtimeId, callStack);
 	}
@@ -109,6 +139,10 @@ public class ScriptRuntime {
 		script.setInputParameters(params);
 		if (callStack != null) {
 			script.setCallStack(callStack);
+		}
+
+		if (runtimeDebugEnabled) {
+			script.setRuntimeLogger(createRuntimeLogger(flowRuntimeId, scriptName, callStack));
 		}
 
 		ScriptRuntimeDTO newRecord = new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
@@ -195,6 +229,24 @@ public class ScriptRuntime {
 					String.format("Failed to update runtime record for the script [%s]", record.getScriptName()), e);
 		}
 
+	}
+
+	private RuntimeLogger createRuntimeLogger(long flowRuntimeId, String scriptName, Deque<String> callStack) {
+		StringBuilder logPrefix = new StringBuilder().append("Script ");
+		logPrefix.append("[runtimeId=").append(flowRuntimeId).append("] [");
+
+		if (callStack != null && callStack.size() > 0) {
+			List<String> parentNames = new ArrayList<>(callStack);
+			Collections.reverse(parentNames);
+			for (String parName : parentNames) {
+				logPrefix.append(parName).append("-->");
+			}
+		}
+		logPrefix.append(scriptName).append("]");
+
+		RuntimeLogger logger = new RuntimeLogger(runtimeLogger, logPrefix.toString());
+
+		return logger;
 	}
 
 	private List<String> toStrings(Object[] params) {

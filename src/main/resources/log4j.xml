@@ -34,6 +34,16 @@
             <param name="ConversionPattern" value="[%d{DATE}] [%c] [%t] [%p]%n %m %n %n"/>
         </layout>
     </appender>
+    
+    <appender name="SCRIPT_RUNTIME" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="DEBUG"/>
+        <param name="File" value="&logDir;/runtime.log"/>
+        <param name="MaxFileSize" value="5MB"/>
+        <param name="Append" value="true"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="[%d{DATE}] [%c] [%t] [%p]%n %m %n %n"/>
+        </layout>
+    </appender>
 
     <logger name="error_logger">
         <level value="ERROR"/>
@@ -44,6 +54,12 @@
      <logger name="info_logger">
         <level value="INFO"/>
         <appender-ref ref="INFOS"/>
+        <appender-ref ref="STDERR"/>
+    </logger>
+    
+    <logger name="runtime_debug_logger">
+        <level value="DEBUG"/>
+        <appender-ref ref="SCRIPT_RUNTIME"/>
         <appender-ref ref="STDERR"/>
     </logger>
 

@@ -15,6 +15,7 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.ilsid.bfa.action.persistence.ActionClassLoader;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
+import com.ilsid.bfa.common.LoggingConfig;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
@@ -78,6 +79,13 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			@Singleton
 			@RepositoryConfig
 			protected Map<String, String> provideRepositoryConfiguration() {
+				return ConfigUtil.getApplicationSettings();
+			}
+			
+			@Provides
+			@Singleton
+			@LoggingConfig
+			protected Map<String, String> provideLoggingConfiguration() {
 				return ConfigUtil.getApplicationSettings();
 			}
 

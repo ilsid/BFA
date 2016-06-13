@@ -18,6 +18,8 @@ import java.util.Properties;
 public class ConfigUtil {
 
 	private static final File CONFIG_FILE = new File("bfa/config.properties");
+	
+	private static Map<String, String> config;
 
 	/**
 	 * Loads configuration from <i>&lt;current_dir&gt;/bfa/config.properties<i> file.
@@ -26,8 +28,12 @@ public class ConfigUtil {
 	 * @throws IllegalStateException
 	 *             if the configuration file is not found or can't be loaded
 	 */
-	public static Map<String, String> getApplicationSettings() {
-		return load();
+	public static synchronized Map<String, String> getApplicationSettings() {
+		if (config == null) {
+			config = load();
+		}
+		
+		return config;
 	}
 
 	private static Map<String, String> load() {

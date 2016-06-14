@@ -128,10 +128,6 @@ public abstract class Script {
 	}
 
 	public ActionResult Action(String name) throws ScriptException {
-		if (runtimeLogger != null) {
-			runtimeLogger.debug("Action: ".concat(name));
-		}
-
 		return Action(name, new Object[] {});
 	}
 

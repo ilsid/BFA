@@ -14,6 +14,7 @@ import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.GroupNameUtil;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.TransactionManager;
 import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 
 /**
@@ -23,7 +24,7 @@ import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
  *
  */
 @Singleton
-public class ActionManager {
+public class ActionManager extends AbstractManager {
 
 	private ActionRepository repository;
 
@@ -41,8 +42,11 @@ public class ActionManager {
 	 */
 	public void createGroup(String groupName) throws ManagementException {
 		try {
+			startTransaction();
 			repository.createGroup(groupName, createActionGroupMetadata(groupName));
+			commitTransaction();
 		} catch (PersistenceException e) {
+			rollbackTransaction();
 			throw new ManagementException(String.format("Failed to created the action group [%s]", groupName), e);
 		}
 	}
@@ -118,8 +122,11 @@ public class ActionManager {
 	 */
 	public void createAction(String actionName, InputStream actionPackage) throws ManagementException {
 		try {
+			startTransaction();
 			repository.save(actionName, actionPackage);
+			commitTransaction();
 		} catch (PersistenceException e) {
+			rollbackTransaction();
 			throw new ManagementException(String.format("Failed to save the action [%s]", actionName), e);
 		}
 	}
@@ -175,13 +182,17 @@ public class ActionManager {
 		ActionClassLoader.releaseResources(actionName);
 
 		try {
+			startTransaction();
 			if (repository.delete(actionName)) {
 				repository.save(actionName, actionPackage);
 			} else {
+				rollbackTransaction();
 				throw new ManagementException(
 						String.format("The action [%s] does not exist in the repository", actionName));
 			}
+			commitTransaction();
 		} catch (PersistenceException e) {
+			rollbackTransaction();
 			throw new ManagementException(String.format("Failed to save the action [%s]", actionName), e);
 		}
 
@@ -223,6 +234,11 @@ public class ActionManager {
 		void setDependencies(List<String> dependencies) {
 			this.dependencies = dependencies;
 		}
+	}
+
+	@Override
+	protected TransactionManager getTransactionManager() {
+		return repository.getTransactionManager();
 	}
 
 	private Map<String, String> createActionGroupMetadata(String groupName) {

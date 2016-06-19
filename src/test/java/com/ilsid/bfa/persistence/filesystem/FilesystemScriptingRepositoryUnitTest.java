@@ -96,18 +96,6 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void classOnlySaveFailsIfConfigurationIsNotSet() throws Exception {
-		expectExceptionIfConfigIsNotSet();
-		saveClass();
-	}
-
-	@Test
-	public void classAndSourceSaveFailsIfConfigurationIsNotSet() throws Exception {
-		expectExceptionIfConfigIsNotSet();
-		saveClassAndSource();
-	}
-
-	@Test
 	public void rootDirectoryPropertyIsRequiredInConfiguration() throws Exception {
 		exceptionRule.expect(ConfigurationException.class);
 		exceptionRule.expectMessage("Required [bfa.persistence.fs.root_dir] property not found");
@@ -550,13 +538,6 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 	private void saveClass() throws Exception {
 		saveClass(false);
-	}
-
-	private void expectExceptionIfConfigIsNotSet() {
-		exceptionRule.expect(IllegalStateException.class);
-		exceptionRule.expectMessage("Root directory is not set");
-
-		repository = new FilesystemScriptingRepository();
 	}
 
 	private void saveClass(boolean saveSource) throws Exception {

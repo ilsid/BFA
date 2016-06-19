@@ -32,7 +32,7 @@ import com.ilsid.bfa.common.JsonUtil;
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.RepositoryConfig;
-import com.ilsid.bfa.persistence.filesystem.ConfigurableRepository;
+import com.ilsid.bfa.persistence.filesystem.FilesystemRepository;
 import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 
 /**
@@ -41,7 +41,7 @@ import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
  * @author illia.sydorovych
  *
  */
-public class FilesystemActionRepository extends ConfigurableRepository implements ActionRepository {
+public class FilesystemActionRepository extends FilesystemRepository implements ActionRepository {
 
 	private static final String ACTION_ROOT_DIR = "action";
 

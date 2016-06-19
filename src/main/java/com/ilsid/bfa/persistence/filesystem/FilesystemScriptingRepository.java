@@ -19,7 +19,6 @@ import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOUtil;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.ScriptingRepository;
-import com.ilsid.bfa.persistence.TransactionManager;
 
 /**
  * The scripting repository based on the file system.
@@ -27,7 +26,7 @@ import com.ilsid.bfa.persistence.TransactionManager;
  * @author illia.sydorovych
  *
  */
-public class FilesystemScriptingRepository extends ConfigurableRepository implements ScriptingRepository {
+public class FilesystemScriptingRepository extends FilesystemRepository implements ScriptingRepository {
 
 	private static final String[] CLASS_FILES_FILTER = new String[] { "class" };
 
@@ -38,7 +37,7 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 	private static final String CLASS_METADATA_SUFFIX = '_' + ClassNameUtil.METADATA_FILE_NAME;
 
 	private ObjectMapper jsonMapper = new ObjectMapper();
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -339,16 +338,6 @@ public class FilesystemScriptingRepository extends ConfigurableRepository implem
 		} else {
 			return null;
 		}
-	}
-
-	/**
-	 * Returns {@link FSTransactionManager} instance.
-	 * 
-	 * @return {@link FSTransactionManager} instance
-	 */
-	@Override
-	public TransactionManager getTransactionManager() {
-		return FSTransactionManager.getInstance();
 	}
 
 	private byte[] loadClassContents(File classFile, String className) throws PersistenceException {

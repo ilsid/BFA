@@ -12,7 +12,7 @@ import com.ilsid.bfa.Configurable;
  * @author illia.sydorovych
  *
  */
-public interface ScriptingRepository extends Configurable {
+public interface ScriptingRepository extends Configurable, Transactional {
 
 	/**
 	 * Loads a byte code for a given class name.
@@ -200,12 +200,5 @@ public interface ScriptingRepository extends Configurable {
 	 *             in case of any repository access issues
 	 */
 	Map<String, String> loadMetadataForPackage(String packageName) throws PersistenceException;
-
-	/**
-	 * Returns a proper {@link TransactionManager} instance for this code repository.
-	 * 
-	 * @return a transaction manager for this repository
-	 */
-	TransactionManager getTransactionManager();
 
 }

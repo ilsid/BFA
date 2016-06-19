@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.ilsid.bfa.Configurable;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.Transactional;
 
 /**
  * Provides access to the Actions code repository.
@@ -14,7 +15,7 @@ import com.ilsid.bfa.persistence.PersistenceException;
  * @author illia.sydorovych
  *
  */
-public interface ActionRepository extends Configurable {
+public interface ActionRepository extends Configurable, Transactional {
 
 	/**
 	 * Loads an implementation class name for the given action.

@@ -48,7 +48,7 @@ import com.ilsid.bfa.script.TypeNameResolver;
  */
 // TODO: write unit tests
 @Singleton
-public class ScriptManager {
+public class ScriptManager extends AbstractManager {
 
 	private static final String MANIFEST_VERSION = "1.0";
 
@@ -425,8 +425,11 @@ public class ScriptManager {
 
 		String packageName = TypeNameResolver.resolveScriptGroupPackageName(groupName);
 		try {
+			startTransaction();
 			repository.savePackage(packageName, createScriptGroupMetadata(groupName));
+			commitTransaction();
 		} catch (PersistenceException e) {
+			rollbackTransaction();
 			throw new ManagementException(String.format("Failed to create the script group [%s]", groupName), e);
 		}
 	}
@@ -451,8 +454,11 @@ public class ScriptManager {
 
 		String packageName = TypeNameResolver.resolveEntityGroupPackageName(groupName);
 		try {
+			startTransaction();
 			repository.savePackage(packageName, createEntityGroupMetadata(groupName));
+			commitTransaction();
 		} catch (PersistenceException e) {
+			rollbackTransaction();
 			throw new ManagementException(String.format("Failed to create the entity group [%s]", groupName), e);
 		}
 	}
@@ -494,6 +500,11 @@ public class ScriptManager {
 	@Inject
 	public void setRepository(ScriptingRepository repository) {
 		this.repository = repository;
+	}
+
+	@Override
+	protected TransactionManager getTransactionManager() {
+		return repository.getTransactionManager();
 	}
 
 	private void saveScript(ScriptCompilationUnit compilationUnit, String scriptBody) throws ManagementException {
@@ -774,21 +785,6 @@ public class ScriptManager {
 		}
 
 		return jarFile;
-	}
-
-	private void startTransaction() throws PersistenceException {
-		repository.getTransactionManager().startTransaction();
-	}
-
-	private void commitTransaction() throws PersistenceException {
-		repository.getTransactionManager().commitTransaction();
-	}
-
-	private void rollbackTransaction() {
-		TransactionManager txManager = repository.getTransactionManager();
-		if (txManager.isTransactionStarted()) {
-			txManager.rollbackTransaction();
-		}
 	}
 
 	private static class ScriptCompilationUnit {

@@ -4,37 +4,45 @@ import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.TransactionManager;
 
 /**
- * Provides the stub implementation that does not support transactions.
+ * Provides a file system based implementation that locks/unlocks a repository in exclusive mode.
  * 
  * @author illia.sydorovych
  *
  */
 public class FSTransactionManager implements TransactionManager {
 	
-	private static final FSTransactionManager instance = new FSTransactionManager();
+	private FilesystemRepository repository;
 	
-	private FSTransactionManager() {
-		
+	public FSTransactionManager(FilesystemRepository repository) {
+		this.repository = repository;
 	}
-	
-	public static TransactionManager getInstance() {
-		return instance;
+
+	public boolean isTransactionStarted() {
+		return repository.isLocked();
 	}
 	
 	/**
-	 * Returns <code>false</code>.
+	 * Locks a repository.
+	 * 
+	 * @throws PersistenceException
+	 *             if a repository has been already locked
 	 */
-	public boolean isTransactionStarted() {
-		return false;
-	}
-
 	public void startTransaction() throws PersistenceException {
+		repository.lock();
 	}
-
+	
+	/**
+	 * Unlocks a repository.
+	 */
 	public void commitTransaction() throws PersistenceException {
+		repository.unlock();
 	}
-
+	
+	/**
+	 * Does the same as {@link #commitTransaction()}.
+	 */
 	public void rollbackTransaction() {
+		repository.unlock();
 	}
 
 }

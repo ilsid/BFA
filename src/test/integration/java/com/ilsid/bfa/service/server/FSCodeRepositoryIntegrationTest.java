@@ -97,5 +97,19 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	protected Map<String, String> loadMetadata(File metaFile) throws Exception {
 		return IOHelper.loadMetadata(metaFile);
 	}
+	
+	protected long getRepositoryVersion() throws Exception {
+		return Long.parseLong(IOHelper.loadFileContents(CODE_REPOSITORY_PATH, ".version"));
+	}
+	
+	protected void assertIncrementedVersion(long oldVersion) throws Exception {
+		long newVersion = getRepositoryVersion();
+		assertEquals(1L, newVersion - oldVersion);
+	}
+	
+	protected void assertSameVersion(long oldVersion) throws Exception {
+		long newVersion = getRepositoryVersion();
+		assertEquals(oldVersion, newVersion);
+	}
 
 }

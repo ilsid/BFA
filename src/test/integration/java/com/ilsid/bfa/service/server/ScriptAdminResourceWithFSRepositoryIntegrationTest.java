@@ -28,8 +28,12 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void validScriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
+		long version = getRepositoryVersion();
+		
 		scriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem("Script 001",
 				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script_x20_001");
+		
+		assertIncrementedVersion(version);
 	}
 
 	@Test
@@ -90,6 +94,8 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void invalidScriptIsNotSavedInFileSystem() throws Exception {
+		long version = getRepositoryVersion();
+		
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams("Script 002",
 				IOHelper.loadScript("three-invalid-expressions-script.txt"));
@@ -99,6 +105,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class).startsWith("Compilation of the script [Script 002] failed"));
 		assertFalse(new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script002").exists());
+		assertSameVersion(version);
 	}
 
 	@Test
@@ -126,6 +133,8 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void validScriptAndItsSourceIsUpdatedInFileSystem() throws Exception {
+		long version = getRepositoryVersion();
+		
 		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/scripttoupdate");
 
 		assertEquals(6, scriptDir.list().length);
@@ -155,10 +164,13 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		String actualScriptBody = IOHelper.loadFileContents(scriptDir.getPath(), "ScriptToUpdate.src");
 		assertEquals(updatedScriptBody, actualScriptBody);
+		assertIncrementedVersion(version);
 	}
 
 	@Test
 	public void nonExistentScriptIsNotAllowedWhenTryingToUpdate() throws Exception {
+		long version = getRepositoryVersion();
+		
 		WebResource webResource = getWebResource(Paths.SCRIPT_UPDATE_SERVICE);
 		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script.txt");
 		ScriptAdminParams script = new ScriptAdminParams("NonExistentScript", updatedScriptBody);
@@ -170,6 +182,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 				.startsWith("The script [NonExistentScript] does not exist in the repository"));
 		assertFalse(new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/nonexistentscript")
 				.exists());
+		assertSameVersion(version);
 	}
 
 	@Test

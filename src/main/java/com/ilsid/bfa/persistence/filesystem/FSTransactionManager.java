@@ -35,6 +35,7 @@ public class FSTransactionManager implements TransactionManager {
 	 * Unlocks a repository.
 	 */
 	public void commitTransaction() throws PersistenceException {
+		repository.incrementVersion();
 		repository.unlock();
 	}
 	

@@ -141,10 +141,13 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void actionIsCreatedInExistingGroup() throws Exception {
+		long version = getRepositoryVersion();
+		
 		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_SERVICE, NEW_ACTION_NAME, true);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		assertNotNull(response.getEntity(OperationStatus.Success.class));
+		assertIncrementedVersion(version);
 	}
 
 	@Test
@@ -157,8 +160,11 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void actionIsNotCreatedIfActionNameIsNotDefined() throws Exception {
+		long version = getRepositoryVersion();
+		
 		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_SERVICE, "", false);
 		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+		assertSameVersion(version);
 	}
 
 	@Test
@@ -199,7 +205,7 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	public void existingActionCanBeUpdatedInFileSystemAndActionClassesAreReloaded() throws Exception {
 		updateAndVerifyAction(Paths.ACTION_UPDATE_SERVICE);
 	}
-	
+
 	@Test
 	public void existingActionCanBeUpdatedQuietlyInFileSystemAndActionClassesAreReloaded() throws Exception {
 		updateAndVerifyAction(Paths.ACTION_UPDATE_QUIETLY_SERVICE);
@@ -263,9 +269,11 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		return response;
 	}
-	
+
 	private void updateAndVerifyAction(String serviceName) throws Exception {
 		try {
+			long version = getRepositoryVersion();
+
 			Class<?> oldActionImplClazz = ActionClassLoader.getLoader(EXISTING_ACTION_NAME)
 					.loadClass(EXISTING_ACTION_IMPL_CLASS_NAME);
 			// One of classes in dependency mail-1.4.1.jar
@@ -301,6 +309,8 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 			// Action implementation class and its dependencies are reloaded
 			assertFalse(oldActionImplClazz == updatedActionImplClazz);
 			assertFalse(oldActionDependencyClazz == updatedActionDependencyClazz);
+
+			assertIncrementedVersion(version);
 		} finally {
 			// Resources occupied by the action loader are released
 			ActionClassLoader.releaseResources(EXISTING_ACTION_NAME);

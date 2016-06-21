@@ -14,6 +14,7 @@ import com.ilsid.bfa.Configurable;
 import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.Metadata;
+import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.TransactionManager;
@@ -27,6 +28,8 @@ import com.ilsid.bfa.persistence.Transactional;
  */
 public abstract class FilesystemRepository implements Configurable, Transactional {
 
+	private static final String INIT_VERSION_VALUE = "1";
+
 	private static final String CONFIG_PROP_ROOT_DIR_NAME = "bfa.persistence.fs.root_dir";
 
 	private static final String REPOSITORY_LOCKED_ERR_MSG = "Repository is locked. The operation should be tried again";
@@ -37,7 +40,11 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 
 	private static final String LOCK_FILE_NAME = ".lock";
 
+	private static final String VERSION_FILE_NAME = ".version";
+
 	private File lockFile;
+
+	private File versionFile;
 
 	private Logger logger;
 
@@ -64,7 +71,8 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 		initDefaultGroup(ClassNameUtil.GENERATED_ENTITIES_DEFAULT_GROUP_PACKAGE,
 				buildMetadata(Metadata.ENTITY_GROUP_TYPE));
 
-		unlockIfNeeded();
+		initLockFile();
+		initVersionFile();
 	}
 
 	/**
@@ -151,6 +159,16 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 		return lockFile.exists();
 	}
 
+	void incrementVersion() throws PersistenceException {
+		try {
+			String version = FileUtils.readFileToString(versionFile);
+			long versionValue = Long.parseLong(version);
+			FileUtils.writeStringToFile(versionFile, Long.valueOf(versionValue + 1).toString());
+		} catch (IOException | NumberFormatException e) {
+			throw new PersistenceException("Failed to update repository version file", e);
+		}
+	}
+
 	private void verifyRootDir(Map<String, String> config) throws ConfigurationException {
 		rootDirPath = config.get(CONFIG_PROP_ROOT_DIR_NAME);
 		if (rootDirPath == null) {
@@ -164,9 +182,20 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 
 	}
 
-	private void unlockIfNeeded() {
+	private void initLockFile() {
 		lockFile = new File(rootDirPath, LOCK_FILE_NAME);
 		unlock();
+	}
+
+	private void initVersionFile() throws ConfigurationException {
+		versionFile = new File(rootDirPath, VERSION_FILE_NAME);
+		if (!versionFile.exists()) {
+			try {
+				FileUtils.writeStringToFile(versionFile, INIT_VERSION_VALUE);
+			} catch (IOException e) {
+				throw new ConfigurationException("Failed to create repository version file", e);
+			}
+		}
 	}
 
 }

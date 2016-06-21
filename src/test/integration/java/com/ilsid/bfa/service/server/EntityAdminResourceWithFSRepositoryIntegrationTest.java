@@ -45,9 +45,13 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 	@Test
 	public void entityIsCompiledAndItsSourceAndClassIsSavedInFileSystem() throws Exception {
+		long version = getRepositoryVersion();
+		
 		entityIsCompiledAndItsSourceAndClassIsSavedInFileSystem(
 				new EntityAdminParams("Entity001", "{\"field1\":\"Number\", \"field2\":\"Decimal\"}"),
 				ENTITY_REPOSITORY_DEFAULT_GROUP_DIR);
+		
+		assertIncrementedVersion(version);
 	}
 
 	@Test
@@ -111,7 +115,9 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
-	public void invalidEntityIsIsNotSavedInFileSystem() {
+	public void invalidEntityIsIsNotSavedInFileSystem() throws Exception {
+		long version = getRepositoryVersion();
+		
 		WebResource webResource = getWebResource(Paths.ENTITY_CREATE_SERVICE);
 		EntityAdminParams entity = new EntityAdminParams("Entity002", "Number field1; Decimal field2");
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
@@ -127,10 +133,14 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertFalse(entityClassFile.exists());
 		assertFalse(entitySourceFile.exists());
+		
+		assertSameVersion(version);
 	}
 
 	@Test
 	public void entityAndItsSourceIsUpdatedInFileSystem() throws Exception {
+		long version = getRepositoryVersion();
+		
 		copyFileFromEntityDefaulGroupDirToRepository("EntityToUpdate.class");
 		copyFileFromEntityDefaulGroupDirToRepository("EntityToUpdate.src");
 
@@ -149,6 +159,8 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		String updatedEntityBody = IOHelper.loadFileContents(ENTITY_REPOSITORY_DEFAULT_GROUP_PATH,
 				"EntityToUpdate.src");
 		assertEquals(newEntityBody, updatedEntityBody);
+		
+		assertIncrementedVersion(version);
 	}
 
 	@Test

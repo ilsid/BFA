@@ -36,7 +36,11 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		CodeRepositoryInitializer.init();
+		ScriptingRepositoryInitializer.init();
+	}
+	
+	public static void afterClass() throws Exception {
+		ScriptingRepositoryInitializer.cleanup();
 	}
 
 	@Before

@@ -16,7 +16,7 @@ import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.action.Action;
 import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
-import com.ilsid.bfa.script.CodeRepositoryInitializer;
+import com.ilsid.bfa.script.ScriptingRepositoryInitializer;
 
 public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
@@ -54,12 +54,13 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
 		ActionClassLoader.setRepository(repository);
 
-		CodeRepositoryInitializer.init();
+		ScriptingRepositoryInitializer.init();
 	}
 
 	@AfterClass
 	public static void afterClass() throws Exception {
 		FileUtils.forceDelete(TMP_CODE_REPOSITORY_DIR);
+		ScriptingRepositoryInitializer.cleanup();
 	}
 
 	@Before

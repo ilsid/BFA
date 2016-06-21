@@ -1,5 +1,7 @@
 package com.ilsid.bfa.script;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.HashMap;
 
 import com.ilsid.bfa.TestConstants;
@@ -7,8 +9,8 @@ import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
 
-public class CodeRepositoryInitializer {
-	
+public class ScriptingRepositoryInitializer {
+
 	@SuppressWarnings("serial")
 	public static ScriptingRepository init() throws Exception {
 		ScriptingRepository repository = new FilesystemScriptingRepository();
@@ -19,9 +21,12 @@ public class CodeRepositoryInitializer {
 		});
 
 		DynamicClassLoader.setRepository(repository);
-		
+
 		return repository;
 	}
 
+	public static void cleanup() throws Exception {
+		Files.delete(new File(TestConstants.CODE_REPOSITORY_DIR, ".version").toPath());
+	}
 
 }

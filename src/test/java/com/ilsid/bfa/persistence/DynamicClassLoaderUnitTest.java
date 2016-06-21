@@ -3,27 +3,24 @@ package com.ilsid.bfa.persistence;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.HashMap;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.TestConstants;
+import com.ilsid.bfa.script.ScriptingRepositoryInitializer;
 
 public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 
 	@BeforeClass
-	@SuppressWarnings("serial")
 	public static void beforeClass() throws Exception {
-		ScriptingRepository repository = new com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository();
-		repository.setConfiguration(new HashMap<String, String>() {
-			{
-				put("bfa.persistence.fs.root_dir", TestConstants.CODE_REPOSITORY_DIR);
-			}
-		});
+		ScriptingRepositoryInitializer.init();
+	}
 
-		DynamicClassLoader.setRepository(repository);
+	@AfterClass
+	public static void afterClass() throws Exception {
+		ScriptingRepositoryInitializer.cleanup();
 	}
 
 	@Test
@@ -125,19 +122,19 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 	public void reloadListenerIsTriggeredOnceAfterClassesReloading() {
 		ReloadListenerImpl listener = new ReloadListenerImpl("aaa");
 		assertFalse(listener.wasInvoked());
-		
+
 		DynamicClassLoader.getInstance().addReloadListener(listener);
-		
+
 		DynamicClassLoader.reloadClasses();
 		assertTrue(listener.wasInvoked());
-		
+
 		listener.reset();
 		assertFalse(listener.wasInvoked());
-		
+
 		DynamicClassLoader.reloadClasses();
 		assertFalse(listener.wasInvoked());
 	}
-	
+
 	@Test
 	public void uniqueReloadListenersOnlyAreTriggeredAfterClassesReloading() {
 		ReloadListenerImpl listener1 = new ReloadListenerImpl("aaa");
@@ -148,22 +145,22 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 		assertFalse(listener1.wasInvoked());
 		assertFalse(listener2.wasInvoked());
 		assertFalse(listener3.wasInvoked());
-		
+
 		DynamicClassLoader.getInstance().addReloadListener(listener1);
 		DynamicClassLoader.getInstance().addReloadListener(listener2);
 		DynamicClassLoader.getInstance().addReloadListener(listener3);
-		
+
 		DynamicClassLoader.reloadClasses();
 		assertTrue(listener1.wasInvoked());
 		assertFalse(listener2.wasInvoked());
 		assertTrue(listener3.wasInvoked());
-		
+
 	}
 
 	private static class ReloadListenerImpl implements DynamicClassLoader.ReloadListener {
 
 		private String name;
-		
+
 		private boolean wasInvoked;
 
 		ReloadListenerImpl(String name) {
@@ -173,11 +170,11 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 		public void execute() {
 			wasInvoked = true;
 		}
-		
+
 		boolean wasInvoked() {
 			return wasInvoked;
 		}
-		
+
 		void reset() {
 			wasInvoked = false;
 		}

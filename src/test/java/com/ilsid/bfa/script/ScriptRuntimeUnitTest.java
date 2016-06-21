@@ -32,7 +32,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		startDatabaseServer();
 		OrientdbClient.init();
 
-		CodeRepositoryInitializer.init();
+		ScriptingRepositoryInitializer.init();
 
 		runtime = new ScriptRuntime();
 		runtime.setRepository(RuntimeRepositoryInitializer.init());
@@ -42,6 +42,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	public static void afterClass() throws Exception {
 		OrientdbClient.release();
 		stopDatabaseServer();
+		ScriptingRepositoryInitializer.cleanup();
 	}
 
 	@Test

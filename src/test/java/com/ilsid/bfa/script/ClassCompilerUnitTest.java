@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jmock.Expectations;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -38,7 +39,8 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	public static void beforeClass() throws Exception {
 		ScriptingRepositoryInitializer.init();
 	}
-	
+
+	@AfterClass
 	public static void afterClass() throws Exception {
 		ScriptingRepositoryInitializer.cleanup();
 	}
@@ -290,7 +292,7 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		compileScriptExpressions(TEST_SCRIPT_CLASS_SHORT_NAME + "DuplicatedInputAndLocalVars",
 				"duplicated-input-and-local-vars-script.txt");
 	}
-	
+
 	@Test
 	public void scriptInputAndLocalVarsOfEntityTypesCanBeResolved() throws Exception {
 		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithInputAndLocalEntityVars",

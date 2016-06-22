@@ -42,9 +42,11 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 // FIXME: remove hardcoded Repository implementations
 public class ApplicationConfig extends GuiceServletContextListener {
 
-	private static final String INFO_LOGGER_NAME = "info_logger";
+	private static final String PERSISTENCE_LOGGER_NAME = "persistence_logger";
 
-	private static final String ERROR_LOGGER_NAME = "error_logger";
+	private static final String WEBAPP_LOGGER_NAME = "webapp_logger";
+
+	private static final String SCRIPT_LOGGER_NAME = "script_logger";
 
 	@Override
 	public void contextDestroyed(javax.servlet.ServletContextEvent servletContextEvent) {
@@ -81,7 +83,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			protected Map<String, String> provideRepositoryConfiguration() {
 				return ConfigUtil.getApplicationSettings();
 			}
-			
+
 			@Provides
 			@Singleton
 			@LoggingConfig
@@ -93,21 +95,21 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			@Singleton
 			@WebAppLogger
 			protected Logger provideWebAppLogger() {
-				return LoggerFactory.getLogger(ERROR_LOGGER_NAME);
+				return LoggerFactory.getLogger(WEBAPP_LOGGER_NAME);
 			}
 
 			@Provides
 			@Singleton
 			@ScriptLogger
 			protected Logger provideScriptLogger() {
-				return LoggerFactory.getLogger(ERROR_LOGGER_NAME);
+				return LoggerFactory.getLogger(SCRIPT_LOGGER_NAME);
 			}
 
 			@Provides
 			@Singleton
 			@PersistenceLogger
 			protected Logger providePersistenceLogger() {
-				return LoggerFactory.getLogger(INFO_LOGGER_NAME);
+				return LoggerFactory.getLogger(PERSISTENCE_LOGGER_NAME);
 			}
 		});
 	}

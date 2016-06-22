@@ -45,13 +45,19 @@
         </layout>
     </appender>
 
-    <logger name="error_logger">
+    <logger name="webapp_logger">
         <level value="ERROR"/>
         <appender-ref ref="ERRORS"/>
         <appender-ref ref="STDERR"/>
     </logger>
     
-     <logger name="info_logger">
+    <logger name="script_logger">
+        <level value="ERROR"/>
+        <appender-ref ref="ERRORS"/>
+        <appender-ref ref="STDERR"/>
+    </logger>
+    
+     <logger name="persistence_logger">
         <level value="INFO"/>
         <appender-ref ref="INFOS"/>
         <appender-ref ref="STDERR"/>

@@ -38,6 +38,9 @@ public class DynamicClassLoader extends ClassLoader {
 	private static Set<ReloadListener> reloadListeners = Collections
 			.newSetFromMap(new ConcurrentHashMap<ReloadListener, Boolean>());
 
+	private static Set<ReloadListener> permanentReloadListeners = Collections
+			.newSetFromMap(new ConcurrentHashMap<ReloadListener, Boolean>());
+
 	private static DynamicClassLoader instance = new DynamicClassLoader();
 
 	private static final ReadWriteLock RELOAD_LOCK = new ReentrantReadWriteLock();
@@ -86,9 +89,9 @@ public class DynamicClassLoader extends ClassLoader {
 	};
 
 	/**
-	 * Loads the class with {@link ClassNameUtil#GENERATED_CLASSES_PACKAGE} package from the specified code
-	 * repository. If the class has been already loaded, it is got from the loader's cache. All other classes are loaded
-	 * by the context class loader of the current thread.
+	 * Loads the class with {@link ClassNameUtil#GENERATED_CLASSES_PACKAGE} package from the specified code repository.
+	 * If the class has been already loaded, it is got from the loader's cache. All other classes are loaded by the
+	 * context class loader of the current thread.
 	 * 
 	 * @param className
 	 *            the name of class to load
@@ -124,17 +127,36 @@ public class DynamicClassLoader extends ClassLoader {
 	}
 
 	/**
-	 * Registers a listener that is triggered right after classes reloading. There is no effect, if such listener has
-	 * been already registered (according to {@linkplain Set#add(Object)} contract).
+	 * Registers a listener that is triggered right after classes reloading. A listener is triggered only once and is
+	 * unregistered after the reloading. There is no effect, if such listener has been already registered (according to
+	 * {@linkplain Set#add(Object)} contract).
 	 * 
 	 * @param listener
 	 *            reloading listener
 	 * @see #reloadClasses()
 	 */
-	public void addReloadListener(ReloadListener listener) {
+	public static void addReloadListener(ReloadListener listener) {
 		READ_RELOAD_LOCK.lock();
 		try {
 			reloadListeners.add(listener);
+		} finally {
+			READ_RELOAD_LOCK.unlock();
+		}
+	}
+
+	/**
+	 * Registers a listener that is triggered right after classes reloading. A listener is permanent and is triggered
+	 * each time the reloading occurs. There is no effect, if such listener has been already registered (according to
+	 * {@linkplain Set#add(Object)} contract).
+	 * 
+	 * @param listener
+	 *            reloading listener
+	 * @see #reloadClasses()
+	 */
+	public static void addPermanentReloadListener(ReloadListener listener) {
+		READ_RELOAD_LOCK.lock();
+		try {
+			permanentReloadListeners.add(listener);
 		} finally {
 			READ_RELOAD_LOCK.unlock();
 		}
@@ -179,8 +201,12 @@ public class DynamicClassLoader extends ClassLoader {
 			}
 		}
 
-		for (ReloadListener action : reloadListeners) {
-			action.execute();
+		for (ReloadListener listener : permanentReloadListeners) {
+			listener.execute();
+		}
+
+		for (ReloadListener listener : reloadListeners) {
+			listener.execute();
 		}
 		reloadListeners.clear();
 	}

@@ -32,6 +32,8 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 
 	private static final String CONFIG_PROP_ROOT_DIR_NAME = "bfa.persistence.fs.root_dir";
 
+	private static final String CONFIG_PROP_LISTEN_UPDATES_NAME = "bfa.persistence.fs.listen_updates";
+
 	private static final String REPOSITORY_LOCKED_ERR_MSG = "Repository is locked. The operation should be tried again";
 
 	private static final String LOCK_FAILED_ERR_MSG = "Failed to lock the repository";
@@ -40,7 +42,7 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 
 	private static final String LOCK_FILE_NAME = ".lock";
 
-	private static final String VERSION_FILE_NAME = ".version";
+	static final String VERSION_FILE_NAME = ".version";
 
 	private File lockFile;
 
@@ -73,6 +75,10 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 
 		initLockFile();
 		initVersionFile();
+
+		if (listenUpdates(config)) {
+			initUpdateListener();
+		}
 	}
 
 	/**
@@ -169,6 +175,18 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 		}
 	}
 
+	Logger getLogger() {
+		return logger;
+	}
+
+	File getVersionFile() {
+		return versionFile;
+	}
+	
+	String readVersion() throws IOException {
+		return FileUtils.readFileToString(versionFile);
+	}
+
 	private void verifyRootDir(Map<String, String> config) throws ConfigurationException {
 		rootDirPath = config.get(CONFIG_PROP_ROOT_DIR_NAME);
 		if (rootDirPath == null) {
@@ -196,6 +214,21 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 				throw new ConfigurationException("Failed to create repository version file", e);
 			}
 		}
+	}
+
+	private boolean listenUpdates(Map<String, String> config) {
+		return Boolean.parseBoolean(config.get(CONFIG_PROP_LISTEN_UPDATES_NAME));
+	}
+	
+	private void initUpdateListener() throws ConfigurationException {
+		String initVersion;
+		try {
+			initVersion = readVersion();
+		} catch (IOException e) {
+			throw new ConfigurationException("Failed to get repository version", e);
+		}
+		
+		RepositoryUpdateListener.start(this, initVersion);
 	}
 
 }

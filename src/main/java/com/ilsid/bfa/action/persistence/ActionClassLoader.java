@@ -192,7 +192,7 @@ public class ActionClassLoader extends ClassLoader {
 					// Reload listener is registered in case of generated class, because this class may be reloaded in
 					// future. This is needed because generated classes used in actions must be loaded by the actual
 					// (most recent) dynamic class loader instance to avoid ClassCastException issues
-					DynamicClassLoader.getInstance().addReloadListener(new ReloadActionListener(actionName));
+					DynamicClassLoader.addReloadListener(new ReloadActionListener(actionName));
 				}
 
 				return DynamicClassLoader.getInstance().loadClass(name);

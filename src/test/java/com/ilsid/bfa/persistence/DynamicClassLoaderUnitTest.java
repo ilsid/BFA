@@ -123,7 +123,7 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 		ReloadListenerImpl listener = new ReloadListenerImpl("aaa");
 		assertFalse(listener.wasInvoked());
 
-		DynamicClassLoader.getInstance().addReloadListener(listener);
+		DynamicClassLoader.addReloadListener(listener);
 
 		DynamicClassLoader.reloadClasses();
 		assertTrue(listener.wasInvoked());
@@ -146,15 +146,53 @@ public class DynamicClassLoaderUnitTest extends BaseUnitTestCase {
 		assertFalse(listener2.wasInvoked());
 		assertFalse(listener3.wasInvoked());
 
-		DynamicClassLoader.getInstance().addReloadListener(listener1);
-		DynamicClassLoader.getInstance().addReloadListener(listener2);
-		DynamicClassLoader.getInstance().addReloadListener(listener3);
+		DynamicClassLoader.addReloadListener(listener1);
+		DynamicClassLoader.addReloadListener(listener2);
+		DynamicClassLoader.addReloadListener(listener3);
 
 		DynamicClassLoader.reloadClasses();
 		assertTrue(listener1.wasInvoked());
 		assertFalse(listener2.wasInvoked());
 		assertTrue(listener3.wasInvoked());
 
+	}
+	
+	@Test
+	public void permanentReloadListenerIsTriggeredEachTimeAfterClassesReloading() {
+		ReloadListenerImpl listener = new ReloadListenerImpl("aaa");
+		assertFalse(listener.wasInvoked());
+
+		DynamicClassLoader.addPermanentReloadListener(listener);
+
+		DynamicClassLoader.reloadClasses();
+		assertTrue(listener.wasInvoked());
+
+		listener.reset();
+		assertFalse(listener.wasInvoked());
+
+		DynamicClassLoader.reloadClasses();
+		assertTrue(listener.wasInvoked());
+	}
+	
+	@Test
+	public void uniquePermanentReloadListenersOnlyAreTriggeredAfterClassesReloading() {
+		ReloadListenerImpl listener1 = new ReloadListenerImpl("aaaa");
+		ReloadListenerImpl listener2 = new ReloadListenerImpl("aaaa");
+		ReloadListenerImpl listener3 = new ReloadListenerImpl("bbbb");
+		assertEquals(listener1, listener2);
+		assertNotEquals(listener1, listener3);
+		assertFalse(listener1.wasInvoked());
+		assertFalse(listener2.wasInvoked());
+		assertFalse(listener3.wasInvoked());
+
+		DynamicClassLoader.addPermanentReloadListener(listener1);
+		DynamicClassLoader.addPermanentReloadListener(listener2);
+		DynamicClassLoader.addPermanentReloadListener(listener3);
+
+		DynamicClassLoader.reloadClasses();
+		assertTrue(listener1.wasInvoked());
+		assertFalse(listener2.wasInvoked());
+		assertTrue(listener3.wasInvoked());
 	}
 
 	private static class ReloadListenerImpl implements DynamicClassLoader.ReloadListener {

@@ -32,7 +32,7 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 
 	private static final String CONFIG_PROP_ROOT_DIR_NAME = "bfa.persistence.fs.root_dir";
 
-	private static final String CONFIG_PROP_LISTEN_UPDATES_NAME = "bfa.persistence.fs.listen_updates";
+	private static final String CONFIG_PROP_LISTEN_UPDATES_ENABLED_NAME = "bfa.persistence.fs.listen_updates.enabled";
 
 	private static final String REPOSITORY_LOCKED_ERR_MSG = "Repository is locked. The operation should be tried again";
 
@@ -42,7 +42,7 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 
 	private static final String LOCK_FILE_NAME = ".lock";
 
-	static final String VERSION_FILE_NAME = ".version";
+	private static final String VERSION_FILE_NAME = ".version";
 
 	private File lockFile;
 
@@ -182,7 +182,7 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 	File getVersionFile() {
 		return versionFile;
 	}
-	
+
 	String readVersion() throws IOException {
 		return FileUtils.readFileToString(versionFile);
 	}
@@ -217,9 +217,9 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 	}
 
 	private boolean listenUpdates(Map<String, String> config) {
-		return Boolean.parseBoolean(config.get(CONFIG_PROP_LISTEN_UPDATES_NAME));
+		return Boolean.parseBoolean(config.get(CONFIG_PROP_LISTEN_UPDATES_ENABLED_NAME));
 	}
-	
+
 	private void initUpdateListener() throws ConfigurationException {
 		String initVersion;
 		try {
@@ -227,7 +227,7 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 		} catch (IOException e) {
 			throw new ConfigurationException("Failed to get repository version", e);
 		}
-		
+
 		RepositoryUpdateListener.start(this, initVersion);
 	}
 

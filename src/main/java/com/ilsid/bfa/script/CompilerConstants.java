@@ -15,6 +15,8 @@ public final class CompilerConstants {
 
 	public static final String SCRIPT_CLASS_NAME = "com.ilsid.bfa.script.Script";
 	
+	public static final String SCRIPT_IMPLEMENTATION_METHOD_NAME = "doExecute";
+	
 	public static final String SCRIPT_SOURCE_TEMPLATE;
 
 	public static final Class<?> SCRIPT_CLASS;

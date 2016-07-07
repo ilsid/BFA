@@ -16,8 +16,8 @@ import java.lang.annotation.Target;
 public @interface ExprParam {
 
 	/**
-	 * Defines whether an expression should be compiled.
+	 * Defines whether an expression should be replaced before compilation.
 	 */
-	boolean compile() default true;
+	boolean replaceOnCompile() default true;
 
 }

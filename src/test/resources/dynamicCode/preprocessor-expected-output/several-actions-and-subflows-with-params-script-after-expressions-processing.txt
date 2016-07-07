@@ -1,0 +1,20 @@
+{
+    DeclareLocalVar("Var1", "Number", Integer.valueOf(3));
+    DeclareLocalVar("Var2", "Decimal", Double.valueOf(5.4));
+    DeclareLocalVar("Var3", "Number");
+    DeclareLocalVar("Var4", "Decimal");
+    DeclareLocalVar("Var5", "Decimal");
+    Action("Some Action 1", new Object[] { Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue()), Double.valueOf(((Double)scriptContext.getVar("Var2").getValue()).doubleValue()) }).SetLocalVar("Var3");
+    SubFlow("Some Sub-Flow 1", new Object[] { Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue()) });
+    Action("Some Action 33", new Object[] { Integer.valueOf(((Integer)scriptContext.getVar("Var3").getValue()).intValue()) }).SetLocalVar("Var4").SetLocalVar("Var5");
+    if (Equal(Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue() - ((Integer)scriptContext.getVar("Var3").getValue()).intValue()), Integer.valueOf(1))) {
+        Action("Some Action 2", new Object[] { Double.valueOf(((Double)scriptContext.getVar("Var2").getValue()).doubleValue()) });
+        SubFlow("Some Sub-Flow 2", new Object[] { Double.valueOf(((Double)scriptContext.getVar("Var2").getValue()).doubleValue()), Integer.valueOf(((Integer)scriptContext.getVar("Var3").getValue()).intValue()) });
+    }
+    if (Equal(Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue() - ((Integer)scriptContext.getVar("Var3").getValue()).intValue()), Integer.valueOf(2))) {
+        Action("Some Action 3", new Object[] { Double.valueOf(((Double)scriptContext.getVar("Var2").getValue()).doubleValue()) });
+    } else if (Equal(Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue() - ((Integer)scriptContext.getVar("Var3").getValue()).intValue()), Integer.valueOf(5))) {
+        Action("Some Action 4", new Object[] { Double.valueOf(((Double)scriptContext.getVar("Var2").getValue()).doubleValue()) });
+        Action("Some Action 5", new Object[] { Integer.valueOf(((Integer)scriptContext.getVar("Var3").getValue()).intValue()) });
+    }
+}

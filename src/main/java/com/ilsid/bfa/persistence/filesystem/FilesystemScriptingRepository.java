@@ -34,10 +34,12 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 
 	private static final String SOURCE_FILE_EXTENSION = ".src";
 
+	private static final String GENERATED_SOURCE_FILE_PREFIX = "_generated" + SOURCE_FILE_EXTENSION;
+
 	private static final String CLASS_METADATA_SUFFIX = '_' + ClassNameUtil.METADATA_FILE_NAME;
 
 	private ObjectMapper jsonMapper = new ObjectMapper();
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -92,7 +94,13 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 	 */
 	@Override
 	public void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
-		doSave(className, byteCode, sourceCode);
+		doSave(className, byteCode, sourceCode, null);
+	}
+
+	@Override
+	public void save(String className, byte[] byteCode, String sourceCode, String generatedCode)
+			throws PersistenceException {
+		doSave(className, byteCode, sourceCode, generatedCode);
 	}
 
 	/*
@@ -102,7 +110,7 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 	 */
 	@Override
 	public void save(String className, byte[] byteCode) throws PersistenceException {
-		doSave(className, byteCode, null);
+		doSave(className, byteCode, null, null);
 	}
 
 	/*
@@ -360,7 +368,8 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 		return className;
 	}
 
-	private void doSave(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
+	private void doSave(String className, byte[] byteCode, String sourceCode, String generatedCode)
+			throws PersistenceException {
 		if (rootDirPath == null) {
 			throw new IllegalStateException("Root directory is not set");
 		}
@@ -369,7 +378,7 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 		String fileClassName = shortClassName + ClassNameUtil.CLASS_FILE_EXTENSION;
 		String fileClassDir = getClassDirectoryPath(className);
 
-		File classFile = new File(fileClassDir + File.separatorChar + fileClassName);
+		File classFile = new File(fileClassDir, fileClassName);
 		try {
 			if (classFile.exists()) {
 				throw new PersistenceException(
@@ -393,13 +402,24 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 		}
 
 		if (sourceCode != null) {
-			String fileSourceName = shortClassName + SOURCE_FILE_EXTENSION;
-			File sourceFile = new File(fileClassDir + File.separatorChar + fileSourceName);
+			File sourceFile = new File(fileClassDir, shortClassName + SOURCE_FILE_EXTENSION);
 			try {
 				FileUtils.writeStringToFile(sourceFile, sourceCode, "UTF-8");
 			} catch (IOException e) {
 				throw new PersistenceException(String.format(
 						"Failed to save a source code for class [%s] in directory %s", className, rootDirPath), e);
+			}
+		}
+
+		if (generatedCode != null) {
+			File generatedSourceFile = new File(fileClassDir, shortClassName + GENERATED_SOURCE_FILE_PREFIX);
+			try {
+				FileUtils.writeStringToFile(generatedSourceFile, generatedCode, "UTF-8");
+			} catch (IOException e) {
+				throw new PersistenceException(
+						String.format("Failed to save a generated source code for class [%s] in directory %s",
+								className, rootDirPath),
+						e);
 			}
 		}
 	}

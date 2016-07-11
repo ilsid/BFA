@@ -1,0 +1,5 @@
+{
+    DeclareLocalVar("Var1", "Number", Integer.valueOf(333));
+    DeclareLocalVar("Var2", "Decimal", Double.valueOf(55.77));
+    Action("Write System Property", new Object[] { Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue()), Double.valueOf(((Double)scriptContext.getVar("Var2").getValue()).doubleValue()) });
+}

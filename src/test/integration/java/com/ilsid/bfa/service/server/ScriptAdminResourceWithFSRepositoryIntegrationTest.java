@@ -27,18 +27,18 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 			.replace('.', '/');
 
 	@Test
-	public void validScriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
+	public void validScriptIsCompiledAndItsSourceAndClassAreSavedInFileSystem() throws Exception {
 		long version = getRepositoryVersion();
-		
-		scriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem("Script 001",
+
+		scriptIsCompiledAndItsSourceAndClassAreSavedInFileSystem("Script 001",
 				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script_x20_001");
-		
+
 		assertIncrementedVersion(version);
 	}
 
 	@Test
-	public void validScriptInNonDefaultGroupIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem() throws Exception {
-		scriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem("Custom Group 01::Script 001",
+	public void validScriptInNonDefaultGroupIsCompiledAndItsSourceAndClassAreSavedInFileSystem() throws Exception {
+		scriptIsCompiledAndItsSourceAndClassAreSavedInFileSystem("Custom Group 01::Script 001",
 				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/script_x20_001");
 	}
 
@@ -57,11 +57,9 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 			assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 			assertTrue(scriptDir.isDirectory());
-			assertEquals(6, scriptDir.list().length);
-			assertFilesExist(scriptDir.getPath(),
-					new String[] { "Entity_x20_Script.class", "Entity_x20_Script.src", "Entity_x20_Script$$2.class",
-							"Entity_x20_Script$$1.class", "Entity_x20_Script$$Var1_dt_Days_Mns_Var2.class",
-							ClassNameUtil.METADATA_FILE_NAME });
+			assertEquals(4, scriptDir.list().length);
+			assertFilesExist(scriptDir.getPath(), new String[] { "Entity_x20_Script.class", "Entity_x20_Script.src",
+					"Entity_x20_Script_generated.src", ClassNameUtil.METADATA_FILE_NAME });
 		} finally {
 			FileUtils.forceDelete(scriptDir);
 		}
@@ -95,7 +93,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void invalidScriptIsNotSavedInFileSystem() throws Exception {
 		long version = getRepositoryVersion();
-		
+
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams("Script 002",
 				IOHelper.loadScript("three-invalid-expressions-script.txt"));
@@ -134,14 +132,12 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void validScriptAndItsSourceIsUpdatedInFileSystem() throws Exception {
 		long version = getRepositoryVersion();
-		
+
 		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/scripttoupdate");
 
-		assertEquals(6, scriptDir.list().length);
-		assertFilesExist(scriptDir.getPath(),
-				new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src", "ScriptToUpdate$$2.class",
-						"ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var2.class",
-						ClassNameUtil.METADATA_FILE_NAME });
+		assertEquals(4, scriptDir.list().length);
+		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
+				"ScriptToUpdate_generated.src", ClassNameUtil.METADATA_FILE_NAME });
 
 		WebResource webResource = getWebResource(Paths.SCRIPT_UPDATE_SERVICE);
 		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script-upd.txt");
@@ -152,15 +148,9 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		assertTrue(scriptDir.isDirectory());
-		assertEquals(7, scriptDir.list().length);
-		// Additional ScriptToUpdate$$3.class is persisted, as the expression "1" (that was duplicated) is replaced with
-		// new expression "3".
-		// ScriptToUpdate$$Var1_Mns_Var2.class is replaced with ScriptToUpdate$$Var1_Mns_Var3.class, as Var2 is replaced
-		// with Var3 in "duplicated-expression-script-upd.txt" script
-		assertFilesExist(scriptDir.getPath(),
-				new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src", "ScriptToUpdate$$3.class",
-						"ScriptToUpdate$$1.class", "ScriptToUpdate$$Var1_Mns_Var3.class",
-						ClassNameUtil.METADATA_FILE_NAME });
+		assertEquals(4, scriptDir.list().length);
+		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
+				"ScriptToUpdate_generated.src", ClassNameUtil.METADATA_FILE_NAME });
 
 		String actualScriptBody = IOHelper.loadFileContents(scriptDir.getPath(), "ScriptToUpdate.src");
 		assertEquals(updatedScriptBody, actualScriptBody);
@@ -170,7 +160,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void nonExistentScriptIsNotAllowedWhenTryingToUpdate() throws Exception {
 		long version = getRepositoryVersion();
-		
+
 		WebResource webResource = getWebResource(Paths.SCRIPT_UPDATE_SERVICE);
 		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script.txt");
 		ScriptAdminParams script = new ScriptAdminParams("NonExistentScript", updatedScriptBody);
@@ -356,11 +346,11 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	public void emptyScriptInputParametersAreLoadedIfNoInputVars() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_INPUT_PARAMS_SERVICE);
 		ClientResponse response = webResource.post(ClientResponse.class, "ScriptToRead");
-		
+
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		assertEquals(0, response.getEntity(Map.class).size());
 	}
-	
+
 	@Test
 	public void childMetadataItemsAreNotLoadedIfGroupNameIsNotDefined() {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_ITEMS_SERVICE);
@@ -381,8 +371,8 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 				+ GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/some_x20_child_x20_group");
 	}
 
-	private void scriptIsCompiledAndItsSourceAndAllClassesAreSavedInFileSystem(String scriptName,
-			String expectedScriptPath) throws Exception {
+	private void scriptIsCompiledAndItsSourceAndClassAreSavedInFileSystem(String scriptName, String expectedScriptPath)
+			throws Exception {
 
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams(scriptName,
@@ -395,11 +385,9 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 			assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 			assertTrue(scriptDir.isDirectory());
-			assertEquals(6, scriptDir.list().length);
-			assertFilesExist(scriptDir.getPath(),
-					new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001$$2.class",
-							"Script_x20_001$$1.class", "Script_x20_001$$Var1_Mns_Var2.class",
-							ClassNameUtil.METADATA_FILE_NAME });
+			assertEquals(4, scriptDir.list().length);
+			assertFilesExist(scriptDir.getPath(), new String[] { "Script_x20_001.class", "Script_x20_001.src",
+					"Script_x20_001_generated.src", ClassNameUtil.METADATA_FILE_NAME });
 		} finally {
 			FileUtils.forceDelete(scriptDir);
 		}

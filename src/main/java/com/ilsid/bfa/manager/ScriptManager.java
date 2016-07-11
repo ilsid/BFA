@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,9 +34,7 @@ import com.ilsid.bfa.persistence.TransactionManager;
 import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 import com.ilsid.bfa.script.ClassCompilationException;
 import com.ilsid.bfa.script.ClassCompiler;
-import com.ilsid.bfa.script.ClassCompiler.CompilationBlock;
-import com.ilsid.bfa.script.ClassCompiler.ScriptExpressionsUnit;
-import com.ilsid.bfa.script.CompilerConstants;
+import com.ilsid.bfa.script.ClassCompiler.ScriptCompilationUnit;
 import com.ilsid.bfa.script.TypeNameResolver;
 
 /**
@@ -76,7 +73,7 @@ public class ScriptManager extends AbstractManager {
 	public void createScript(String scriptName, String scriptBody) throws ManagementException {
 		checkParentScriptGroupExists(scriptName);
 
-		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
+		ScriptUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
 			saveScript(compilationUnit, scriptBody);
@@ -107,7 +104,7 @@ public class ScriptManager extends AbstractManager {
 	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
 		checkParentScriptGroupExists(scriptName);
 
-		ScriptCompilationUnit compilationUnit = compileScript(scriptName, scriptBody);
+		ScriptUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
 			deleteScript(scriptName);
@@ -179,7 +176,7 @@ public class ScriptManager extends AbstractManager {
 	 */
 	public void createEntity(String entityName, String entityBody) throws ManagementException {
 		checkParentEntityGroupExists(entityName);
-		EntityCompilationUnit compilationUnit = compileEntity(entityName, entityBody);
+		EntityUnit compilationUnit = compileEntity(entityName, entityBody);
 		try {
 			startTransaction();
 			saveEntity(compilationUnit, entityBody);
@@ -208,7 +205,7 @@ public class ScriptManager extends AbstractManager {
 	public void updateEntity(String entityName, String entityBody) throws ManagementException {
 		checkParentEntityGroupExists(entityName);
 
-		EntityCompilationUnit compilationUnit = compileEntity(entityName, entityBody);
+		EntityUnit compilationUnit = compileEntity(entityName, entityBody);
 		try {
 			startTransaction();
 			deleteEntity(entityName);
@@ -507,21 +504,11 @@ public class ScriptManager extends AbstractManager {
 		return repository.getTransactionManager();
 	}
 
-	private void saveScript(ScriptCompilationUnit compilationUnit, String scriptBody) throws ManagementException {
-		try {
-			repository.save(compilationUnit.scriptClassName, compilationUnit.scriptByteCode, scriptBody);
-
-			for (CompilationBlock expr : compilationUnit.scriptExpressions) {
-				repository.save(expr.getClassName(), expr.getByteCode());
-			}
-		} catch (PersistenceException e) {
-			rollbackTransaction();
-			throw new ManagementException(
-					String.format("Failed to persist the script [%s]", compilationUnit.scriptName), e);
-		}
+	private void saveScript(ScriptUnit unit, String scriptBody) throws PersistenceException {
+		repository.save(unit.scriptClassName, unit.scriptByteCode, scriptBody, unit.generatedSource);
 	}
 
-	private void saveScriptMetadata(ScriptCompilationUnit compilationUnit) throws PersistenceException {
+	private void saveScriptMetadata(ScriptUnit compilationUnit) throws PersistenceException {
 		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put(Metadata.TYPE, Metadata.SCRIPT_TYPE);
 		metaData.put(Metadata.NAME, compilationUnit.scriptName);
@@ -533,7 +520,7 @@ public class ScriptManager extends AbstractManager {
 		repository.savePackageMetadata(packageName, metaData);
 	}
 
-	private void writeInputParametersIfAny(Map<String, String> metaData, ScriptCompilationUnit compilationUnit)
+	private void writeInputParametersIfAny(Map<String, String> metaData, ScriptUnit compilationUnit)
 			throws PersistenceException {
 
 		if (compilationUnit.scriptParameters.size() > 0) {
@@ -549,7 +536,7 @@ public class ScriptManager extends AbstractManager {
 
 	}
 
-	private void saveEntityMetadata(EntityCompilationUnit compilationUnit) throws PersistenceException {
+	private void saveEntityMetadata(EntityUnit compilationUnit) throws PersistenceException {
 		Map<String, String> metaData = new LinkedHashMap<>();
 		metaData.put(Metadata.TYPE, Metadata.ENTITY_TYPE);
 		metaData.put(Metadata.NAME, compilationUnit.entityName);
@@ -579,30 +566,23 @@ public class ScriptManager extends AbstractManager {
 		}
 	}
 
-	private ScriptCompilationUnit compileScript(String scriptName, String scriptBody) throws ManagementException {
+	private ScriptUnit compileScript(String scriptName, String scriptBody) throws ManagementException {
 		String scriptClassName = TypeNameResolver.resolveScriptClassName(scriptName);
-		byte[] scriptByteCode;
-		ScriptExpressionsUnit expressionsUnit;
+		ScriptCompilationUnit compilationUnit;
 		try {
-			scriptByteCode = ClassCompiler.compileScript(scriptClassName, scriptBody);
-
-			String scriptShortClassName = ClassNameUtil.getShortClassName(scriptClassName);
-			final String scriptSourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
-					ClassNameUtil.getPackageName(scriptClassName), scriptShortClassName, scriptBody);
-
-			expressionsUnit = ClassCompiler.compileScriptExpressions(scriptSourceCode);
+			compilationUnit = ClassCompiler.compileScript(scriptClassName, scriptBody);
 		} catch (ClassCompilationException e) {
 			throw new ManagementException(String.format("Compilation of the script [%s] failed", scriptName), e);
 		}
 
-		ScriptCompilationUnit result = new ScriptCompilationUnit();
-		result.scriptName = scriptName;
-		result.scriptParameters = expressionsUnit.getInputParameters();
-		result.scriptClassName = scriptClassName;
-		result.scriptByteCode = scriptByteCode;
-		result.scriptExpressions = expressionsUnit.getExpressions();
+		ScriptUnit unit = new ScriptUnit();
+		unit.scriptName = scriptName;
+		unit.scriptParameters = compilationUnit.getInputParameters();
+		unit.scriptClassName = scriptClassName;
+		unit.scriptByteCode = compilationUnit.getByteCode();
+		unit.generatedSource = compilationUnit.getGeneratedSource();
 
-		return result;
+		return unit;
 	}
 
 	private String transformToJavaCode(String entityName, String entityBody) throws ManagementException {
@@ -624,7 +604,7 @@ public class ScriptManager extends AbstractManager {
 		return javaCode.toString();
 	}
 
-	private EntityCompilationUnit compileEntity(String entityName, String entityBody) throws ManagementException {
+	private EntityUnit compileEntity(String entityName, String entityBody) throws ManagementException {
 		String bodyJavaCode = transformToJavaCode(entityName, entityBody);
 		String className = TypeNameResolver.resolveEntityClassName(entityName);
 
@@ -635,15 +615,15 @@ public class ScriptManager extends AbstractManager {
 			throw new ManagementException(String.format("Compilation of the entity [%s] failed", entityName), e);
 		}
 
-		EntityCompilationUnit compilationUnit = new EntityCompilationUnit();
-		compilationUnit.entityName = entityName;
-		compilationUnit.entityClassName = className;
-		compilationUnit.entityByteCode = byteCode;
+		EntityUnit unit = new EntityUnit();
+		unit.entityName = entityName;
+		unit.entityClassName = className;
+		unit.entityByteCode = byteCode;
 
-		return compilationUnit;
+		return unit;
 	}
 
-	private void saveEntity(EntityCompilationUnit compilationUnit, String entityBody) throws ManagementException {
+	private void saveEntity(EntityUnit compilationUnit, String entityBody) throws ManagementException {
 		try {
 			repository.save(compilationUnit.entityClassName, compilationUnit.entityByteCode, entityBody);
 		} catch (PersistenceException e) {
@@ -787,7 +767,7 @@ public class ScriptManager extends AbstractManager {
 		return jarFile;
 	}
 
-	private static class ScriptCompilationUnit {
+	private static class ScriptUnit {
 
 		String scriptName;
 
@@ -797,11 +777,10 @@ public class ScriptManager extends AbstractManager {
 
 		byte[] scriptByteCode;
 
-		Collection<CompilationBlock> scriptExpressions;
-
+		String generatedSource;
 	}
 
-	private static class EntityCompilationUnit {
+	private static class EntityUnit {
 
 		String entityName;
 

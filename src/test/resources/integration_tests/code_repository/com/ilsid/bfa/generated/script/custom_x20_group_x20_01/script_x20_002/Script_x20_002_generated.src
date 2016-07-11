@@ -1,0 +1,10 @@
+{
+    DeclareLocalVar("Var1", "Number", Integer.valueOf(2));
+    // Expression "1" is defined twice, but is compiled only once
+    DeclareLocalVar("Var2", "Number", Integer.valueOf(1));
+    DeclareLocalVar("Res", "Number");
+    // Expression "Var1 - Var2" is defined twice, but is compiled only once
+    if (Equal(Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue() - ((Integer)scriptContext.getVar("Var2").getValue()).intValue()), Integer.valueOf(1))) {
+        SetLocalVar("Res", Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue() - ((Integer)scriptContext.getVar("Var2").getValue()).intValue()));
+    }
+}

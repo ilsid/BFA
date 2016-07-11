@@ -112,9 +112,10 @@ class ScriptSourcePreprocessor {
 	 * 
 	 * @param source
 	 *            original script code
-	 * @return a unit that contains the transformed script code with replaced expressions. Note, the transformed code
-	 *         contains enclosing brackets.In case of expressions parsing issues, a list of corresponding exceptions is
-	 *         returned within a unit and the transformed script code is <code>null</code>
+	 * @return a unit that contains the transformed script code (with replaced expressions) and optional input
+	 *         parameters. Note, the transformed code contains enclosing brackets.In case of expressions parsing errors,
+	 *         a list of corresponding exceptions is returned within a unit. The script code is <code>null</code> and
+	 *         input parameters are empty in case of parsing errors.
 	 * @throws ParsingException
 	 *             if the passed script code is invalid
 	 */
@@ -152,6 +153,7 @@ class ScriptSourcePreprocessor {
 			}
 
 			result.source = resultSource;
+			result.inputParameters = new LinkedHashMap<>(visitorContext.scriptInputParameters);
 		} else {
 			result.processingErrors.addAll(visitorContext.exceptions);
 		}
@@ -163,10 +165,16 @@ class ScriptSourcePreprocessor {
 
 		private String source;
 
+		private Map<String, String> inputParameters = new LinkedHashMap<>();
+
 		private List<Exception> processingErrors = new LinkedList<>();
 
 		public String getSource() {
 			return source;
+		}
+
+		public Map<String, String> getInputParameters() {
+			return inputParameters;
 		}
 
 		public List<Exception> getProcessingErrors() {

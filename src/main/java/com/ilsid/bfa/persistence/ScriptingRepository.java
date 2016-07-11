@@ -57,6 +57,27 @@ public interface ScriptingRepository extends Configurable, Transactional {
 	void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException;
 
 	/**
+	 * Saves new class. Source code here is not the whole code of the class, but the variable part only (for example, a
+	 * script body), that may be updated by user in the future.
+	 * 
+	 * @param className
+	 *            the class name
+	 * @param byteCode
+	 *            the class byte code
+	 * @param sourceCode
+	 *            the source code (variable part)
+	 * @param generatedCode
+	 *            the auto-generated code derived from the original source. This code that is actually executed in
+	 *            runtime
+	 * @throws PersistenceException
+	 *             <ul>
+	 *             <li>if the class with the given name already exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	void save(String className, byte[] byteCode, String sourceCode, String generatedCode) throws PersistenceException;
+
+	/**
 	 * Saves new class.
 	 * 
 	 * @param className

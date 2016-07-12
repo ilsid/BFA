@@ -32,6 +32,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 	private static final String SCRIPT_SOURCE_FILE_NAME = "single-expression-script.txt";
 
+	private static final String SCRIPT_GENERATED_SOURCE_FILE_NAME = "dummy-generated-script.txt";
+
 	private final static String SCRIPT_CLASS_NAME = CompileHelper.GENERATED_SCRIPT_PACKAGE
 			+ FilesystemScriptingRepositoryUnitTest.class.getSimpleName() + "Script01";
 
@@ -41,6 +43,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	private final static File SAVED_SCRIPT_CLASS_FILE = new File(PATH_WO_EXTENSION + ".class");
 
 	private final static File SAVED_SCRIPT_SRC_FILE = new File(PATH_WO_EXTENSION + ".src");
+
+	private final static File SAVED_SCRIPT_GENERATED_SRC_FILE = new File(PATH_WO_EXTENSION + "_generated.src");
 
 	private ScriptingRepository repository = new FilesystemScriptingRepository();
 
@@ -85,14 +89,23 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		assertTrue(SAVED_SCRIPT_CLASS_FILE.exists());
 		assertTrue(SAVED_SCRIPT_SRC_FILE.exists());
+		assertTrue(SAVED_SCRIPT_GENERATED_SRC_FILE.exists());
 
 		String savedScriptBodySource;
 		try (InputStream savedScriptBody = new FileInputStream(SAVED_SCRIPT_SRC_FILE)) {
 			savedScriptBodySource = IOUtils.toString(savedScriptBody, "UTF-8");
 		}
-		String inputScriptBodySource = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);
+		String expectedScriptBodySource = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);
 
-		assertEquals(inputScriptBodySource, savedScriptBodySource);
+		assertEquals(expectedScriptBodySource, savedScriptBodySource);
+
+		String savedScriptGeneratedSource;
+		try (InputStream savedGeneratedCode = new FileInputStream(SAVED_SCRIPT_GENERATED_SRC_FILE)) {
+			savedScriptGeneratedSource = IOUtils.toString(savedGeneratedCode, "UTF-8");
+		}
+		String expectedScriptGeneratedSource = IOHelper.loadScript(SCRIPT_GENERATED_SOURCE_FILE_NAME);
+
+		assertEquals(expectedScriptGeneratedSource, savedScriptGeneratedSource);
 	}
 
 	@Test
@@ -219,7 +232,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		createCodeRepository();
 
 		List<Map.Entry<String, byte[]>> classes = repository.loadClasses("com.ilsid.bfa.generated.entity");
-		assertEquals(2, classes.size());
+		assertEquals(3, classes.size());
 
 		Map<String, byte[]> loadedClasses = new HashMap<>();
 		for (Map.Entry<String, byte[]> entry : classes) {
@@ -228,15 +241,18 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		final String className1 = "com.ilsid.bfa.generated.entity.default_group.Entity001";
 		final String className2 = "com.ilsid.bfa.generated.entity.default_group.Contract";
+		final String className3 = "com.ilsid.bfa.generated.entity.default_group.MSISDN";
 
 		assertTrue(loadedClasses.containsKey(className1));
 		assertTrue(loadedClasses.containsKey(className2));
+		assertTrue(loadedClasses.containsKey(className3));
 
 		final String entityDir = TestConstants.TEST_RESOURCES_DIR
 				+ "/code_repository/com/ilsid/bfa/generated/entity/default_group";
 
 		assertTrue(Arrays.equals(IOHelper.loadClass(entityDir, "Entity001.class"), loadedClasses.get(className1)));
 		assertTrue(Arrays.equals(IOHelper.loadClass(entityDir, "Contract.class"), loadedClasses.get(className2)));
+		assertTrue(Arrays.equals(IOHelper.loadClass(entityDir, "MSISDN.class"), loadedClasses.get(className3)));
 	}
 
 	@Test
@@ -287,7 +303,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	public void classWithoutSourceCanBeDeleted() throws Exception {
 		createCodeRepository();
 
-		String className = "com.ilsid.bfa.generated.script.default_group.script001.Script001$$1";
+		String className = "com.ilsid.bfa.generated.script.default_group.script002.Script002";
 		String filePrefix = REPOSITORY_ROOT_DIR_PATH + "/" + className.replace('.', '/');
 		File classFile = new File(filePrefix + ".class");
 		File sourceFile = new File(filePrefix + ".src");
@@ -541,11 +557,12 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	}
 
 	private void saveClass(boolean saveSource) throws Exception {
-		String scriptBody = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);
-		byte[] byteCode = CompileHelper.compileScript(SCRIPT_CLASS_NAME, IOUtils.toInputStream(scriptBody));
+		String body = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);
+		String generatedSource = IOHelper.loadScript(SCRIPT_GENERATED_SOURCE_FILE_NAME);
+		byte[] byteCode = CompileHelper.compileScript(SCRIPT_CLASS_NAME, IOUtils.toInputStream(body));
 
 		if (saveSource) {
-			repository.save(SCRIPT_CLASS_NAME, byteCode, scriptBody);
+			repository.save(SCRIPT_CLASS_NAME, byteCode, body, generatedSource);
 		} else {
 			repository.save(SCRIPT_CLASS_NAME, byteCode);
 		}

@@ -1,0 +1,19 @@
+{
+    DeclareInputVar("msisdn", "String");
+    // com.ilsid.bfa.generated.entity.default_group.MSISDN class is expected in repository
+    DeclareLocalVar("msisdnRec", "MSISDN");
+    try {
+        Action("MSISDN::Get", new Object[] { ((String)scriptContext.getVar("msisdn").getValue()) }).SetLocalVar("msisdnRec");
+        if (Equal((com.ilsid.bfa.generated.entity.default_group.MSISDN)scriptContext.getVar("msisdnRec").getValue(), null)) {
+            Action("MSISDN::Create", new Object[] { ((String)scriptContext.getVar("msisdn").getValue()) }).SetLocalVar("msisdnRec");
+        } else {
+            Action("MSISDN::Update Count", new Object[] { ((String)scriptContext.getVar("msisdn").getValue()) });
+            SetLocalVar("msisdnRec.flowCounter", Integer.valueOf(((com.ilsid.bfa.generated.entity.default_group.MSISDN)scriptContext.getVar("msisdnRec").getValue()).flowCounter.intValue() + 1));
+        }
+        Action("Util::Send Email", new Object[] { ("BFA Notification: MSISDN Processed"), ("MSISDN " + ((com.ilsid.bfa.generated.entity.default_group.MSISDN)scriptContext.getVar("msisdnRec").getValue()).value + " was processed!") });
+        Action("Util::Write EDR", new Object[] { (((com.ilsid.bfa.generated.entity.default_group.MSISDN)scriptContext.getVar("msisdnRec").getValue()).value), ("some.email44@gmail.com") });
+        SubFlow("Post-Process MSISDN", new Object[] { (com.ilsid.bfa.generated.entity.default_group.MSISDN)scriptContext.getVar("msisdnRec").getValue() });
+    } finally {
+        Action("Database::Close Connection");
+    }
+}

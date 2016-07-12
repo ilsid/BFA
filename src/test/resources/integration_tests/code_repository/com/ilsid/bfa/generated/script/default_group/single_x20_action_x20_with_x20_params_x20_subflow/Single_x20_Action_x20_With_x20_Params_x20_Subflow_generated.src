@@ -1,0 +1,7 @@
+{
+    // Input vars are expected from parent script
+    DeclareInputVar("Var1", "Number");
+    DeclareInputVar("Var2", "Decimal");
+    DeclareLocalVar("Var3", "Number");
+    Action("Write System Property", new Object[] { Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue()), Double.valueOf(((Double)scriptContext.getVar("Var2").getValue()).doubleValue()) }).SetLocalVar("Var3");
+}

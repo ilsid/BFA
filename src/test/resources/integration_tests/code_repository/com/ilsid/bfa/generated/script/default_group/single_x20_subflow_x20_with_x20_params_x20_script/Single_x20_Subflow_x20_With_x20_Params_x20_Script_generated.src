@@ -1,0 +1,7 @@
+{
+    DeclareLocalVar("Var1", "Number", Integer.valueOf(3));
+    DeclareLocalVar("Var2", "Decimal", Double.valueOf(5.4));
+    // com.ilsid.bfa.generated.script.default_group.single_x20_action_x20_with_x20_params_x20_subflow.Single_x20_Action_x20_With_x20_Params_x20_Subflow 
+    // class is expected in the code repository
+    SubFlow("Single Action With Params Subflow", new Object[] { Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue()), Double.valueOf(((Double)scriptContext.getVar("Var2").getValue()).doubleValue()) });
+}

@@ -11,10 +11,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
-import com.ilsid.bfa.script.ClassCompiler.CompilationBlock;
-import com.ilsid.bfa.script.ClassCompiler.ScriptExpressionsUnit;
+import com.ilsid.bfa.script.ClassCompiler.ScriptCompilationUnit;
 
 import javassist.ByteArrayClassPath;
 import javassist.ClassPath;
@@ -23,15 +21,9 @@ import javassist.CtClass;
 
 public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
-	private static final String TEST_INVOCATION_EXPRESSION = "return Integer.valueOf(2 - 1);";
-
-	private static final String TEST_INVOCATION_CLASS_NAME = "com.ilsid.bfa.test.generated.TestInvocation";
+	private static final String SCRIPT_CONTEXT_FIELD_NAME = "scriptContext";
 
 	private static final String TEST_SCRIPT_CLASS_NAME = "com.ilsid.bfa.test.generated.TestScript";
-
-	private static final String TEST_SCRIPT_CLASS_SHORT_NAME = "TestScript";
-
-	private static final String SCRIPT_PACKAGE = "com.ilsid.bfa.generated.script.default_group";
 
 	private ScriptContext mockContext;
 
@@ -53,9 +45,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	@Test
 	public void scriptCanBeCompiled() throws Exception {
 		String body = IOHelper.loadScript("declarations-only-script.txt");
-		byte[] byteCode = ClassCompiler.compileScript(TEST_SCRIPT_CLASS_NAME, body);
+		byte[] byteCode = ClassCompiler.compileScript(TEST_SCRIPT_CLASS_NAME, body).getByteCode();
 		Script script = (Script) loadFromBytecode(TEST_SCRIPT_CLASS_NAME, byteCode).newInstance();
-		setInaccessibleParentField(script, "scriptContext", mockContext);
+		setInaccessibleParentField(script, SCRIPT_CONTEXT_FIELD_NAME, mockContext);
 		checking(getScriptExpectations());
 		script.execute();
 	}
@@ -72,116 +64,56 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void invocationCanBeCompiled() throws Exception {
-		byte[] byteCode = ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
+	public void scriptWithSingleExpressionCanBeCompiled() throws Exception {
+		final String scriptClassName = "scriptWithSingleExpressionCanBeCompiled.TestScript33";
+		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "single-expression-script.txt");
+		assertTrue(scriptUnit.getInputParameters().isEmpty());
+		assertTrue(scriptUnit.getGeneratedSource().length() > 0);
 
-		DynamicCodeInvocation instance = (DynamicCodeInvocation) loadFromBytecode(TEST_INVOCATION_CLASS_NAME, byteCode)
-				.newInstance();
-		assertEquals(new Integer(1), instance.invoke());
+		Script script = (Script) loadFromBytecode(scriptClassName, scriptUnit.getByteCode()).newInstance();
+		setInaccessibleParentField(script, SCRIPT_CONTEXT_FIELD_NAME, mockContext);
+
+		checking(new Expectations() {
+			{
+				// Expression "2" is replaced with value 2
+				oneOf(mockContext).addLocalVar("Var1", "java.lang.Integer", 2);
+			}
+		});
+
+		script.execute();
 	}
 
 	@Test
-	public void invocationWithSameNameCanBeCompiledMultipleTimes() {
-		try {
-			ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
-			ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
-			ClassCompiler.compileInvocation(TEST_INVOCATION_CLASS_NAME, TEST_INVOCATION_EXPRESSION);
-		} catch (ClassCompilationException e) {
-			failCausedByUnexpectedException(e);
-		}
-	}
+	public void scriptWithSeveralExpressionsCanBeCompiled() throws Exception {
+		final String scriptClassName = "scriptWithSeveralExpressionsCanBeCompiled.TestScript44";
+		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "several-expressions-script.txt");
+		assertTrue(scriptUnit.getInputParameters().isEmpty());
+		assertTrue(scriptUnit.getGeneratedSource().length() > 0);
 
-	@Test
-	public void singleScriptExpressionCanBeCompiled() throws Exception {
-		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "single-expression-script.txt");
-
-		assertEquals(1, expressions.length);
-
-		String exprClassName = expressions[0].getClassName();
-		assertExpressionShortClassName("TestScript33$$2", exprClassName);
-
-		DynamicCodeInvocation expr = (DynamicCodeInvocation) loadFromBytecode(exprClassName,
-				expressions[0].getByteCode()).newInstance();
-
-		Integer exprResult = (Integer) expr.invoke();
-		assertEquals(2, exprResult);
-	}
-
-	@Test
-	public void nothingIsCompiledInScriptWithNoExpressions() throws Exception {
-		CompilationBlock[] expressions = compileScriptExpressions("TestScript33", "declarations-only-script.txt");
-		assertEquals(0, expressions.length);
-	}
-
-	@Test
-	public void expressionMarkedAsNonCompiledIsNotCompiled() throws Exception {
-		// The script contains two expressions, but only one expression is compiled
-		CompilationBlock[] expressions = compileScriptExpressions("TestScript77",
-				"one-noncompiled-expression-script.txt");
-
-		assertEquals(1, expressions.length);
-
-		String exprName = expressions[0].getClassName();
-		assertExpressionShortClassName("TestScript77$$1", exprName);
-	}
-
-	@Test
-	public void onlyUniqueScriptExpressionsAreCompiled() throws Exception {
-		// The script contains two "Var1 - Var2" expressions, but only a single
-		// compiled expression is returned
-		CompilationBlock[] expressions = compileScriptExpressions("TestScript44", "duplicated-expression-script.txt");
-
-		assertEquals(3, expressions.length);
-
-		String exprName1 = expressions[0].getClassName();
-		String exprName2 = expressions[1].getClassName();
-		String exprName3 = expressions[2].getClassName();
-
-		assertExpressionShortClassName("TestScript44$$2", exprName1);
-		assertExpressionShortClassName("TestScript44$$1", exprName2);
-		assertExpressionShortClassName("TestScript44$$Var1_Mns_Var2", exprName3);
-
-		DynamicCodeInvocation expr1 = (DynamicCodeInvocation) loadFromBytecode(exprName1, expressions[0].getByteCode())
-				.newInstance();
-		DynamicCodeInvocation expr2 = (DynamicCodeInvocation) loadFromBytecode(exprName2, expressions[1].getByteCode())
-				.newInstance();
-		DynamicCodeInvocation expr3 = (DynamicCodeInvocation) loadFromBytecode(exprName3, expressions[2].getByteCode())
-				.newInstance();
-
-		// Define the variables declared in the script. They are needed for the expression runtime.
-		expr3.setScriptContext(ScriptContextUtil.createContext(new Variable("Var1", "java.lang.Integer", 2),
-				new Variable("Var2", "java.lang.Integer", 1)));
-
-		Integer exprResult1 = (Integer) expr1.invoke();
-		Integer exprResult2 = (Integer) expr2.invoke();
-		Integer exprResult3 = (Integer) expr3.invoke();
-		// Var1 = 2
-		assertEquals(2, exprResult1);
-		// Var2 = 1
-		assertEquals(1, exprResult2);
-		// Var2 - Var1 = 1
-		assertEquals(1, exprResult3);
+		Script script = (Script) loadFromBytecode(scriptClassName, scriptUnit.getByteCode()).newInstance();
+		script.execute();
 	}
 
 	@Test
 	public void errorDetailsAreProvidedIfScriptContainsInvalidExpression() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
-		msg.append("Compilation of the script [TestScript33] failed").append(StringUtils.LF);
+		msg.append("Script [TestScript33] contains errors. Compilation failed").append(StringUtils.LF);
 		msg.append(
 				"Could not parse expression [Var1 - Var33]: Integer value or variable is expected after operand [-], but was [Var33]")
 				.append(StringUtils.LF);
-		msg.append("   Caused by: Integer value or variable is expected after operand [-], but was [Var33]");
+		msg.append("   Caused by: Integer value or variable is expected after operand [-], but was [Var33]")
+				.append(StringUtils.LF);
 		exceptionRule.expectMessage(msg.toString());
 
-		compileScriptExpressions("TestScript33", "one-invalid-expression-script.txt");
+		compileScript("TestScript33", "one-invalid-expression-script.txt");
 	}
 
 	@Test
 	public void errorDetailsAreProvidedIfScriptContainsMultipleInvalidExpressions() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
-		msg.append("Compilation of the script [TestScript33] failed").append(StringUtils.LF);
+		msg.append("Script [TestScript33] contains errors. Compilation failed").append(StringUtils.LF);
 		msg.append("Could not parse expression [Var55]: Unexpected token [Var55]").append(StringUtils.LF);
 		msg.append("   Caused by: Unexpected token [Var55]").append(StringUtils.LF);
 		msg.append(
@@ -193,14 +125,14 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		msg.append("   Caused by: Unexpected token [abc]").append(StringUtils.LF);
 		exceptionRule.expectMessage(msg.toString());
 
-		compileScriptExpressions("TestScript33", "three-invalid-expressions-script.txt");
+		compileScript("TestScript33", "three-invalid-expressions-script.txt");
 	}
 
 	@Test
 	public void errorDetailsAreProvidedIfScriptContainsInvalidEntityType() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
-		msg.append("Compilation of the script [TestScript33] failed").append(StringUtils.LF);
+		msg.append("Script [TestScript33] contains errors. Compilation failed").append(StringUtils.LF);
 		msg.append("Variable [Var1] has invalid type [Contract555]").append(StringUtils.LF);
 		msg.append("Could not parse expression [Var1.Days]: Unexpected token [Var1.Days]").append(StringUtils.LF);
 		msg.append("   Caused by: Unexpected token [Var1.Days]").append(StringUtils.LF);
@@ -209,28 +141,23 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		msg.append("   Caused by: Unexpected token [Var1.Days]").append(StringUtils.LF);
 		exceptionRule.expectMessage(msg.toString());
 
-		compileScriptExpressions("TestScript33", "single-invalid-entity-script.txt");
+		compileScript("TestScript33", "single-invalid-entity-script.txt");
 	}
 
 	@Test
 	public void scriptWithActionCanBeCompiled() throws Exception {
-		final String scriptName = "single-action-with-params-script.txt";
-
-		compileScript(TEST_SCRIPT_CLASS_NAME + "WithAction", scriptName);
-		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithAction", scriptName);
-
-		assertEquals(4, expressions.length);
-
-		assertExpressionShortClassName("TestScriptWithAction$$3", expressions[0].getClassName());
-		assertExpressionShortClassName("TestScriptWithAction$$5_dt_4", expressions[1].getClassName());
-		assertExpressionShortClassName("TestScriptWithAction$$Var1", expressions[2].getClassName());
-		assertExpressionShortClassName("TestScriptWithAction$$Var2", expressions[3].getClassName());
+		final String scriptClassName = "scriptWithActionCanBeCompiled.TestScript77";
+		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "single-action-with-params-script.txt");
+		assertTrue(scriptUnit.getInputParameters().isEmpty());
+		assertTrue(scriptUnit.getGeneratedSource().length() > 0);
+		assertTrue(scriptUnit.getByteCode().length > 0);
 	}
 
 	@Test
 	public void scriptWithInputVarsCanBeCompiled() throws Exception {
-		ScriptExpressionsUnit unit = compileScriptExpressionsAndReturnUnit("TestScript555", "input-vars-script.txt");
-		Map<String, String> params = unit.getInputParameters();
+		final String scriptClassName = "scriptWithInputVarsCanBeCompiled.TestScript888";
+		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "input-vars-script.txt");
+		Map<String, String> params = scriptUnit.getInputParameters();
 
 		assertEquals(3, params.size());
 
@@ -238,40 +165,43 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		assertEquals("Var1", paramNames[0]);
 		assertEquals("Var2", paramNames[1]);
 		assertEquals("Var3", paramNames[2]);
+		assertEquals("Number", params.get("Var1"));
+		assertEquals("Decimal", params.get("Var2"));
+		assertEquals("Number", params.get("Var3"));
 	}
 
 	@Test
 	public void scriptLocalVarValuesCanBeResolved() throws Exception {
-		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithValuesToResolve",
+		final String scriptClassName = "scriptLocalVarValuesCanBeResolved.TestScript999";
+		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName,
 				"local-vars-with-values-to-resolve-script.txt");
 
-		assertEquals(4, expressions.length);
-
-		assertExpressionShortClassName("TestScriptWithValuesToResolve$$1", expressions[0].getClassName());
-		assertExpressionShortClassName("TestScriptWithValuesToResolve$$33", expressions[1].getClassName());
-		assertExpressionShortClassName("TestScriptWithValuesToResolve$$2", expressions[2].getClassName());
-		assertExpressionShortClassName("TestScriptWithValuesToResolve$$55_dt_77", expressions[3].getClassName());
+		assertTrue(scriptUnit.getInputParameters().isEmpty());
+		assertTrue(scriptUnit.getGeneratedSource().length() > 0);
+		assertTrue(scriptUnit.getByteCode().length > 0);
 	}
 
 	@Test
 	public void errorDetailsAreProvidedIfScriptContainsLocalVarsThatCanNotBeResolved() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
-		msg.append("Compilation of the script [TestScriptWithUnresolvedValues] failed").append(StringUtils.LF);
+		msg.append("Script [TestScriptWithUnresolvedValues] contains errors. Compilation failed")
+				.append(StringUtils.LF);
 		msg.append("[1.2] is not a value of type Number").append(StringUtils.LF);
 		msg.append("[abc] is not a value of type Decimal").append(StringUtils.LF);
 		msg.append("Could not parse expression [abc]: Unexpected token [abc]").append(StringUtils.LF);
-		msg.append("   Caused by: Unexpected token [abc]");
+		msg.append("   Caused by: Unexpected token [abc]").append(StringUtils.LF);
 
 		exceptionRule.expectMessage(msg.toString());
 
-		compileScriptExpressions("TestScriptWithUnresolvedValues", "local-vars-with-unresolved-values-script.txt");
+		compileScript("TestScriptWithUnresolvedValues", "local-vars-with-unresolved-values-script.txt");
 	}
 
 	@Test
 	public void scriptInputVarsDeclarationOrderIsPreserved() throws Exception {
-		ScriptExpressionsUnit unit = compileScriptExpressionsAndReturnUnit("TestScript777", "input-vars-script-2.txt");
-		Map<String, String> params = unit.getInputParameters();
+		final String scriptClassName = "scriptInputVarsDeclarationOrderIsPreserved.TestScript99999";
+		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "input-vars-script-2.txt");
+		Map<String, String> params = scriptUnit.getInputParameters();
 
 		assertEquals(3, params.size());
 
@@ -285,22 +215,21 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 	public void errorDetailsAreProvidedIfScriptContainsDuplicatedInputAndLocalVars() throws Exception {
 		exceptionRule.expect(ClassCompilationException.class);
 		StringBuilder msg = new StringBuilder();
-		msg.append("Compilation of the script [TestScriptDuplicatedInputAndLocalVars] failed").append(StringUtils.LF);
-		msg.append("Input variable with name [Var1] has been already declared");
+		msg.append("Script [DuplicatedInputAndLocalVars] contains errors. Compilation failed").append(StringUtils.LF);
+		msg.append("Input variable with name [Var1] has been already declared").append(StringUtils.LF);
 		exceptionRule.expectMessage(msg.toString());
 
-		compileScriptExpressions(TEST_SCRIPT_CLASS_SHORT_NAME + "DuplicatedInputAndLocalVars",
-				"duplicated-input-and-local-vars-script.txt");
+		compileScript("DuplicatedInputAndLocalVars", "duplicated-input-and-local-vars-script.txt");
 	}
 
 	@Test
 	public void scriptInputAndLocalVarsOfEntityTypesCanBeResolved() throws Exception {
-		CompilationBlock[] expressions = compileScriptExpressions("TestScriptWithInputAndLocalEntityVars",
-				"input-and-local-entity-vars-script.txt");
+		final String scriptClassName = "scriptInputAndLocalVarsOfEntityTypesCanBeResolved.TestScript75757";
+		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "input-and-local-entity-vars-script.txt");
 
-		assertEquals(1, expressions.length);
+		assertEquals(1, scriptUnit.getInputParameters().size());
 
-		assertExpressionShortClassName("TestScriptWithInputAndLocalEntityVars$$Var1", expressions[0].getClassName());
+		loadFromBytecode(scriptClassName, scriptUnit.getByteCode()).newInstance();
 	}
 
 	@Test
@@ -435,36 +364,12 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		ClassCompiler.compileEntity(className, "java.lang.Double field1; com.some.NonExistingType field2;");
 	}
 
-	@SuppressWarnings("unused")
 	private void compileScript(String className) throws Exception {
-		byte[] byteCode = ClassCompiler.compileScript(className, IOHelper.loadScript("declarations-only-script.txt"));
+		ClassCompiler.compileScript(className, IOHelper.loadScript("declarations-only-script.txt"));
 	}
 
-	@SuppressWarnings("unused")
-	private void compileScript(String className, String fileName) throws Exception {
-		byte[] byteCode = ClassCompiler.compileScript(className, IOHelper.loadScript(fileName));
-	}
-
-	private CompilationBlock[] compileScriptExpressions(String shortClassName, String fileName) throws Exception {
-		return compileScriptExpressionsAndReturnUnit(shortClassName, fileName).getExpressions()
-				.toArray(new CompilationBlock[] {});
-	}
-
-	private ScriptExpressionsUnit compileScriptExpressionsAndReturnUnit(String shortClassName, String fileName)
-			throws Exception {
-		String body = IOHelper.loadScript(fileName);
-		String sourceCode = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
-				ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE + "." + shortClassName.toLowerCase(),
-				shortClassName, body);
-
-		ScriptExpressionsUnit unit = ClassCompiler.compileScriptExpressions(sourceCode);
-
-		return unit;
-	}
-
-	private void assertExpressionShortClassName(String expected, String actual) {
-		String scriptChildPackage = expected.substring(0, expected.lastIndexOf("$$")).toLowerCase();
-		assertEquals(SCRIPT_PACKAGE + "." + scriptChildPackage + "." + expected, actual);
+	private ScriptCompilationUnit compileScript(String className, String fileName) throws Exception {
+		return ClassCompiler.compileScript(className, IOHelper.loadScript(fileName));
 	}
 
 	private Expectations getScriptExpectations() throws Exception {

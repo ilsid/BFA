@@ -58,11 +58,12 @@ public abstract class Script {
 
 	@Var(scope = Var.Scope.LOCAL)
 	public void DeclareLocalVar(String name, String type, @ExprParam Object initValue) throws ScriptException {
-		scriptContext.addLocalVar(name, TypeNameResolver.resolveEntityClassName(type), getValue(initValue));
+		scriptContext.addLocalVar(name, TypeNameResolver.resolveEntityClassName(type), initValue);
 	}
 
-	public void SetLocalVar(@ExprParam(compile = false) String name, @ExprParam Object expr) throws ScriptException {
-		scriptContext.updateLocalVar(name, getValue(expr));
+	public void SetLocalVar(@ExprParam(replaceOnCompile = false) String name, @ExprParam Object expr)
+			throws ScriptException {
+		scriptContext.updateLocalVar(name, expr);
 	}
 
 	public Object GetGlobalVar(String name) {
@@ -70,7 +71,7 @@ public abstract class Script {
 	}
 
 	public void SetGlobalVar(String name, @ExprParam Object expr) throws ScriptException {
-		GlobalContext.getInstance().setGlobalVar(name, getValue(expr));
+		GlobalContext.getInstance().setGlobalVar(name, expr);
 	}
 
 	public boolean Equal(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
@@ -82,7 +83,7 @@ public abstract class Script {
 			runtimeLogger.debug(new StringBuilder("Equal: ").append(expr1).append(", ").append(expr2).toString());
 		}
 
-		AbstractCondition condition = new EqualCondition(getValue(expr1), getValue(expr2));
+		AbstractCondition condition = new EqualCondition(expr1, expr2);
 		if (description != null) {
 			condition.setDescription(description);
 		}
@@ -100,7 +101,7 @@ public abstract class Script {
 			runtimeLogger.debug(new StringBuilder("LessOrEqual: ").append(expr1).append(", ").append(expr2).toString());
 		}
 
-		AbstractCondition condition = new LessOrEqualCondition(getValue(expr1), getValue(expr2));
+		AbstractCondition condition = new LessOrEqualCondition(expr1, expr2);
 		if (description != null) {
 			condition.setDescription(description);
 		}
@@ -117,14 +118,12 @@ public abstract class Script {
 	}
 
 	public void SubFlow(String name, @ExprParam Object... params) throws ScriptException {
-		final Object[] paramValues = toValues(params);
-
 		if (runtimeLogger != null) {
 			runtimeLogger.debug(new StringBuilder("SubFlow: ").append(name).append(", parameters: ")
-					.append(Arrays.toString(paramValues)).toString());
+					.append(Arrays.toString(params)).toString());
 		}
 
-		runtime.runScript(name, paramValues, runtimeId, createSubflowCallStack());
+		runtime.runScript(name, params, runtimeId, createSubflowCallStack());
 	}
 
 	public ActionResult Action(String name) throws ScriptException {
@@ -132,11 +131,9 @@ public abstract class Script {
 	}
 
 	public ActionResult Action(String name, @ExprParam Object... params) throws ScriptException {
-		final Object[] paramValues = toValues(params);
-
 		if (runtimeLogger != null) {
 			runtimeLogger.debug(new StringBuilder("Action: ").append(name).append(", parameters: ")
-					.append(Arrays.toString(paramValues)).toString());
+					.append(Arrays.toString(params)).toString());
 		}
 
 		Action action;
@@ -146,7 +143,7 @@ public abstract class Script {
 			throw new ScriptException(String.format("Lookup of the action [%s] failed", name), e);
 		}
 
-		action.setInputParameters(paramValues);
+		action.setInputParameters(params);
 
 		Object[] result;
 		try {
@@ -182,7 +179,7 @@ public abstract class Script {
 
 	public interface ActionResult {
 
-		public ActionResult SetLocalVar(@ExprParam(compile = false) String name) throws ScriptException;
+		public ActionResult SetLocalVar(@ExprParam(replaceOnCompile = false) String name) throws ScriptException;
 
 	}
 
@@ -214,32 +211,6 @@ public abstract class Script {
 		if (isTopLevel()) {
 			ActionContext.cleanup();
 		}
-	}
-
-	private Object[] toValues(Object[] params) throws ScriptException {
-		Object[] paramValues = new Object[params.length];
-		for (int i = 0; i < params.length; i++) {
-			paramValues[i] = getValue(params[i]);
-		}
-
-		return paramValues;
-	}
-
-	private ValueExpression<?> toExpression(Object expr) throws ScriptException {
-		if (expr instanceof ValueExpression) {
-			return (ValueExpression<?>) expr;
-		} else {
-			try {
-				return new ScriptExpression((String) expr, scriptContext);
-			} catch (ClassCastException e) {
-				throw new ScriptException("Expected string expression but was " + expr, e);
-			}
-		}
-	}
-
-	private Object getValue(Object expr) throws ScriptException {
-		Object result = toExpression(expr).getValue();
-		return result;
 	}
 
 	private void setLocalVarValue(String name, Object value) throws ScriptException {

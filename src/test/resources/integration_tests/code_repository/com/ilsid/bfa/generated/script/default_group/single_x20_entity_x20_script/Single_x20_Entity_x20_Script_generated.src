@@ -1,0 +1,10 @@
+{
+    // com.ilsid.bfa.generated.entity.default_group.Contract class is expected in the code repository
+    DeclareLocalVar("Var1", "Contract");
+    DeclareLocalVar("Var2", "Number", Integer.valueOf(1));
+    DeclareLocalVar("Res", "Number");
+    SetLocalVar("Var1.Days", Integer.valueOf(2));
+    if (Equal(Integer.valueOf(((com.ilsid.bfa.generated.entity.default_group.Contract)scriptContext.getVar("Var1").getValue()).Days.intValue() - ((Integer)scriptContext.getVar("Var2").getValue()).intValue()), Integer.valueOf(1))) {
+        SetLocalVar("Res", Integer.valueOf(((com.ilsid.bfa.generated.entity.default_group.Contract)scriptContext.getVar("Var1").getValue()).Days.intValue() - ((Integer)scriptContext.getVar("Var2").getValue()).intValue()));
+    }
+}

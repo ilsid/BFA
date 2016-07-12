@@ -1,0 +1,5 @@
+{
+    DeclareInputVar("Contract", "Contract");
+    DeclareInputVar("Var1", "Decimal");
+    Action("Write System Property", new Object[] { Integer.valueOf(((com.ilsid.bfa.generated.entity.default_group.Contract)scriptContext.getVar("Contract").getValue()).Days.intValue()), Double.valueOf(((Double)scriptContext.getVar("Var1").getValue()).doubleValue()) });
+}

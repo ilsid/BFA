@@ -1,0 +1,34 @@
+DeclareInputVar("msisdn", "String");
+
+// com.ilsid.bfa.generated.entity.default_group.MSISDN class is expected in repository
+DeclareLocalVar("msisdnRec", "MSISDN");
+
+try {
+
+  Action("MSISDN::Get", "msisdn").SetLocalVar("msisdnRec");
+
+  if (Equal("msisdnRec", "null")) {
+
+    Action("MSISDN::Create", "msisdn").SetLocalVar("msisdnRec");  
+
+  }
+  else {
+
+    Action("MSISDN::Update Count", "msisdn");
+    SetLocalVar("msisdnRec.flowCounter", "msisdnRec.flowCounter + 1");
+
+  }
+
+  Action("Util::Send Email", 
+         "'BFA Notification: MSISDN Processed'", 
+         "'MSISDN ' + msisdnRec.value + ' was processed!'");
+  
+  Action("Util::Write EDR", "msisdnRec.value", "'some.email44@gmail.com'");
+  
+  SubFlow("Post-Process MSISDN", "msisdnRec");
+
+} finally {
+
+  Action("Database::Close Connection");
+
+}

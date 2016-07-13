@@ -47,6 +47,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 		repositoryConfig.put("bfa.persistence.orientdb.url", TestConstants.DATABASE_URL);
 		repositoryConfig.put("bfa.persistence.orientdb.user", TestConstants.DATABASE_USER);
 		repositoryConfig.put("bfa.persistence.orientdb.password", TestConstants.DATABASE_PASSWORD);
+		repositoryConfig.put("bfa.tmp_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
 
 		startDatabaseServer();
 

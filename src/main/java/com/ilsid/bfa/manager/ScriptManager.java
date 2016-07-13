@@ -24,6 +24,8 @@ import javax.inject.Singleton;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import com.ilsid.bfa.Configurable;
+import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.JsonUtil;
 import com.ilsid.bfa.common.Metadata;
@@ -45,15 +47,21 @@ import com.ilsid.bfa.script.TypeNameResolver;
  */
 // TODO: write unit tests
 @Singleton
-public class ScriptManager extends AbstractManager {
+public class ScriptManager extends AbstractManager implements Configurable {
 
-	private static final String MANIFEST_VERSION = "1.0";
+	private static final String TMP_ENTITIES_JAR_MANIFEST_VERSION = "1.0";
 
-	private static final String TMP_JAR_NAME_TEMPLATE = "__tmp-bfa-entities-%s.jar";
+	private static final String TMP_ENTITIES_JAR_NAME_TEMPLATE = "__tmp-bfa-entities-%s.jar";
+
+	private static final String CONFIG_PROP_TMP_DIR_NAME = "bfa.tmp_dir";
+
+	private static final String DEFAULT_TMP_DIR = "bfa";
 
 	private static final Map<String, String> EMPTY_MAP = Collections.unmodifiableMap(new HashMap<String, String>());
 
 	private ScriptingRepository repository;
+
+	private File tmpDir;
 
 	/**
 	 * Creates new script in the repository. If no group is defined then the script is to be saved in the Default Group.
@@ -499,6 +507,23 @@ public class ScriptManager extends AbstractManager {
 		this.repository = repository;
 	}
 
+	/**
+	 * Defines configuration.
+	 * 
+	 * @param config
+	 */
+	@Override
+	@Inject
+	public void setConfiguration(@ManagerConfig Map<String, String> config) throws ConfigurationException {
+		String tmpDirName = config.get(CONFIG_PROP_TMP_DIR_NAME);
+
+		if (tmpDirName != null) {
+			tmpDir = new File(tmpDirName);
+		} else {
+			tmpDir = new File(DEFAULT_TMP_DIR);
+		}
+	}
+
 	@Override
 	protected TransactionManager getTransactionManager() {
 		return repository.getTransactionManager();
@@ -730,13 +755,13 @@ public class ScriptManager extends AbstractManager {
 
 	private File createTempJar(List<Entry<String, byte[]>> entityClasses) throws ManagementException {
 		Manifest manifest = new Manifest();
-		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, MANIFEST_VERSION);
+		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, TMP_ENTITIES_JAR_MANIFEST_VERSION);
 
-		final String jarName = String.format(TMP_JAR_NAME_TEMPLATE, System.currentTimeMillis());
-		final File jarFile = new File(jarName);
+		final String jarName = String.format(TMP_ENTITIES_JAR_NAME_TEMPLATE, System.currentTimeMillis());
+		final File jarFile = new File(tmpDir, jarName);
 
 		try {
-			JarOutputStream jar = new JarOutputStream(new FileOutputStream(jarName), manifest);
+			JarOutputStream jar = new JarOutputStream(new FileOutputStream(jarFile), manifest);
 
 			Set<String> processedPackages = new HashSet<>();
 			for (Entry<String, byte[]> classEntry : entityClasses) {

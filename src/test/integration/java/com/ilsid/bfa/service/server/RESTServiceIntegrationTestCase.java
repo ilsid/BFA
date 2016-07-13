@@ -26,6 +26,7 @@ import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.action.persistence.ActionClassLoader;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.LoggingConfig;
+import com.ilsid.bfa.manager.ManagerConfig;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
@@ -171,6 +172,13 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 				@Singleton
 				@LoggingConfig
 				protected Map<String, String> provideLoggingConfiguration() {
+					return repositoryConfig;
+				}
+
+				@Provides
+				@Singleton
+				@ManagerConfig
+				protected Map<String, String> provideManagerConfiguration() {
 					return repositoryConfig;
 				}
 

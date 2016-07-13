@@ -16,6 +16,7 @@ import com.ilsid.bfa.action.persistence.ActionClassLoader;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
 import com.ilsid.bfa.common.LoggingConfig;
+import com.ilsid.bfa.manager.ManagerConfig;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
@@ -88,6 +89,13 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			@Singleton
 			@LoggingConfig
 			protected Map<String, String> provideLoggingConfiguration() {
+				return ConfigUtil.getApplicationSettings();
+			}
+
+			@Provides
+			@Singleton
+			@ManagerConfig
+			protected Map<String, String> provideManagerConfiguration() {
 				return ConfigUtil.getApplicationSettings();
 			}
 

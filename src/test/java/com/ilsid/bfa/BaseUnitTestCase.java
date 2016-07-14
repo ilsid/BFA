@@ -97,5 +97,9 @@ public abstract class BaseUnitTestCase {
 	protected String toNativeFS(String dirs) {
 		return dirs.replace('/', File.separatorChar);
 	}
+	
+	protected String toUnixLF(String str) {
+		return str.replace("\r\n", "\n");
+	}
 
 }

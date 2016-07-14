@@ -95,7 +95,7 @@ public class ScriptSourcePreprocessorUnitTest extends BaseUnitTestCase {
 		String result = exprUnit.getSource();
 
 		assertTrue(exprUnit.getProcessingErrors().isEmpty());
-		assertEquals(IOHelper.loadScript(expectedResult), result);
+		assertEquals(toUnixLF(IOHelper.loadScript(expectedResult)), toUnixLF(result));
 	}
 
 	private void assertProcessingErrors(String input, String... expectedErrorMessages) throws Exception {

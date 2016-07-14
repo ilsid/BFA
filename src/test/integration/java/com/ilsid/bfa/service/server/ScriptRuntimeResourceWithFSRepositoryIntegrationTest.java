@@ -24,7 +24,7 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 
 	private static final String TEST_SYSTEM_PROP_NAME = "test.action.sys.property";
 
-	private static final String ACTION_DIR = "action/default_group/Write_x20_System_x20_Property";
+	private static final String ACTION_DIR = "action/default_group/write_x20_system_x20_property";
 
 	private static final Set<Long> uniqueRuntimeIds = new HashSet<>();
 

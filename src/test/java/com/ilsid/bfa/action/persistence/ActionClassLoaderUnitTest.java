@@ -132,7 +132,7 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 		FileUtils.copyFileToDirectory(
 				new File(TestConstants.CODE_REPOSITORY_DIR + "/updated_action/com/some/action/impl/SomeAction.class"),
 				new File(TMP_CODE_REPOSITORY_PATH
-						+ "/action/default_group/Reserve_x20_Amount/classes/com/some/action/impl"));
+						+ "/action/default_group/reserve_x20_amount/classes/com/some/action/impl"));
 
 		// The current loader must be closed explicitly as it was created via package private constructor (but not via
 		// getLoader() static method)

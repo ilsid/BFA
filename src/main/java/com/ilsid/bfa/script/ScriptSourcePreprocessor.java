@@ -27,6 +27,7 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.visitor.DumpVisitor;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
+import com.ilsid.bfa.script.ScriptContext.VarNameParts;
 
 /**
  * Prepares script for compilation stage.
@@ -200,6 +201,8 @@ class ScriptSourcePreprocessor {
 
 	private static class ScriptExpressionsVisitor extends VoidVisitorAdapter<MethodVisitorContext> {
 
+		private static final String ARRAY_BRACKETS = "[]";
+
 		private static final String DQ = "\"";
 
 		private static final String EXPRESSION_PREFIX = "@@EXPR@@";
@@ -228,8 +231,9 @@ class ScriptSourcePreprocessor {
 					for (Annotation[] annotations : parentMethod.getParameterAnnotations()) {
 						for (Annotation a : annotations) {
 							if (a.annotationType() == ExprParam.class) {
-								processExpression(methodParams[paramIdx], visitorContext,
-										((ExprParam) a).replaceOnCompile());
+								final ExprParam exprAnt = (ExprParam) a;
+								processExpression(methodParams[paramIdx], visitorContext, exprAnt.replaceOnCompile(),
+										exprAnt.type());
 							}
 						}
 						paramIdx++;
@@ -284,8 +288,16 @@ class ScriptSourcePreprocessor {
 
 		private void checkVarType(String varName, String varType, String javaType,
 				MethodVisitorContext visitorContext) {
+			// Special processing of array canonical name
+			final String actualJavaType;
+			if (javaType.endsWith(ARRAY_BRACKETS)) {
+				actualJavaType = javaType.substring(0, javaType.length() - ARRAY_BRACKETS.length());
+			} else {
+				actualJavaType = javaType;
+			}
+
 			try {
-				DynamicClassLoader.getInstance().loadClass(javaType);
+				DynamicClassLoader.getInstance().loadClass(actualJavaType);
 			} catch (ClassNotFoundException e) {
 				Exception ce = new ClassCompilationException(
 						String.format("Variable [%s] has invalid type [%s]", varName, varType));
@@ -293,33 +305,58 @@ class ScriptSourcePreprocessor {
 			}
 		}
 
-		private void processExpression(Node expression, MethodVisitorContext visitorContext, boolean replaceIsNeeded) {
+		private void processExpression(Node expression, MethodVisitorContext visitorContext, boolean replaceIsNeeded,
+				ExprParam.Type exprType) {
+
 			if (StringLiteralExpr.class.isInstance(expression)) {
 				final StringLiteralExpr stringLiteralExpr = (StringLiteralExpr) expression;
 				String scriptExpr = stringLiteralExpr.getValue();
 				Map<String, String> parsedExpressions = visitorContext.parsedExpressions;
 
-				try {
-					String javaExpr = visitorContext.parser.parse(scriptExpr);
+				if (exprType == ExprParam.Type.ANY || exprType == ExprParam.Type.VAR_OR_FLD_NAME) {
+					try {
+						String javaExpr = visitorContext.parser.parse(scriptExpr);
 
-					if (replaceIsNeeded) {
-						final String replacementExpr = EXPRESSION_PREFIX + scriptExpr;
-						stringLiteralExpr.setValue(replacementExpr);
-						parsedExpressions.put(DQ + replacementExpr + DQ, javaExpr);
+						if (replaceIsNeeded) {
+							final String replacementExpr = EXPRESSION_PREFIX + scriptExpr;
+							stringLiteralExpr.setValue(replacementExpr);
+							parsedExpressions.put(DQ + replacementExpr + DQ, javaExpr);
+						}
+					} catch (ParsingException e) {
+						visitorContext.exceptions.add(e);
 					}
-				} catch (ParsingException e) {
-					visitorContext.exceptions.add(e);
+				} else if (exprType == ExprParam.Type.VAR_NAME) {
+					processVarNameExpression(scriptExpr, visitorContext);
+				} else {
+					throw new IllegalStateException("Unexpected expression type: " + exprType);
 				}
+
 			} else if (ArrayCreationExpr.class.isInstance(expression)) {
 				// This is a case for varargs that have been replaced with explicit array statement
 				for (Node childNode : expression.getChildrenNodes()) {
 					for (Node grandChildNode : childNode.getChildrenNodes()) {
 						// The string literals with method parameter values are the grand-children of "Create Array"
 						// expression
-						processExpression(grandChildNode, visitorContext, true);
+						processExpression(grandChildNode, visitorContext, true, ExprParam.Type.ANY);
 					}
 				}
 			}
+		}
+
+		private void processVarNameExpression(String expr, MethodVisitorContext visitorContext) {
+			String varName;
+			try {
+				final VarNameParts varNameParts = visitorContext.scriptContext.getVariableNameParts(expr);
+				varName = varNameParts.getVarName();
+
+				if (varNameParts.getFieldName() != null) {
+					visitorContext.exceptions.add(new ParsingException(
+							String.format("Unexpected token [%s]. Variable name [%s] is expected", expr, varName)));
+				}
+			} catch (ScriptException e) {
+				visitorContext.exceptions.add(e);
+			}
+
 		}
 
 	}

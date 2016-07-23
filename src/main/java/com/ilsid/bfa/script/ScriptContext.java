@@ -65,20 +65,15 @@ public class ScriptContext {
 	 * @throws ScriptException
 	 */
 	public void updateLocalVar(String name, Object value) throws ScriptException {
-		String[] varParts = name.split("\\.");
-		if (varParts.length > 2) {
-			throw new IllegalArgumentException("Unexpected variable name format: " + name);
-		} else if (varParts.length == 1) {
-			checkLocalVarExists(name);
-			Variable var = localVars.get(name);
+		VarNameParts nameParts = getVariableNameParts(name);
+		final String varName = nameParts.getVarName();
+		final String fieldName = nameParts.getFieldName();
+		Variable var = localVars.get(varName);
+
+		if (fieldName == null) {
 			Object resolvedValue = resolveValue(var.getJavaType(), value);
 			var.setValue(resolvedValue);
 		} else {
-			String varName = varParts[0];
-			String fieldName = varParts[1];
-
-			checkLocalVarExists(varName);
-			Variable var = localVars.get(varName);
 			Object varTarget = var.getValue();
 			if (varTarget == null) {
 				varTarget = createInstance(var);
@@ -95,6 +90,47 @@ public class ScriptContext {
 
 	public void setScriptName(String scriptName) {
 		this.scriptName = scriptName;
+	}
+
+	static interface VarNameParts {
+
+		String getVarName();
+
+		String getFieldName();
+	}
+
+	static class VarNamePartsHolder implements VarNameParts {
+
+		String varName;
+
+		String fieldName;
+
+		public String getVarName() {
+			return varName;
+		}
+
+		public String getFieldName() {
+			return fieldName;
+		}
+
+	}
+
+	VarNameParts getVariableNameParts(String name) throws ScriptException {
+		VarNamePartsHolder parts = new VarNamePartsHolder();
+		String[] varParts = name.split("\\.");
+
+		if (varParts.length <= 2) {
+			parts.varName = varParts[0];
+			checkLocalVarExists(parts.varName);
+			
+			if (varParts.length == 2) {
+				parts.fieldName = varParts[1];
+			}
+		} else {
+			throw new ScriptException("Unexpected variable name format: " + name);
+		}
+
+		return parts;
 	}
 
 	private void setField(Object target, String fieldName, Object value) throws ScriptException {

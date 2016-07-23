@@ -53,18 +53,24 @@ public class ScriptSourcePreprocessorUnitTest extends BaseUnitTestCase {
 		assertExpressionsProcessing("several-actions-with-params-and-entity-script.txt",
 				"preprocessor-expected-output/several-actions-with-params-and-entity-script-after-expressions-processing.txt");
 	}
+	
+	@Test
+	public void expressionsWithArraysAreReplacedWithJavaCode() throws Exception {
+		assertExpressionsProcessing("arrays-script.txt",
+				"preprocessor-expected-output/arrays-script-after-expressions-processing.txt");
+	}
 
 	@Test
 	public void errorDetailsAreProvidedIfScriptContainsInvalidExpression() throws Exception {
 		assertProcessingErrors("one-invalid-expression-script.txt",
-				"Could not parse expression [Var1 - Var33]: Integer value or variable is expected after operand [-], but was [Var33]");
+				"Could not parse expression [Var1 - Var33]: Number value or variable is expected after operand [-], but was [Var33]");
 	}
 
 	@Test
 	public void errorDetailsAreProvidedIfScriptContainsMultipleInvalidExpressions() throws Exception {
 		assertProcessingErrors("three-invalid-expressions-script.txt",
 				"Could not parse expression [Var55]: Unexpected token [Var55]",
-				"Could not parse expression [Var1 - Var33]: Integer value or variable is expected after operand [-], but was [Var33]",
+				"Could not parse expression [Var1 - Var33]: Number value or variable is expected after operand [-], but was [Var33]",
 				"Could not parse expression [abc]: Unexpected token [abc]");
 	}
 

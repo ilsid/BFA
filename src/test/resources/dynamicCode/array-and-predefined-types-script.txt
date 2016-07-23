@@ -1,0 +1,9 @@
+DeclareLocalVar("Var1", "Number");
+DeclareLocalVar("Var2", "String");
+DeclareLocalVar("Res", "Array");
+
+Action("Reserve Amount").SetResult("Res");
+
+// Type check is performed in runtime, as types of array elements are unknown in compile-time
+SetLocalVar("Var1", "Res[1]");
+SetLocalVar("Var2", "Res[2]");

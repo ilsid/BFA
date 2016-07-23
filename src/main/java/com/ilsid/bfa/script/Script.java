@@ -61,8 +61,8 @@ public abstract class Script {
 		scriptContext.addLocalVar(name, TypeNameResolver.resolveEntityClassName(type), initValue);
 	}
 
-	public void SetLocalVar(@ExprParam(replaceOnCompile = false) String name, @ExprParam Object expr)
-			throws ScriptException {
+	public void SetLocalVar(@ExprParam(replaceOnCompile = false, type = ExprParam.Type.VAR_OR_FLD_NAME) String name,
+			@ExprParam Object expr) throws ScriptException {
 		scriptContext.updateLocalVar(name, expr);
 	}
 
@@ -151,6 +151,10 @@ public abstract class Script {
 		} catch (ActionException e) {
 			throw new ScriptException(String.format("Execution of the action [%s] failed", name), e);
 		}
+
+		if (result == null) {
+			result = new Object[] {};
+		}
 		ActionResult actionResult = new ActionResultImpl(result, name);
 
 		return actionResult;
@@ -179,7 +183,12 @@ public abstract class Script {
 
 	public interface ActionResult {
 
-		public ActionResult SetLocalVar(@ExprParam(replaceOnCompile = false) String name) throws ScriptException;
+		public ActionResult SetLocalVar(
+				@ExprParam(replaceOnCompile = false, type = ExprParam.Type.VAR_OR_FLD_NAME) String name)
+				throws ScriptException;
+
+		public void SetResult(@ExprParam(replaceOnCompile = false, type = ExprParam.Type.VAR_NAME) String name)
+				throws ScriptException;
 
 	}
 
@@ -253,6 +262,10 @@ public abstract class Script {
 			Script.this.setLocalVarValue(name, input[index++]);
 
 			return this;
+		}
+
+		public void SetResult(String name) throws ScriptException {
+			Script.this.scriptContext.updateLocalVar(name, input);
 		}
 
 	}

@@ -1,0 +1,8 @@
+{
+    DeclareLocalVar("Var1", "Number", Integer.valueOf(3));
+    DeclareLocalVar("Var2", "Decimal", Double.valueOf(5.4));
+    DeclareLocalVar("Var3", "Number");
+    DeclareLocalVar("Res", "Array");
+    Action("Write System Property", new Object[] { Integer.valueOf(((Integer)scriptContext.getVar("Var1").getValue()).intValue()), Double.valueOf(((Double)scriptContext.getVar("Var2").getValue()).doubleValue()) }).SetResult("Res");
+    SetLocalVar("Var3", ((Object[])scriptContext.getVar("Res").getValue())[0]);
+}

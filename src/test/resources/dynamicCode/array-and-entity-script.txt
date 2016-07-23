@@ -1,0 +1,8 @@
+// com.ilsid.bfa.generated.entity.default_group.Contract class is expected in the code repository
+DeclareLocalVar("Var1", "Contract");
+DeclareLocalVar("Res", "Array");
+
+Action("Reserve Amount").SetResult("Res");
+
+// Type check is performed in runtime, as types of array elements are unknown in compile-time
+SetLocalVar("Var1", "Res[1]");

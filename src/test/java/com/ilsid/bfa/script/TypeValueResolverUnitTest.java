@@ -10,6 +10,7 @@ import com.ilsid.bfa.script.TypeValueResolver.EntityResolver;
 import com.ilsid.bfa.script.TypeValueResolver.IntegerResolver;
 import com.ilsid.bfa.script.TypeValueResolver.PredefinedTypeResolver;
 import com.ilsid.bfa.script.TypeValueResolver.StringResolver;
+import com.ilsid.bfa.script.TypeValueResolver.ArrayResolver;
 import com.ilsid.bfa.test.types.Contract;
 
 public class TypeValueResolverUnitTest extends BaseUnitTestCase {
@@ -21,6 +22,8 @@ public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 	private PredefinedTypeResolver stringResolver = new StringResolver();
 
 	private PredefinedTypeResolver booleanResolver = new BooleanResolver();
+
+	private PredefinedTypeResolver arrayResolver = new ArrayResolver();
 
 	@Test
 	public void integerValueIsResolvedToIntegerForNumberType() throws Exception {
@@ -114,6 +117,26 @@ public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 		exceptionRule.expectMessage("[abc] is not a value of type Boolean");
 
 		booleanResolver.resolve("abc");
+	}
+
+	@Test
+	public void arrayValueIsResolvedToSameInstance() throws Exception {
+		Object[] array = new Object[] {};
+		assertSame(array, arrayResolver.resolve(array));
+		
+		array = new Object[] {null}; 
+		assertSame(array, arrayResolver.resolve(array));
+		
+		array = new Object[] {"aaa", new Object(), 22};
+		assertSame(array, arrayResolver.resolve(array));
+	}
+	
+	@Test
+	public void nonArrayValueIsNotResolvedToArray() throws Exception {
+		exceptionRule.expect(InvalidTypeException.class);
+		exceptionRule.expectMessage("[abcde] is not a value of type Array");
+		
+		arrayResolver.resolve("abcde");
 	}
 
 	@Test

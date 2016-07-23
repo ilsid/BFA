@@ -149,6 +149,10 @@ public class ScriptExpressionParser {
 				String entityExpr = String.format(ParsingUtil.ENTITY_VAR_EXPR_TEMPLATE, entInfo.varType, token);
 				javaExpression.append(entityExpr);
 				context.setState(context.TERMINATION_STATE);
+			} else if (ParsingUtil.isAccessToArrayVariable(token, context.getScriptContext())) {
+				String arrayExpr = ParsingUtil.getArrayAccessExpression(token);
+				javaExpression.append(arrayExpr);
+				context.setState(context.TERMINATION_STATE);
 			} else if (ParsingUtil.isNull(token)) {
 				javaExpression.append(token);
 				context.setState(context.TERMINATION_STATE);
@@ -284,7 +288,7 @@ public class ScriptExpressionParser {
 
 		@Override
 		protected String getTypeName() {
-			return ParsingUtil.INTEGER_TYPE_ALIAS;
+			return PredefinedTypes.NUMBER;
 		}
 
 		@Override
@@ -339,7 +343,7 @@ public class ScriptExpressionParser {
 
 		@Override
 		protected String getTypeName() {
-			return ParsingUtil.DOUBLE_TYPE_ALIAS;
+			return PredefinedTypes.DECIMAL;
 		}
 
 		@Override
@@ -406,7 +410,7 @@ public class ScriptExpressionParser {
 
 		@Override
 		protected String getTypeName() {
-			return ParsingUtil.BOOLEAN_TYPE_ALIAS;
+			return PredefinedTypes.BOOLEAN;
 		}
 
 	}
@@ -460,7 +464,7 @@ public class ScriptExpressionParser {
 
 		@Override
 		protected String getTypeName() {
-			return ParsingUtil.STRING_TYPE_ALIAS;
+			return PredefinedTypes.STRING;
 		}
 
 		@Override
@@ -566,6 +570,9 @@ public class ScriptExpressionParser {
 
 		private static final String BLANK_REGEX = "\\s+";
 
+		private static final Pattern ARRAY_ACCESS_PATTERN = Pattern
+				.compile("^[a-zA-Z]+[a-zA-Z0-9]*\\[[1-9]+[0-9]*\\]$");
+
 		private static final Pattern STRING_LITERAL_PATTERN = Pattern.compile("'.*?'");
 
 		private static final String DQ = "\"";
@@ -590,6 +597,8 @@ public class ScriptExpressionParser {
 
 		private static final String SQ = "'";
 
+		private static final String LSB = "[";
+
 		private static final String INTEGER_VAR_EXPR_TEMPLATE = "((Integer)scriptContext.getVar(\"%s\").getValue()).intValue()";
 
 		private static final String INTEGER_FLD_EXPR_TEMPLATE = "((%s)scriptContext.getVar(\"%s\").getValue()).%s.intValue()";
@@ -608,13 +617,7 @@ public class ScriptExpressionParser {
 
 		private static final String ENTITY_VAR_EXPR_TEMPLATE = "(%s)scriptContext.getVar(\"%s\").getValue()";
 
-		private static final String INTEGER_TYPE_ALIAS = "Integer";
-
-		private static final String DOUBLE_TYPE_ALIAS = "Decimal";
-
-		private static final String BOOLEAN_TYPE_ALIAS = "Boolean";
-
-		private static final String STRING_TYPE_ALIAS = "String";
+		private static final String ARRAY_ELEMENT_EXPR_TEMPLATE = "((Object[])scriptContext.getVar(\"%s\").getValue())[%s]";
 
 		static boolean isIntegerVariable(String token, ScriptContext context) {
 			return isVariable(token, context, Integer.class);
@@ -653,8 +656,29 @@ public class ScriptExpressionParser {
 					&& !token.substring(1, token.length() - 1).contains(SQ);
 		}
 
+		static boolean isAccessToArrayVariable(String token, ScriptContext context) {
+			if (!ARRAY_ACCESS_PATTERN.matcher(token).matches()) {
+				return false;
+			}
+
+			String varName = token.substring(0, token.indexOf(LSB));
+
+			return isVariable(varName, context, Object[].class);
+		}
+
 		static boolean isNull(String token) {
 			return NULL_EXPR.equals(token);
+		}
+
+		static String getArrayAccessExpression(String token) {
+			// Parsing expression "varName[arrIndex]"
+			final int leftBracketIdx = token.indexOf(LSB);
+			String varName = token.substring(0, leftBracketIdx);
+			String arrIndex = token.substring(leftBracketIdx + 1, token.length() - 1);
+			// Script arrays are started with index of 1 while Java arrays are started with 0
+			int javaArrIndex = Integer.parseInt(arrIndex) - 1;
+
+			return String.format(ARRAY_ELEMENT_EXPR_TEMPLATE, varName, javaArrIndex);
 		}
 
 		private static boolean isEntityVariable(String token, ScriptContext context, EntityInfo info) {
@@ -729,8 +753,8 @@ public class ScriptExpressionParser {
 		}
 
 		private static boolean isVariable(String token, ScriptContext context, Class<?> varType) {
-			boolean hasProperFormat = !Character.isDigit(token.charAt(0)) && StringUtils.isAlphanumeric(token);
-			if (!hasProperFormat) {
+			boolean isValidVarName = !Character.isDigit(token.charAt(0)) && StringUtils.isAlphanumeric(token);
+			if (!isValidVarName) {
 				return false;
 			}
 
@@ -739,7 +763,7 @@ public class ScriptExpressionParser {
 				return false;
 			}
 
-			if (var.getJavaType().equals(varType.getName())) {
+			if (var.getJavaType().equals(varType.getCanonicalName())) {
 				return true;
 			} else {
 				return false;

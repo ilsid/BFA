@@ -43,13 +43,13 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void arithmeticsWithIntegerAndDoublePrimitivesIsNotAllowed() {
 		assertException("2 - 1.0",
-				"Could not parse expression [2 - 1.0]: Integer value or variable is expected after operand [-], but was [1.0]");
+				"Could not parse expression [2 - 1.0]: Number value or variable is expected after operand [-], but was [1.0]");
 	}
 
 	@Test
 	public void arithmeticsWithIntegerAndNonNumericIsNotAllowed() {
 		assertException("2 - a",
-				"Could not parse expression [2 - a]: Integer value or variable is expected after operand [-], but was [a]");
+				"Could not parse expression [2 - a]: Number value or variable is expected after operand [-], but was [a]");
 	}
 
 	@Test
@@ -113,16 +113,14 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void singleIntegerVariableCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Integer", 3));
-		assertOutput("Var1",
-				"Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue())");
+		assertOutput("Var1", "Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue())");
 	}
 
 	@Test
 	public void arithmeticsWithTwoIntegerVariablesCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Integer", 3), new Variable("Var2", "java.lang.Integer", 1));
-		assertOutput("Var1 - Var2",
-				"Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue()"
-						+ " - ((Integer)scriptContext.getVar(\"Var2\").getValue()).intValue())");
+		assertOutput("Var1 - Var2", "Integer.valueOf(((Integer)scriptContext.getVar(\"Var1\").getValue()).intValue()"
+				+ " - ((Integer)scriptContext.getVar(\"Var2\").getValue()).intValue())");
 
 	}
 
@@ -153,14 +151,14 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void arithmeticsWithIntegerVariableAndDoublePrimitiveIsNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertException("Var1 - 1.0",
-				"Could not parse expression [Var1 - 1.0]: Integer value or variable is expected after operand [-], but was [1.0]");
+				"Could not parse expression [Var1 - 1.0]: Number value or variable is expected after operand [-], but was [1.0]");
 	}
 
 	@Test
 	public void arithmeticsWithIntegerVariableAndNonNumericIsNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Integer", 3));
 		assertException("Var1 - a",
-				"Could not parse expression [Var1 - a]: Integer value or variable is expected after operand [-], but was [a]");
+				"Could not parse expression [Var1 - a]: Number value or variable is expected after operand [-], but was [a]");
 	}
 
 	@Test
@@ -173,16 +171,14 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void singleDoubleVariableCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0));
-		assertOutput("Var1",
-				"Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue())");
+		assertOutput("Var1", "Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue())");
 	}
 
 	@Test
 	public void arithmeticsWithTwoDoubleVariablesCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0));
-		assertOutput("Var1 - Var2",
-				"Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue()"
-						+ " - ((Double)scriptContext.getVar(\"Var2\").getValue()).doubleValue())");
+		assertOutput("Var1 - Var2", "Double.valueOf(((Double)scriptContext.getVar(\"Var1\").getValue()).doubleValue()"
+				+ " - ((Double)scriptContext.getVar(\"Var2\").getValue()).doubleValue())");
 
 	}
 
@@ -386,8 +382,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void singleBooleanVariableCanBeParsed() throws Exception {
 		createContext(new Variable("Var1", "java.lang.Boolean", true));
-		assertOutput("Var1",
-				"Boolean.valueOf(((Boolean)scriptContext.getVar(\"Var1\").getValue()).booleanValue())");
+		assertOutput("Var1", "Boolean.valueOf(((Boolean)scriptContext.getVar(\"Var1\").getValue()).booleanValue())");
 	}
 
 	@Test
@@ -607,8 +602,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void entityVariableCanBeParsed() throws Exception {
 		createContext(new Variable("Contract", Contract.class.getName(), new Contract()));
-		assertOutput("Contract",
-				"(com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()");
+		assertOutput("Contract", "(com.ilsid.bfa.test.types.Contract)scriptContext.getVar(\"Contract\").getValue()");
 	}
 
 	@Test
@@ -636,6 +630,48 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 		assertException("null + Subscriber", "Could not parse expression [null + Subscriber]: Unexpected token [+]");
 		assertException("null + Subscriber.MSISDN",
 				"Could not parse expression [null + Subscriber.MSISDN]: Unexpected token [+]");
+	}
+
+	@Test
+	public void arrayAccessExpressionCanBeParsed() throws Exception {
+		createContext(new Variable("Var", Object[].class.getCanonicalName()));
+
+		// Script arrays are started with index of 1 while Java arrays are started with 0
+		assertOutput("Var[1]", "((Object[])scriptContext.getVar(\"Var\").getValue())[0]");
+		assertOutput("Var[55]", "((Object[])scriptContext.getVar(\"Var\").getValue())[54]");
+		assertOutput("Var[999]", "((Object[])scriptContext.getVar(\"Var\").getValue())[998]");
+	}
+
+	@Test
+	// Script arrays are started with index of 1
+	public void arrayAccessExpressionWithZeroIndexIsNotAllowed() throws Exception {
+		createContext(new Variable("Var", Object[].class.getCanonicalName()));
+		assertException("Var[0]", "Could not parse expression [Var[0]]: Unexpected token [Var[0]]");
+	}
+
+	@Test
+	public void arrayAccessExpressionWithNegativeIndexIsNotAllowed() throws Exception {
+		createContext(new Variable("Var", Object[].class.getCanonicalName()));
+		assertException("Var[-1]", "Could not parse expression [Var[-1]]: Unexpected token [Var[-1]]");
+	}
+
+	@Test
+	public void arrayAccessExpressionWithEmptyIndexIsNotAllowed() throws Exception {
+		createContext(new Variable("Var", Object[].class.getCanonicalName()));
+		assertException("Var[]", "Could not parse expression [Var[]]: Unexpected token [Var[]]");
+	}
+
+	@Test
+	public void arrayAccessExpressionWithoutClosingBracketIsNotAllowed() throws Exception {
+		createContext(new Variable("Var", Object[].class.getCanonicalName()));
+		assertException("Var[", "Could not parse expression [Var[]: Unexpected token [Var[]");
+	}
+
+	@Test
+	public void arrayAccessExpressionForNonArrayVariableIsNotAllowed() throws Exception {
+		createContext(new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
+		assertException("Subscriber[0]",
+				"Could not parse expression [Subscriber[0]]: Unexpected token [Subscriber[0]]");
 	}
 
 	private void createContext(final Variable... vars) {

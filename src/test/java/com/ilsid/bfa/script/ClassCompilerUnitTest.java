@@ -100,9 +100,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		StringBuilder msg = new StringBuilder();
 		msg.append("Script [TestScript33] contains errors. Compilation failed").append(StringUtils.LF);
 		msg.append(
-				"Could not parse expression [Var1 - Var33]: Integer value or variable is expected after operand [-], but was [Var33]")
+				"Could not parse expression [Var1 - Var33]: Number value or variable is expected after operand [-], but was [Var33]")
 				.append(StringUtils.LF);
-		msg.append("   Caused by: Integer value or variable is expected after operand [-], but was [Var33]")
+		msg.append("   Caused by: Number value or variable is expected after operand [-], but was [Var33]")
 				.append(StringUtils.LF);
 		exceptionRule.expectMessage(msg.toString());
 
@@ -117,9 +117,9 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 		msg.append("Could not parse expression [Var55]: Unexpected token [Var55]").append(StringUtils.LF);
 		msg.append("   Caused by: Unexpected token [Var55]").append(StringUtils.LF);
 		msg.append(
-				"Could not parse expression [Var1 - Var33]: Integer value or variable is expected after operand [-], but was [Var33]")
+				"Could not parse expression [Var1 - Var33]: Number value or variable is expected after operand [-], but was [Var33]")
 				.append(StringUtils.LF);
-		msg.append("   Caused by: Integer value or variable is expected after operand [-], but was [Var33]")
+		msg.append("   Caused by: Number value or variable is expected after operand [-], but was [Var33]")
 				.append(StringUtils.LF);
 		msg.append("Could not parse expression [abc]: Unexpected token [abc]").append(StringUtils.LF);
 		msg.append("   Caused by: Unexpected token [abc]").append(StringUtils.LF);
@@ -231,7 +231,27 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 		loadFromBytecode(scriptClassName, scriptUnit.getByteCode()).newInstance();
 	}
+	
+	@Test
+	public void scriptWithArrayCanBeCompiled() throws Exception {
+		final String scriptClassName = "scriptWithArrayCanBeResolved.TestScript7575788";
+		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "array-and-predefined-types-script.txt");
 
+		assertEquals(0, scriptUnit.getInputParameters().size());
+
+		loadFromBytecode(scriptClassName, scriptUnit.getByteCode()).newInstance();
+	}
+
+	@Test
+	public void scriptWithArrayAndEntityCanBeCompiled() throws Exception {
+		final String scriptClassName = "scriptWithArrayAndEntityCanBeCompiled.TestScript7575788";
+		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "array-and-entity-script.txt");
+		
+		assertEquals(0, scriptUnit.getInputParameters().size());
+		
+		loadFromBytecode(scriptClassName, scriptUnit.getByteCode()).newInstance();
+	}
+	
 	@Test
 	public void entityWithSingleFieldOfPredefinedTypeCanBeCompiled() throws Exception {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity01";

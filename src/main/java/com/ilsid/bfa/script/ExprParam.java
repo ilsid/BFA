@@ -17,7 +17,19 @@ public @interface ExprParam {
 
 	/**
 	 * Defines whether an expression should be replaced before compilation.
+	 * 
+	 * @return <code>true</code> by default
 	 */
 	boolean replaceOnCompile() default true;
 
+	/**
+	 * Defines an expression type.
+	 * 
+	 * @return {@linkplain Type#ANY} by default.
+	 */
+	Type type() default Type.ANY;
+
+	public static enum Type {
+		ANY, VAR_NAME, VAR_OR_FLD_NAME;
+	}
 }

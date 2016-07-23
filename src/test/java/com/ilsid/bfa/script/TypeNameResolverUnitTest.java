@@ -103,12 +103,22 @@ public class TypeNameResolverUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void predefinedNumberTypeCanBeResolved() {
-		assertEquals("java.lang.Integer", TypeNameResolver.resolveEntityClassName("Number"));
+		assertEquals("java.lang.Integer", TypeNameResolver.resolveEntityClassName(PredefinedTypes.NUMBER));
 	}
 
 	@Test
 	public void predefinedDecimalTypeCanBeResolved() {
-		assertEquals("java.lang.Double", TypeNameResolver.resolveEntityClassName("Decimal"));
+		assertEquals("java.lang.Double", TypeNameResolver.resolveEntityClassName(PredefinedTypes.DECIMAL));
+	}
+
+	@Test
+	public void predefinedBooleanTypeCanBeResolved() {
+		assertEquals("java.lang.Boolean", TypeNameResolver.resolveEntityClassName(PredefinedTypes.BOOLEAN));
+	}
+
+	@Test
+	public void predefinedArrayTypeCanBeResolved() {
+		assertEquals("java.lang.Object[]", TypeNameResolver.resolveEntityClassName(PredefinedTypes.ARRAY));
 	}
 
 	@Test

@@ -69,27 +69,17 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 
 	@Test
 	public void scriptWithSingleParametrizedActionIsRun() throws Exception {
-		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
+		verifyScriptWithParameterizedActionCanBeRun("Single Action With Params Script");
+	}
 
-		// The script invokes "Write System Property" action that sets "test.action.sys.property" system property
-		assertNull(System.getProperty(TEST_SYSTEM_PROP_NAME));
-		verifyScriptCanBeRun("Single Action With Params Script");
-		// "Write System Property" accepts two parameters. Their values are 3 and 5.4. The values are appended to the
-		// initial system property value "Test Action Value".
-		assertEquals("Test Action Value 3 5.4", System.getProperty(TEST_SYSTEM_PROP_NAME));
+	@Test
+	public void scriptWithSingleParametrizedActionAndResultArrayIsRun() throws Exception {
+		verifyScriptWithParameterizedActionCanBeRun("Single Action With Result Array Script");
 	}
 
 	@Test
 	public void scriptWithSingleParametrizedSubflowIsRun() throws Exception {
-		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
-
-		// The sub-flow script invokes "Write System Property" action that sets "test.action.sys.property" system
-		// property
-		assertNull(System.getProperty(TEST_SYSTEM_PROP_NAME));
-		verifyScriptCanBeRun("Single Subflow With Params Script");
-		// "Write System Property" accepts two parameters from input vars (passed by parent script). Their values are 3
-		// and 5.4. The values are appended to the initial system property value "Test Action Value".
-		assertEquals("Test Action Value 3 5.4", System.getProperty(TEST_SYSTEM_PROP_NAME));
+		verifyScriptWithParameterizedActionCanBeRun("Single Subflow With Params Script");
 	}
 
 	@Test
@@ -108,6 +98,17 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 		// First input param conforms Contract entity in the repository
 		verifyScriptWithInputParametersCanBeRun("Custom Group 02::Script with Entity Param", "{\"Days\":\"55\"}",
 				"9.99");
+	}
+
+	private void verifyScriptWithParameterizedActionCanBeRun(String scriptName) throws Exception {
+		copyDirectoryToRepository(TestConstants.CODE_REPOSITORY_DIR + "/" + ACTION_DIR, ACTION_DIR);
+
+		// Script invokes "Write System Property" action that sets "test.action.sys.property" system property
+		assertNull(System.getProperty(TEST_SYSTEM_PROP_NAME));
+		verifyScriptCanBeRun(scriptName);
+		// "Write System Property" accepts two parameters from input vars (passed by parent script). Their values are 3
+		// and 5.4. The values are appended to the initial system property value "Test Action Value".
+		assertEquals("Test Action Value 3 5.4", System.getProperty(TEST_SYSTEM_PROP_NAME));
 	}
 
 	private void verifyScriptWithInputParametersCanBeRun(String scriptName, Object... params) throws Exception {

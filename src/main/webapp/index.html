@@ -43,7 +43,6 @@
 				'\n',
 				'\n',
 				'st->Action.MSISDN::Get(right)->SetLocalVar.msisdnRec->Equal.msisdn.null',
-				'SetLocalVar.msisdnRec->Equal.msisdn.null',
 				'Equal.msisdn.null(yes, right)->Action.MSISDN::Update Count',
 				'Action.MSISDN::Update Count->SetLocalVar.msisdnRec.flowCounter->Action.Util::Send Email',
 				'Equal.msisdn.null(no)->Action.MSISDN::Create->SetLocalVar.msisdnRec2->Action.Util::Send Email',
@@ -542,8 +541,8 @@
 		function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
 				'dijit/Toolbar', 'dijit/form/Button', 'dijit/form/RadioButton', 'dojo/dom-construct', 
-				'dojo/dom-style', 'dojo/domReady!'],
-				function(registry, ContentPane, SimpleTextarea, Toolbar, Button, RadioButton, domConstruct, domStyle) {
+				'dojo/domReady!'],
+				function(registry, ContentPane, SimpleTextarea, Toolbar, Button, RadioButton, domConstruct) {
 					var tabContainer = registry.byId('tabContainer');
 					var groupName = getSelectedGroupName(registry.byId('scriptTree'), 'SCRIPT_GROUP');
 					
@@ -587,12 +586,12 @@
 						checked: true,
 						onChange: function(event) {
 							if (this.checked) {
-								this.scriptArea.set('style', 'display: inline;');
-								domStyle.set(this.chartCanvas, 'display', 'none');
+								this.scriptArea.domNode.style.display = 'block';
+								this.chartCanvas.domNode.style.display = 'none';
 							} else {
-								this.scriptArea.set('style', 'display: none;');
-								//domStyle.set(this.chartCanvas, 'overflow', 'auto');
-								domStyle.set(this.chartCanvas, 'display', 'inline');
+								this.scriptArea.domNode.style.display = 'none';
+								this.chartCanvas.domNode.style.display = 'block';
+								
 								if (this.chart) {
 									this.chart.clean();
 								}
@@ -644,12 +643,15 @@
 					scriptArea.startup();
 					radioSource.scriptArea = scriptArea;
 					
+					var chartArea = new ContentPane({
+						className: 'hiddenBorderedFixedPane'
+					});
+					chartArea.startup();
+					radioSource.chartCanvas = chartArea;
+					
 					tab.addChild(toolBar);
 					tab.addChild(scriptArea);
-					
-					var chartCanvas = domConstruct.toDom('<div id="chart_' + tabId + '" style="display: none;"></div>');
-					domConstruct.place(chartCanvas, tab.domNode);
-					radioSource.chartCanvas = chartCanvas;
+					tab.addChild(chartArea);
 					
 					if (indexInContainer > -1) {
 						tabContainer.addChild(tab, indexInContainer);

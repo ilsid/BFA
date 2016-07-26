@@ -67,6 +67,16 @@
   overflow: scroll; 
 }
 
+.hiddenBorderedFixedPane{
+  display: none;
+  height: 95%; 
+  width:100%; 
+  resize: none; 
+  overflow: auto; 
+  border-style: groove;
+  border-width: thin;
+}
+
 .nestedAccordionContainer{
   width: 100%; 
   height: 100%; 

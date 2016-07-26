@@ -16,10 +16,63 @@
 
 </style>
 
+<script src="script/flowchart/raphael-2.1.0-min.js"></script>
+<script src="script/flowchart/jquery-1.11.0.min.js"></script>
+<script src="script/flowchart/flowchart-1.6.3.min.js"></script>
+
 </head>
 <body class="claro">
 
 	<script src="script/dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+		
+	<script>
+		// sample flow chart
+		function drawFlowChart(canvasId) {
+			var code=['st=>start: Start', 
+				'e=>end: End',
+				'Action.MSISDN::Get=>operation: MSISDN::Get',
+				'SetLocalVar.msisdnRec=>operation: Set msisdnRec',
+				'SetLocalVar.msisdnRec2=>operation: Set msisdnRec',
+				'Action.MSISDN::Create=>operation: MSISDN::Create',
+				'Action.MSISDN::Update Count=>operation: MSISDN::Update Count',
+				'SetLocalVar.msisdnRec.flowCounter=>operation: msisdnRec.flowCounter=',
+				'msisdnRec.flowCounter + 1',
+				'Equal.msisdn.null=>condition: MSISDN exists?',
+				'Action.Util::Send Email=>operation: Util::Send Email',
+				'Action.Util::Write EDR=>operation: Util::Write EDR',
+				'\n',
+				'\n',
+				'st->Action.MSISDN::Get(right)->SetLocalVar.msisdnRec->Equal.msisdn.null',
+				'SetLocalVar.msisdnRec->Equal.msisdn.null',
+				'Equal.msisdn.null(yes, right)->Action.MSISDN::Update Count',
+				'Action.MSISDN::Update Count->SetLocalVar.msisdnRec.flowCounter->Action.Util::Send Email',
+				'Equal.msisdn.null(no)->Action.MSISDN::Create->SetLocalVar.msisdnRec2->Action.Util::Send Email',
+				'Action.Util::Send Email->Action.Util::Write EDR->e']
+				.join('\n');
+			
+			var chart = flowchart.parse(code);
+			
+			chart.drawSVG(canvasId, {
+			  'line-width': 2,
+			  'line-length': 20,
+			  'text-margin': 10,
+			  'font-size': 12,
+			  'font': 'normal',
+			  'font-family': 'Helvetica',
+			  'font-weight': 'normal',
+			  'font-color': 'black',
+			  'line-color': 'black',
+			  'element-color': 'black',
+			  'fill': '#F2F2F2', 
+			  'yes-text': 'yes',
+			  'no-text': 'no',
+			  'arrow-end': 'block',
+			  'scale': 1
+			});
+			
+			return chart;
+		}
+	</script>	
 	
 	<script>
 		function isEmptyObject(obj) {
@@ -488,8 +541,9 @@
 		
 		function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
-				'dijit/Toolbar', 'dijit/form/Button', 'dojo/domReady!'],
-				function(registry, ContentPane, SimpleTextarea, Toolbar, Button) {
+				'dijit/Toolbar', 'dijit/form/Button', 'dijit/form/RadioButton', 'dojo/dom-construct', 
+				'dojo/dom-style', 'dojo/domReady!'],
+				function(registry, ContentPane, SimpleTextarea, Toolbar, Button, RadioButton, domConstruct, domStyle) {
 					var tabContainer = registry.byId('tabContainer');
 					var groupName = getSelectedGroupName(registry.byId('scriptTree'), 'SCRIPT_GROUP');
 					
@@ -528,12 +582,47 @@
 					btnSave.startup();
 					btnRun.startup();
 					
+					var radioSource = new RadioButton({
+						name: tabId,
+						checked: true,
+						onChange: function(event) {
+							if (this.checked) {
+								this.scriptArea.set('style', 'display: inline;');
+								domStyle.set(this.chartCanvas, 'display', 'none');
+							} else {
+								this.scriptArea.set('style', 'display: none;');
+								//domStyle.set(this.chartCanvas, 'overflow', 'auto');
+								domStyle.set(this.chartCanvas, 'display', 'inline');
+								if (this.chart) {
+									this.chart.clean();
+								}
+								this.chart = drawFlowChart(this.chartCanvas.id);
+							}
+						}
+					});
+					radioSource.startup();
+					
+					var radioChart = new RadioButton({
+						name: tabId,
+						checked: false
+					});
+					radioChart.startup();	
+										
 					var toolBar = new Toolbar({
 						className: 'nestedPane'
 					});
 					toolBar.addChild(btnSave);
 					toolBar.addChild(btnRun);
+					toolBar.addChild(radioSource);
+					toolBar.addChild(radioChart);
 					toolBar.startup();
+					
+					domConstruct.place('<label>&nbsp;&nbsp;&nbsp;&nbsp;</label>', 
+						radioSource.domNode, 'before');
+					domConstruct.place('<label for="' + radioSource.id + '">Source&nbsp;&nbsp;</label>', 
+						radioSource.domNode, 'after');
+					domConstruct.place('<label for="' + radioChart.id + '">Flow Chart</label>', 
+						radioChart.domNode, 'after');
 				
 					var scriptArea = new SimpleTextarea({
 						className: 'fixedTextArea',
@@ -553,9 +642,14 @@
 						scriptArea.set('value', scriptSource);
 					}
 					scriptArea.startup();
+					radioSource.scriptArea = scriptArea;
 					
 					tab.addChild(toolBar);
 					tab.addChild(scriptArea);
+					
+					var chartCanvas = domConstruct.toDom('<div id="chart_' + tabId + '" style="display: none;"></div>');
+					domConstruct.place(chartCanvas, tab.domNode);
+					radioSource.chartCanvas = chartCanvas;
 					
 					if (indexInContainer > -1) {
 						tabContainer.addChild(tab, indexInContainer);

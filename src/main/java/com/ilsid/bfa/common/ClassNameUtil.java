@@ -64,6 +64,16 @@ public class ClassNameUtil {
 	 */
 	public static final String CLASS_FILE_EXTENSION = ".class";
 
+	/**
+	 * Temporary class name used for intermediate parsing/source processing stage.
+	 */
+	public static final String TMP_CLASS_NAME = "TmpClass";
+
+	/**
+	 * Temporary package name used for intermediate parsing/source processing stage.
+	 */
+	public static final String TMP_PACKAGE_NAME = "com.ilsid.bfa.tmp";
+
 	private static final char DOT = '.';
 
 	private static final Map<String, String> escapeSymbols;

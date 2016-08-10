@@ -26,6 +26,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.visitor.DumpVisitor;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.script.ScriptContext.VarNameParts;
 
@@ -35,11 +36,7 @@ import com.ilsid.bfa.script.ScriptContext.VarNameParts;
  * @author illia.sydorovych
  *
  */
-class ScriptSourcePreprocessor {
-
-	private static final String TMP_CLASS_NAME = "TmpScript";
-
-	private static final String TMP_PACKAGE_NAME = "com.ilsid.bfa.tmp";
+public class ScriptSourcePreprocessor {
 
 	private static final String LB_PATTERN = "[\r\n]";
 
@@ -121,8 +118,8 @@ class ScriptSourcePreprocessor {
 	 *             if the passed script code is invalid
 	 */
 	public static ExpressionsUnit processExpressions(String source) throws ParsingException {
-		final String fullSource = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE, TMP_PACKAGE_NAME,
-				TMP_CLASS_NAME, source);
+		final String fullSource = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
+				ClassNameUtil.TMP_PACKAGE_NAME, ClassNameUtil.TMP_CLASS_NAME, source);
 
 		CompilationUnit compilationUnit;
 		try {

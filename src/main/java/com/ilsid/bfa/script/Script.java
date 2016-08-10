@@ -9,6 +9,8 @@ import com.ilsid.bfa.action.Action;
 import com.ilsid.bfa.action.ActionContext;
 import com.ilsid.bfa.action.ActionException;
 import com.ilsid.bfa.action.persistence.ActionLocator;
+import com.ilsid.bfa.flow.FlowElement;
+import com.ilsid.bfa.flow.FlowConstants;
 
 //TODO: complete implementation
 //TODO: complete javadocs
@@ -61,6 +63,7 @@ public abstract class Script {
 		scriptContext.addLocalVar(name, TypeNameResolver.resolveEntityClassName(type), initValue);
 	}
 
+	@FlowElement(type = FlowConstants.OPERATION, description = "Set %0 = %1")
 	public void SetLocalVar(@ExprParam(replaceOnCompile = false, type = ExprParam.Type.VAR_OR_FLD_NAME) String name,
 			@ExprParam Object expr) throws ScriptException {
 		scriptContext.updateLocalVar(name, expr);
@@ -74,10 +77,12 @@ public abstract class Script {
 		GlobalContext.getInstance().setGlobalVar(name, expr);
 	}
 
+	@FlowElement(type = FlowConstants.CONDITION, description = "%0 == %1?")
 	public boolean Equal(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
 		return Equal(expr1, expr2, null);
 	}
 
+	@FlowElement(type = FlowConstants.CONDITION, description = "%2")
 	public boolean Equal(@ExprParam Object expr1, @ExprParam Object expr2, String description) throws ScriptException {
 		if (runtimeLogger != null) {
 			runtimeLogger.debug(new StringBuilder("Equal: ").append(expr1).append(", ").append(expr2).toString());
@@ -91,10 +96,12 @@ public abstract class Script {
 		return condition.isTrue();
 	}
 
+	@FlowElement(type = FlowConstants.CONDITION, description = "%0 <= %1?")
 	public boolean LessOrEqual(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
 		return LessOrEqual(expr1, expr2, null);
 	}
 
+	@FlowElement(type = FlowConstants.CONDITION, description = "%2")
 	public boolean LessOrEqual(@ExprParam Object expr1, @ExprParam Object expr2, String description)
 			throws ScriptException {
 		if (runtimeLogger != null) {
@@ -109,6 +116,7 @@ public abstract class Script {
 		return condition.isTrue();
 	}
 
+	@FlowElement(type = FlowConstants.SUBFLOW, description = "%0")
 	public void SubFlow(String name) throws ScriptException {
 		if (runtimeLogger != null) {
 			runtimeLogger.debug("SubFlow: ".concat(name));
@@ -117,6 +125,7 @@ public abstract class Script {
 		runtime.runScript(name, runtimeId, createSubflowCallStack());
 	}
 
+	@FlowElement(type = FlowConstants.SUBFLOW, description = "%0")
 	public void SubFlow(String name, @ExprParam Object... params) throws ScriptException {
 		if (runtimeLogger != null) {
 			runtimeLogger.debug(new StringBuilder("SubFlow: ").append(name).append(", parameters: ")
@@ -126,10 +135,12 @@ public abstract class Script {
 		runtime.runScript(name, params, runtimeId, createSubflowCallStack());
 	}
 
+	@FlowElement(type = FlowConstants.OPERATION, description = "%0")
 	public ActionResult Action(String name) throws ScriptException {
 		return Action(name, new Object[] {});
 	}
 
+	@FlowElement(type = FlowConstants.OPERATION, description = "%0")
 	public ActionResult Action(String name, @ExprParam Object... params) throws ScriptException {
 		if (runtimeLogger != null) {
 			runtimeLogger.debug(new StringBuilder("Action: ").append(name).append(", parameters: ")
@@ -183,10 +194,12 @@ public abstract class Script {
 
 	public interface ActionResult {
 
+		@FlowElement(type = FlowConstants.OPERATION, description = "Set %0")
 		public ActionResult SetLocalVar(
 				@ExprParam(replaceOnCompile = false, type = ExprParam.Type.VAR_OR_FLD_NAME) String name)
 				throws ScriptException;
 
+		@FlowElement(type = FlowConstants.OPERATION, description = "Set %0")
 		public void SetResult(@ExprParam(replaceOnCompile = false, type = ExprParam.Type.VAR_NAME) String name)
 				throws ScriptException;
 

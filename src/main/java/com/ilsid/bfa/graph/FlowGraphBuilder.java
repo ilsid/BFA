@@ -8,15 +8,18 @@ import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
@@ -99,6 +102,8 @@ public class FlowGraphBuilder {
 
 		private static final Pattern DESCRIPTION_PLACEHOLDER_PATTERN = Pattern.compile("(%[0-9]{1}+)");
 
+		private static final String QUESTION_MARK = "?";
+
 		@Override
 		public void visit(MethodCallExpr m, GraphContext context) {
 			for (Node child : m.getChildrenNodes()) {
@@ -116,16 +121,20 @@ public class FlowGraphBuilder {
 
 					for (Annotation a : parentMethod.getDeclaredAnnotations()) {
 						if (a.annotationType() == FlowElement.class) {
-							Vertex newVertex = context.graph.addVertex(null);
 							FlowElement flowElement = (FlowElement) a;
-							newVertex.setProperty(FlowConstants.TYPE_PROPERTY, flowElement.type());
 							String elementName = determineElementName(flowElement.description(), m);
-							newVertex.setProperty(FlowConstants.NAME_PROPERTY, elementName);
-							System.out.println(newVertex.getProperty(FlowConstants.TYPE_PROPERTY) + " | "
-									+ newVertex.getProperty(FlowConstants.NAME_PROPERTY));
+							if (context.conditionState) {
+								context.conditionNameParts.add(elementName);
+							} else {
+								Vertex newVertex = context.graph.addVertex(null);
+								newVertex.setProperty(FlowConstants.TYPE_PROPERTY, flowElement.type());
+								newVertex.setProperty(FlowConstants.NAME_PROPERTY, elementName);
+								System.out.println(newVertex.getProperty(FlowConstants.TYPE_PROPERTY) + " | "
+										+ newVertex.getProperty(FlowConstants.NAME_PROPERTY));
 
-							createEdgesToVertex(context, newVertex);
-							context.outVertices.add(new OutVertex(newVertex, EMPTY_EDGE_LABEL));
+								createEdgesToVertex(context, newVertex);
+								context.outVertices.add(new OutVertex(newVertex, EMPTY_EDGE_LABEL));
+							}
 
 							break;
 						}
@@ -141,11 +150,13 @@ public class FlowGraphBuilder {
 			System.out.println();
 			System.out.println("If Condition: " + ifStmt.getCondition() + " . Class: "
 					+ ifStmt.getCondition().getClass().getName());
-			// FIXME: Assumption is here that condition contains a single statement. For example such condition as
-			// (Equal(...) && Equal(...)) breaks the logic
+			context.conditionState = true;
 			ifStmt.getCondition().accept(this, context);
-			OutVertex conditionStmt = context.outVertices.peek();
-			conditionStmt.edgeLabel = YES_EDGE_LABEL;
+			context.conditionState = false;
+
+			Vertex conditionVertex = createConditionVertex(context);
+			OutVertex conditionStmt = new OutVertex(conditionVertex, YES_EDGE_LABEL);
+			context.outVertices.add(conditionStmt);
 
 			System.out.println("Then Statement: " + ifStmt.getThenStmt() + " . Class: "
 					+ ifStmt.getThenStmt().getClass().getName());
@@ -153,15 +164,45 @@ public class FlowGraphBuilder {
 
 			conditionStmt.edgeLabel = NO_EDGE_LABEL;
 			context.outVertices.addFirst(conditionStmt);
-			
+
 			if (ifStmt.getElseStmt() != null) {
 				System.out.println("Else Statement: " + ifStmt.getElseStmt() + " . Class: "
 						+ ifStmt.getElseStmt().getClass().getName());
 				OutVertex lastThenStmt = context.outVertices.removeLast();
 				ifStmt.getElseStmt().accept(this, context);
 				context.outVertices.add(lastThenStmt);
-			} 
+			}
 			System.out.println();
+		}
+
+		@Override
+		public void visit(BinaryExpr bnrExpr, GraphContext context) {
+			if (context.conditionState) {
+				context.conditionOperators.add(bnrExpr.getOperator().name());
+			}
+
+			super.visit(bnrExpr, context);
+		}
+
+		private Vertex createConditionVertex(GraphContext context) {
+			String namePart;
+			StringBuilder fullName = new StringBuilder();
+			while ((namePart = context.conditionNameParts.poll()) != null) {
+				fullName.append(namePart).append(StringUtils.SPACE);
+				String operator = context.conditionOperators.pollLast();
+				if (operator != null) {
+					fullName.append(operator).append(StringUtils.SPACE);
+				}
+			}
+			fullName.append(QUESTION_MARK);
+
+			Vertex conditionVertex = context.graph.addVertex(null);
+			conditionVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.CONDITION);
+			conditionVertex.setProperty(FlowConstants.NAME_PROPERTY, fullName.toString());
+			
+			createEdgesToVertex(context, conditionVertex);
+
+			return conditionVertex;
 		}
 
 		private String determineElementName(String elementDescription, MethodCallExpr methodExpr) {
@@ -199,6 +240,12 @@ public class FlowGraphBuilder {
 		Graph graph = new TinkerGraph();
 
 		Deque<OutVertex> outVertices = new LinkedList<>();
+
+		boolean conditionState;
+
+		Queue<String> conditionNameParts = new LinkedList<>();
+
+		Deque<String> conditionOperators = new LinkedList<>();
 	}
 
 }

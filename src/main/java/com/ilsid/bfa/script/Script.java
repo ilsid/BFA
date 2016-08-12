@@ -77,7 +77,7 @@ public abstract class Script {
 		GlobalContext.getInstance().setGlobalVar(name, expr);
 	}
 
-	@FlowElement(type = FlowConstants.CONDITION, description = "%0 == %1?")
+	@FlowElement(type = FlowConstants.CONDITION, description = "%0 == %1")
 	public boolean Equal(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
 		return Equal(expr1, expr2, null);
 	}
@@ -96,7 +96,7 @@ public abstract class Script {
 		return condition.isTrue();
 	}
 
-	@FlowElement(type = FlowConstants.CONDITION, description = "%0 <= %1?")
+	@FlowElement(type = FlowConstants.CONDITION, description = "%0 <= %1")
 	public boolean LessOrEqual(@ExprParam Object expr1, @ExprParam Object expr2) throws ScriptException {
 		return LessOrEqual(expr1, expr2, null);
 	}

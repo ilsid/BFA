@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -19,6 +20,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
+import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.flow.FlowConstants;
@@ -37,6 +39,12 @@ import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
  *
  */
 public class FlowGraphBuilder {
+
+	private static final String EMPTY_EDGE_LABEL = "";
+
+	private static final String YES_EDGE_LABEL = "Yes";
+
+	private static final String NO_EDGE_LABEL = "No";
 
 	/**
 	 * Builds graph for a given script.
@@ -59,20 +67,42 @@ public class FlowGraphBuilder {
 			throw new IllegalStateException("Failed to parse script", e);
 		}
 
-		VisitorContext visitorContext = new VisitorContext();
-		new GraphVisitor().visit(compilationUnit, visitorContext);
+		GraphContext context = new GraphContext();
+		addStartVertex(context);
+		new GraphVisitor().visit(compilationUnit, context);
+		addEndVertex(context);
 
-		return visitorContext.graph;
+		return context.graph;
 	}
 
-	private static class GraphVisitor extends VoidVisitorAdapter<VisitorContext> {
+	private static void addStartVertex(GraphContext context) {
+		Vertex startVertex = context.graph.addVertex(null);
+		startVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.START);
+		context.outVertices.add(new OutVertex(startVertex, EMPTY_EDGE_LABEL));
+	}
+
+	private static void addEndVertex(GraphContext context) {
+		Vertex endVertex = context.graph.addVertex(null);
+		endVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.END);
+
+		createEdgesToVertex(context, endVertex);
+	}
+
+	private static void createEdgesToVertex(GraphContext context, Vertex inVertex) {
+		OutVertex outVertex;
+		while ((outVertex = context.outVertices.poll()) != null) {
+			context.graph.addEdge(null, outVertex.instance, inVertex, outVertex.edgeLabel);
+		}
+	}
+
+	private static class GraphVisitor extends VoidVisitorAdapter<GraphContext> {
 
 		private static final Pattern DESCRIPTION_PLACEHOLDER_PATTERN = Pattern.compile("(%[0-9]{1}+)");
 
 		@Override
-		public void visit(MethodCallExpr m, VisitorContext visitorContext) {
+		public void visit(MethodCallExpr m, GraphContext context) {
 			for (Node child : m.getChildrenNodes()) {
-				child.accept(this, visitorContext);
+				child.accept(this, context);
 			}
 
 			Expression[] methodParams = m.getArgs().toArray(new Expression[] {});
@@ -86,13 +116,17 @@ public class FlowGraphBuilder {
 
 					for (Annotation a : parentMethod.getDeclaredAnnotations()) {
 						if (a.annotationType() == FlowElement.class) {
-							Vertex vertex = visitorContext.graph.addVertex(null);
+							Vertex newVertex = context.graph.addVertex(null);
 							FlowElement flowElement = (FlowElement) a;
-							vertex.setProperty(FlowConstants.TYPE_PROPERTY, flowElement.type());
+							newVertex.setProperty(FlowConstants.TYPE_PROPERTY, flowElement.type());
 							String elementName = determineElementName(flowElement.description(), m);
-							vertex.setProperty(FlowConstants.NAME_PROPERTY, elementName);
-							System.out.println(vertex.getProperty(FlowConstants.TYPE_PROPERTY) + " | "
-									+ vertex.getProperty(FlowConstants.NAME_PROPERTY));
+							newVertex.setProperty(FlowConstants.NAME_PROPERTY, elementName);
+							System.out.println(newVertex.getProperty(FlowConstants.TYPE_PROPERTY) + " | "
+									+ newVertex.getProperty(FlowConstants.NAME_PROPERTY));
+
+							createEdgesToVertex(context, newVertex);
+							context.outVertices.add(new OutVertex(newVertex, EMPTY_EDGE_LABEL));
+
 							break;
 						}
 					}
@@ -100,6 +134,34 @@ public class FlowGraphBuilder {
 					break;
 				}
 			}
+		}
+
+		@Override
+		public void visit(IfStmt ifStmt, GraphContext context) {
+			System.out.println();
+			System.out.println("If Condition: " + ifStmt.getCondition() + " . Class: "
+					+ ifStmt.getCondition().getClass().getName());
+			// FIXME: Assumption is here that condition contains a single statement. For example such condition as
+			// (Equal(...) && Equal(...)) breaks the logic
+			ifStmt.getCondition().accept(this, context);
+			OutVertex conditionStmt = context.outVertices.peek();
+			conditionStmt.edgeLabel = YES_EDGE_LABEL;
+
+			System.out.println("Then Statement: " + ifStmt.getThenStmt() + " . Class: "
+					+ ifStmt.getThenStmt().getClass().getName());
+			ifStmt.getThenStmt().accept(this, context);
+
+			conditionStmt.edgeLabel = NO_EDGE_LABEL;
+			context.outVertices.addFirst(conditionStmt);
+			
+			if (ifStmt.getElseStmt() != null) {
+				System.out.println("Else Statement: " + ifStmt.getElseStmt() + " . Class: "
+						+ ifStmt.getElseStmt().getClass().getName());
+				OutVertex lastThenStmt = context.outVertices.removeLast();
+				ifStmt.getElseStmt().accept(this, context);
+				context.outVertices.add(lastThenStmt);
+			} 
+			System.out.println();
 		}
 
 		private String determineElementName(String elementDescription, MethodCallExpr methodExpr) {
@@ -119,10 +181,24 @@ public class FlowGraphBuilder {
 		}
 	}
 
-	private static class VisitorContext {
+	private static class OutVertex {
+
+		Vertex instance;
+
+		String edgeLabel;
+
+		public OutVertex(Vertex instance, String edgeLabel) {
+			this.instance = instance;
+			this.edgeLabel = edgeLabel;
+		}
+
+	}
+
+	private static class GraphContext {
 
 		Graph graph = new TinkerGraph();
 
+		Deque<OutVertex> outVertices = new LinkedList<>();
 	}
 
 }

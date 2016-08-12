@@ -2,6 +2,10 @@ package com.ilsid.bfa.flow;
 
 public class FlowConstants {
 	
+	public static final String START = "Start";
+	
+	public static final String END = "End";
+	
 	public static final String OPERATION = "Operation";
 	
 	public static final String CONDITION = "Condition";

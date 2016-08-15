@@ -224,34 +224,27 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void scriptInputAndLocalVarsOfEntityTypesCanBeResolved() throws Exception {
-		final String scriptClassName = "scriptInputAndLocalVarsOfEntityTypesCanBeResolved.TestScript75757";
-		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "input-and-local-entity-vars-script.txt");
-
-		assertEquals(1, scriptUnit.getInputParameters().size());
-
-		loadFromBytecode(scriptClassName, scriptUnit.getByteCode()).newInstance();
+		assertScriptWithParamsCanBeCompiled("scriptInputAndLocalVarsOfEntityTypesCanBeResolved.TestScript75757",
+				"input-and-local-entity-vars-script.txt", 1);
 	}
-	
+
 	@Test
 	public void scriptWithArrayCanBeCompiled() throws Exception {
-		final String scriptClassName = "scriptWithArrayCanBeResolved.TestScript7575788";
-		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "array-and-predefined-types-script.txt");
-
-		assertEquals(0, scriptUnit.getInputParameters().size());
-
-		loadFromBytecode(scriptClassName, scriptUnit.getByteCode()).newInstance();
+		assertNoParamsScriptCanBeCompiled("scriptWithArrayCanBeCompiled.TestScript7575788",
+				"array-and-predefined-types-script.txt");
 	}
 
 	@Test
 	public void scriptWithArrayAndEntityCanBeCompiled() throws Exception {
-		final String scriptClassName = "scriptWithArrayAndEntityCanBeCompiled.TestScript7575788";
-		ScriptCompilationUnit scriptUnit = compileScript(scriptClassName, "array-and-entity-script.txt");
-		
-		assertEquals(0, scriptUnit.getInputParameters().size());
-		
-		loadFromBytecode(scriptClassName, scriptUnit.getByteCode()).newInstance();
+		assertNoParamsScriptCanBeCompiled("scriptWithArrayAndEntityCanBeCompiled.TestScript7575788",
+				"array-and-entity-script.txt");
 	}
-	
+
+	@Test
+	public void scriptWithLoopCanBeCompiled() throws Exception {
+		assertNoParamsScriptCanBeCompiled("scriptWithLoop.TestScript7575788", "single-loop-script.txt");
+	}
+
 	@Test
 	public void entityWithSingleFieldOfPredefinedTypeCanBeCompiled() throws Exception {
 		String className = "com.ilsid.bfa.test.generated.entity.Entity01";
@@ -399,6 +392,17 @@ public class ClassCompilerUnitTest extends BaseUnitTestCase {
 				oneOf(mockContext).addLocalVar("Var2", "java.lang.Double");
 			}
 		};
+	}
+
+	private void assertNoParamsScriptCanBeCompiled(String className, String scriptName) throws Exception {
+		assertScriptWithParamsCanBeCompiled(className, scriptName, 0);
+	}
+
+	private void assertScriptWithParamsCanBeCompiled(String className, String scriptName, int paramsCount)
+			throws Exception {
+		ScriptCompilationUnit scriptUnit = compileScript(className, scriptName);
+		assertEquals(paramsCount, scriptUnit.getInputParameters().size());
+		loadFromBytecode(className, scriptUnit.getByteCode()).newInstance();
 	}
 
 	private Class<?> loadFromBytecode(String className, byte[] byteCode) throws Exception {

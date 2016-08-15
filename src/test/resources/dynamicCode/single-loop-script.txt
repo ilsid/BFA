@@ -1,0 +1,7 @@
+DeclareLocalVar("Var1", "Number", "1");
+
+while (LessOrEqual("Var1", "10")) {
+	
+	SetLocalVar("Var1", "Var1 + 1");
+
+}

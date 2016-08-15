@@ -43,12 +43,6 @@ import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
  */
 public class FlowGraphBuilder {
 
-	private static final String EMPTY_EDGE_LABEL = "";
-
-	private static final String YES_EDGE_LABEL = "Yes";
-
-	private static final String NO_EDGE_LABEL = "No";
-
 	/**
 	 * Builds graph for a given script.
 	 * 
@@ -80,13 +74,15 @@ public class FlowGraphBuilder {
 
 	private static void addStartVertex(GraphContext context) {
 		Vertex startVertex = context.graph.addVertex(null);
-		startVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.START);
-		context.outVertices.add(new OutVertex(startVertex, EMPTY_EDGE_LABEL));
+		startVertex.setProperty(FlowConstants.NAME_PROPERTY, FlowConstants.START_NAME);
+		startVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.START_NAME);
+		context.outVertices.add(new OutVertex(startVertex, FlowConstants.EMPTY_LABEL));
 	}
 
 	private static void addEndVertex(GraphContext context) {
 		Vertex endVertex = context.graph.addVertex(null);
-		endVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.END);
+		endVertex.setProperty(FlowConstants.NAME_PROPERTY, FlowConstants.END_NAME);
+		endVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.END_NAME);
 
 		createEdgesToVertex(context, endVertex);
 	}
@@ -129,11 +125,9 @@ public class FlowGraphBuilder {
 								Vertex newVertex = context.graph.addVertex(null);
 								newVertex.setProperty(FlowConstants.TYPE_PROPERTY, flowElement.type());
 								newVertex.setProperty(FlowConstants.NAME_PROPERTY, elementName);
-								System.out.println(newVertex.getProperty(FlowConstants.TYPE_PROPERTY) + " | "
-										+ newVertex.getProperty(FlowConstants.NAME_PROPERTY));
 
 								createEdgesToVertex(context, newVertex);
-								context.outVertices.add(new OutVertex(newVertex, EMPTY_EDGE_LABEL));
+								context.outVertices.add(new OutVertex(newVertex, FlowConstants.EMPTY_LABEL));
 							}
 
 							break;
@@ -147,32 +141,23 @@ public class FlowGraphBuilder {
 
 		@Override
 		public void visit(IfStmt ifStmt, GraphContext context) {
-			System.out.println();
-			System.out.println("If Condition: " + ifStmt.getCondition() + " . Class: "
-					+ ifStmt.getCondition().getClass().getName());
 			context.conditionState = true;
 			ifStmt.getCondition().accept(this, context);
 			context.conditionState = false;
 
 			Vertex conditionVertex = createConditionVertex(context);
-			OutVertex conditionStmt = new OutVertex(conditionVertex, YES_EDGE_LABEL);
-			context.outVertices.add(conditionStmt);
+			context.outVertices.add(new OutVertex(conditionVertex, FlowConstants.YES_LABEL));
 
-			System.out.println("Then Statement: " + ifStmt.getThenStmt() + " . Class: "
-					+ ifStmt.getThenStmt().getClass().getName());
 			ifStmt.getThenStmt().accept(this, context);
 
-			conditionStmt.edgeLabel = NO_EDGE_LABEL;
-			context.outVertices.addFirst(conditionStmt);
+			context.outVertices.addFirst(new OutVertex(conditionVertex, FlowConstants.NO_LABEL));
 
 			if (ifStmt.getElseStmt() != null) {
-				System.out.println("Else Statement: " + ifStmt.getElseStmt() + " . Class: "
-						+ ifStmt.getElseStmt().getClass().getName());
 				OutVertex lastThenStmt = context.outVertices.removeLast();
 				ifStmt.getElseStmt().accept(this, context);
+				// outVerticies must contain last "then" statement as well after exiting "else" block
 				context.outVertices.add(lastThenStmt);
 			}
-			System.out.println();
 		}
 
 		@Override
@@ -199,7 +184,7 @@ public class FlowGraphBuilder {
 			Vertex conditionVertex = context.graph.addVertex(null);
 			conditionVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.CONDITION);
 			conditionVertex.setProperty(FlowConstants.NAME_PROPERTY, fullName.toString());
-			
+
 			createEdgesToVertex(context, conditionVertex);
 
 			return conditionVertex;

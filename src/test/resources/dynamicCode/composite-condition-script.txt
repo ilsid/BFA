@@ -1,0 +1,12 @@
+DeclareLocalVar("Var1", "Number");
+DeclareLocalVar("Var2", "Decimal");
+DeclareLocalVar("Var3", "Number");
+
+SetLocalVar("Var1", "1");
+SetLocalVar("Var2", "2.0");
+
+if (Equal("Var1", "1") && Equal("Var2", "33") || Equal("Var3", "444")) {
+	SetLocalVar("Var3", "Var1");
+} else {
+	SetLocalVar("Var3", "33");
+}

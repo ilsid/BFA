@@ -239,6 +239,22 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
+	public void flowChartCodeForScriptIsLoaded() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_FLOW_CHART_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams();
+		script.setName("ScriptToRead");
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		String expectedResult = toUnixLF(IOHelper
+				.loadScript("flowchartjs-adapter-expected-output/integration_tests/script-to-read-representation.txt"));
+
+		assertEquals(expectedResult, response.getEntity(String.class));
+	}
+
+	@Test
 	public void topLevelScriptGroupsAreLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_ITEMS_SERVICE);
 		ClientResponse response = webResource.post(ClientResponse.class, Metadata.ROOT_PARENT_NAME);

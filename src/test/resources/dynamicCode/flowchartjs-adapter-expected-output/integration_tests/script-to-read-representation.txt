@@ -1,0 +1,9 @@
+1=>start: Start
+2=>condition: Var1 - Var2 == 1 ?
+3=>operation: Set Res = Var1 - Var2
+4=>end: End
+
+1->2
+2(yes)->3
+2(no)->4
+3->4

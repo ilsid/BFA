@@ -12,6 +12,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.ilsid.bfa.common.Metadata;
+import com.ilsid.bfa.graph.FlowChartJsAdapter;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ScriptAdminParams;
@@ -214,6 +215,40 @@ public class ScriptAdminResource extends AbstractAdminResource {
 		}
 
 		return Response.status(Status.OK).entity(params).build();
+	}
+
+	/**
+	 * Loads a flow chart representation for the given script. The representation has
+	 * <a href="http://flowchart.js.org">flowchart.js</a> format. If the script's group is not specified, it is searched
+	 * within the Default Group.
+	 * 
+	 * @param script
+	 *            the script data. The name must be specified
+	 * @return the response containing the script's flow chart representation (as plain text)
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the script's name is not specified</li>
+	 *             <li>if the script with the specified name does not exist in the specified group</li>
+	 *             <li>in case of the repository access failure</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@Path(Paths.GET_FLOW_CHART_OPERATION)
+	public Response getFlowChart(ScriptAdminParams script) {
+		validateNonEmptyName(Paths.SCRIPT_GET_FLOW_CHART_SERVICE, script);
+		String scriptSource;
+		try {
+			scriptSource = scriptManager.getScriptSourceCode(script.getName());
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.SCRIPT_GET_FLOW_CHART_SERVICE, e);
+		}
+
+		String flowChartCode = FlowChartJsAdapter.buildFlowChart(scriptSource);
+
+		return Response.status(Status.OK).entity(flowChartCode).build();
 	}
 
 }

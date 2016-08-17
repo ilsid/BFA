@@ -42,6 +42,8 @@ public final class Paths {
 
 	public final static String GET_INPUT_PARAMS_OPERATION = "getInputParameters";
 
+	public final static String GET_FLOW_CHART_OPERATION = "getFlowChart";
+
 	public final static String SCRIPT_SERVICE_ADMIN_ROOT = SCRIPT_SERVICE_ROOT + "/admin";
 
 	public final static String SCRIPT_CREATE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + CREATE_OPERATION;
@@ -56,6 +58,9 @@ public final class Paths {
 
 	public final static String SCRIPT_GET_INPUT_PARAMS_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/"
 			+ GET_INPUT_PARAMS_OPERATION;
+
+	public final static String SCRIPT_GET_FLOW_CHART_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/"
+			+ GET_FLOW_CHART_OPERATION;
 
 	/*
 	 * Script Runtime

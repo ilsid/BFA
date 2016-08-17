@@ -1,0 +1,9 @@
+1=>start: Start
+2=>condition: Var1 - Var3 == 2 ?
+3=>operation: Write System Property
+4=>end: End
+
+1->2
+2(yes)->3
+2(no)->4
+3->4

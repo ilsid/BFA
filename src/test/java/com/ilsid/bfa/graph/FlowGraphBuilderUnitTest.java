@@ -29,7 +29,7 @@ public class FlowGraphBuilderUnitTest extends BaseUnitTestCase {
 		final String condition2 = "Var1 - Var3 == 2 ?";
 		final String subCondition21 = "Var1 - Var3 == 5 ?";
 
-		edge(FlowConstants.START_NAME, "Some Action 1");
+		edge(FlowConstants.START, "Some Action 1");
 		edge("Some Action 1", "Set Var3");
 		edge("Set Var3", "Some Sub-Flow 1");
 		edge("Some Sub-Flow 1", "Some Action 33");
@@ -41,12 +41,12 @@ public class FlowGraphBuilderUnitTest extends BaseUnitTestCase {
 		edge("Some Sub-Flow 2", condition2);
 		edge(condition1, condition2, FlowConstants.NO_LABEL);
 		edge(condition2, "Some Action 3", FlowConstants.YES_LABEL);
-		edge("Some Action 3", FlowConstants.END_NAME);
+		edge("Some Action 3", FlowConstants.END);
 		edge(condition2, subCondition21, FlowConstants.NO_LABEL);
 		edge(subCondition21, "Some Action 4", FlowConstants.YES_LABEL);
 		edge("Some Action 4", "Some Action 5");
-		edge("Some Action 5", FlowConstants.END_NAME);
-		edge(subCondition21, FlowConstants.END_NAME, FlowConstants.NO_LABEL);
+		edge("Some Action 5", FlowConstants.END);
+		edge(subCondition21, FlowConstants.END, FlowConstants.NO_LABEL);
 	}
 
 	@Test
@@ -59,13 +59,13 @@ public class FlowGraphBuilderUnitTest extends BaseUnitTestCase {
 
 		final String condition = "Var1 == 1 and Var2 == 33 or Var3 == 444 ?";
 
-		edge(FlowConstants.START_NAME, "Set Var1 = 1");
+		edge(FlowConstants.START, "Set Var1 = 1");
 		edge("Set Var1 = 1", "Set Var2 = 2.0");
 		edge("Set Var2 = 2.0", condition);
 		edge(condition, "Set Var3 = Var1", FlowConstants.YES_LABEL);
 		edge(condition, "Set Var3 = 33", FlowConstants.NO_LABEL);
-		edge("Set Var3 = Var1", FlowConstants.END_NAME);
-		edge("Set Var3 = 33", FlowConstants.END_NAME);
+		edge("Set Var3 = Var1", FlowConstants.END);
+		edge("Set Var3 = 33", FlowConstants.END);
 	}
 
 	private int getCount(Iterable<?> iterable) {

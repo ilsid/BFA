@@ -73,16 +73,16 @@ public class FlowGraphBuilder {
 	}
 
 	private static void addStartVertex(GraphContext context) {
-		Vertex startVertex = context.graph.addVertex(null);
-		startVertex.setProperty(FlowConstants.NAME_PROPERTY, FlowConstants.START_NAME);
-		startVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.START_NAME);
+		Vertex startVertex = context.graph.addVertex(++context.vertexCount);
+		startVertex.setProperty(FlowConstants.NAME_PROPERTY, FlowConstants.START);
+		startVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.START);
 		context.outVertices.add(new OutVertex(startVertex, FlowConstants.EMPTY_LABEL));
 	}
 
 	private static void addEndVertex(GraphContext context) {
-		Vertex endVertex = context.graph.addVertex(null);
-		endVertex.setProperty(FlowConstants.NAME_PROPERTY, FlowConstants.END_NAME);
-		endVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.END_NAME);
+		Vertex endVertex = context.graph.addVertex(++context.vertexCount);
+		endVertex.setProperty(FlowConstants.NAME_PROPERTY, FlowConstants.END);
+		endVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.END);
 
 		createEdgesToVertex(context, endVertex);
 	}
@@ -90,7 +90,7 @@ public class FlowGraphBuilder {
 	private static void createEdgesToVertex(GraphContext context, Vertex inVertex) {
 		OutVertex outVertex;
 		while ((outVertex = context.outVertices.poll()) != null) {
-			context.graph.addEdge(null, outVertex.instance, inVertex, outVertex.edgeLabel);
+			context.graph.addEdge(++context.edgeCount, outVertex.instance, inVertex, outVertex.edgeLabel);
 		}
 	}
 
@@ -122,7 +122,7 @@ public class FlowGraphBuilder {
 							if (context.conditionState) {
 								context.conditionNameParts.add(elementName);
 							} else {
-								Vertex newVertex = context.graph.addVertex(null);
+								Vertex newVertex = context.graph.addVertex(++context.vertexCount);
 								newVertex.setProperty(FlowConstants.TYPE_PROPERTY, flowElement.type());
 								newVertex.setProperty(FlowConstants.NAME_PROPERTY, elementName);
 
@@ -181,7 +181,7 @@ public class FlowGraphBuilder {
 			}
 			fullName.append(QUESTION_MARK);
 
-			Vertex conditionVertex = context.graph.addVertex(null);
+			Vertex conditionVertex = context.graph.addVertex(++context.vertexCount);
 			conditionVertex.setProperty(FlowConstants.TYPE_PROPERTY, FlowConstants.CONDITION);
 			conditionVertex.setProperty(FlowConstants.NAME_PROPERTY, fullName.toString());
 
@@ -231,6 +231,10 @@ public class FlowGraphBuilder {
 		Queue<String> conditionNameParts = new LinkedList<>();
 
 		Deque<String> conditionOperators = new LinkedList<>();
+
+		int vertexCount = 0;
+
+		int edgeCount = 0;
 	}
 
 }

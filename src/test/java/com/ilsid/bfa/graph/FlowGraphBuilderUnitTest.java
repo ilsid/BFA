@@ -17,6 +17,7 @@ public class FlowGraphBuilderUnitTest extends BaseUnitTestCase {
 
 	private Graph graph;
 
+	// See src/test/resource/graph_builder_doc/flow-with-nested-condition.jpg for reference
 	@Test
 	public void graphForScriptWithSubConditionsCanBeBuilt() throws Exception {
 		String source = IOHelper.loadScript("several-actions-and-subflows-with-params-script.txt");
@@ -49,6 +50,7 @@ public class FlowGraphBuilderUnitTest extends BaseUnitTestCase {
 		edge(subCondition21, FlowConstants.END, FlowConstants.NO_LABEL);
 	}
 
+	// See src/test/resource/graph_builder_doc/flow-with-composite-condition-stmt.jpg for reference
 	@Test
 	public void graphForScriptWithCompositeConditionStatementCanBeBuilt() throws Exception {
 		String source = IOHelper.loadScript("composite-condition-script.txt");

@@ -170,7 +170,7 @@
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>pack-dojo</id>
+						<id>pack-dojo-lib</id>
 						<phase>prepare-package</phase>
 						<goals>
 							<goal>run</goal>
@@ -179,6 +179,21 @@
 							<tasks>
 								<unzip src="${project.basedir}/lib/dojo-1.10.4.zip"
 									dest="${project.basedir}/target/${project.build.finalName}/script" />
+							</tasks>
+						</configuration>
+					</execution>
+					<execution>
+						<id>pack-flowchart-libs</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<copy
+									todir="${project.basedir}/target/${project.build.finalName}/script/flowchart">
+									<fileset dir="${project.basedir}/lib/flowchart" />
+								</copy>
 							</tasks>
 						</configuration>
 					</execution>

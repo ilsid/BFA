@@ -24,54 +24,6 @@
 <body class="claro">
 
 	<script src="script/dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
-		
-	<script>
-		// sample flow chart
-		function drawFlowChart(canvasId) {
-			var code=['st=>start: Start', 
-				'e=>end: End',
-				'Action.MSISDN::Get=>operation: MSISDN::Get',
-				'SetLocalVar.msisdnRec=>operation: Set msisdnRec',
-				'SetLocalVar.msisdnRec2=>operation: Set msisdnRec',
-				'Action.MSISDN::Create=>operation: MSISDN::Create',
-				'Action.MSISDN::Update Count=>operation: MSISDN::Update Count',
-				'SetLocalVar.msisdnRec.flowCounter=>operation: msisdnRec.flowCounter=',
-				'msisdnRec.flowCounter + 1',
-				'Equal.msisdn.null=>condition: MSISDN exists?',
-				'Action.Util::Send Email=>operation: Util::Send Email',
-				'Action.Util::Write EDR=>operation: Util::Write EDR',
-				'\n',
-				'\n',
-				'st->Action.MSISDN::Get(right)->SetLocalVar.msisdnRec->Equal.msisdn.null',
-				'Equal.msisdn.null(yes, right)->Action.MSISDN::Update Count',
-				'Action.MSISDN::Update Count->SetLocalVar.msisdnRec.flowCounter->Action.Util::Send Email',
-				'Equal.msisdn.null(no)->Action.MSISDN::Create->SetLocalVar.msisdnRec2->Action.Util::Send Email',
-				'Action.Util::Send Email->Action.Util::Write EDR->e']
-				.join('\n');
-			
-			var chart = flowchart.parse(code);
-			
-			chart.drawSVG(canvasId, {
-			  'line-width': 2,
-			  'line-length': 20,
-			  'text-margin': 10,
-			  'font-size': 12,
-			  'font': 'normal',
-			  'font-family': 'Helvetica',
-			  'font-weight': 'normal',
-			  'font-color': 'black',
-			  'line-color': 'black',
-			  'element-color': 'black',
-			  'fill': '#F2F2F2', 
-			  'yes-text': 'yes',
-			  'no-text': 'no',
-			  'arrow-end': 'block',
-			  'scale': 1
-			});
-			
-			return chart;
-		}
-	</script>	
 	
 	<script>
 		function isEmptyObject(obj) {
@@ -132,6 +84,38 @@
 		
 		function escapeEntitySource(source)  {
 			return source.replace(/"/g,'\\"');
+		}
+		
+		function drawFlowChart(scriptName, canvasId) {
+			require(['dojo/request/xhr'],
+				function(request) {
+					request('service/script/admin/getFlowChart', {
+							headers: { 'Content-Type': 'application/json' },
+								method: 'POST',
+								data: '{"name": "' + scriptName + '"}'
+						}).then(function(resp){
+							var chart = flowchart.parse(resp);
+							chart.drawSVG(canvasId, {
+							  'line-width': 2,
+							  'line-length': 20,
+							  'text-margin': 10,
+							  'font-size': 12,
+							  'font': 'normal',
+							  'font-family': 'Helvetica',
+							  'font-weight': 'normal',
+							  'font-color': 'black',
+							  'line-color': 'black',
+							  'element-color': 'black',
+							  'fill': '#F2F2F2', 
+							  'yes-text': 'yes',
+							  'no-text': 'no',
+							  'arrow-end': 'block',
+							  'scale': 1
+							});
+						}, function(err) {
+							writeError(err);
+						});
+				});
 		}
 
 		function showCreateGroupDialog(objectType) {
@@ -584,6 +568,7 @@
 					var radioSource = new RadioButton({
 						name: tabId,
 						checked: true,
+						chartCreated: false,
 						onChange: function(event) {
 							if (this.checked) {
 								this.scriptArea.domNode.style.display = 'block';
@@ -592,10 +577,11 @@
 								this.scriptArea.domNode.style.display = 'none';
 								this.chartCanvas.domNode.style.display = 'block';
 								
-								if (this.chart) {
-									this.chart.clean();
+								if (!this.chartCreated) {
+									var scriptName = groupName + '::' + tabTitle;
+									drawFlowChart(scriptName, this.chartCanvas.id);
+									this.chartCreated = true;
 								}
-								this.chart = drawFlowChart(this.chartCanvas.id);
 							}
 						}
 					});

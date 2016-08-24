@@ -15,7 +15,7 @@ import com.tinkerpop.blueprints.Vertex;
  * @author illia.sydorovych
  *
  */
-public class FlowChartJsAdapter {
+public class FlowChartJsConverter {
 
 	private static final String LF = "\n";
 
@@ -47,7 +47,7 @@ public class FlowChartJsAdapter {
 	}
 
 	/**
-	 * Build script's flow representation
+	 * Build script's flow representation.
 	 * 
 	 * @param source
 	 *            script's source code

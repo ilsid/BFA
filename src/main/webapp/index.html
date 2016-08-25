@@ -6,6 +6,7 @@
 <link rel="shortcut icon" href="res/icons/action_16x16.png"/>
 <link rel="stylesheet" href="script/dijit/themes/claro/claro.css"/>
 <link rel="stylesheet" href="script/dojox/grid/resources/claroGrid.css"/>
+<link rel="stylesheet" href="script/mermaid/mermaid.css"/>
 <link rel="stylesheet" href="res/styles/custom.css"/>
 <style type="text/css">
 	html, body {
@@ -16,9 +17,7 @@
 
 </style>
 
-<script src="script/flowchart/raphael-2.1.0-min.js"></script>
-<script src="script/flowchart/jquery-1.11.0.min.js"></script>
-<script src="script/flowchart/flowchart-1.6.3.min.js"></script>
+<script src="script/mermaid/mermaid.min.js"></script>
 
 </head>
 <body class="claro">
@@ -87,31 +86,15 @@
 		}
 		
 		function drawFlowChart(scriptName, canvasId) {
-			require(['dojo/request/xhr'],
-				function(request) {
+			require(['dojo/request/xhr', 'dojo/dom-construct', 'dojo/domReady!'],
+				function(request, domConstruct) {
 					request('service/script/admin/getFlowChart', {
 							headers: { 'Content-Type': 'application/json' },
-								method: 'POST',
-								data: '{"name": "' + scriptName + '"}'
+							method: 'POST',
+							data: '{"name": "' + scriptName + '"}'
 						}).then(function(resp){
-							var chart = flowchart.parse(resp);
-							chart.drawSVG(canvasId, {
-							  'line-width': 2,
-							  'line-length': 20,
-							  'text-margin': 10,
-							  'font-size': 12,
-							  'font': 'normal',
-							  'font-family': 'Helvetica',
-							  'font-weight': 'normal',
-							  'font-color': 'black',
-							  'line-color': 'black',
-							  'element-color': 'black',
-							  'fill': '#F2F2F2', 
-							  'yes-text': 'yes',
-							  'no-text': 'no',
-							  'arrow-end': 'block',
-							  'scale': 1
-							});
+							domConstruct.place('<div class="mermaid">' + resp + '</div>', canvasId);
+							mermaid.init();
 						}, function(err) {
 							writeError(err);
 						});

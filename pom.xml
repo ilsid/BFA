@@ -183,7 +183,7 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>pack-flowchart-libs</id>
+						<id>pack-flowchart-lib</id>
 						<phase>prepare-package</phase>
 						<goals>
 							<goal>run</goal>
@@ -191,8 +191,8 @@
 						<configuration>
 							<tasks>
 								<copy
-									todir="${project.basedir}/target/${project.build.finalName}/script/flowchart">
-									<fileset dir="${project.basedir}/lib/flowchart" />
+									todir="${project.basedir}/target/${project.build.finalName}/script/mermaid">
+									<fileset dir="${project.basedir}/lib/mermaid" />
 								</copy>
 							</tasks>
 						</configuration>

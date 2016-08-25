@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.ilsid.bfa.common.Metadata;
-import com.ilsid.bfa.graph.FlowChartJsConverter;
+import com.ilsid.bfa.graph.MermaidConverter;
 import com.ilsid.bfa.manager.ManagementException;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.ScriptAdminParams;
@@ -246,7 +246,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 			throw new ResourceException(Paths.SCRIPT_GET_FLOW_CHART_SERVICE, e);
 		}
 
-		String flowChartCode = FlowChartJsConverter.buildFlowChart(scriptSource);
+		String flowChartCode = MermaidConverter.buildFlowChart(scriptSource);
 
 		return Response.status(Status.OK).entity(flowChartCode).build();
 	}

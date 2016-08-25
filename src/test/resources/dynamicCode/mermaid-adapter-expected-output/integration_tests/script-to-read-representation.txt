@@ -1,0 +1,5 @@
+graph TB;
+1((Start))-->2{"Var1 - Var2 == 1 ?"}
+2{"Var1 - Var2 == 1 ?"}-->|yes|3["Set Res = Var1 - Var2"]
+2{"Var1 - Var2 == 1 ?"}-->|no|4((End))
+3["Set Res = Var1 - Var2"]-->4((End))

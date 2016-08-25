@@ -33,9 +33,11 @@ public class MermaidConverter {
 		DEF_TYPE_MAP = new HashMap<>();
 		DEF_TYPE_MAP.put(FlowConstants.START, "((Start))");
 		DEF_TYPE_MAP.put(FlowConstants.END, "((End))");
-		DEF_TYPE_MAP.put(FlowConstants.OPERATION, "[%s]");
-		DEF_TYPE_MAP.put(FlowConstants.CONDITION, "{%s}");
-		DEF_TYPE_MAP.put(FlowConstants.SUBFLOW, ">%s]");
+		// Wrapping quotes in element names are needed to avoid problems with special characters.
+		// For example, [Set arr[1]] is a problem. ["Set arr[1]"] is ok.
+		DEF_TYPE_MAP.put(FlowConstants.OPERATION, "[\"%s\"]");
+		DEF_TYPE_MAP.put(FlowConstants.CONDITION, "{\"%s\"}");
+		DEF_TYPE_MAP.put(FlowConstants.SUBFLOW, ">\"%s\"]");
 
 		LABEL_MAP = new HashMap<>();
 		LABEL_MAP.put(FlowConstants.YES_LABEL, "yes");

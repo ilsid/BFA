@@ -249,7 +249,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		String expectedResult = toUnixLF(IOHelper
-				.loadScript("flowchartjs-adapter-expected-output/integration_tests/script-to-read-representation.txt"));
+				.loadScript("mermaid-adapter-expected-output/integration_tests/script-to-read-representation.txt"));
 
 		assertEquals(expectedResult, response.getEntity(String.class));
 	}

@@ -1,5 +1,5 @@
 graph TB;
-1((Start))-->2{Var1 - Var3 == 2 ?}
-2{Var1 - Var3 == 2 ?}-->|yes|3[Write System Property]
-2{Var1 - Var3 == 2 ?}-->|no|4((End))
-3[Write System Property]-->4((End))
+1((Start))-->2{"Var1 - Var3 == 2 ?"}
+2{"Var1 - Var3 == 2 ?"}-->|yes|3["Write System Property"]
+2{"Var1 - Var3 == 2 ?"}-->|no|4((End))
+3["Write System Property"]-->4((End))

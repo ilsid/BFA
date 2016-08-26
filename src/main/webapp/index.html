@@ -93,8 +93,16 @@
 							method: 'POST',
 							data: '{"name": "' + scriptName + '"}'
 						}).then(function(resp){
-							domConstruct.place('<div class="mermaid">' + resp + '</div>', canvasId);
+							var chart = domConstruct.toDom('<div class="mermaid">' + resp + '</div>');
+							domConstruct.place(chart, canvasId);
+							
 							mermaid.init();
+							
+							// A workaround to avoid chart picture scaling. 
+							// Maybe more robust solution is needed here
+							var svg = chart.children[0];
+							var viewBoxValues = svg.getAttribute('viewBox').split(' ');
+							svg.style.height = viewBoxValues[3];
 						}, function(err) {
 							writeError(err);
 						});

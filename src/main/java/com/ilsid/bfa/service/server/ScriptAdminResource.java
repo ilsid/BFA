@@ -219,8 +219,8 @@ public class ScriptAdminResource extends AbstractAdminResource {
 
 	/**
 	 * Loads a flow chart representation for the given script. The representation has
-	 * <a href="http://flowchart.js.org">flowchart.js</a> format. If the script's group is not specified, it is searched
-	 * within the Default Group.
+	 * <a href="https://github.com/knsv/mermaid">mermaid</a> format. If the script's group is not specified, it is
+	 * searched within the Default Group.
 	 * 
 	 * @param script
 	 *            the script data. The name must be specified

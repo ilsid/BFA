@@ -17,8 +17,10 @@ import java.util.Properties;
  */
 public class ConfigUtil {
 
-	private static final File CONFIG_FILE = new File("bfa/config.properties");
-	
+	private static final String CONFIG_SYS_PROPERTY_NAME = "bfa.config";
+
+	private static final String DEFAULT_CONFIG_FILE = "bfa/config.properties";
+
 	private static Map<String, String> config;
 
 	/**
@@ -32,22 +34,24 @@ public class ConfigUtil {
 		if (config == null) {
 			config = load();
 		}
-		
+
 		return config;
 	}
 
 	private static Map<String, String> load() {
+		String configFilePath = System.getProperty(CONFIG_SYS_PROPERTY_NAME, DEFAULT_CONFIG_FILE);
+		File configFile = new File(configFilePath);
+
 		Properties props = new Properties();
 
-		try (InputStream configFile = new FileInputStream(CONFIG_FILE)) {
-			props.load(configFile);
+		try (InputStream configFileStream = new FileInputStream(configFile)) {
+			props.load(configFileStream);
 		} catch (FileNotFoundException e) {
-			throw new IllegalStateException(String.format("BFA configuration file [%s] is not found", CONFIG_FILE));
+			throw new IllegalStateException(String.format("BFA configuration file [%s] is not found", configFile));
 		} catch (IOException e) {
-			throw new IllegalStateException(String.format("Failed to load BFA configuration file [%s]", CONFIG_FILE),
-					e);
+			throw new IllegalStateException(String.format("Failed to load BFA configuration file [%s]", configFile), e);
 		}
-		
+
 		Map<String, String> result = new HashMap<String, String>();
 		for (String key : props.stringPropertyNames()) {
 			result.put(key, props.getProperty(key));

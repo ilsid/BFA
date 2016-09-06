@@ -25,7 +25,7 @@ public abstract class Script {
 
 	private ScriptRuntime runtime;
 
-	private long runtimeId = -1;
+	private Object runtimeId = -1;
 
 	private String name;
 
@@ -171,11 +171,11 @@ public abstract class Script {
 		return actionResult;
 	}
 
-	public long getRuntimeId() {
+	public Object getRuntimeId() {
 		return runtimeId;
 	}
 
-	public void setRuntimeId(long runtimeId) {
+	public void setRuntimeId(Object runtimeId) {
 		this.runtimeId = runtimeId;
 	}
 

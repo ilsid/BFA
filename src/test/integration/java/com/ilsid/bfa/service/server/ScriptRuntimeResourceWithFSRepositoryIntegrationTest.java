@@ -26,7 +26,7 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 
 	private static final String ACTION_DIR = "action/default_group/write_x20_system_x20_property";
 
-	private static final Set<Long> uniqueRuntimeIds = new HashSet<>();
+	private static final Set<Object> uniqueRuntimeIds = new HashSet<>();
 
 	@After
 	public void after() {
@@ -141,8 +141,8 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 
 		RuntimeStatus status = response.getEntity(RuntimeStatus.class);
 
-		final long runtimeId = status.getRuntimeId();
-		assertTrue(runtimeId > 0);
+		final Object runtimeId = status.getRuntimeId();
+		assertNotNull(runtimeId);
 		assertTrue(uniqueRuntimeIds.add(runtimeId));
 
 		assertEquals(RuntimeStatusType.COMPLETED, status.getStatusType());

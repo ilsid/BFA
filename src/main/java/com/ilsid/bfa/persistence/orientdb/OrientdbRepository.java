@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.ilsid.bfa.Configurable;
 import com.ilsid.bfa.ConfigurationException;
-import com.ilsid.bfa.common.NumberUtil;
+import com.ilsid.bfa.common.ConfigUtil;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
@@ -137,7 +137,7 @@ public abstract class OrientdbRepository implements Configurable {
 						StringUtils.join(missedProps, ", ")));
 			}
 
-			int poolSize = getOptionalPositiveIntegerValue(CONFIG_PROP_DB_POOL_SIZE, config,
+			int poolSize = ConfigUtil.getPositiveIntegerValue(CONFIG_PROP_DB_POOL_SIZE, config,
 					DB_POOL_SIZE_DEFAULT_VALUE);
 
 			try {
@@ -156,23 +156,6 @@ public abstract class OrientdbRepository implements Configurable {
 				factory = null;
 			}
 		}
-	}
-
-	private int getOptionalPositiveIntegerValue(String propName, Map<String, String> config, int defaultValue)
-			throws ConfigurationException {
-		String strValue = config.get(propName);
-
-		int intValue;
-		if (NumberUtil.isPositiveInteger(strValue)) {
-			intValue = Integer.parseInt(strValue);
-		} else if (strValue == null) {
-			intValue = defaultValue;
-		} else {
-			throw new ConfigurationException(
-					String.format("The value of the configuration property [%s] must be positive integer", propName));
-		}
-
-		return intValue;
 	}
 
 	private String getRequiredValue(String propName, Map<String, String> config, List<String> missedProps) {

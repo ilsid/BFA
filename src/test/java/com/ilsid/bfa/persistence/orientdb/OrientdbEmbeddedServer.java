@@ -23,6 +23,8 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
  */
 public class OrientdbEmbeddedServer {
 
+	private static final String SCHEMA_CREATION_SCRIPT = "src/main/resources/database/orientdb-schema.sql";
+
 	private static final String CONFIG_FILE = TestConstants.TEST_RESOURCES_DIR + "/test-orientdb-config.xml";
 
 	private static OServer server;
@@ -69,7 +71,7 @@ public class OrientdbEmbeddedServer {
 				10);
 
 		ODatabaseDocumentTx db = factory.getDatabase();
-		String script = FileUtils.readFileToString(new File("src/main/resources/database/schema.sql"));
+		String script = FileUtils.readFileToString(new File(SCHEMA_CREATION_SCRIPT));
 		db.command(new OCommandScript("sql", script)).execute();
 
 		factory.close();

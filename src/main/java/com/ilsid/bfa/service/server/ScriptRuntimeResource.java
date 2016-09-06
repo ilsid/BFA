@@ -49,7 +49,7 @@ public class ScriptRuntimeResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.RUN_OPERATION)
 	public Response run(ScriptRuntimeParams script) {
-		long runtimeId;
+		Object runtimeId;
 		try {
 			final Object[] params = script.getInputParameters();
 			if (params != null && params.length > 0) {

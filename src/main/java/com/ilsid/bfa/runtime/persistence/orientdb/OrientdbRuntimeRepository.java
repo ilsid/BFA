@@ -33,7 +33,7 @@ public class OrientdbRuntimeRepository extends OrientdbRepository implements Run
 	 * @see com.ilsid.bfa.persistence.ScriptingRepository#getNextRuntimeId()
 	 */
 	@Override
-	public long getNextRuntimeId() throws PersistenceException {
+	public Object getNextRuntimeId() throws PersistenceException {
 		List<ODocument> resultSet = executeInTransaction(new DatabaseCallback<List<ODocument>>() {
 
 			public List<ODocument> doInDatabase(OrientGraph connection) throws PersistenceException {

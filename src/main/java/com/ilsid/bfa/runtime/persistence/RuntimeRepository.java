@@ -19,7 +19,7 @@ public interface RuntimeRepository extends Configurable {
 	 * @throws PersistenceException
 	 *             in case of any repository access issues
 	 */
-	long getNextRuntimeId() throws PersistenceException;
+	Object getNextRuntimeId() throws PersistenceException;
 
 	/**
 	 * Creates runtime record in the repository.

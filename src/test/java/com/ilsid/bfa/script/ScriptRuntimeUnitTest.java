@@ -25,7 +25,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
 	private static ScriptRuntime runtime;
 
-	private static final Set<Long> uniqueRuntimeIds = new HashSet<>();
+	private static final Set<Object> uniqueRuntimeIds = new HashSet<>();
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
@@ -47,19 +47,19 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void scriptCanBeRun() throws Exception {
-		long runtimeId = runtime.runScript("Script001");
+		Object runtimeId = runtime.runScript("Script001");
 		assertRuntimeId(runtimeId);
 	}
 
 	@Test
 	public void scriptWithSubflowCanBeRun() throws Exception {
-		long runtimeId = runtime.runScript("SingleSubflowScript");
+		Object runtimeId = runtime.runScript("SingleSubflowScript");
 		assertRuntimeId(runtimeId);
 	}
 
 	@Test
 	public void runtimeRecordIsGenerated() throws Exception {
-		long runtimeId = runtime.runScript("Script001");
+		Object runtimeId = runtime.runScript("Script001");
 		assertRuntimeId(runtimeId);
 
 		List<ODocument> records = OrientdbClient.query("SELECT * FROM FlowRuntime WHERE runtimeId=" + runtimeId);
@@ -74,7 +74,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void runtimeRecordIsGeneratedForScriptWithSubflow() throws Exception {
-		long runtimeId = runtime.runScript("SingleSubflowScript");
+		Object runtimeId = runtime.runScript("SingleSubflowScript");
 		assertRuntimeId(runtimeId);
 
 		List<ODocument> records = OrientdbClient
@@ -101,8 +101,8 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		assertEquals("SingleSubflowScript", callStack.get(0));
 	}
 
-	private void assertRuntimeId(long value) {
-		assertTrue(value > 0);
+	private void assertRuntimeId(Object value) {
+		assertNotNull(value);
 		assertTrue(uniqueRuntimeIds.add(value));
 	}
 

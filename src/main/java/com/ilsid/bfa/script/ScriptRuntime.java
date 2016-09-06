@@ -56,7 +56,7 @@ public class ScriptRuntime {
 	 *             <li>in case of the script runtime failure</li>
 	 *             </ul>
 	 */
-	public long runScript(String scriptName) throws ScriptException {
+	public Object runScript(String scriptName) throws ScriptException {
 		return runScript(scriptName, EMPTY_PARAMS, null, null);
 	}
 
@@ -75,7 +75,7 @@ public class ScriptRuntime {
 	 *             <li>in case of the script runtime failure</li>
 	 *             </ul>
 	 */
-	public long runScript(String scriptName, Object[] params) throws ScriptException {
+	public Object runScript(String scriptName, Object[] params) throws ScriptException {
 		return runScript(scriptName, params, null, null);
 	}
 
@@ -118,14 +118,14 @@ public class ScriptRuntime {
 		}
 	}
 
-	long runScript(String scriptName, long runtimeId, Deque<String> callStack) throws ScriptException {
+	Object runScript(String scriptName, Object runtimeId, Deque<String> callStack) throws ScriptException {
 		return runScript(scriptName, EMPTY_PARAMS, runtimeId, callStack);
 	}
 
-	long runScript(String scriptName, Object[] params, Long runtimeId, Deque<String> callStack) throws ScriptException {
+	Object runScript(String scriptName, Object[] params, Object runtimeId, Deque<String> callStack) throws ScriptException {
 		Script script = createInstance(scriptName);
 
-		long flowRuntimeId;
+		Object flowRuntimeId;
 		if (runtimeId == null) {
 			flowRuntimeId = generatedRuntimeId(scriptName);
 		} else {
@@ -194,13 +194,13 @@ public class ScriptRuntime {
 		return script;
 	}
 
-	private ScriptRuntimeDTO createErrorDTO(long flowRuntimeId, String scriptName, Exception exception) {
+	private ScriptRuntimeDTO createErrorDTO(Object flowRuntimeId, String scriptName, Exception exception) {
 		return new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
 				.setStatus(RuntimeStatusType.FAILED).setError(exception).setEndTime(new Date());
 	}
 
-	private long generatedRuntimeId(String scriptName) throws ScriptException {
-		long runtimeId;
+	private Object generatedRuntimeId(String scriptName) throws ScriptException {
+		Object runtimeId;
 		try {
 			runtimeId = repository.getNextRuntimeId();
 		} catch (PersistenceException e) {
@@ -231,7 +231,7 @@ public class ScriptRuntime {
 
 	}
 
-	private RuntimeLogger createRuntimeLogger(long flowRuntimeId, String scriptName, Deque<String> callStack) {
+	private RuntimeLogger createRuntimeLogger(Object flowRuntimeId, String scriptName, Deque<String> callStack) {
 		StringBuilder logPrefix = new StringBuilder().append("Script ");
 		logPrefix.append("[runtimeId=").append(flowRuntimeId).append("] [");
 

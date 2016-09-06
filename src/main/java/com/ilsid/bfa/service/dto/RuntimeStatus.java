@@ -14,9 +14,9 @@ public class RuntimeStatus {
 
 	private String errorDetails;
 
-	private long runtimeId;
+	private Object runtimeId;
 
-	public static RuntimeStatusBuilder runtimeId(long runtimeId) {
+	public static RuntimeStatusBuilder runtimeId(Object runtimeId) {
 		return new RuntimeStatusBuilder(runtimeId);
 	}
 
@@ -25,7 +25,7 @@ public class RuntimeStatus {
 	 * 
 	 * @return the runtime identifier
 	 */
-	public long getRuntimeId() {
+	public Object getRuntimeId() {
 		return runtimeId;
 	}
 
@@ -52,7 +52,7 @@ public class RuntimeStatus {
 
 		private RuntimeStatus instance;
 
-		public RuntimeStatusBuilder(long runtimeId) {
+		public RuntimeStatusBuilder(Object runtimeId) {
 			instance = new RuntimeStatus();
 			instance.runtimeId = runtimeId;
 		}

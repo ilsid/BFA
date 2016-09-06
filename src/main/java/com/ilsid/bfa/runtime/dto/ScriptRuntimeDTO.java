@@ -15,7 +15,7 @@ import com.ilsid.bfa.dto.RequiredField;
 public class ScriptRuntimeDTO {
 
 	@RequiredField
-	private long runtimeId;
+	private Object runtimeId;
 	
 	@RequiredField
 	private String scriptName;
@@ -34,11 +34,11 @@ public class ScriptRuntimeDTO {
 
 	private Exception error;
 
-	public long getRuntimeId() {
+	public Object getRuntimeId() {
 		return runtimeId;
 	}
 
-	public ScriptRuntimeDTO setRuntimeId(long runtimeId) {
+	public ScriptRuntimeDTO setRuntimeId(Object runtimeId) {
 		this.runtimeId = runtimeId;
 		return this;
 	}

@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PoolingOptions;
+import com.datastax.driver.core.Session;
 import com.ilsid.bfa.Configurable;
 import com.ilsid.bfa.ConfigurationException;
 
@@ -18,13 +19,27 @@ import com.ilsid.bfa.ConfigurationException;
  */
 public abstract class CassandraRepository implements Configurable {
 
+	private static final String KEYSPACE_NAME = "bfa";
+
 	private static final Object CLUSTER_LOCK = new Object();
 
 	private static Cluster cluster;
 
+	private static Session session;
+
 	/**
-	 * Initializes database connection pool using the provided configuration. Should be invoked only once. All
-	 * {@link CassandraRepository} instances share the same pool. Does nothing on consequent invocations.
+	 * Returns Cassandra session. Must be used only after {@link #setConfiguration(Map)} invocation.
+	 * 
+	 * @return a database session or <code>null</code> if {@link #setConfiguration(Map)} was never invoked
+	 * @see #setConfiguration(Map)
+	 */
+	protected Session getSession() {
+		return session;
+	}
+
+	/**
+	 * Initializes database session using the provided configuration. Should be invoked only once. All
+	 * {@link CassandraRepository} instances share the same session. Does nothing on consequent invocations.
 	 * 
 	 * @param config
 	 *            database configuration
@@ -48,15 +63,22 @@ public abstract class CassandraRepository implements Configurable {
 			PoolingOptions poolingOptions = CassandraConfig.extractPoolingOptions(config);
 
 			cluster = Cluster.builder().addContactPointsWithPorts(addresses).withPoolingOptions(poolingOptions).build();
+			session = cluster.connect(KEYSPACE_NAME);
 		}
 
 	}
 
-	void closeCluster() {
+	void closeConnection() {
 		synchronized (CLUSTER_LOCK) {
 			if (cluster != null) {
-				cluster.close();
-				cluster = null;
+				try {
+					if (session != null) {
+						session.close();
+					}
+				} finally {
+					cluster.close();
+					cluster = null;
+				}
 			}
 		}
 	}

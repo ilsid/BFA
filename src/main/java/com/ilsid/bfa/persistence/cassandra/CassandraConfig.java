@@ -5,7 +5,10 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.datastax.driver.core.HostDistance;
+import com.datastax.driver.core.PoolingOptions;
 import com.ilsid.bfa.ConfigurationException;
+import com.ilsid.bfa.common.ConfigUtil;
 import com.ilsid.bfa.common.NumberUtil;
 
 /**
@@ -16,43 +19,44 @@ import com.ilsid.bfa.common.NumberUtil;
  */
 public class CassandraConfig {
 
-	public static final String CONFIG_PROP_CONTACT_POINTS = "bfa.persistence.cassandra.contact_points";
+	static final String CONFIG_PROP_CONTACT_POINTS = "bfa.persistence.cassandra.contact_points";
 
-	public static final String CONFIG_PROP_POOL_SIZE_LOCAL_MIN = "bfa.persistence.cassandra.pool_size.local.min";
+	static final String CONFIG_PROP_POOL_SIZE_LOCAL_MIN = "bfa.persistence.cassandra.pool_size.local.min";
 
-	public static final String CONFIG_PROP_POOL_SIZE_LOCAL_MAX = "bfa.persistence.cassandra.pool_size.local.max";
+	static final String CONFIG_PROP_POOL_SIZE_LOCAL_MAX = "bfa.persistence.cassandra.pool_size.local.max";
 
-	public static final String CONFIG_PROP_POOL_SIZE_REMOTE_MIN = "bfa.persistence.cassandra.pool_size.remote.min";
+	static final String CONFIG_PROP_POOL_SIZE_REMOTE_MIN = "bfa.persistence.cassandra.pool_size.remote.min";
 
-	public static final String CONFIG_PROP_POOL_SIZE_REMOTE_MAX = "bfa.persistence.cassandra.pool_size.remote.max";
-
-	public static final String CONFIG_PROP_MAX_REQUESTS_LOCAL = "bfa.persistence.cassandra.max_requests.local";
-
-	public static final String CONFIG_PROP_MAX_REQUESTS_REMOTE = "bfa.persistence.cassandra.max_requests.remote";
-
-	public static final int NATIVE_TRANSPORT_PORT_DEFAULT_VALUE = 9042;
-
-	public static final int POOL_SIZE_LOCAL_MIN_DEFAULT_VALUE = 2;
-
-	public static final int POOL_SIZE_LOCAL_MAX_DEFAULT_VALUE = 10;
-
-	public static final int POOL_SIZE_REMOTE_MIN_DEFAULT_VALUE = 2;
-
-	public static final int POOL_SIZE_REMOTE_MAX_DEFAULT_VALUE = 5;
+	static final String CONFIG_PROP_POOL_SIZE_REMOTE_MAX = "bfa.persistence.cassandra.pool_size.remote.max";
 
 	/*
 	 * Max simultaneous requests per connection.
 	 */
-	public static final int MAX_REQUESTS_LOCAL_DEFAULT_VALUE = 2048;
+	static final String CONFIG_PROP_MAX_REQUESTS_LOCAL = "bfa.persistence.cassandra.max_requests.local";
 
 	/*
 	 * Max simultaneous requests per connection.
 	 */
-	public static final int MAX_REQUESTS_REMOTE_DEFAULT_VALUE = 512;
+	static final String CONFIG_PROP_MAX_REQUESTS_REMOTE = "bfa.persistence.cassandra.max_requests.remote";
+
+	static final int NATIVE_TRANSPORT_PORT_DEFAULT_VALUE = 9042;
+
+	static final Map<String, Integer> PO_DEFAULTS;
 
 	private static final String CONTACT_POINT_SEPARATOR = ",";
 
 	private static final String PORT_SEPARATOR = ":";
+
+	static {
+		PO_DEFAULTS = new LinkedHashMap<String, Integer>();
+
+		PO_DEFAULTS.put(CONFIG_PROP_POOL_SIZE_LOCAL_MIN, 2);
+		PO_DEFAULTS.put(CONFIG_PROP_POOL_SIZE_LOCAL_MAX, 10);
+		PO_DEFAULTS.put(CONFIG_PROP_POOL_SIZE_REMOTE_MIN, 2);
+		PO_DEFAULTS.put(CONFIG_PROP_POOL_SIZE_REMOTE_MAX, 5);
+		PO_DEFAULTS.put(CONFIG_PROP_MAX_REQUESTS_LOCAL, 2048);
+		PO_DEFAULTS.put(CONFIG_PROP_MAX_REQUESTS_REMOTE, 512);
+	}
 
 	/**
 	 * Extracts contact points from the configuration. {@link #CONFIG_PROP_CONTACT_POINTS} property is expected to be in
@@ -71,6 +75,7 @@ public class CassandraConfig {
 	 * If a port is not explicitly defined for any host then {@link #NATIVE_TRANSPORT_PORT_DEFAULT_VALUE} is used.
 	 * 
 	 * @param config
+	 *            configuration
 	 * @return a contact points map, where the key is a host name and the value is a port number.
 	 * @throws ConfigurationException
 	 *             if the given configuration does not contain {@link #CONFIG_PROP_CONTACT_POINTS} property or this
@@ -85,10 +90,10 @@ public class CassandraConfig {
 		}
 
 		Map<String, Integer> contactPoints = new LinkedHashMap<>();
-		String[] points = propValue.split(CONTACT_POINT_SEPARATOR);
+		String[] points = propValue.replace(StringUtils.SPACE, StringUtils.EMPTY).split(CONTACT_POINT_SEPARATOR);
 
 		for (String point : points) {
-			String[] pointParts = point.replace(StringUtils.SPACE, StringUtils.EMPTY).split(PORT_SEPARATOR, 2);
+			String[] pointParts = point.split(PORT_SEPARATOR, 2);
 			final String host = pointParts[0];
 
 			if (pointParts.length > 1) {
@@ -100,6 +105,39 @@ public class CassandraConfig {
 		}
 
 		return contactPoints;
+	}
+
+	/**
+	 * Extract pooling options from the configuration. Sets default values for missing options.
+	 * 
+	 * @param config
+	 *            configuration
+	 * @return the pooling options
+	 * @throws ConfigurationException
+	 *             if pooling options have invalid format
+	 */
+	public static PoolingOptions extractPoolingOptions(Map<String, String> config) throws ConfigurationException {
+		PoolingOptions poolingOptions = new PoolingOptions();
+
+		poolingOptions.setConnectionsPerHost(HostDistance.LOCAL,
+				ConfigUtil.getPositiveIntegerValue(CONFIG_PROP_POOL_SIZE_LOCAL_MIN, config,
+						PO_DEFAULTS.get(CONFIG_PROP_POOL_SIZE_LOCAL_MIN)),
+				ConfigUtil.getPositiveIntegerValue(CONFIG_PROP_POOL_SIZE_LOCAL_MAX, config,
+						PO_DEFAULTS.get(CONFIG_PROP_POOL_SIZE_LOCAL_MAX)));
+
+		poolingOptions.setConnectionsPerHost(HostDistance.REMOTE,
+				ConfigUtil.getPositiveIntegerValue(CONFIG_PROP_POOL_SIZE_REMOTE_MIN, config,
+						PO_DEFAULTS.get(CONFIG_PROP_POOL_SIZE_REMOTE_MIN)),
+				ConfigUtil.getPositiveIntegerValue(CONFIG_PROP_POOL_SIZE_REMOTE_MAX, config,
+						PO_DEFAULTS.get(CONFIG_PROP_POOL_SIZE_REMOTE_MAX)));
+
+		poolingOptions.setMaxRequestsPerConnection(HostDistance.LOCAL, ConfigUtil.getPositiveIntegerValue(
+				CONFIG_PROP_MAX_REQUESTS_LOCAL, config, PO_DEFAULTS.get(CONFIG_PROP_MAX_REQUESTS_LOCAL)));
+
+		poolingOptions.setMaxRequestsPerConnection(HostDistance.REMOTE, ConfigUtil.getPositiveIntegerValue(
+				CONFIG_PROP_MAX_REQUESTS_REMOTE, config, PO_DEFAULTS.get(CONFIG_PROP_MAX_REQUESTS_REMOTE)));
+
+		return poolingOptions;
 	}
 
 	private static int getPort(String portString) throws ConfigurationException {

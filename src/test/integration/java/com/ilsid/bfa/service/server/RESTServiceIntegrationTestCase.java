@@ -8,7 +8,6 @@ import javax.inject.Singleton;
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletContextListener;
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -21,18 +20,17 @@ import com.google.inject.Provides;
 import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.IntegrationTestConstants;
-import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.action.persistence.ActionClassLoader;
 import com.ilsid.bfa.action.persistence.ActionRepository;
 import com.ilsid.bfa.common.LoggingConfig;
 import com.ilsid.bfa.manager.ManagerConfig;
+import com.ilsid.bfa.persistence.DatabaseServerManager;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
-import com.ilsid.bfa.persistence.orientdb.OrientdbEmbeddedServer;
 import com.ilsid.bfa.persistence.orientdb.OrientdbResourceManager;
+import com.ilsid.bfa.persistence.orientdb.OrientdbServerManager;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
@@ -55,6 +53,8 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 	private static final String CONTEXT_ROOT = "/bfa";
 
+	private static OrientdbServerManager databaseServerManager = new OrientdbServerManager();
+	
 	private static int serverPort = 8082;
 
 	private static String rootURL = getRootURL();
@@ -97,17 +97,9 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 			server.stop();
 		}
 	}
-
-	public static void startDatabaseServer() throws Exception {
-		// Copy initial clean database to the testing directory
-		FileUtils.copyDirectory(TestConstants.INIT_DATABASE_DIR, IntegrationTestConstants.DATABASE_DIR);
-		System.setProperty(TestConstants.ORIENTDB_HOME_PROPERTY, IntegrationTestConstants.ORIENTDB_HOME_DIR.getPath());
-		OrientdbEmbeddedServer.startup();
-	}
-
-	public static void stopDatabaseServer() throws Exception {
-		System.getProperties().remove(TestConstants.ORIENTDB_HOME_PROPERTY);
-		OrientdbEmbeddedServer.shutdown();
+	
+	public static DatabaseServerManager getDatabaseServerManager() {
+		return databaseServerManager;
 	}
 
 	private static String getRootURL() {

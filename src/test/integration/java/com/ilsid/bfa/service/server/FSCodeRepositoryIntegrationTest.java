@@ -44,12 +44,10 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 
 		Map<String, String> repositoryConfig = new HashMap<>();
 		repositoryConfig.put("bfa.persistence.fs.root_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
-		repositoryConfig.put("bfa.persistence.orientdb.url", TestConstants.DATABASE_URL);
-		repositoryConfig.put("bfa.persistence.orientdb.user", TestConstants.DATABASE_USER);
-		repositoryConfig.put("bfa.persistence.orientdb.password", TestConstants.DATABASE_PASSWORD);
 		repositoryConfig.put("bfa.tmp_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
+		repositoryConfig.putAll(getDatabaseServerManager().getConfig());
 
-		startDatabaseServer();
+		getDatabaseServerManager().startServer();
 
 		startWebServer(new TestApplicationConfig(FilesystemScriptingRepository.class, FilesystemActionRepository.class,
 				repositoryConfig));
@@ -58,7 +56,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	@AfterClass
 	public static void tearDown() throws Exception {
 		stopWebServer();
-		stopDatabaseServer();
+		getDatabaseServerManager().stopServer();
 		FileUtils.forceDelete(IntegrationTestConstants.CODE_REPOSITORY_DIR);
 	}
 
@@ -98,16 +96,16 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	protected Map<String, String> loadMetadata(File metaFile) throws Exception {
 		return IOHelper.loadMetadata(metaFile);
 	}
-	
+
 	protected long getRepositoryVersion() throws Exception {
 		return Long.parseLong(IOHelper.loadFileContents(CODE_REPOSITORY_PATH, ".version"));
 	}
-	
+
 	protected void assertIncrementedVersion(long oldVersion) throws Exception {
 		long newVersion = getRepositoryVersion();
 		assertEquals(1L, newVersion - oldVersion);
 	}
-	
+
 	protected void assertSameVersion(long oldVersion) throws Exception {
 		long newVersion = getRepositoryVersion();
 		assertEquals(oldVersion, newVersion);

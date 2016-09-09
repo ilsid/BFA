@@ -88,14 +88,14 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void actionThirdPartyDependencyCanBeLoaded() throws Exception {
-		final String className = "org.joda.time.Months";
+		final String className = "com.ilsid.bfa.SomeClassWithinActionLib";
 		makeSureClassIsNotInClasspathOfCurrentLoader(className);
 
 		Class<?> clazz = loader.loadClass(className);
 		assertEquals(LOADER_CLASS_NAME, clazz.getClassLoader().getClass().getName());
 
-		Field field = clazz.getDeclaredField("EIGHT");
-		assertEquals(className, field.get(null).getClass().getName());
+		Field field = clazz.getDeclaredField("SOME_CONSTANT");
+		assertEquals("Some Value", field.get(null));
 	}
 
 	@Test

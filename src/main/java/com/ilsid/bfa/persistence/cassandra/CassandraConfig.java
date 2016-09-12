@@ -41,6 +41,8 @@ public class CassandraConfig {
 
 	static final int NATIVE_TRANSPORT_PORT_DEFAULT_VALUE = 9042;
 
+	static final String KEYSPACE_NAME = "bfa";
+
 	static final Map<String, Integer> PO_DEFAULTS;
 
 	private static final String CONTACT_POINT_SEPARATOR = ",";
@@ -108,7 +110,7 @@ public class CassandraConfig {
 	}
 
 	/**
-	 * Extract pooling options from the configuration. Sets default values for missing options.
+	 * Extracts pooling options from the configuration. Sets default values for missing options.
 	 * 
 	 * @param config
 	 *            configuration

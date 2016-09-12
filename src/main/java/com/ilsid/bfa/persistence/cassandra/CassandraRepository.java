@@ -19,8 +19,6 @@ import com.ilsid.bfa.ConfigurationException;
  */
 public abstract class CassandraRepository implements Configurable {
 
-	private static final String KEYSPACE_NAME = "bfa";
-
 	private static final Object CLUSTER_LOCK = new Object();
 
 	private static Cluster cluster;
@@ -35,6 +33,10 @@ public abstract class CassandraRepository implements Configurable {
 	 */
 	protected Session getSession() {
 		return session;
+	}
+
+	protected boolean useDefaultKeyspace() {
+		return true;
 	}
 
 	/**
@@ -63,7 +65,12 @@ public abstract class CassandraRepository implements Configurable {
 			PoolingOptions poolingOptions = CassandraConfig.extractPoolingOptions(config);
 
 			cluster = Cluster.builder().addContactPointsWithPorts(addresses).withPoolingOptions(poolingOptions).build();
-			session = cluster.connect(KEYSPACE_NAME);
+
+			if (useDefaultKeyspace()) {
+				session = cluster.connect(CassandraConfig.KEYSPACE_NAME);
+			} else {
+				session = cluster.connect();
+			}
 		}
 
 	}

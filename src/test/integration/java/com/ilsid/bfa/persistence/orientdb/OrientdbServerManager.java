@@ -27,7 +27,7 @@ public class OrientdbServerManager implements DatabaseServerManager {
 		OrientdbEmbeddedServer.startup();
 	}
 
-	public void stopServer() throws Exception {
+	public void stopServer() {
 		System.getProperties().remove(TestConstants.ORIENTDB_HOME_PROPERTY);
 		OrientdbEmbeddedServer.shutdown();
 	}

@@ -8,6 +8,6 @@ public interface DatabaseServerManager {
 	
 	public void startServer() throws Exception;
 	
-	public void stopServer() throws Exception;
+	public void stopServer();
 
 }

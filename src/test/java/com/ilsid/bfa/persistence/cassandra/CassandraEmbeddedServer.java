@@ -11,6 +11,8 @@ public class CassandraEmbeddedServer {
 
 	private static Map<String, String> clientConfig;
 
+	private static CassandraClient client;
+
 	static {
 		clientConfig = new HashMap<>();
 		// CQL port is 9142 in cassandra-unit config. See <cassandra-unit jar>/cu-cassandra.yaml
@@ -31,10 +33,10 @@ public class CassandraEmbeddedServer {
 		if (cassandraJob.startException != null) {
 			throw cassandraJob.startException;
 		}
-		
-		CassandraClient client = new CassandraClient();
+
+		client = new CassandraClient();
 		client.setConfiguration(clientConfig);
-		
+
 		client.initDatabase();
 
 		serverStarted = true;
@@ -48,6 +50,9 @@ public class CassandraEmbeddedServer {
 		return clientConfig;
 	}
 
+	public static CassandraClient getClient() {
+		return client;
+	}
 
 	private static class CassandraRunnable implements Runnable {
 
@@ -62,6 +67,10 @@ public class CassandraEmbeddedServer {
 
 		}
 
+	}
+
+	public static void main(String[] args) throws Exception {
+		startup();
 	}
 
 }

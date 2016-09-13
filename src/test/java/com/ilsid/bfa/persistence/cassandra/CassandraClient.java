@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
 
@@ -17,6 +18,10 @@ public class CassandraClient extends CassandraRepository {
 	@Override
 	protected boolean useDefaultKeyspace() {
 		return false;
+	}
+	
+	public ResultSet queryWithAllowedFiltering(String query) {
+		return getSession().execute(query + " ALLOW FILTERING");
 	}
 
 	void initDatabase() throws Exception {

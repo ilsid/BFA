@@ -33,6 +33,9 @@ public class ScriptRuntime {
 
 	private static final String RUNTIME_DEBUG_LOGGING_FLAG = "bfa.logging.runtime_debug";
 
+	// FIXME: introduce authorization
+	private static final String STUBBED_USER_NAME = "system";
+
 	private static final Object[] EMPTY_PARAMS = new Object[] {};
 
 	private final Logger runtimeLogger = LoggerFactory.getLogger("runtime_debug_logger");
@@ -122,7 +125,8 @@ public class ScriptRuntime {
 		return runScript(scriptName, EMPTY_PARAMS, runtimeId, callStack);
 	}
 
-	Object runScript(String scriptName, Object[] params, Object runtimeId, Deque<String> callStack) throws ScriptException {
+	Object runScript(String scriptName, Object[] params, Object runtimeId, Deque<String> callStack)
+			throws ScriptException {
 		Script script = createInstance(scriptName);
 
 		Object flowRuntimeId;
@@ -145,11 +149,11 @@ public class ScriptRuntime {
 			script.setRuntimeLogger(createRuntimeLogger(flowRuntimeId, scriptName, callStack));
 		}
 
-		ScriptRuntimeDTO newRecord = new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
-				.setParameters(toStrings(params)).setStatus(RuntimeStatusType.INPROGRESS).setStartTime(new Date())
-				.setCallStack(callStack);
+		ScriptRuntimeDTO runtimeRecord = new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId)
+				.setUserName(STUBBED_USER_NAME).setScriptName(scriptName).setParameters(toStrings(params))
+				.setStatus(RuntimeStatusType.INPROGRESS).setStartTime(new Date()).setCallStack(callStack);
 
-		createRuntimeRecord(newRecord);
+		createRuntimeRecord(runtimeRecord);
 		try {
 			script.execute();
 		} catch (ScriptException e) {
@@ -165,8 +169,12 @@ public class ScriptRuntime {
 			script.cleanup();
 		}
 
-		updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
-				.setStatus(RuntimeStatusType.COMPLETED).setEndTime(new Date()));
+		runtimeRecord.setStatus(RuntimeStatusType.COMPLETED).setEndTime(new Date());
+		updateRuntimeRecord(runtimeRecord);
+		
+		// updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
+		// .setStatus(RuntimeStatusType.COMPLETED).setEndTime(new Date()));
+		
 
 		return flowRuntimeId;
 	}

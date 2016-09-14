@@ -127,27 +127,27 @@ public class IOHelper {
 
 	public static List<File> unzip(File zipFile, File destDir) throws IOException {
 		List<File> result = new LinkedList<>();
-	    InputStream inputStream = new FileInputStream(zipFile);
-	    ZipArchiveInputStream in = new ZipArchiveInputStream(inputStream);
-	    ZipArchiveEntry entry = in.getNextZipEntry();
-	    while (entry != null) {
-	        if (entry.isDirectory()) {
-	            entry = in.getNextZipEntry();
-	            continue;
-	        }
-	        File curfile = new File(destDir, entry.getName());
-	        File parent = curfile.getParentFile();
-	        if (!parent.exists()) {
-	            parent.mkdirs();
-	        }
-	        OutputStream out = new FileOutputStream(curfile);
-	        IOUtils.copy(in, out);
-	        out.close();
-	        result.add(curfile);
-	        entry = in.getNextZipEntry();
-	    }
-	    in.close();
-	    return result;
+		try (ZipArchiveInputStream in = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
+			ZipArchiveEntry entry = in.getNextZipEntry();
+			while (entry != null) {
+				if (entry.isDirectory()) {
+					entry = in.getNextZipEntry();
+					continue;
+				}
+				File curfile = new File(destDir, entry.getName());
+				File parent = curfile.getParentFile();
+				if (!parent.exists()) {
+					parent.mkdirs();
+				}
+				OutputStream out = new FileOutputStream(curfile);
+				IOUtils.copy(in, out);
+				out.close();
+				result.add(curfile);
+				entry = in.getNextZipEntry();
+			}
+		}
+		
+		return result;
 	}
 
 	private static List<String> getRelativeFilePaths(File dir, Collection<File> files) throws Exception {

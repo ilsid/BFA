@@ -35,7 +35,11 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 
 	@BeforeClass
 	public static void setUp() throws Exception {
+		if (IntegrationTestConstants.CODE_REPOSITORY_DIR.exists()) {
+			FileUtils.forceDelete(IntegrationTestConstants.CODE_REPOSITORY_DIR);
+		}
 		FileUtils.forceMkdir(IntegrationTestConstants.CODE_REPOSITORY_DIR);
+		
 		LoggingConfigurator.configureLog4j(LOGGING_CONFIG_FILE);
 
 		// Creating the "pre-condition" scripts required for some tests

@@ -43,7 +43,10 @@ public class CassandraEmbeddedServer {
 	}
 
 	public static synchronized void shutdown() {
-		serverStarted = false;
+		if (serverStarted) {
+			EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
+			serverStarted = false;
+		}
 	}
 
 	public static Map<String, String> getClientConfig() {

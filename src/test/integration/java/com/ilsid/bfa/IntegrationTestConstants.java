@@ -3,8 +3,8 @@ package com.ilsid.bfa;
 import java.io.File;
 
 public class IntegrationTestConstants {
-
-	private final static String CODE_REPOSITORY_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_code_repository";
+	
+	private final static String CODE_REPOSITORY_PATH = "target/__tmp_code_repository";
 
 	public final static File CODE_REPOSITORY_DIR = new File(CODE_REPOSITORY_PATH);
 

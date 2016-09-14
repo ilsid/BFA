@@ -29,10 +29,9 @@ import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
-import com.ilsid.bfa.persistence.orientdb.OrientdbResourceManager;
-import com.ilsid.bfa.persistence.orientdb.OrientdbServerManager;
+import com.ilsid.bfa.persistence.cassandra.CassandraServerManager;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
-import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbRuntimeRepository;
+import com.ilsid.bfa.runtime.persistence.cassandra.CassandraRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ScriptLogger;
 import com.sun.jersey.api.client.Client;
@@ -53,33 +52,33 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 
 	private static final String CONTEXT_ROOT = "/bfa";
 
-	private static OrientdbServerManager databaseServerManager = new OrientdbServerManager();
-	
-	private static int serverPort = 8082;
+	private static DatabaseServerManager databaseServerManager = new CassandraServerManager();
 
-	private static String rootURL = getRootURL();
+	private static int webServerPort = 8082;
 
-	private static Server server;
+	private static String webServerRootURL = getWebServerRootURL();
 
-	private static Client client;
+	private static Server webServer;
+
+	private static Client webClient;
 
 	protected WebResource getWebResource(String path) {
-		return client.resource(rootURL + path);
+		return webClient.resource(webServerRootURL + path);
 	}
 
 	public static void startWebServer(ServletContextListener applicationConfig) throws Exception {
 		ClientConfig config = new DefaultClientConfig();
 		config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
 		config.getClasses().add(MultiPartWriter.class);
-		client = Client.create(config);
+		webClient = Client.create(config);
 
 		String serverPortConfigValue = System.getProperty(PORT_PROPERTY);
 		if (serverPortConfigValue != null) {
-			serverPort = Integer.parseInt(serverPortConfigValue);
-			rootURL = getRootURL();
+			webServerPort = Integer.parseInt(serverPortConfigValue);
+			webServerRootURL = getWebServerRootURL();
 		}
 
-		server = new Server(serverPort);
+		webServer = new Server(webServerPort);
 
 		ServletContextHandler contextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		contextHandler.addEventListener(applicationConfig);
@@ -88,22 +87,22 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 		// DefaultServlet is required to avoid 404 errors
 		contextHandler.addServlet(DefaultServlet.class, "/");
 
-		server.setHandler(contextHandler);
-		server.start();
+		webServer.setHandler(contextHandler);
+		webServer.start();
 	}
 
 	public static void stopWebServer() throws Exception {
-		if (server != null && server.isStarted()) {
-			server.stop();
+		if (webServer != null && webServer.isStarted()) {
+			webServer.stop();
 		}
 	}
-	
+
 	public static DatabaseServerManager getDatabaseServerManager() {
 		return databaseServerManager;
 	}
 
-	private static String getRootURL() {
-		return LOCALHOST_URL + ":" + serverPort + CONTEXT_ROOT + "/";
+	private static String getWebServerRootURL() {
+		return LOCALHOST_URL + ":" + webServerPort + CONTEXT_ROOT + "/";
 	}
 
 	protected static class TestApplicationConfig extends GuiceServletContextListener {
@@ -127,7 +126,6 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 		@Override
 		public void contextDestroyed(javax.servlet.ServletContextEvent servletContextEvent) {
 			super.contextDestroyed(servletContextEvent);
-			OrientdbResourceManager.releaseResources();
 		}
 
 		@Override
@@ -138,7 +136,7 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 				protected void configureServlets() {
 					bind(ScriptingRepository.class).to(scriptingRepositoryClass).in(Singleton.class);
 					bind(ActionRepository.class).to(actionRepositoryClass).in(Singleton.class);
-					bind(RuntimeRepository.class).to(OrientdbRuntimeRepository.class).in(Singleton.class);
+					bind(RuntimeRepository.class).to(CassandraRuntimeRepository.class).in(Singleton.class);
 
 					requestStaticInjection(DynamicClassLoader.class);
 					requestStaticInjection(ActionClassLoader.class);

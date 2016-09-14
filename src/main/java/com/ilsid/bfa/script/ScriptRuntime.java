@@ -33,7 +33,7 @@ public class ScriptRuntime {
 
 	private static final String RUNTIME_DEBUG_LOGGING_FLAG = "bfa.logging.runtime_debug";
 
-	// FIXME: introduce authorization
+	// FIXME: introduce authentication
 	private static final String STUBBED_USER_NAME = "system";
 
 	private static final Object[] EMPTY_PARAMS = new Object[] {};
@@ -157,24 +157,19 @@ public class ScriptRuntime {
 		try {
 			script.execute();
 		} catch (ScriptException e) {
-			updateRuntimeRecord(createErrorDTO(flowRuntimeId, scriptName, e));
+			updateRuntimeRecord(addErrorInfo(runtimeRecord, e));
 			throw e;
 		} catch (RuntimeException e) {
-			updateRuntimeRecord(createErrorDTO(flowRuntimeId, scriptName, e));
+			updateRuntimeRecord(addErrorInfo(runtimeRecord, e));
 			throw new ScriptException(String.format("Script [%s] failed", scriptName), e);
 		} catch (Error e) {
-			updateRuntimeRecord(createErrorDTO(flowRuntimeId, scriptName, new Exception("System error occurred", e)));
+			updateRuntimeRecord(addErrorInfo(runtimeRecord, new Exception("System error occurred", e)));
 			throw new ScriptException(String.format("Script [%s] failed with system error", scriptName), e);
 		} finally {
 			script.cleanup();
 		}
 
-		runtimeRecord.setStatus(RuntimeStatusType.COMPLETED).setEndTime(new Date());
-		updateRuntimeRecord(runtimeRecord);
-		
-		// updateRuntimeRecord(new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
-		// .setStatus(RuntimeStatusType.COMPLETED).setEndTime(new Date()));
-		
+		updateRuntimeRecord(runtimeRecord.setStatus(RuntimeStatusType.COMPLETED).setEndTime(new Date()));
 
 		return flowRuntimeId;
 	}
@@ -202,9 +197,8 @@ public class ScriptRuntime {
 		return script;
 	}
 
-	private ScriptRuntimeDTO createErrorDTO(Object flowRuntimeId, String scriptName, Exception exception) {
-		return new ScriptRuntimeDTO().setRuntimeId(flowRuntimeId).setScriptName(scriptName)
-				.setStatus(RuntimeStatusType.FAILED).setError(exception).setEndTime(new Date());
+	private ScriptRuntimeDTO addErrorInfo(ScriptRuntimeDTO runtimeRecord, Exception e) {
+		return runtimeRecord.setStatus(RuntimeStatusType.FAILED).setEndTime(new Date()).setError(e);
 	}
 
 	private Object generatedRuntimeId(String scriptName) throws ScriptException {

@@ -68,7 +68,8 @@ public abstract class CassandraRepository implements Configurable {
 			}
 
 			PoolingOptions poolingOptions = CassandraConfig.extractPoolingOptions(config);
-			SocketOptions socketOptions = new SocketOptions().setConnectTimeoutMillis(2000);
+			SocketOptions socketOptions = new SocketOptions()
+					.setConnectTimeoutMillis(CassandraConfig.extractConnectionTimeout(config));
 
 			cluster = Cluster.builder().addContactPointsWithPorts(addresses).withPoolingOptions(poolingOptions)
 					.withSocketOptions(socketOptions).build();

@@ -19,7 +19,7 @@ public class CassandraClient extends CassandraRepository {
 	protected boolean useDefaultKeyspace() {
 		return false;
 	}
-	
+
 	public ResultSet queryWithAllowedFiltering(String query) {
 		return getSession().execute(query + " ALLOW FILTERING");
 	}
@@ -28,12 +28,16 @@ public class CassandraClient extends CassandraRepository {
 		String script = FileUtils.readFileToString(new File(KEYSPACE_CREATION_SCRIPT));
 		String[] statements = script.split(";");
 		final Session session = getSession();
-		
+
 		for (String stmt : statements) {
 			if (ALPHA_PATTERN.matcher(stmt).matches()) {
 				session.execute(new SimpleStatement(stmt));
 			}
 		}
+	}
+
+	void dropDatabase() {
+		getSession().execute("DROP KEYSPACE " + CassandraConfig.KEYSPACE_NAME);
 	}
 
 }

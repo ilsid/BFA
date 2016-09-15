@@ -16,7 +16,8 @@ public class CassandraEmbeddedServer {
 	static {
 		clientConfig = new HashMap<>();
 		// CQL port is 9142 in cassandra-unit config. See <cassandra-unit jar>/cu-cassandra.yaml
-		clientConfig.put("bfa.persistence.cassandra.contact_points", "localhost:9142");
+		clientConfig.put(CassandraConfig.CONFIG_PROP_CONTACT_POINTS, "localhost:9142");
+		clientConfig.put(CassandraConfig.CONFIG_PROP_CONNECTION_TIMEOUT, "10000");
 	}
 
 	public static synchronized void startup() throws Exception {
@@ -44,7 +45,7 @@ public class CassandraEmbeddedServer {
 
 	public static synchronized void shutdown() {
 		if (serverStarted) {
-			EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
+			client.dropDatabase();
 			serverStarted = false;
 		}
 	}

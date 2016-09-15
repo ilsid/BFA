@@ -5,11 +5,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PoolingOptions;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SocketOptions;
 import com.ilsid.bfa.Configurable;
 import com.ilsid.bfa.ConfigurationException;
+import com.ilsid.bfa.persistence.RepositoryConfig;
 
 /**
  * Cassandra DBMS based repository.
@@ -48,8 +52,9 @@ public abstract class CassandraRepository implements Configurable {
 	 * @throws ConfigurationException
 	 *             in case of incorrect configuration or pool initialization failure
 	 */
+	@Inject
 	@Override
-	public void setConfiguration(Map<String, String> config) throws ConfigurationException {
+	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
 		synchronized (CLUSTER_LOCK) {
 			if (cluster != null) {
 				return;
@@ -63,8 +68,10 @@ public abstract class CassandraRepository implements Configurable {
 			}
 
 			PoolingOptions poolingOptions = CassandraConfig.extractPoolingOptions(config);
+			SocketOptions socketOptions = new SocketOptions().setConnectTimeoutMillis(2000);
 
-			cluster = Cluster.builder().addContactPointsWithPorts(addresses).withPoolingOptions(poolingOptions).build();
+			cluster = Cluster.builder().addContactPointsWithPorts(addresses).withPoolingOptions(poolingOptions)
+					.withSocketOptions(socketOptions).build();
 
 			if (useDefaultKeyspace()) {
 				session = cluster.connect(CassandraConfig.KEYSPACE_NAME);
@@ -75,7 +82,7 @@ public abstract class CassandraRepository implements Configurable {
 
 	}
 
-	void closeConnection() {
+	static void closeConnection() {
 		synchronized (CLUSTER_LOCK) {
 			if (cluster != null) {
 				try {

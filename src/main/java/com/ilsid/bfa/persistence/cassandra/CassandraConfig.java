@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.datastax.driver.core.HostDistance;
 import com.datastax.driver.core.PoolingOptions;
+import com.datastax.driver.core.SocketOptions;
 import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.common.ConfigUtil;
 import com.ilsid.bfa.common.NumberUtil;
@@ -20,6 +21,8 @@ import com.ilsid.bfa.common.NumberUtil;
 public class CassandraConfig {
 
 	static final String CONFIG_PROP_CONTACT_POINTS = "bfa.persistence.cassandra.contact_points";
+
+	static final String CONFIG_PROP_CONNECTION_TIMEOUT = "bfa.persistence.cassandra.connection_timeout";
 
 	static final String CONFIG_PROP_POOL_SIZE_LOCAL_MIN = "bfa.persistence.cassandra.pool_size.local.min";
 
@@ -140,6 +143,22 @@ public class CassandraConfig {
 				CONFIG_PROP_MAX_REQUESTS_REMOTE, config, PO_DEFAULTS.get(CONFIG_PROP_MAX_REQUESTS_REMOTE)));
 
 		return poolingOptions;
+	}
+
+	/**
+	 * Extracts connection timeout defined from the configuration. The timeout is defined by
+	 * {@link #CONFIG_PROP_CONNECTION_TIMEOUT} property. If the property is not set, then
+	 * {@link SocketOptions#DEFAULT_CONNECT_TIMEOUT_MILLIS} is returned.
+	 * 
+	 * @param config
+	 *            configuration
+	 * @return connection timeout value
+	 * @throws ConfigurationException
+	 *             if {@link #CONFIG_PROP_CONNECTION_TIMEOUT} property has not an integer value
+	 */
+	public static int extractConnectionTimeout(Map<String, String> config) throws ConfigurationException {
+		return ConfigUtil.getPositiveIntegerValue(CONFIG_PROP_CONNECTION_TIMEOUT, config,
+				SocketOptions.DEFAULT_CONNECT_TIMEOUT_MILLIS);
 	}
 
 	private static int getPort(String portString) throws ConfigurationException {

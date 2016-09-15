@@ -21,10 +21,10 @@ import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
+import com.ilsid.bfa.persistence.cassandra.CassandraResourceManager;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
-import com.ilsid.bfa.persistence.orientdb.OrientdbResourceManager;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
-import com.ilsid.bfa.runtime.persistence.orientdb.OrientdbRuntimeRepository;
+import com.ilsid.bfa.runtime.persistence.cassandra.CassandraRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ScriptLogger;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -52,7 +52,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 	@Override
 	public void contextDestroyed(javax.servlet.ServletContextEvent servletContextEvent) {
 		super.contextDestroyed(servletContextEvent);
-		OrientdbResourceManager.releaseResources();
+		CassandraResourceManager.releaseResources();
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			protected void configureServlets() {
 				bind(ScriptingRepository.class).to(FilesystemScriptingRepository.class).asEagerSingleton();
 				bind(ActionRepository.class).to(FilesystemActionRepository.class).asEagerSingleton();
-				bind(RuntimeRepository.class).to(OrientdbRuntimeRepository.class).asEagerSingleton();
+				bind(RuntimeRepository.class).to(CassandraRuntimeRepository.class).asEagerSingleton();
 
 				requestStaticInjection(DynamicClassLoader.class);
 				requestStaticInjection(ActionClassLoader.class);

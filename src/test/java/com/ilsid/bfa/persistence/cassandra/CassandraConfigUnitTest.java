@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import com.datastax.driver.core.HostDistance;
 import com.datastax.driver.core.PoolingOptions;
+import com.datastax.driver.core.SocketOptions;
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.ConfigurationException;
 
@@ -137,6 +138,31 @@ public class CassandraConfigUnitTest extends BaseUnitTestCase {
 		assertPoolingOptionExceptions("-55");
 	}
 
+	@Test
+	public void connectionTimeoutCanBeExtracted() throws Exception {
+		assertEquals(10000, extractConnectionTimeout("10000"));
+	}
+
+	@Test
+	public void defaultConnectionTimeoutIsReturnedIfNotSet() throws Exception {
+		assertEquals(SocketOptions.DEFAULT_CONNECT_TIMEOUT_MILLIS, extractConnectionTimeout(null));
+	}
+
+	@Test
+	public void connectionTimeoutWithStringValuesCanNotBeExtracted() throws Exception {
+		assertConnectionTimeoutException("abc");
+	}
+
+	@Test
+	public void connectionTimeoutWithZeroValuesCanNotBeExtracted() throws Exception {
+		assertConnectionTimeoutException("0");
+	}
+
+	@Test
+	public void connectionTimeoutWithNegativeValuesCanNotBeExtracted() throws Exception {
+		assertConnectionTimeoutException("-55");
+	}
+
 	@SuppressWarnings("serial")
 	private Map<String, String> getConfigWithContactPoints(final String value) {
 		return new HashMap<String, String>() {
@@ -146,8 +172,25 @@ public class CassandraConfigUnitTest extends BaseUnitTestCase {
 		};
 	}
 
+	@SuppressWarnings("serial")
+	private Map<String, String> getConfigWithConnectionTimeout(final String value) {
+		return new HashMap<String, String>() {
+			{
+				put(CassandraConfig.CONFIG_PROP_CONNECTION_TIMEOUT, value);
+			}
+		};
+	}
+
 	private Map<String, Integer> extractContactPoints(String value) throws Exception {
 		return CassandraConfig.extractContactPoints(getConfigWithContactPoints(value));
+	}
+
+	private int extractConnectionTimeout(String value) throws Exception {
+		if (value == null) {
+			return CassandraConfig.extractConnectionTimeout(new HashMap<String, String>());
+		} else {
+			return CassandraConfig.extractConnectionTimeout(getConfigWithConnectionTimeout(value));
+		}
 	}
 
 	private PoolingOptions extractPoolingOptions(Map<String, String> config) throws Exception {
@@ -177,6 +220,15 @@ public class CassandraConfigUnitTest extends BaseUnitTestCase {
 
 	private void assertPoolingOptionNames() {
 		assertTrue(Arrays.equals(PO_NAMES, CassandraConfig.PO_DEFAULTS.keySet().toArray(new String[] {})));
+	}
+
+	private void assertConnectionTimeoutException(final String value) throws Exception {
+		exceptionRule.expect(ConfigurationException.class);
+		exceptionRule
+				.expectMessage(String.format("The value of the configuration property [%s] must be a positive integer",
+						CassandraConfig.CONFIG_PROP_CONNECTION_TIMEOUT));
+
+		extractConnectionTimeout(value);
 	}
 
 }

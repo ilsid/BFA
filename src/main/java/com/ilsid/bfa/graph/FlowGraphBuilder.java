@@ -51,13 +51,14 @@ public class FlowGraphBuilder {
 	 * @return flow graph
 	 */
 	public static Graph buildGraph(String source) {
+		final String preprocessedSource = ScriptSourcePreprocessor.processVarargs(source);
+
 		final String fullSource = String.format(CompilerConstants.SCRIPT_SOURCE_TEMPLATE,
-				ClassNameUtil.TMP_PACKAGE_NAME, ClassNameUtil.TMP_CLASS_NAME, source);
-		final String preprocessedSource = ScriptSourcePreprocessor.processVarargs(fullSource);
+				ClassNameUtil.TMP_PACKAGE_NAME, ClassNameUtil.TMP_CLASS_NAME, preprocessedSource);
 
 		CompilationUnit compilationUnit;
 		try {
-			try (InputStream scriptSource = IOUtils.toInputStream(preprocessedSource);) {
+			try (InputStream scriptSource = IOUtils.toInputStream(fullSource);) {
 				compilationUnit = JavaParser.parse(scriptSource);
 			}
 		} catch (ParseException | IOException e) {

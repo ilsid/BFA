@@ -201,7 +201,7 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>pack-flowchart-lib</id>
+						<id>pack-mermaid-lib</id>
 						<phase>prepare-package</phase>
 						<goals>
 							<goal>run</goal>
@@ -210,7 +210,22 @@
 							<tasks>
 								<copy
 									todir="${project.basedir}/target/${project.build.finalName}/script/mermaid">
-									<fileset dir="${project.basedir}/lib/mermaid" />
+									<fileset dir="${project.basedir}/lib/mermaid-6.0.0" />
+								</copy>
+							</tasks>
+						</configuration>
+					</execution>
+					<execution>
+						<id>pack-ace-lib</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<copy
+									todir="${project.basedir}/target/${project.build.finalName}/script/ace">
+									<fileset dir="${project.basedir}/lib/ace-1.2.5/src-min-noconflict" />
 								</copy>
 							</tasks>
 						</configuration>

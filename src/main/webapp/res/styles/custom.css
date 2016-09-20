@@ -108,3 +108,15 @@
   font-family: Courier New,Courier,Lucida Sans Typewriter,Lucida Typewriter,monospace;
   font-size: 12px;
 }
+
+div[ace-script-editor="true"] { 
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	border-style: groove;
+	border-width: thin;
+	font-family: Consolas,monaco,monospace;
+	font-size: 13px;
+	font-weight: 500;
+}

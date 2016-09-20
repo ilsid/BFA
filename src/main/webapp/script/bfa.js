@@ -58,6 +58,31 @@ function escapeEntitySource(source)  {
 	return source.replace(/"/g,'\\"');
 }
 
+function createScriptEditor(scriptSource, parentPanel, topPosition, onChangeHandler) {
+	require(['dojo/dom-construct', 'dojo/domReady!'],
+		function(domConstruct) {
+			var parentId = parentPanel.id;
+			var scriptHolderId = parentId + '-script-editor';
+			var scriptHolder = domConstruct.toDom('<div id="' + scriptHolderId + 
+				'" ace-script-editor="true"></div>');
+			domConstruct.place(scriptHolder, parentId);
+			
+			var editor = ace.edit(scriptHolderId);
+			editor.setTheme("ace/theme/eclipse");
+			editor.getSession().setMode("ace/mode/java");
+			
+			document.getElementById(scriptHolderId).style.top = topPosition;
+			
+			if (scriptSource) {
+				editor.setValue(scriptSource);
+				editor.gotoLine(1);
+			}
+			editor.getSession().on('change', onChangeHandler);
+			
+			parentPanel.editor = editor;
+	});
+}
+
 function drawFlowChart(scriptName, canvasId) {
 	require(['dojo/request/xhr', 'dojo/dom-construct', 'dojo/domReady!'],
 		function(request, domConstruct) {
@@ -250,8 +275,8 @@ function onCreateScriptDialog_btnOkClick() {
 			
 			var tabContainer = registry.byId('tabContainer');
 			var scriptTab = tabContainer.selectedChildWidget;
-			var scriptArea = scriptTab.getChildren()[1];
-			var scriptSource = scriptArea.get('value');
+			var scriptEditor = scriptTab.getChildren()[1].editor;
+			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
 			
 			request('service/script/admin/create', {
@@ -282,8 +307,8 @@ function onUpdateScriptDialog_btnOkClick() {
 			
 			var tabContainer = registry.byId('tabContainer');
 			var scriptTab = tabContainer.selectedChildWidget;
-			var scriptArea = scriptTab.getChildren()[1];
-			var scriptSource = scriptArea.get('value');
+			var scriptEditor = scriptTab.getChildren()[1].editor;
+			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
 			
 			request('service/script/admin/update', {
@@ -488,8 +513,9 @@ function buildEntitySource(grid) {
 function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 	require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
 		'dijit/Toolbar', 'dijit/form/Button', 'dijit/form/RadioButton', 'dojo/dom-construct', 
-		'dojo/domReady!'],
-		function(registry, ContentPane, SimpleTextarea, Toolbar, Button, RadioButton, domConstruct) {
+		'dojo/dom-geometry', 'dojo/domReady!'],
+		function(registry, ContentPane, SimpleTextarea, Toolbar, Button, RadioButton, 
+			domConstruct, domGeom) {
 			var tabContainer = registry.byId('tabContainer');
 			var groupName = getSelectedGroupName(registry.byId('scriptTree'), 'SCRIPT_GROUP');
 			
@@ -572,23 +598,9 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			domConstruct.place('<label for="' + radioChart.id + '">Flow Chart</label>', 
 				radioChart.domNode, 'after');
 		
-			var scriptArea = new SimpleTextarea({
-				className: 'fixedTextArea',
-				modified: false,
-				spellcheck: false,
-				
-				onInput: function(event) {
-					if (isExistingScript && !this.modified) {
-						btnSave.set('disabled', false);
-						tab.set('title', '*' + tab.title);
-						this.modified = true;
-					}
-				}
+			var scriptArea = new ContentPane({
+				className: 'nestedPane'
 			});
-			
-			if (scriptSource) {
-				scriptArea.set('value', scriptSource);
-			}
 			scriptArea.startup();
 			radioSource.scriptArea = scriptArea;
 			
@@ -607,7 +619,18 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			} else {
 				tabContainer.addChild(tab);
 			}
+			
 			tabContainer.selectChild(tab);
+			
+			var scriptEditorTopPos = domGeom.position(toolBar.domNode).h + 8;
+			var editorOnChangeHandler = function() {
+				if (isExistingScript && btnSave.get('disabled')) {
+					btnSave.set('disabled', false);
+					tab.set('title', '*' + tab.title);
+				}
+			};
+			createScriptEditor(scriptSource, scriptArea, scriptEditorTopPos, editorOnChangeHandler);
+			
 	});
 }
 

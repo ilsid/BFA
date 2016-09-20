@@ -17,7 +17,7 @@ public class ResourceException extends WebApplicationException {
 
 	private String message;
 
-	private Status status = Status.INTERNAL_SERVER_ERROR;
+	private Status status = Status.BAD_REQUEST;
 
 	private boolean hasCause;
 

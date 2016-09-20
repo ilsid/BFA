@@ -47,6 +47,11 @@ function writeErrorMessage(msg) {
 }
 
 function writeError(error, message) {
+	if (error.response.status == 500) {
+		writeErrorMessage('Internal server error. Please contact your system administrator.');
+		return;
+	}
+	
 	if (message) {
 		writeErrorMessage(message + ': ' + error.response.text);
 	} else {

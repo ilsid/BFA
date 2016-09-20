@@ -100,7 +100,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class).startsWith("Compilation of the script [Script 002] failed"));
 		assertFalse(new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script002").exists());
 		assertSameVersion(version);
@@ -167,7 +167,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class)
 				.startsWith("The script [NonExistentScript] does not exist in the repository"));
 		assertFalse(new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/nonexistentscript")
@@ -233,7 +233,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class)
 				.startsWith("The script [NonExistentScript] does not exist in the repository"));
 	}

@@ -122,7 +122,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		EntityAdminParams entity = new EntityAdminParams("Entity002", "Number field1; Decimal field2");
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
 
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class)
 				.startsWith("The representation of entity [Entity002] has invalid format"));
 
@@ -171,7 +171,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
 
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class)
 				.startsWith("The entity [NonExistentEntity] does not exist in the repository"));
 		assertFalse(
@@ -223,7 +223,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, entity);
 
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertEquals("The entity [NonExistingEntity] does not exist in the repository",
 				response.getEntity(String.class));
 	}

@@ -1,3 +1,20 @@
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+html,
+body,
+label,
+table.dijitDialogPaneContentArea,
+.dijitTextBox,
+.dijitValidationTextBox
+{
+  font-family: Verdana, Geneva, sans-serif; 
+  font-size: 12px;
+}
+
 .toolbarIconDeleteItem,
 .toolbarIconDeleteFolder,
 .toolbarIconEntity,
@@ -8,7 +25,8 @@
 .toolbarIconError,
 .toolbarIconInfo,
 .toolbarIconUpdate,
-.toolbarIconDownload
+.toolbarIconDownload,
+.toolbarIconRuntimeMonitor
  {
   background-repeat: no-repeat;
   width: 16px;
@@ -58,6 +76,10 @@
 
 .toolbarIconDownload {
   background-image: url("../icons/download_16x16.png");
+}
+
+.toolbarIconRuntimeMonitor {
+  background-image: url("../icons/runtime_monitor_16x16.png");
 }
 
 .fixedTextArea{

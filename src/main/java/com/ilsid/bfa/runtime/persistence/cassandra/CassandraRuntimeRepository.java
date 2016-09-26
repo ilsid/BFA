@@ -26,7 +26,7 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 	private static final String NEXT_RUNTIME_ID_QUERY = "SELECT uuid() AS " + RUNTIME_ID_ALIAS + " FROM system.local";
 
 	private static final String RUNNING_FLOWS_INSERT_STMT = "INSERT INTO running_flows (runtime_id, user_name, script_name, parameters, start_date, "
-			+ "start_time, call_stack) VALUES (?, ?, ?, ?, ?, ?, ?)";
+			+ "start_time, call_stack, completed) VALUES (?, ?, ?, ?, ?, ?, ?, false)";
 	
 	private static final String RUNNING_FLOWS_UPDATE_STMT = "UPDATE running_flows SET completed=true WHERE start_date=? AND runtime_id=? AND start_time=?";
 

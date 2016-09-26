@@ -19,14 +19,18 @@ public class ScriptingRepositoryInitializer {
 				put("bfa.persistence.fs.root_dir", TestConstants.CODE_REPOSITORY_DIR);
 			}
 		});
-
+		
 		DynamicClassLoader.setRepository(repository);
 
 		return repository;
 	}
 
 	public static void cleanup() throws Exception {
-		Files.delete(new File(TestConstants.CODE_REPOSITORY_DIR, ".version").toPath());
+		final File versionFile = new File(TestConstants.CODE_REPOSITORY_DIR, ".version");
+
+		if (versionFile.exists()) {
+			Files.delete(versionFile.toPath());
+		}
 	}
 
 }

@@ -19,6 +19,10 @@ public class CassandraClient extends CassandraRepository {
 	protected boolean useDefaultKeyspace() {
 		return false;
 	}
+	
+	public ResultSet query(String query) {
+		return getSession().execute(query);
+	}
 
 	public ResultSet queryWithAllowedFiltering(String query) {
 		return getSession().execute(query + " ALLOW FILTERING");

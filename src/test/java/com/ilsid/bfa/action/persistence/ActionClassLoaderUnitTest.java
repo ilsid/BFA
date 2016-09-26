@@ -3,7 +3,6 @@ package com.ilsid.bfa.action.persistence;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -15,7 +14,7 @@ import org.junit.Test;
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.action.Action;
-import com.ilsid.bfa.action.persistence.filesystem.FilesystemActionRepository;
+import com.ilsid.bfa.action.persistence.filesystem.ActionRepositoryInitializer;
 import com.ilsid.bfa.script.ScriptingRepositoryInitializer;
 
 public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
@@ -37,23 +36,12 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
 	private static final String ENTITY_CLASS_NAME = "com.ilsid.bfa.generated.entity.default_group.Contract";
 
-	private static ActionRepository repository = new FilesystemActionRepository();
-
 	private ClassLoader loader;
 
 	@BeforeClass
-	@SuppressWarnings("serial")
 	public static void beforeClass() throws Exception {
 		FileUtils.forceMkdir(TMP_CODE_REPOSITORY_DIR);
-
-		repository.setConfiguration(new HashMap<String, String>() {
-			{
-				put("bfa.persistence.fs.root_dir", TMP_CODE_REPOSITORY_DIR.getAbsolutePath());
-			}
-		});
-
-		ActionClassLoader.setRepository(repository);
-
+		ActionClassLoader.setRepository(ActionRepositoryInitializer.init(TMP_CODE_REPOSITORY_DIR.getAbsolutePath()));
 		ScriptingRepositoryInitializer.init();
 	}
 

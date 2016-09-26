@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,17 +37,12 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 	private ActionRepository repository = new FilesystemActionRepository();
 
 	@Before
-	@SuppressWarnings("serial")
 	public void setUp() throws Exception {
 		FileUtils.forceMkdir(REPOSITORY_ROOT_DIR);
 		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + "/code_repository/action"),
 				new File(REPOSITORY_ROOT_DIR, "action"));
 
-		repository.setConfiguration(new HashMap<String, String>() {
-			{
-				put("bfa.persistence.fs.root_dir", REPOSITORY_ROOT_DIR_PATH);
-			}
-		});
+		repository = ActionRepositoryInitializer.init(REPOSITORY_ROOT_DIR_PATH);
 	}
 
 	@After
@@ -177,15 +171,21 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 	public void metadataForActionsInExistingGroupCanBeLoaded() throws Exception {
 		List<Map<String, String>> metaDatas = repository.loadMetadataForActions(ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE);
 
-		assertEquals(2, metaDatas.size());
+		assertEquals(3, metaDatas.size());
 
 		Map<String, String> metaData = metaDatas.get(0);
+		assertEquals(3, metaData.keySet().size());
+		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("Failed Action", metaData.get(Metadata.NAME));
+		assertEquals("Failed Action", metaData.get(Metadata.TITLE));
+
+		metaData = metaDatas.get(1);
 		assertEquals(3, metaData.keySet().size());
 		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("Reserve Amount", metaData.get(Metadata.NAME));
 		assertEquals("Reserve Amount", metaData.get(Metadata.TITLE));
 
-		metaData = metaDatas.get(1);
+		metaData = metaDatas.get(2);
 		assertEquals(3, metaData.keySet().size());
 		assertEquals(Metadata.ACTION_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("Write System Property", metaData.get(Metadata.NAME));

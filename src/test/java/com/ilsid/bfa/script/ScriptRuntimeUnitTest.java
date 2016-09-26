@@ -13,21 +13,20 @@ import org.junit.Test;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.ilsid.bfa.BaseUnitTestCase;
+import com.ilsid.bfa.action.persistence.ActionLocator;
+import com.ilsid.bfa.action.persistence.filesystem.ActionRepositoryInitializer;
 import com.ilsid.bfa.persistence.cassandra.CassandraEmbeddedServer;
 import com.ilsid.bfa.persistence.cassandra.CassandraRuntimeRepositoryInitializer;
-import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
 
 public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
 	private static final String RUNTIME_ID_COLUMN = "runtime_id";
 
-	private static final String RUNNING_FLOWS_QUERY_TPLT = "SELECT * FROM bfa.running_flows WHERE runtime_id=%s";
+	private static final String RUNNING_FLOWS_QUERY_TPLT = "SELECT * FROM bfa.running_flows WHERE start_date='%s' AND runtime_id=%s";
 
-	// Filtering by status is needed here to avoid
-	// [PRIMARY KEY column "runtime_id" cannot be restricted as preceding column "status" is not restricted] error
-	private static final String COMPLETED_FLOWS_BY_DATE_QUERY_TPLT = "SELECT * FROM bfa.completed_flows_by_date WHERE status='Completed' AND runtime_id=%s";
+	private static final String COMPLETED_FLOWS_QUERY_TPLT = "SELECT * FROM bfa.completed_flows WHERE start_date='%s' AND runtime_id=%s";
 
-	private static final String COMPLETED_FLOWS_BY_STATUS_QUERY_TPLT = "SELECT * FROM bfa.completed_flows_by_status WHERE runtime_id=%s";
+	private static final String FAILED_FLOWS_QUERY_TPLT = "SELECT * FROM bfa.failed_flows";
 
 	private static final SimpleDateFormat TOKEN_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
 
@@ -42,6 +41,11 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
 		runtime = new ScriptRuntime();
 		runtime.setRepository(CassandraRuntimeRepositoryInitializer.init());
+
+		final ActionLocator actionLocator = new ActionLocator();
+		actionLocator.setRepository(ActionRepositoryInitializer.init());
+
+		runtime.setActionLocator(actionLocator);
 	}
 
 	@AfterClass
@@ -64,23 +68,33 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void runtimeRecordIsGenerated() throws Exception {
+		String startDate = nowDateToken();
 		Object runtimeId = runtime.runScript("Script001");
 
 		assertRuntimeId(runtimeId);
-		assertSingleRecordIsPersisted(String.format(RUNNING_FLOWS_QUERY_TPLT, runtimeId), runtimeId);
-		assertSingleRecordIsPersisted(String.format(COMPLETED_FLOWS_BY_DATE_QUERY_TPLT, runtimeId), runtimeId);
-		assertSingleRecordIsPersisted(String.format(COMPLETED_FLOWS_BY_STATUS_QUERY_TPLT, runtimeId), runtimeId);
+		assertSingleRecordIsPersisted(String.format(RUNNING_FLOWS_QUERY_TPLT, startDate, runtimeId), runtimeId);
+		assertSingleRecordIsPersisted(String.format(COMPLETED_FLOWS_QUERY_TPLT, startDate, runtimeId), runtimeId);
+	}
+
+	@Test
+	public void runtimeRecordIsGeneratedForFailedScript() throws Exception {
+		try {
+			runtime.runScript("Custom Group 003::Failed Script");
+		} catch (ScriptException e) {
+			assertEquals("Execution of the action [Failed Action] failed", e.getMessage());
+		}
+
+		assertSingleRecordWithErrorDetailsIsPersisted(FAILED_FLOWS_QUERY_TPLT);
 	}
 
 	@Test
 	public void runtimeRecordIsGeneratedForScriptWithSubflow() throws Exception {
+		String startDate = nowDateToken();
 		Object runtimeId = runtime.runScript("SingleSubflowScript");
 
 		assertRuntimeId(runtimeId);
-		assertTwoRecordsArePersisted(String.format(RUNNING_FLOWS_QUERY_TPLT, runtimeId), runtimeId);
-		assertTwoRecordsWithValidDetailsArePersisted(String.format(COMPLETED_FLOWS_BY_DATE_QUERY_TPLT, runtimeId),
-				runtimeId);
-		assertTwoRecordsWithValidDetailsArePersisted(String.format(COMPLETED_FLOWS_BY_STATUS_QUERY_TPLT, runtimeId),
+		assertTwoRecordsArePersisted(String.format(RUNNING_FLOWS_QUERY_TPLT, startDate, runtimeId), runtimeId);
+		assertTwoRecordsWithValidDetailsArePersisted(String.format(COMPLETED_FLOWS_QUERY_TPLT, startDate, runtimeId),
 				runtimeId);
 	}
 
@@ -90,7 +104,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	}
 
 	private void assertSingleRecordIsPersisted(String query, Object runtimeId) {
-		ResultSet rs = CassandraEmbeddedServer.getClient().queryWithAllowedFiltering(query);
+		ResultSet rs = CassandraEmbeddedServer.getClient().query(query);
 
 		final List<Row> rows = rs.all();
 		assertEquals(1, rows.size());
@@ -98,11 +112,28 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		assertEquals(runtimeId, row.getUUID(RUNTIME_ID_COLUMN));
 		Date startTime = row.getTimestamp("start_time");
 		assertNotNull(startTime);
-		assertEquals(row.getString("start_date"), TOKEN_DATE_FORMAT.format(startTime));
+		assertEquals(row.getString("start_date"), toDateToken(startTime));
+	}
+
+	private void assertSingleRecordWithErrorDetailsIsPersisted(String query) {
+		ResultSet rs = CassandraEmbeddedServer.getClient().query(query);
+
+		final List<Row> rows = rs.all();
+		assertEquals(1, rows.size());
+		final Row row = rows.get(0);
+		Date startTime = row.getTimestamp("start_time");
+		assertNotNull(startTime);
+		assertEquals(row.getString("start_date"), toDateToken(startTime));
+
+		List<String> errors = row.getList("error_details", String.class);
+		assertEquals(3, errors.size());
+		assertEquals("Execution of the action [Failed Action] failed", errors.get(0));
+		assertEquals("   Caused by: Test action failed", errors.get(1));
+		assertEquals("   Caused by: Base action error", errors.get(2));
 	}
 
 	private void assertTwoRecordsArePersisted(String query, Object runtimeId) {
-		ResultSet rs = CassandraEmbeddedServer.getClient().queryWithAllowedFiltering(query);
+		ResultSet rs = CassandraEmbeddedServer.getClient().query(query);
 
 		final List<Row> rows = rs.all();
 		assertEquals(2, rows.size());
@@ -112,7 +143,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	}
 
 	private void assertTwoRecordsWithValidDetailsArePersisted(String query, Object runtimeId) {
-		ResultSet rs = CassandraEmbeddedServer.getClient().queryWithAllowedFiltering(query);
+		ResultSet rs = CassandraEmbeddedServer.getClient().query(query);
 
 		final List<Row> rows = rs.all();
 
@@ -125,21 +156,27 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		assertEquals(runtimeId, subflow.getUUID(RUNTIME_ID_COLUMN));
 
 		assertTrue(topScript.getList("call_stack", String.class).isEmpty());
-		assertEquals(RuntimeStatusType.COMPLETED.getValue(), topScript.getString("status"));
 		final Date topScriptStartTime = topScript.getTimestamp("start_time");
 		assertNotNull(topScriptStartTime);
-		assertEquals(topScript.getString("start_date"), TOKEN_DATE_FORMAT.format(topScriptStartTime));
+		assertEquals(topScript.getString("start_date"), toDateToken(topScriptStartTime));
 		assertNotNull(topScript.getTimestamp("end_time"));
 
 		final List<String> subflowCallstack = subflow.getList("call_stack", String.class);
 		assertEquals(1, subflowCallstack.size());
 		// Call stack contains name of calling script
 		assertEquals("SingleSubflowScript", subflowCallstack.get(0));
-		assertEquals(RuntimeStatusType.COMPLETED.getValue(), subflow.getString("status"));
 		final Date subflowStartTime = subflow.getTimestamp("start_time");
 		assertNotNull(subflowStartTime);
-		assertEquals(subflow.getString("start_date"), TOKEN_DATE_FORMAT.format(subflowStartTime));
+		assertEquals(subflow.getString("start_date"), toDateToken(subflowStartTime));
 		assertNotNull(subflow.getTimestamp("end_time"));
+	}
+
+	private String toDateToken(Date time) {
+		return TOKEN_DATE_FORMAT.format(time);
+	}
+
+	private String nowDateToken() {
+		return TOKEN_DATE_FORMAT.format(new Date());
 	}
 
 }

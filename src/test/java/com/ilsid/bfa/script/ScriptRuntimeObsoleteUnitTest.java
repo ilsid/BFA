@@ -8,6 +8,7 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
@@ -17,6 +18,7 @@ import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.ilsid.bfa.persistence.orientdb.OrientdbClient;
 
+@Ignore
 public class ScriptRuntimeObsoleteUnitTest extends BaseUnitTestCase {
 
 	private final static File ORIENTDB_HOME_DIR = new File(REPOSITORY_ROOT_DIR, "orientdb");

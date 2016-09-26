@@ -1,6 +1,9 @@
 package com.ilsid.bfa.runtime.persistence.cassandra;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.UUID;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.BoundStatement;
@@ -8,8 +11,11 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.QueryPagingOptions;
 import com.ilsid.bfa.persistence.cassandra.CassandraRepository;
 import com.ilsid.bfa.persistence.cassandra.CassandraUtil;
+import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
+import com.ilsid.bfa.runtime.dto.ScriptRuntimeCriteria;
 import com.ilsid.bfa.runtime.dto.ScriptRuntimeDTO;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 
@@ -21,13 +27,14 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 
 	private static final String RUNNING_FLOWS_INSERT_STMT = "INSERT INTO running_flows (runtime_id, user_name, script_name, parameters, start_date, "
 			+ "start_time, call_stack) VALUES (?, ?, ?, ?, ?, ?, ?)";
+	
+	private static final String RUNNING_FLOWS_UPDATE_STMT = "UPDATE running_flows SET completed=true WHERE start_date=? AND runtime_id=? AND start_time=?";
 
-	private static final String COMPLETED_FLOWS_INSERT_STMT_TPLT = "INSERT INTO %s (runtime_id, user_name, script_name, parameters, start_date, "
-			+ "start_time, call_stack, status, end_time, error_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	private static final String COMPLETED_FLOWS_INSERT_STMT_TPLT = "INSERT INTO completed_flows (runtime_id, user_name, script_name, parameters, start_date, "
+			+ "start_time, call_stack, end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-	private static final String COMPLETED_FLOWS_BY_DATE_TABLE_NAME = "completed_flows_by_date";
-
-	private static final String COMPLETED_FLOWS_BY_STATUS_TABLE_NAME = "completed_flows_by_status";
+	private static final String FAILED_FLOWS_INSERT_STMT_TPLT = "INSERT INTO failed_flows (runtime_id, user_name, script_name, parameters, start_date, "
+			+ "start_time, call_stack, end_time, error_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	/*
 	 * (non-Javadoc)
@@ -76,18 +83,46 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 	public void updateRuntimeRecord(ScriptRuntimeDTO record) throws PersistenceException, IllegalArgumentException {
 		final Session session = getSession();
 
-		PreparedStatement insertByDatePrepStmt = session
-				.prepare(String.format(COMPLETED_FLOWS_INSERT_STMT_TPLT, COMPLETED_FLOWS_BY_DATE_TABLE_NAME));
-		BoundStatement insertByDateBoundStmt = bindCompletedFlowsStatement(insertByDatePrepStmt, record);
+		PreparedStatement insertStmt;
+		final RuntimeStatusType runtimeStatus = record.getStatus();
 
-		PreparedStatement insertByStatusPrepStmt = session
-				.prepare(String.format(COMPLETED_FLOWS_INSERT_STMT_TPLT, COMPLETED_FLOWS_BY_STATUS_TABLE_NAME));
-		BoundStatement insertByStatusBoundStmt = bindCompletedFlowsStatement(insertByStatusPrepStmt, record);
+		if (runtimeStatus == RuntimeStatusType.COMPLETED) {
+			insertStmt = session.prepare(COMPLETED_FLOWS_INSERT_STMT_TPLT);
+		} else if (runtimeStatus == RuntimeStatusType.FAILED) {
+			insertStmt = session.prepare(FAILED_FLOWS_INSERT_STMT_TPLT);
+		} else {
+			throw new IllegalArgumentException("Illegal flow runtime status: " + runtimeStatus);
+		}
 
+		BoundStatement insBoundStmt = new BoundStatement(insertStmt);
+		final Date startTime = record.getStartTime();
+		final UUID runtimeId = (UUID) record.getRuntimeId();
+		final String startDate = CassandraUtil.timestampToDateToken(startTime);
+		final Collection<String> callStack = record.getCallStack();
+
+		insBoundStmt.setUUID(0, runtimeId);
+		insBoundStmt.setString(1, record.getUserName());
+		insBoundStmt.setString(2, record.getScriptName());
+		insBoundStmt.setList(3, record.getParameters());
+		insBoundStmt.setString(4, startDate);
+		insBoundStmt.setTimestamp(5, startTime);
+		if (callStack == null) {
+			insBoundStmt.setList(6, null);
+		} else {
+			insBoundStmt.setList(6, new LinkedList<String>(callStack));
+		}
+		insBoundStmt.setTimestamp(7, record.getEndTime());
+		if (runtimeStatus == RuntimeStatusType.FAILED) {
+			insBoundStmt.setList(8, CassandraUtil.getErrorDetails(record.getError()));
+		}
+		
+		PreparedStatement updateStmt = session.prepare(RUNNING_FLOWS_UPDATE_STMT);
+		BoundStatement updBoundStmt = updateStmt.bind(startDate, runtimeId, startTime);
+		
 		BatchStatement batch = new BatchStatement();
-		batch.add(insertByDateBoundStmt);
-		batch.add(insertByStatusBoundStmt);
-
+		batch.add(insBoundStmt);
+		batch.add(updBoundStmt);
+		
 		try {
 			session.execute(batch);
 		} catch (RuntimeException e) {
@@ -95,12 +130,17 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 		}
 	}
 
-	private BoundStatement bindCompletedFlowsStatement(PreparedStatement stmt, ScriptRuntimeDTO record) {
-		final Date startTime = record.getStartTime();
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.runtime.persistence.RuntimeRepository#fetch(com.ilsid.bfa.runtime.dto. ScriptRuntimeCriteria,
+	 * com.ilsid.bfa.persistence.QueryPagingOptions)
+	 */
+	@Override
+	public Collection<ScriptRuntimeDTO> fetch(ScriptRuntimeCriteria criteria, QueryPagingOptions pagingOptions)
+			throws PersistenceException {
 
-		return stmt.bind(record.getRuntimeId(), record.getUserName(), record.getScriptName(), record.getParameters(),
-				CassandraUtil.timestampToDateToken(startTime), startTime, record.getCallStack(),
-				record.getStatus().getValue(), record.getEndTime(), CassandraUtil.getErrorDetails(record.getError()));
+		return null;
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
@@ -19,13 +20,19 @@ public class CassandraClient extends CassandraRepository {
 	protected boolean useDefaultKeyspace() {
 		return false;
 	}
-	
+
 	public ResultSet query(String query) {
 		return getSession().execute(query);
 	}
 
 	public ResultSet queryWithAllowedFiltering(String query) {
 		return getSession().execute(query + " ALLOW FILTERING");
+	}
+
+	public void executeBoundStatement(String statement, Object... values) {
+		Session session = getSession();
+		PreparedStatement stmt = session.prepare(statement);
+		session.execute(stmt.bind(values));
 	}
 
 	void initDatabase() throws Exception {

@@ -27,7 +27,7 @@ public class ScriptRuntimeDTO {
 
 	@RequiredField
 	private RuntimeStatusType status;
-
+	
 	@RequiredField
 	private Date startTime;
 

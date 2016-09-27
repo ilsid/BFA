@@ -1,7 +1,6 @@
 package com.ilsid.bfa.runtime.persistence.orientdb;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.QueryPage;
 import com.ilsid.bfa.persistence.QueryPagingOptions;
 import com.ilsid.bfa.persistence.orientdb.DatabaseCallback;
 import com.ilsid.bfa.persistence.orientdb.OrientdbRepository;
@@ -125,7 +125,7 @@ public class OrientdbRuntimeRepository extends OrientdbRepository implements Run
 	 * ScriptRuntimeCriteria, com.ilsid.bfa.persistence.QueryPagingOptions)
 	 */
 	@Override
-	public Collection<ScriptRuntimeDTO> fetch(ScriptRuntimeCriteria criteria, QueryPagingOptions pagingOptions)
+	public QueryPage<ScriptRuntimeDTO> fetch(ScriptRuntimeCriteria criteria, QueryPagingOptions pagingOptions)
 			throws PersistenceException {
 
 		throw new RuntimeException("Not implemented");

@@ -12,8 +12,6 @@ public class ScriptRuntimeCriteria {
 
 	private Date startDate;
 
-	private Date endDate;
-
 	private RuntimeStatusType status;
 
 	public Date getStartDate() {
@@ -22,15 +20,6 @@ public class ScriptRuntimeCriteria {
 
 	public ScriptRuntimeCriteria setStartDate(Date startDate) {
 		this.startDate = startDate;
-		return this;
-	}
-
-	public Date getEndDate() {
-		return endDate;
-	}
-
-	public ScriptRuntimeCriteria setEndDate(Date endDate) {
-		this.endDate = endDate;
 		return this;
 	}
 

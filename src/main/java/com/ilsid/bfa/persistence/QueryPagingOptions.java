@@ -12,7 +12,7 @@ public class QueryPagingOptions {
 
 	private int resultsPerPage = DEFAULT_RESULTS_PER_PAGE;
 
-	private Object pageToken;
+	private String pageToken;
 
 	public int getResultsPerPage() {
 		return resultsPerPage;
@@ -23,11 +23,11 @@ public class QueryPagingOptions {
 		return this;
 	}
 
-	public Object getPageToken() {
+	public String getPageToken() {
 		return pageToken;
 	}
 
-	public QueryPagingOptions setPageToken(Object pageToken) {
+	public QueryPagingOptions setPageToken(String pageToken) {
 		this.pageToken = pageToken;
 		return this;
 	}

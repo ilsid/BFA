@@ -8,11 +8,14 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PagingState;
 import com.datastax.driver.core.PoolingOptions;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SocketOptions;
+import com.datastax.driver.core.exceptions.PagingStateException;
 import com.ilsid.bfa.Configurable;
 import com.ilsid.bfa.ConfigurationException;
+import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 
 /**
@@ -41,6 +44,17 @@ public abstract class CassandraRepository implements Configurable {
 
 	protected boolean useDefaultKeyspace() {
 		return true;
+	}
+	
+	protected PagingState toPagingState(String pagingToken) throws PersistenceException {
+		PagingState result;
+		try {
+			result = PagingState.fromString(pagingToken);
+		} catch (PagingStateException e) {
+			throw new PersistenceException("Wrong query paging token", e);
+		}
+		
+		return result;
 	}
 
 	/**

@@ -2,8 +2,10 @@ package com.ilsid.bfa.runtime.persistence.cassandra;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.datastax.driver.core.BatchStatement;
@@ -45,6 +47,18 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 	static final String FAILED_FLOWS_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
 			+ "start_time, call_stack, end_time, error_details FROM failed_flows WHERE start_date=?";
 
+	private final Map<String, PreparedStatement> preparedStatements = new HashMap<>();
+
+	@Override
+	protected void prepareStatements(Session session) throws PersistenceException {
+		String[] statements = { NEXT_RUNTIME_ID_QUERY, RUNNING_FLOWS_INSERT_STMT, RUNNING_FLOWS_UPDATE_STMT,
+				COMPLETED_FLOWS_INSERT_STMT, FAILED_FLOWS_INSERT_STMT, FAILED_FLOWS_SELECT_STMT };
+
+		for (String stmt : statements) {
+			preparedStatements.put(stmt, session.prepare(stmt));
+		}
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -55,8 +69,8 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 		final UUID result;
 		final Session session = getSession();
 		try {
-			PreparedStatement st = session.prepare(NEXT_RUNTIME_ID_QUERY);
-			ResultSet rs = session.execute(st.bind());
+			final PreparedStatement stmt = preparedStatements.get(NEXT_RUNTIME_ID_QUERY);
+			ResultSet rs = session.execute(stmt.bind());
 
 			result = rs.one().getUUID(RUNTIME_ID_ALIAS);
 		} catch (RuntimeException e) {
@@ -76,7 +90,7 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 	public void createRuntimeRecord(ScriptRuntimeDTO record) throws PersistenceException {
 		final Session session = getSession();
 		try {
-			PreparedStatement prepStmt = session.prepare(RUNNING_FLOWS_INSERT_STMT);
+			PreparedStatement prepStmt = preparedStatements.get(RUNNING_FLOWS_INSERT_STMT);
 			final Date startTime = record.getStartTime();
 
 			BoundStatement boundStmt = prepStmt.bind(record.getRuntimeId(), record.getUserName(),
@@ -130,7 +144,7 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 		QueryPage<ScriptRuntimeDTO> result;
 		try {
 			if (status == RuntimeStatusType.FAILED) {
-				PreparedStatement stmt = session.prepare(FAILED_FLOWS_SELECT_STMT);
+				PreparedStatement stmt = preparedStatements.get(FAILED_FLOWS_SELECT_STMT);
 				BoundStatement boundStmt = stmt.bind(CassandraUtil.timestampToDateToken(criteria.getStartDate()));
 				boundStmt.setFetchSize(pagingOptions.getResultsPerPage());
 
@@ -169,9 +183,9 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 		final RuntimeStatusType status = record.getStatus();
 
 		if (status == RuntimeStatusType.COMPLETED) {
-			insertStmt = session.prepare(COMPLETED_FLOWS_INSERT_STMT);
+			insertStmt = preparedStatements.get(COMPLETED_FLOWS_INSERT_STMT);
 		} else if (status == RuntimeStatusType.FAILED) {
-			insertStmt = session.prepare(FAILED_FLOWS_INSERT_STMT);
+			insertStmt = preparedStatements.get(FAILED_FLOWS_INSERT_STMT);
 		} else {
 			throw new IllegalArgumentException("Illegal flow runtime status: " + status);
 		}
@@ -203,7 +217,7 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 	}
 
 	private BoundStatement createRunningFlowUpdateStatement(Session session, ScriptRuntimeDTO record) {
-		PreparedStatement updateStmt = session.prepare(RUNNING_FLOWS_UPDATE_STMT);
+		PreparedStatement updateStmt = preparedStatements.get(RUNNING_FLOWS_UPDATE_STMT);
 
 		final Date startTime = record.getStartTime();
 		BoundStatement boundStmt = updateStmt.bind(CassandraUtil.timestampToDateToken(startTime), record.getRuntimeId(),

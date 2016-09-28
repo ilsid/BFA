@@ -32,6 +32,18 @@ public abstract class CassandraRepository implements Configurable {
 
 	private static Session session;
 
+	private boolean statementsPreparationDone = false;
+
+	/**
+	 * Prepare database statements. An implementor should cache the prepared statements for consequent re-use.
+	 * 
+	 * @param session
+	 *            database session
+	 * @throws PersistenceException
+	 *             if statements can't be prepared
+	 */
+	protected abstract void prepareStatements(Session session) throws PersistenceException;
+
 	/**
 	 * Returns Cassandra session. Must be used only after {@link #setConfiguration(Map)} invocation.
 	 * 
@@ -45,7 +57,7 @@ public abstract class CassandraRepository implements Configurable {
 	protected boolean useDefaultKeyspace() {
 		return true;
 	}
-	
+
 	protected PagingState toPagingState(String pagingToken) throws PersistenceException {
 		PagingState result;
 		try {
@@ -53,13 +65,14 @@ public abstract class CassandraRepository implements Configurable {
 		} catch (PagingStateException e) {
 			throw new PersistenceException("Wrong query paging token", e);
 		}
-		
+
 		return result;
 	}
 
 	/**
-	 * Initializes database session using the provided configuration. Should be invoked only once. All
-	 * {@link CassandraRepository} instances share the same session. Does nothing on consequent invocations.
+	 * Initializes database session using the provided configuration. All {@link CassandraRepository} instances share
+	 * the same session. The session is initialized only once on the first method invocation of any instance. Also,
+	 * database statements are prepared for a particular instance using {@link #prepareStatements(Session)}.
 	 * 
 	 * @param config
 	 *            database configuration
@@ -70,28 +83,35 @@ public abstract class CassandraRepository implements Configurable {
 	@Override
 	public void setConfiguration(@RepositoryConfig Map<String, String> config) throws ConfigurationException {
 		synchronized (CLUSTER_LOCK) {
-			if (cluster != null) {
-				return;
+			if (cluster == null) {
+				Map<String, Integer> contactPoints = CassandraConfig.extractContactPoints(config);
+
+				List<InetSocketAddress> addresses = new LinkedList<>();
+				for (String host : contactPoints.keySet()) {
+					addresses.add(new InetSocketAddress(host, contactPoints.get(host)));
+				}
+
+				PoolingOptions poolingOptions = CassandraConfig.extractPoolingOptions(config);
+				SocketOptions socketOptions = new SocketOptions()
+						.setConnectTimeoutMillis(CassandraConfig.extractConnectionTimeout(config));
+
+				cluster = Cluster.builder().addContactPointsWithPorts(addresses).withPoolingOptions(poolingOptions)
+						.withSocketOptions(socketOptions).build();
+
+				if (useDefaultKeyspace()) {
+					session = cluster.connect(CassandraConfig.KEYSPACE_NAME);
+				} else {
+					session = cluster.connect();
+				}
 			}
 
-			Map<String, Integer> contactPoints = CassandraConfig.extractContactPoints(config);
-
-			List<InetSocketAddress> addresses = new LinkedList<>();
-			for (String host : contactPoints.keySet()) {
-				addresses.add(new InetSocketAddress(host, contactPoints.get(host)));
-			}
-
-			PoolingOptions poolingOptions = CassandraConfig.extractPoolingOptions(config);
-			SocketOptions socketOptions = new SocketOptions()
-					.setConnectTimeoutMillis(CassandraConfig.extractConnectionTimeout(config));
-
-			cluster = Cluster.builder().addContactPointsWithPorts(addresses).withPoolingOptions(poolingOptions)
-					.withSocketOptions(socketOptions).build();
-
-			if (useDefaultKeyspace()) {
-				session = cluster.connect(CassandraConfig.KEYSPACE_NAME);
-			} else {
-				session = cluster.connect();
+			if (!statementsPreparationDone) {
+				try {
+					prepareStatements(session);
+					statementsPreparationDone = true;
+				} catch (RuntimeException | PersistenceException e) {
+					throw new ConfigurationException("Failed to prepare database statements", e);
+				}
 			}
 		}
 

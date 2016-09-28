@@ -2,6 +2,7 @@ package com.ilsid.bfa;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.Date;
 
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
@@ -12,6 +13,8 @@ import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
 public abstract class BaseUnitTestCase {
+	
+	private static final long ONE_MINUTE_IN_MILLIS = 60000;
 	
 	protected final static String REPOSITORY_ROOT_DIR_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_class_repository";
 	
@@ -100,6 +103,10 @@ public abstract class BaseUnitTestCase {
 	
 	protected String toUnixLF(String str) {
 		return str.replace("\r\n", "\n");
+	}
+	
+	protected Date addMinutes(Date time, int minutes) {
+		return new Date(time.getTime() + minutes * ONE_MINUTE_IN_MILLIS);
 	}
 
 }

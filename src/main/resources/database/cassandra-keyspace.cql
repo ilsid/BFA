@@ -14,8 +14,10 @@ CREATE TABLE running_flows (
 	call_stack LIST<VARCHAR>,
 	completed BOOLEAN,
 	
-	PRIMARY KEY ((start_date, runtime_id), start_time)
+	PRIMARY KEY (start_date, start_time, runtime_id)
 ) WITH CLUSTERING ORDER BY (start_time DESC);
+
+CREATE INDEX idx_completed_flow_flags ON running_flows (completed);
 
 
 CREATE TABLE completed_flows (
@@ -29,7 +31,7 @@ CREATE TABLE completed_flows (
 	call_stack LIST<VARCHAR>,
 	end_time TIMESTAMP,
 	
-	PRIMARY KEY ((start_date, runtime_id), start_time)
+	PRIMARY KEY (start_date, start_time)
 ) WITH CLUSTERING ORDER BY (start_time DESC);
 
 

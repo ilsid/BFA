@@ -27,7 +27,22 @@ import com.ilsid.bfa.runtime.dto.ScriptRuntimeCriteria;
 import com.ilsid.bfa.runtime.dto.ScriptRuntimeDTO;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 
+// FIXME: Data model should be updated. "ddMMyyyy" partition key is a bad one for saving/updating of "running flow" and "completed flow" 
+// records, as it is going to be a hot spot under a heavy load. Also index for running_flows.completed column is under concern 
+// (see https://docs.datastax.com/en/cql/3.3/cql/cql_using/useWhenIndex.html#useWhenIndex__when-no-index)
+/**
+ * Cassandra based runtime repository.
+ * 
+ * @author illia.sydorovych
+ *
+ */
 public class CassandraRuntimeRepository extends CassandraRepository implements RuntimeRepository {
+
+	private static final RuntimeRowConverter FAILED_FLOW_CONVERTER = new FailedFlowConverter();
+
+	private static final RuntimeRowConverter RUNNING_FLOW_CONVERTER = new RunningFlowConverter();
+
+	private static final RuntimeRowConverter COMPLETED_FLOW_CONVERTER = new CompletedFlowConverter();
 
 	static final String RUNTIME_ID_ALIAS = "runtime_id";
 
@@ -47,12 +62,19 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 	static final String FAILED_FLOWS_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
 			+ "start_time, call_stack, end_time, error_details FROM failed_flows WHERE start_date=?";
 
+	static final String RUNNING_FLOWS_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
+			+ "start_time, call_stack FROM running_flows WHERE start_date=? AND completed=false";
+
+	static final String COMPLETED_FLOWS_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
+			+ "start_time, call_stack, end_time FROM completed_flows WHERE start_date=?";
+
 	private final Map<String, PreparedStatement> preparedStatements = new HashMap<>();
 
 	@Override
 	protected void prepareStatements(Session session) throws PersistenceException {
 		String[] statements = { NEXT_RUNTIME_ID_QUERY, RUNNING_FLOWS_INSERT_STMT, RUNNING_FLOWS_UPDATE_STMT,
-				COMPLETED_FLOWS_INSERT_STMT, FAILED_FLOWS_INSERT_STMT, FAILED_FLOWS_SELECT_STMT };
+				COMPLETED_FLOWS_INSERT_STMT, FAILED_FLOWS_INSERT_STMT, FAILED_FLOWS_SELECT_STMT,
+				RUNNING_FLOWS_SELECT_STMT, COMPLETED_FLOWS_SELECT_STMT };
 
 		for (String stmt : statements) {
 			preparedStatements.put(stmt, session.prepare(stmt));
@@ -136,40 +158,28 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 	public QueryPage<ScriptRuntimeDTO> fetch(ScriptRuntimeCriteria criteria, QueryPagingOptions pagingOptions)
 			throws PersistenceException {
 
-		List<ScriptRuntimeDTO> fetchResult = new LinkedList<>();
-		String nextPageToken = null;
 		RuntimeStatusType status = criteria.getStatus();
 		final Session session = getSession();
 
 		QueryPage<ScriptRuntimeDTO> result;
+		PreparedStatement stmt;
+		RuntimeRowConverter rowConverter;
 		try {
 			if (status == RuntimeStatusType.FAILED) {
-				PreparedStatement stmt = preparedStatements.get(FAILED_FLOWS_SELECT_STMT);
-				BoundStatement boundStmt = stmt.bind(CassandraUtil.timestampToDateToken(criteria.getStartDate()));
-				boundStmt.setFetchSize(pagingOptions.getResultsPerPage());
-
-				final String pageToken = pagingOptions.getPageToken();
-				if (pageToken != null) {
-					boundStmt.setPagingState(toPagingState(pageToken));
-				}
-
-				ResultSet rs = session.execute(boundStmt);
-				int remainingCount = rs.getAvailableWithoutFetching();
-
-				for (Row row : rs) {
-					fetchResult.add(toFailedFlowRecord(row));
-					if (--remainingCount == 0) {
-						break;
-					}
-				}
-
-				PagingState nextPage = rs.getExecutionInfo().getPagingState();
-				if (nextPage != null) {
-					nextPageToken = nextPage.toString();
-				}
+				stmt = preparedStatements.get(FAILED_FLOWS_SELECT_STMT);
+				rowConverter = FAILED_FLOW_CONVERTER;
+			} else if (status == RuntimeStatusType.INPROGRESS) {
+				stmt = preparedStatements.get(RUNNING_FLOWS_SELECT_STMT);
+				rowConverter = RUNNING_FLOW_CONVERTER;
+			} else if (status == RuntimeStatusType.COMPLETED) {
+				stmt = preparedStatements.get(COMPLETED_FLOWS_SELECT_STMT);
+				rowConverter = COMPLETED_FLOW_CONVERTER;
+			} else {
+				throw new IllegalArgumentException("Wrong flow runtime status: " + status);
 			}
 
-			result = new QueryPage<ScriptRuntimeDTO>(fetchResult, nextPageToken);
+			BoundStatement boundStmt = stmt.bind(CassandraUtil.timestampToDateToken(criteria.getStartDate()));
+			result = getPagedResult(session, boundStmt, rowConverter, pagingOptions);
 
 		} catch (RuntimeException e) {
 			throw new PersistenceException("Failed to fetch flow runtime records", e);
@@ -226,13 +236,78 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 		return boundStmt;
 	}
 
-	private ScriptRuntimeDTO toFailedFlowRecord(Row row) {
-		ScriptRuntimeDTO record = new ScriptRuntimeDTO().setRuntimeId(row.getUUID(0)).setUserName(row.getString(1))
-				.setScriptName(row.getString(2)).setParameters(row.getList(3, String.class))
-				.setStartTime(row.getTimestamp(5)).setCallStack(row.getList(6, String.class))
-				.setEndTime(row.getTimestamp(7)).setError(ExceptionUtil.toException(row.getList(8, String.class)));
+	private QueryPage<ScriptRuntimeDTO> getPagedResult(Session session, BoundStatement boundStmt,
+			RuntimeRowConverter rowConverter, QueryPagingOptions pagingOptions) throws PersistenceException {
 
-		return record;
+		List<ScriptRuntimeDTO> fetchResult = new LinkedList<>();
+		String nextPageToken = null;
+
+		boundStmt.setFetchSize(pagingOptions.getResultsPerPage());
+
+		final String pageToken = pagingOptions.getPageToken();
+		if (pageToken != null) {
+			boundStmt.setPagingState(toPagingState(pageToken));
+		}
+
+		ResultSet rs = session.execute(boundStmt);
+		int remainingCount = rs.getAvailableWithoutFetching();
+
+		for (Row row : rs) {
+			fetchResult.add(rowConverter.toRecord(row));
+			if (--remainingCount == 0) {
+				break;
+			}
+		}
+
+		PagingState nextPage = rs.getExecutionInfo().getPagingState();
+
+		if (nextPage != null) {
+			nextPageToken = nextPage.toString();
+		}
+
+		return new QueryPage<ScriptRuntimeDTO>(fetchResult, nextPageToken);
+	}
+
+	private static abstract class RuntimeRowConverter {
+
+		public ScriptRuntimeDTO toRecord(Row row) {
+			ScriptRuntimeDTO record = new ScriptRuntimeDTO().setRuntimeId(row.getUUID(0)).setUserName(row.getString(1))
+					.setScriptName(row.getString(2)).setParameters(row.getList(3, String.class))
+					.setStartTime(row.getTimestamp(5)).setCallStack(row.getList(6, String.class));
+
+			return record;
+		};
+
+	}
+
+	private static class FailedFlowConverter extends RuntimeRowConverter {
+
+		@Override
+		public ScriptRuntimeDTO toRecord(Row row) {
+			final Exception flowError = ExceptionUtil.toException(row.getList(8, String.class));
+
+			return super.toRecord(row).setEndTime(row.getTimestamp(7)).setError(flowError)
+					.setStatus(RuntimeStatusType.FAILED);
+		}
+
+	}
+
+	private static class RunningFlowConverter extends RuntimeRowConverter {
+
+		@Override
+		public ScriptRuntimeDTO toRecord(Row row) {
+			return super.toRecord(row).setStatus(RuntimeStatusType.INPROGRESS);
+		}
+
+	}
+
+	private static class CompletedFlowConverter extends RuntimeRowConverter {
+
+		@Override
+		public ScriptRuntimeDTO toRecord(Row row) {
+			return super.toRecord(row).setEndTime(row.getTimestamp(7)).setStatus(RuntimeStatusType.COMPLETED);
+		}
+
 	}
 
 }

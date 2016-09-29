@@ -42,10 +42,10 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 	public static void afterClass() throws Exception {
 		CassandraEmbeddedServer.shutdown();
 	}
-	
+
 	@After
 	public void afterTest() {
-		clearFailedFlows();
+		CassandraEmbeddedServer.getClient().clearDatabase();
 	}
 
 	@Test
@@ -63,8 +63,8 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(1, records.size());
 
 		ScriptRuntimeDTO rec = records.get(0);
-		
-		assertNotNull(rec.getRuntimeId());;
+
+		assertNotNull(rec.getRuntimeId());
 		assertEquals(USER_NAME, rec.getUserName());
 		assertEquals("Test Script 1", rec.getScriptName());
 		assertEquals(getParameters(), rec.getParameters());
@@ -72,6 +72,58 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(addMinutes(startTime, 1), rec.getEndTime());
 		assertEquals(getCallStack(), rec.getCallStack());
 		assertEquals(ExceptionUtil.toException(getErrorDetails()).getMessage(), rec.getError().getMessage());
+		assertEquals(RuntimeStatusType.FAILED, rec.getStatus());
+	}
+
+	@Test
+	public void allRunningFlowFieldsAreFetched() throws Exception {
+		final Date startTime = new Date();
+		insertRunningFlows(1, startTime, getParameters(), getCallStack());
+
+		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
+				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.INPROGRESS).setStartDate(startTime),
+				new QueryPagingOptions());
+
+		final List<ScriptRuntimeDTO> records = fetchResult.getResult();
+
+		assertNull(fetchResult.getNextPageToken());
+		assertEquals(1, records.size());
+
+		ScriptRuntimeDTO rec = records.get(0);
+
+		assertNotNull(rec.getRuntimeId());
+		assertEquals(USER_NAME, rec.getUserName());
+		assertEquals("Test Script 1", rec.getScriptName());
+		assertEquals(getParameters(), rec.getParameters());
+		assertEquals(addMinutes(startTime, 1), rec.getStartTime());
+		assertEquals(getCallStack(), rec.getCallStack());
+		assertEquals(RuntimeStatusType.INPROGRESS, rec.getStatus());
+	}
+
+	@Test
+	public void allCompletedFlowFieldsAreFetched() throws Exception {
+		final Date startTime = new Date();
+		insertCompletedFlows(1, startTime, getParameters(), getCallStack());
+
+		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
+				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.COMPLETED).setStartDate(startTime),
+				new QueryPagingOptions());
+
+		final List<ScriptRuntimeDTO> records = fetchResult.getResult();
+
+		assertNull(fetchResult.getNextPageToken());
+		assertEquals(1, records.size());
+
+		ScriptRuntimeDTO rec = records.get(0);
+
+		assertNotNull(rec.getRuntimeId());
+		assertEquals(USER_NAME, rec.getUserName());
+		assertEquals("Test Script 1", rec.getScriptName());
+		assertEquals(getParameters(), rec.getParameters());
+		assertEquals(addMinutes(startTime, 1), rec.getStartTime());
+		assertEquals(addMinutes(startTime, 1), rec.getEndTime());
+		assertEquals(getCallStack(), rec.getCallStack());
+		assertEquals(RuntimeStatusType.COMPLETED, rec.getStatus());
 	}
 
 	@Test
@@ -83,45 +135,61 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.FAILED).setStartDate(startTime),
 				new QueryPagingOptions());
 
-		final List<ScriptRuntimeDTO> records = fetchResult.getResult();
-
-		assertNull(fetchResult.getNextPageToken());
-		assertEquals(3, records.size());
-
-		assertEquals(addMinutes(startTime, 3), records.get(0).getStartTime());
-		assertEquals("Test Script 3", records.get(0).getScriptName());
-
-		assertEquals(addMinutes(startTime, 2), records.get(1).getStartTime());
-		assertEquals("Test Script 2", records.get(1).getScriptName());
-
-		assertEquals(addMinutes(startTime, 1), records.get(2).getStartTime());
-		assertEquals("Test Script 1", records.get(2).getScriptName());
+		assertResultIsSortedByDescendingStartTime(fetchResult, startTime);
 	}
 
 	@Test
-	public void fetchedFlowsResultIsPaginated() throws Exception {
+	public void runningFlowsAreFetchedByDescendingStartTimeOrder() throws Exception {
+		final Date startTime = new Date();
+		insertRunningFlows(3, startTime);
+
+		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
+				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.INPROGRESS).setStartDate(startTime),
+				new QueryPagingOptions());
+
+		assertResultIsSortedByDescendingStartTime(fetchResult, startTime);
+	}
+
+	@Test
+	public void completedFlowsAreFetchedByDescendingStartTimeOrder() throws Exception {
+		final Date startTime = new Date();
+		insertCompletedFlows(3, startTime);
+
+		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
+				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.COMPLETED).setStartDate(startTime),
+				new QueryPagingOptions());
+
+		assertResultIsSortedByDescendingStartTime(fetchResult, startTime);
+	}
+
+	@Test
+	public void fetchedFailedFlowsResultIsPaginated() throws Exception {
 		final Date startTime = new Date();
 		final int totalRecords = 100;
 		final int pageSize = 80;
 
 		insertFailedFlows(totalRecords, startTime);
-		
-		final QueryPagingOptions pagingOptions = new QueryPagingOptions().setResultsPerPage(pageSize);
-		
-		QueryPage<ScriptRuntimeDTO> firstPage = repository.fetch(
-				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.FAILED).setStartDate(startTime),
-				pagingOptions);
-		
-		final String nextPageToken = firstPage.getNextPageToken();
-		assertNotNull(nextPageToken);
-		assertEquals(pageSize, firstPage.getResult().size());
-		
-		QueryPage<ScriptRuntimeDTO> secondPage = repository.fetch(
-				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.FAILED).setStartDate(startTime),
-				pagingOptions.setPageToken(nextPageToken));
-		
-		assertNull(secondPage.getNextPageToken());
-		assertEquals(totalRecords - pageSize, secondPage.getResult().size());
+		assertResultIsPaginated(totalRecords, pageSize, startTime, RuntimeStatusType.FAILED);
+	}
+
+	@Test
+	public void fetchedRunningFlowsResultIsPaginated() throws Exception {
+		final Date startTime = new Date();
+		final int totalRecords = 100;
+		final int pageSize = 80;
+
+		insertRunningFlows(totalRecords, startTime);
+		assertResultIsPaginated(totalRecords, pageSize, startTime, RuntimeStatusType.INPROGRESS);
+	}
+
+	@Test
+	public void fetchedCompletedFlowsResultIsPaginated() throws Exception {
+		final Date startTime = new Date();
+		final int totalRecords = 100;
+		final int pageSize = 80;
+
+		insertCompletedFlows(totalRecords, startTime);
+		assertResultIsPaginated(totalRecords, pageSize, startTime, RuntimeStatusType.COMPLETED);
 	}
 
 	@SuppressWarnings("serial")
@@ -154,6 +222,42 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		};
 	}
 
+	private void assertResultIsSortedByDescendingStartTime(QueryPage<ScriptRuntimeDTO> fetchResult, Date initTime) {
+		final List<ScriptRuntimeDTO> records = fetchResult.getResult();
+
+		assertNull(fetchResult.getNextPageToken());
+		assertEquals(3, records.size());
+
+		assertEquals(addMinutes(initTime, 3), records.get(0).getStartTime());
+		assertEquals("Test Script 3", records.get(0).getScriptName());
+
+		assertEquals(addMinutes(initTime, 2), records.get(1).getStartTime());
+		assertEquals("Test Script 2", records.get(1).getScriptName());
+
+		assertEquals(addMinutes(initTime, 1), records.get(2).getStartTime());
+		assertEquals("Test Script 1", records.get(2).getScriptName());
+	}
+
+	private void assertResultIsPaginated(int totalRecords, int pageSize, Date startTime, RuntimeStatusType flowStatus)
+			throws Exception {
+
+		final QueryPagingOptions pagingOptions = new QueryPagingOptions().setResultsPerPage(pageSize);
+
+		QueryPage<ScriptRuntimeDTO> firstPage = repository
+				.fetch(new ScriptRuntimeCriteria().setStatus(flowStatus).setStartDate(startTime), pagingOptions);
+
+		final String nextPageToken = firstPage.getNextPageToken();
+		assertNotNull(nextPageToken);
+		assertEquals(pageSize, firstPage.getResult().size());
+
+		QueryPage<ScriptRuntimeDTO> secondPage = repository.fetch(
+				new ScriptRuntimeCriteria().setStatus(flowStatus).setStartDate(startTime),
+				pagingOptions.setPageToken(nextPageToken));
+
+		assertNull(secondPage.getNextPageToken());
+		assertEquals(totalRecords - pageSize, secondPage.getResult().size());
+	}
+
 	private void insertFailedFlows(int recordsCount, final Date initTime) {
 		insertFailedFlows(recordsCount, initTime, EMPTY_LIST, EMPTY_LIST, EMPTY_LIST);
 	}
@@ -173,9 +277,44 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 
 		}
 	}
-	
-	private void clearFailedFlows() {
-		CassandraEmbeddedServer.getClient().query("TRUNCATE failed_flows");
+
+	private void insertRunningFlows(int recordsCount, final Date initTime) {
+		insertRunningFlows(recordsCount, initTime, EMPTY_LIST, EMPTY_LIST);
+	}
+
+	private void insertRunningFlows(int recordsCount, final Date initTime, List<String> parameters,
+			List<String> callStack) {
+
+		final String startDate = TOKEN_DATE_FORMAT.format(initTime);
+
+		for (int cnt = 1; cnt < recordsCount + 1; cnt++) {
+			Date startTime = addMinutes(initTime, cnt);
+
+			CassandraEmbeddedServer.getClient().executeBoundStatement(
+					CassandraRuntimeRepository.RUNNING_FLOWS_INSERT_STMT, UUID.randomUUID(), USER_NAME,
+					"Test Script " + cnt, parameters, startDate, startTime, callStack);
+
+		}
+	}
+
+	private void insertCompletedFlows(int recordsCount, final Date initTime) {
+		insertCompletedFlows(recordsCount, initTime, EMPTY_LIST, EMPTY_LIST);
+	}
+
+	private void insertCompletedFlows(int recordsCount, final Date initTime, List<String> parameters,
+			List<String> callStack) {
+
+		final String startDate = TOKEN_DATE_FORMAT.format(initTime);
+
+		for (int cnt = 1; cnt < recordsCount + 1; cnt++) {
+			Date startTime = addMinutes(initTime, cnt);
+			Date endTime = startTime;
+
+			CassandraEmbeddedServer.getClient().executeBoundStatement(
+					CassandraRuntimeRepository.COMPLETED_FLOWS_INSERT_STMT, UUID.randomUUID(), USER_NAME,
+					"Test Script " + cnt, parameters, startDate, startTime, callStack, endTime);
+
+		}
 	}
 
 }

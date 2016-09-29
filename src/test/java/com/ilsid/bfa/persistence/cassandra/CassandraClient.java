@@ -50,6 +50,12 @@ public class CassandraClient extends CassandraRepository {
 
 		session.execute(prepStmt.bind(values));
 	}
+	
+	public void clearDatabase() {
+		query("TRUNCATE failed_flows");
+		query("TRUNCATE running_flows");
+		query("TRUNCATE completed_flows");
+	}
 
 	void initDatabase() throws Exception {
 		String script = FileUtils.readFileToString(new File(KEYSPACE_CREATION_SCRIPT));

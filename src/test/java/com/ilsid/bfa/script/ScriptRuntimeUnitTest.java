@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -22,9 +23,9 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
 	private static final String RUNTIME_ID_COLUMN = "runtime_id";
 
-	private static final String RUNNING_FLOWS_QUERY_TPLT = "SELECT * FROM bfa.running_flows WHERE start_date='%s' AND runtime_id=%s";
+	private static final String RUNNING_FLOWS_QUERY_TPLT = "SELECT * FROM bfa.running_flows WHERE start_date='%s'";
 
-	private static final String COMPLETED_FLOWS_QUERY_TPLT = "SELECT * FROM bfa.completed_flows WHERE start_date='%s' AND runtime_id=%s";
+	private static final String COMPLETED_FLOWS_QUERY_TPLT = "SELECT * FROM bfa.completed_flows WHERE start_date='%s'";
 
 	private static final String FAILED_FLOWS_QUERY_TPLT = "SELECT * FROM bfa.failed_flows";
 
@@ -54,6 +55,11 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		CassandraEmbeddedServer.shutdown();
 	}
 
+	@After
+	public void afterTest() {
+		CassandraEmbeddedServer.getClient().clearDatabase();
+	}
+
 	@Test
 	public void scriptCanBeRun() throws Exception {
 		Object runtimeId = runtime.runScript("Script001");
@@ -72,9 +78,9 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		Object runtimeId = runtime.runScript("Script001");
 
 		assertRuntimeId(runtimeId);
-		Row row = assertSingleRecordIsPersisted(String.format(RUNNING_FLOWS_QUERY_TPLT, startDate, runtimeId), runtimeId);
+		Row row = assertSingleRecordIsPersisted(String.format(RUNNING_FLOWS_QUERY_TPLT, startDate), runtimeId);
 		assertEquals(true, row.getBool("completed"));
-		assertSingleRecordIsPersisted(String.format(COMPLETED_FLOWS_QUERY_TPLT, startDate, runtimeId), runtimeId);
+		assertSingleRecordIsPersisted(String.format(COMPLETED_FLOWS_QUERY_TPLT, startDate), runtimeId);
 	}
 
 	@Test
@@ -94,9 +100,8 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		Object runtimeId = runtime.runScript("SingleSubflowScript");
 
 		assertRuntimeId(runtimeId);
-		assertTwoRecordsArePersisted(String.format(RUNNING_FLOWS_QUERY_TPLT, startDate, runtimeId), runtimeId);
-		assertTwoRecordsWithValidDetailsArePersisted(String.format(COMPLETED_FLOWS_QUERY_TPLT, startDate, runtimeId),
-				runtimeId);
+		assertTwoRecordsArePersisted(String.format(RUNNING_FLOWS_QUERY_TPLT, startDate), runtimeId);
+		assertTwoRecordsWithValidDetailsArePersisted(String.format(COMPLETED_FLOWS_QUERY_TPLT, startDate), runtimeId);
 	}
 
 	private void assertRuntimeId(Object value) {
@@ -105,7 +110,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	}
 
 	private Row assertSingleRecordIsPersisted(String query, Object runtimeId) {
-		ResultSet rs = CassandraEmbeddedServer.getClient().query(query);
+		ResultSet rs = CassandraEmbeddedServer.getClient().queryWithAllowedFiltering(query);
 
 		final List<Row> rows = rs.all();
 		assertEquals(1, rows.size());
@@ -114,7 +119,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		Date startTime = row.getTimestamp("start_time");
 		assertNotNull(startTime);
 		assertEquals(row.getString("start_date"), toDateToken(startTime));
-		
+
 		return row;
 	}
 
@@ -136,7 +141,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 	}
 
 	private void assertTwoRecordsArePersisted(String query, Object runtimeId) {
-		ResultSet rs = CassandraEmbeddedServer.getClient().query(query);
+		ResultSet rs = CassandraEmbeddedServer.getClient().queryWithAllowedFiltering(query);
 
 		final List<Row> rows = rs.all();
 		assertEquals(2, rows.size());

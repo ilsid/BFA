@@ -18,6 +18,7 @@ import com.ilsid.bfa.action.persistence.ActionLocator;
 import com.ilsid.bfa.action.persistence.filesystem.ActionRepositoryInitializer;
 import com.ilsid.bfa.persistence.cassandra.CassandraEmbeddedServer;
 import com.ilsid.bfa.persistence.cassandra.CassandraRuntimeRepositoryInitializer;
+import com.ilsid.bfa.runtime.persistence.cassandra.RuntimeDatabaseFixture;
 
 public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
@@ -57,7 +58,7 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 
 	@After
 	public void afterTest() {
-		CassandraEmbeddedServer.getClient().clearDatabase();
+		RuntimeDatabaseFixture.clearData();
 	}
 
 	@Test

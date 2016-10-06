@@ -35,6 +35,8 @@ public final class Paths {
 	public final static String GET_ITEMS_OPERATION = "getItems";
 
 	public final static String GET_INFO_OPERATION = "getInfo";
+	
+	public final static String FETCH_OPERATION = "fetch";
 
 	/*
 	 * Script Administration
@@ -80,6 +82,8 @@ public final class Paths {
 
 	public final static String SCRIPT_GET_STATUS_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/"
 			+ SCRIPT_GET_STATUS_OPERATION;
+
+	public final static String SCRIPT_RUNTIME_FETCH_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/" + FETCH_OPERATION;
 
 	/*
 	 * Entity Administration

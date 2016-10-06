@@ -16,6 +16,9 @@ public class QueryPage<T> {
 
 	private String nextPageToken;
 
+	public QueryPage() {
+	}
+
 	public QueryPage(List<T> result) {
 		this.result = result;
 	}
@@ -34,6 +37,10 @@ public class QueryPage<T> {
 		return result;
 	};
 
+	public void setResult(List<T> result) {
+		this.result = result;
+	}
+
 	/**
 	 * Returns the next page token.
 	 * 
@@ -41,5 +48,9 @@ public class QueryPage<T> {
 	 */
 	public String getNextPageToken() {
 		return nextPageToken;
+	}
+
+	public void setNextPageToken(String nextPageToken) {
+		this.nextPageToken = nextPageToken;
 	}
 }

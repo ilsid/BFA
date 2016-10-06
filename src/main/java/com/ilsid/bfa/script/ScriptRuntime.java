@@ -18,7 +18,10 @@ import com.ilsid.bfa.action.persistence.ActionLocator;
 import com.ilsid.bfa.common.LoggingConfig;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.QueryPage;
+import com.ilsid.bfa.persistence.QueryPagingOptions;
 import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
+import com.ilsid.bfa.runtime.dto.ScriptRuntimeCriteria;
 import com.ilsid.bfa.runtime.dto.ScriptRuntimeDTO;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 
@@ -80,6 +83,59 @@ public class ScriptRuntime {
 	 */
 	public Object runScript(String scriptName, Object[] params) throws ScriptException {
 		return runScript(scriptName, params, null, null);
+	}
+
+	/**
+	 * Fetches script runtime info by the given criteria. If the result exceeds the fetch limit, only the first query
+	 * page is returned.
+	 * 
+	 * @param criteria
+	 *            fetch criteria
+	 * @param resultsPerPage
+	 *            fetch records limit
+	 * @return all records or the first page only, if the result exceeds the fetch limit
+	 * @throws ScriptException
+	 *             in case of any repository access issues
+	 */
+	public QueryPage<ScriptRuntimeDTO> fetch(ScriptRuntimeCriteria criteria, int resultsPerPage)
+			throws ScriptException {
+		return fetch(criteria, resultsPerPage, null);
+	}
+
+	/**
+	 * Does the same as {@link #fetch(ScriptRuntimeCriteria, int)}, but explicitly defines the token of a page to
+	 * return.
+	 * 
+	 * @param criteria
+	 *            fetch criteria
+	 * @param resultsPerPage
+	 *            maximum number of records per one query page
+	 * @param pageToken
+	 *            page token
+	 * @return the defined page of the fetch result
+	 * @throws ScriptException
+	 *             <ul>
+	 *             <li>invalid page token is provided</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public QueryPage<ScriptRuntimeDTO> fetch(ScriptRuntimeCriteria criteria, int resultsPerPage, String pageToken)
+			throws ScriptException {
+		QueryPagingOptions pagingOptions = new QueryPagingOptions();
+		pagingOptions.setResultsPerPage(resultsPerPage);
+
+		if (pageToken != null) {
+			pagingOptions.setPageToken(pageToken);
+		}
+
+		QueryPage<ScriptRuntimeDTO> result;
+		try {
+			result = repository.fetch(criteria, pagingOptions);
+		} catch (PersistenceException e) {
+			throw new ScriptException("Failed to fetch script runtime info", e);
+		}
+
+		return result;
 	}
 
 	/**

@@ -12,9 +12,9 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
+import com.ilsid.bfa.common.DateHelper;
+
 public abstract class BaseUnitTestCase {
-	
-	private static final long ONE_MINUTE_IN_MILLIS = 60000;
 	
 	protected final static String REPOSITORY_ROOT_DIR_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_class_repository";
 	
@@ -106,7 +106,7 @@ public abstract class BaseUnitTestCase {
 	}
 	
 	protected Date addMinutes(Date time, int minutes) {
-		return new Date(time.getTime() + minutes * ONE_MINUTE_IN_MILLIS);
+		return DateHelper.addMinutes(time, minutes);
 	}
 
 }

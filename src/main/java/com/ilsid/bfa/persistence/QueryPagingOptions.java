@@ -8,11 +8,17 @@ package com.ilsid.bfa.persistence;
  */
 public class QueryPagingOptions {
 
-	private static final int DEFAULT_RESULTS_PER_PAGE = 50;
+	public static final int DEFAULT_RESULTS_PER_PAGE = 50;
 
-	private int resultsPerPage = DEFAULT_RESULTS_PER_PAGE;
+	private static int defaultResultsPerPage = DEFAULT_RESULTS_PER_PAGE;
+
+	private int resultsPerPage = defaultResultsPerPage;
 
 	private String pageToken;
+
+	public static synchronized void setDefaultResultsPerPage(int value) {
+		defaultResultsPerPage = value;
+	}
 
 	public int getResultsPerPage() {
 		return resultsPerPage;

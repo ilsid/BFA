@@ -1,10 +1,8 @@
 package com.ilsid.bfa.runtime.persistence.cassandra;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -24,12 +22,6 @@ import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 
 public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 
-	private static final String USER_NAME = "some user";
-
-	private static final LinkedList<String> EMPTY_LIST = new LinkedList<>();
-
-	private static final SimpleDateFormat TOKEN_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
-
 	private static RuntimeRepository repository;
 
 	@BeforeClass
@@ -45,13 +37,13 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 
 	@After
 	public void afterTest() {
-		CassandraEmbeddedServer.getClient().clearDatabase();
+		RuntimeDatabaseFixture.clearData();
 	}
 
 	@Test
 	public void allFailedFlowFieldsAreFetched() throws Exception {
 		final Date startTime = new Date();
-		insertFailedFlows(1, startTime, getParameters(), getCallStack(), getErrorDetails());
+		RuntimeDatabaseFixture.insertFailedFlows(1, startTime, getParameters(), getCallStack(), getErrorDetails());
 
 		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
 				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.FAILED).setStartDate(startTime),
@@ -65,7 +57,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		ScriptRuntimeDTO rec = records.get(0);
 
 		assertNotNull(rec.getRuntimeId());
-		assertEquals(USER_NAME, rec.getUserName());
+		assertEquals(RuntimeDatabaseFixture.USER_NAME, rec.getUserName());
 		assertEquals("Test Script 1", rec.getScriptName());
 		assertEquals(getParameters(), rec.getParameters());
 		assertEquals(addMinutes(startTime, 1), rec.getStartTime());
@@ -78,7 +70,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void allRunningFlowFieldsAreFetched() throws Exception {
 		final Date startTime = new Date();
-		insertRunningFlows(1, startTime, getParameters(), getCallStack());
+		RuntimeDatabaseFixture.insertRunningFlows(1, startTime, getParameters(), getCallStack());
 
 		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
 				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.INPROGRESS).setStartDate(startTime),
@@ -92,7 +84,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		ScriptRuntimeDTO rec = records.get(0);
 
 		assertNotNull(rec.getRuntimeId());
-		assertEquals(USER_NAME, rec.getUserName());
+		assertEquals(RuntimeDatabaseFixture.USER_NAME, rec.getUserName());
 		assertEquals("Test Script 1", rec.getScriptName());
 		assertEquals(getParameters(), rec.getParameters());
 		assertEquals(addMinutes(startTime, 1), rec.getStartTime());
@@ -103,7 +95,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void allCompletedFlowFieldsAreFetched() throws Exception {
 		final Date startTime = new Date();
-		insertCompletedFlows(1, startTime, getParameters(), getCallStack());
+		RuntimeDatabaseFixture.insertCompletedFlows(1, startTime, getParameters(), getCallStack());
 
 		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
 				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.COMPLETED).setStartDate(startTime),
@@ -117,7 +109,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		ScriptRuntimeDTO rec = records.get(0);
 
 		assertNotNull(rec.getRuntimeId());
-		assertEquals(USER_NAME, rec.getUserName());
+		assertEquals(RuntimeDatabaseFixture.USER_NAME, rec.getUserName());
 		assertEquals("Test Script 1", rec.getScriptName());
 		assertEquals(getParameters(), rec.getParameters());
 		assertEquals(addMinutes(startTime, 1), rec.getStartTime());
@@ -129,7 +121,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void failedFlowsAreFetchedByDescendingStartTimeOrder() throws Exception {
 		final Date startTime = new Date();
-		insertFailedFlows(3, startTime);
+		RuntimeDatabaseFixture.insertFailedFlows(3, startTime);
 
 		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
 				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.FAILED).setStartDate(startTime),
@@ -141,7 +133,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void runningFlowsAreFetchedByDescendingStartTimeOrder() throws Exception {
 		final Date startTime = new Date();
-		insertRunningFlows(3, startTime);
+		RuntimeDatabaseFixture.insertRunningFlows(3, startTime);
 
 		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
 				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.INPROGRESS).setStartDate(startTime),
@@ -153,7 +145,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void completedFlowsAreFetchedByDescendingStartTimeOrder() throws Exception {
 		final Date startTime = new Date();
-		insertCompletedFlows(3, startTime);
+		RuntimeDatabaseFixture.insertCompletedFlows(3, startTime);
 
 		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
 				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.COMPLETED).setStartDate(startTime),
@@ -168,7 +160,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		final int totalRecords = 100;
 		final int pageSize = 80;
 
-		insertFailedFlows(totalRecords, startTime);
+		RuntimeDatabaseFixture.insertFailedFlows(totalRecords, startTime);
 		assertResultIsPaginated(totalRecords, pageSize, startTime, RuntimeStatusType.FAILED);
 	}
 
@@ -178,7 +170,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		final int totalRecords = 100;
 		final int pageSize = 80;
 
-		insertRunningFlows(totalRecords, startTime);
+		RuntimeDatabaseFixture.insertRunningFlows(totalRecords, startTime);
 		assertResultIsPaginated(totalRecords, pageSize, startTime, RuntimeStatusType.INPROGRESS);
 	}
 
@@ -188,7 +180,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		final int totalRecords = 100;
 		final int pageSize = 80;
 
-		insertCompletedFlows(totalRecords, startTime);
+		RuntimeDatabaseFixture.insertCompletedFlows(totalRecords, startTime);
 		assertResultIsPaginated(totalRecords, pageSize, startTime, RuntimeStatusType.COMPLETED);
 	}
 
@@ -256,65 +248,6 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 
 		assertNull(secondPage.getNextPageToken());
 		assertEquals(totalRecords - pageSize, secondPage.getResult().size());
-	}
-
-	private void insertFailedFlows(int recordsCount, final Date initTime) {
-		insertFailedFlows(recordsCount, initTime, EMPTY_LIST, EMPTY_LIST, EMPTY_LIST);
-	}
-
-	private void insertFailedFlows(int recordsCount, final Date initTime, List<String> parameters,
-			List<String> callStack, List<String> errorDetails) {
-
-		final String startDate = TOKEN_DATE_FORMAT.format(initTime);
-
-		for (int cnt = 1; cnt < recordsCount + 1; cnt++) {
-			Date startTime = addMinutes(initTime, cnt);
-			Date endTime = startTime;
-
-			CassandraEmbeddedServer.getClient().executeBoundStatement(
-					CassandraRuntimeRepository.FAILED_FLOWS_INSERT_STMT, UUID.randomUUID(), USER_NAME,
-					"Test Script " + cnt, parameters, startDate, startTime, callStack, endTime, errorDetails);
-
-		}
-	}
-
-	private void insertRunningFlows(int recordsCount, final Date initTime) {
-		insertRunningFlows(recordsCount, initTime, EMPTY_LIST, EMPTY_LIST);
-	}
-
-	private void insertRunningFlows(int recordsCount, final Date initTime, List<String> parameters,
-			List<String> callStack) {
-
-		final String startDate = TOKEN_DATE_FORMAT.format(initTime);
-
-		for (int cnt = 1; cnt < recordsCount + 1; cnt++) {
-			Date startTime = addMinutes(initTime, cnt);
-
-			CassandraEmbeddedServer.getClient().executeBoundStatement(
-					CassandraRuntimeRepository.RUNNING_FLOWS_INSERT_STMT, UUID.randomUUID(), USER_NAME,
-					"Test Script " + cnt, parameters, startDate, startTime, callStack);
-
-		}
-	}
-
-	private void insertCompletedFlows(int recordsCount, final Date initTime) {
-		insertCompletedFlows(recordsCount, initTime, EMPTY_LIST, EMPTY_LIST);
-	}
-
-	private void insertCompletedFlows(int recordsCount, final Date initTime, List<String> parameters,
-			List<String> callStack) {
-
-		final String startDate = TOKEN_DATE_FORMAT.format(initTime);
-
-		for (int cnt = 1; cnt < recordsCount + 1; cnt++) {
-			Date startTime = addMinutes(initTime, cnt);
-			Date endTime = startTime;
-
-			CassandraEmbeddedServer.getClient().executeBoundStatement(
-					CassandraRuntimeRepository.COMPLETED_FLOWS_INSERT_STMT, UUID.randomUUID(), USER_NAME,
-					"Test Script " + cnt, parameters, startDate, startTime, callStack, endTime);
-
-		}
 	}
 
 }

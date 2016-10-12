@@ -1,3 +1,13 @@
+function init() {
+	TIME_PATTERN = {datePattern: 'HH:mm:ss', selector: 'date', locale: 'en-us'};
+	// FIXME: date format should be obtained dynamically from server
+	DATE_PATTERN = {datePattern: 'yyyy-MM-dd', selector: 'date', locale: 'en-us'};
+
+	createTree('script', createScriptTab, undefined, 'getSource');
+	createTree('entity', createEntityTab, 'toolbarIconEntity', 'getSource');	
+	createTree('action', createActionTab, 'toolbarIconAction', 'getInfo');
+}
+
 function isEmptyObject(obj) {
 	var keys = [];
 	for (var key in obj) {
@@ -6,6 +16,30 @@ function isEmptyObject(obj) {
 	}
 	return keys.length == 0;
 }
+
+function convertArrayToLines(arr) { 
+	var lines = '';
+	if (arr) {
+		arr.forEach(function(item, i, arr) {
+			lines = lines + item + '<br/>';
+		});
+	}
+	return lines;
+}	
+
+function convertMillisecondsToTime(millis) { 
+	var result;
+	require(['dojo/date/locale'],
+		function(locale) {
+			var time = '';
+			if (millis) {
+				time = locale.format(new Date(millis), TIME_PATTERN);
+			}
+			result = time;
+	});
+	
+	return result;
+}	
 
 function getSelectedGroupName(tree, groupType) {
 	var selectedItem = tree.selectedItems[0];
@@ -105,6 +139,51 @@ function drawFlowChart(scriptName, canvasId) {
 					var svg = chart.children[0];
 					var viewBoxValues = svg.getAttribute('viewBox').split(' ');
 					svg.style.height = viewBoxValues[3];
+				}, function(err) {
+					writeError(err);
+				});
+		});
+}
+
+function fetchFlowsRuntimeRecords() {
+	require(['dojo/request/xhr', 'dijit/registry', 'dojo/data/ObjectStore', 
+			'dojo/store/Memory', 'dojo/date/locale', 'dojo/domReady!'],
+		function(request, registry, ObjectStore, Memory, locale) {
+			var status = document.getElementById('runtimeMonitorTab_status').value;
+			var dateObj = registry.byId('runtimeMonitorTab_startDate').get('value');
+			var date = locale.format(dateObj, DATE_PATTERN);
+			
+			request('service/script/runtime/fetch', {
+					headers: { 'Content-Type': 'application/json' },
+					method: 'POST',
+					handleAs: 'json',
+					data: '{"criteria": {"startDate": "' + date + '", "status": "' + status + '"}}'
+				}).then(function(resp){
+				
+					var grid = registry.byId('runtimeMonitorTab_dataGrid');
+					
+					grid.setStore(new ObjectStore({ 
+						objectStore: new Memory({ data: []}),
+						modified: false
+					}));
+					
+					var records = resp.result;
+					records.forEach(function(rec, i, records) {
+						grid.store.newItem(
+							{fldScriptName: rec.scriptName, 
+							 fldRuntimeId: rec.runtimeId, 
+							 fldStartTime: rec.startTime, 
+							 fldEndTime: rec.endTime, 
+							 fldParams: rec.parameters,
+							 fldCallStack: rec.callStack, 
+							 fldErrors: rec.errorDetails, 
+							 fldStatus: rec.status,
+							 fldUser: rec.userName});
+					});
+										
+					grid.store.save();
+					grid.render();
+					
 				}, function(err) {
 					writeError(err);
 				});

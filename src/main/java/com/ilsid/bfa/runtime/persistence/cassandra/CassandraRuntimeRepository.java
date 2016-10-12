@@ -16,7 +16,6 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
-import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.QueryPage;
 import com.ilsid.bfa.persistence.QueryPagingOptions;
@@ -220,7 +219,7 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 		boundStmt.setTimestamp(7, record.getEndTime());
 
 		if (status == RuntimeStatusType.FAILED) {
-			boundStmt.setList(8, CassandraUtil.getErrorDetails(record.getError()));
+			boundStmt.setList(8, new LinkedList<String>(record.getErrorDetails()));
 		}
 
 		return boundStmt;
@@ -284,9 +283,7 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 
 		@Override
 		public ScriptRuntimeDTO toRecord(Row row) {
-			final Exception flowError = ExceptionUtil.toException(row.getList(8, String.class));
-
-			return super.toRecord(row).setEndTime(row.getTimestamp(7)).setError(flowError)
+			return super.toRecord(row).setEndTime(row.getTimestamp(7)).setErrorDetails(row.getList(8, String.class))
 					.setStatus(RuntimeStatusType.FAILED);
 		}
 

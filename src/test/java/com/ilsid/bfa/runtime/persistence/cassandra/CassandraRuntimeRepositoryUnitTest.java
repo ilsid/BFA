@@ -10,7 +10,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
-import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.persistence.QueryPage;
 import com.ilsid.bfa.persistence.QueryPagingOptions;
 import com.ilsid.bfa.persistence.cassandra.CassandraEmbeddedServer;
@@ -63,7 +62,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(addMinutes(startTime, 1), rec.getStartTime());
 		assertEquals(addMinutes(startTime, 1), rec.getEndTime());
 		assertEquals(getCallStack(), rec.getCallStack());
-		assertEquals(ExceptionUtil.toException(getErrorDetails()).getMessage(), rec.getError().getMessage());
+		assertEquals(getErrorDetails(), rec.getErrorDetails());
 		assertEquals(RuntimeStatusType.FAILED, rec.getStatus());
 	}
 

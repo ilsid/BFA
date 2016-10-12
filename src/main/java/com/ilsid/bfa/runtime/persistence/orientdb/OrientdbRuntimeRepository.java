@@ -1,13 +1,9 @@
 package com.ilsid.bfa.runtime.persistence.orientdb;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.persistence.PersistenceException;
 import com.ilsid.bfa.persistence.QueryPage;
 import com.ilsid.bfa.persistence.QueryPagingOptions;
@@ -105,8 +101,8 @@ public class OrientdbRuntimeRepository extends OrientdbRepository implements Run
 
 				dbRecord.field("status", record.getStatus());
 				dbRecord.field("endTime", record.getEndTime());
-				if (record.getError() != null) {
-					dbRecord.field("errorDetails", getDetails(record.getError()));
+				if (record.getErrorDetails() != null) {
+					dbRecord.field("errorDetails", record.getErrorDetails());
 				}
 
 				dbRecord.save();
@@ -121,19 +117,14 @@ public class OrientdbRuntimeRepository extends OrientdbRepository implements Run
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.ilsid.bfa.runtime.persistence.RuntimeRepository#fetch(com.ilsid.bfa.runtime.dto.
-	 * ScriptRuntimeCriteria, com.ilsid.bfa.persistence.QueryPagingOptions)
+	 * @see com.ilsid.bfa.runtime.persistence.RuntimeRepository#fetch(com.ilsid.bfa.runtime.dto. ScriptRuntimeCriteria,
+	 * com.ilsid.bfa.persistence.QueryPagingOptions)
 	 */
 	@Override
 	public QueryPage<ScriptRuntimeDTO> fetch(ScriptRuntimeCriteria criteria, QueryPagingOptions pagingOptions)
 			throws PersistenceException {
 
 		throw new RuntimeException("Not implemented");
-	}
-
-	private List<String> getDetails(Exception error) {
-		String[] chain = ExceptionUtil.getExceptionMessageChain(error).split(StringUtils.LF);
-		return Arrays.asList(chain);
 	}
 
 }

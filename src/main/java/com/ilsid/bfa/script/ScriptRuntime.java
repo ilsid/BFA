@@ -1,6 +1,7 @@
 package com.ilsid.bfa.script;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Deque;
@@ -11,10 +12,12 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ilsid.bfa.action.persistence.ActionLocator;
+import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.common.LoggingConfig;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
 import com.ilsid.bfa.persistence.PersistenceException;
@@ -254,7 +257,10 @@ public class ScriptRuntime {
 	}
 
 	private ScriptRuntimeDTO addErrorInfo(ScriptRuntimeDTO runtimeRecord, Exception e) {
-		return runtimeRecord.setStatus(RuntimeStatusType.FAILED).setEndTime(new Date()).setError(e);
+		final List<String> errorDetails = Arrays
+				.asList(ExceptionUtil.getExceptionMessageChain(e).split(StringUtils.LF));
+
+		return runtimeRecord.setStatus(RuntimeStatusType.FAILED).setEndTime(new Date()).setErrorDetails(errorDetails);
 	}
 
 	private Object generatedRuntimeId(String scriptName) throws ScriptException {

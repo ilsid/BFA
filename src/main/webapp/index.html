@@ -330,7 +330,12 @@
 											</select>
 										</td>
 										<td><div data-dojo-type="dijit/form/Button" id="runtimeMonitorTab_filterBtn" 
-											data-dojo-props="iconClass:'toolbarIconFilter', showLabel:false" onclick="fetchFlowsRuntimeRecords();">Apply Filter</div></td>
+											data-dojo-props="iconClass:'toolbarIconFilter', showLabel:false" onclick="fetchFlowsRuntimeRecords();">Apply Filter</div>
+										</td>
+										<td><input type="checkbox" data-dojo-type="dijit/form/CheckBox" id="runtimeMonitorTab_realtimeCheck" 
+											onchange="changeRealTimeMonitoringMode();" />
+											<label for="runtimeMonitorTab_realtimeCheck">Real-time</label>
+										</td>	
 									</tr>
 								</table>
 							</div>

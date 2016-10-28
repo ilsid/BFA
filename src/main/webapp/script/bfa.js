@@ -28,14 +28,12 @@ function convertArrayToLines(arr) {
 }	
 
 function convertMillisecondsToTime(millis) { 
-	var result;
+	var result = '';
 	require(['dojo/date/locale'],
 		function(locale) {
-			var time = '';
 			if (millis) {
-				time = locale.format(new Date(millis), TIME_PATTERN);
+				result = locale.format(new Date(millis), TIME_PATTERN);
 			}
-			result = time;
 	});
 	
 	return result;
@@ -162,6 +160,7 @@ function fetchFlowsRuntimeRecords() {
 				
 					var grid = registry.byId('runtimeMonitorTab_dataGrid');
 					
+					delete grid.store;
 					grid.setStore(new ObjectStore({ 
 						objectStore: new Memory({ data: []}),
 						modified: false
@@ -187,6 +186,23 @@ function fetchFlowsRuntimeRecords() {
 				}, function(err) {
 					writeError(err);
 				});
+		});
+}
+
+function changeRealTimeMonitoringMode() {
+	require([ 'dijit/registry'],
+		function(registry) {
+			var checkBox = registry.byId('runtimeMonitorTab_realtimeCheck');
+			var filterBtn = registry.byId('runtimeMonitorTab_filterBtn');
+			var dateBox = registry.byId('runtimeMonitorTab_startDate');
+						
+			if (checkBox.checked) {
+				filterBtn.set('disabled', true);
+				dateBox.set('disabled', true);
+			} else {
+				filterBtn.set('disabled', false);
+				dateBox.set('disabled', false);
+			}
 		});
 }
 

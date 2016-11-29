@@ -1,5 +1,6 @@
 package com.ilsid.bfa.service.server;
 
+import java.net.Inet4Address;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -139,7 +140,7 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void pagintedScriptRuntimeRecordsAreFetched() throws Exception {
+	public void paginatedScriptRuntimeRecordsAreFetched() throws Exception {
 		try {
 			final Date startDate = new Date();
 			RuntimeDatabaseFixture.insertFailedFlows(5, startDate);
@@ -179,6 +180,16 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 			RuntimeDatabaseFixture.clearData();
 		}
 
+	}
+
+	@Test
+	public void monitoringServerUrlIsObtained() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_RUNTIME_MONITORING_SERVER_URL_SERVICE);
+		final ClientResponse response = webResource.get(ClientResponse.class);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		assertEquals("ws://" + Inet4Address.getLocalHost().getHostAddress() + ":8057/bfa/monitor",
+				response.getEntity(String.class));
 	}
 
 	private void verifyScriptWithParameterizedActionCanBeRun(String scriptName) throws Exception {

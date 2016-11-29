@@ -35,7 +35,7 @@ public final class Paths {
 	public final static String GET_ITEMS_OPERATION = "getItems";
 
 	public final static String GET_INFO_OPERATION = "getInfo";
-	
+
 	public final static String FETCH_OPERATION = "fetch";
 
 	/*
@@ -76,6 +76,8 @@ public final class Paths {
 
 	public final static String SCRIPT_GET_STATUS_OPERATION = "getStatus";
 
+	public final static String GET_MONITORING_SERVER_URL_OPERATION = "getMonitoringServerUrl";
+
 	public final static String SCRIPT_RUN_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/" + RUN_OPERATION;
 
 	public final static String SCRIPT_START_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/" + START_OPERATION;
@@ -84,6 +86,9 @@ public final class Paths {
 			+ SCRIPT_GET_STATUS_OPERATION;
 
 	public final static String SCRIPT_RUNTIME_FETCH_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/" + FETCH_OPERATION;
+
+	public final static String SCRIPT_GET_RUNTIME_MONITORING_SERVER_URL_SERVICE = SCRIPT_SERVICE_RUNTIME_ROOT + "/"
+			+ GET_MONITORING_SERVER_URL_OPERATION;
 
 	/*
 	 * Entity Administration

@@ -119,6 +119,13 @@ public class ScriptRuntimeResource {
 		return Response.status(Status.OK).entity(result).build();
 	}
 
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	@Path(Paths.GET_MONITORING_SERVER_URL_OPERATION)
+	public String getMonitoringServerURL() {
+		return scriptRuntime.getMonitoringServerURL();
+	}
+
 	@Inject
 	public void setScriptRuntime(ScriptRuntime scriptRuntime) {
 		this.scriptRuntime = scriptRuntime;

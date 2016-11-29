@@ -1,5 +1,7 @@
 package com.ilsid.bfa.script;
 
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,7 +18,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ilsid.bfa.ConfigurationException;
 import com.ilsid.bfa.action.persistence.ActionLocator;
+import com.ilsid.bfa.common.ConfigUtil;
 import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.common.LoggingConfig;
 import com.ilsid.bfa.persistence.DynamicClassLoader;
@@ -26,6 +30,9 @@ import com.ilsid.bfa.persistence.QueryPagingOptions;
 import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
 import com.ilsid.bfa.runtime.dto.ScriptRuntimeCriteria;
 import com.ilsid.bfa.runtime.dto.ScriptRuntimeDTO;
+import com.ilsid.bfa.runtime.monitor.MonitoringException;
+import com.ilsid.bfa.runtime.monitor.MonitoringServer;
+import com.ilsid.bfa.runtime.monitor.MonitoringServerConfig;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 
 /**
@@ -39,6 +46,14 @@ public class ScriptRuntime {
 
 	private static final String RUNTIME_DEBUG_LOGGING_FLAG = "bfa.logging.runtime_debug";
 
+	private static final String CONFIG_PROP_MONITOR_SERVER_HOST = "bfa.monitor.server.host";
+
+	private static final String CONFIG_PROP_MONITOR_SERVER_PORT = "bfa.monitor.server.port";
+
+	private static final String MONITORING_SERVER_URL_PREFIX = "ws://";
+
+	private static final int MONITOR_SERVER_PORT_DEFAULT_VALUE = 8025;
+
 	// FIXME: introduce authentication
 	private static final String STUBBED_USER_NAME = "system";
 
@@ -51,6 +66,8 @@ public class ScriptRuntime {
 	private ActionLocator actionLocator;
 
 	private boolean runtimeDebugEnabled;
+
+	private String monitoringServerURL;
 
 	/**
 	 * Runs the script with the given name.
@@ -178,6 +195,47 @@ public class ScriptRuntime {
 		} else {
 			runtimeDebugEnabled = Boolean.getBoolean(RUNTIME_DEBUG_LOGGING_FLAG);
 		}
+	}
+
+	/**
+	 * Initializes and starts the monitoring server.
+	 * 
+	 * @param serverConfig
+	 *            server configuration
+	 * @throws ConfigurationException
+	 *             if the server can't be started
+	 */
+	@Inject
+	public void initMonitoringServer(@MonitoringServerConfig Map<String, String> serverConfig)
+			throws ConfigurationException {
+		String host;
+		int port;
+		try {
+			host = serverConfig.get(CONFIG_PROP_MONITOR_SERVER_HOST);
+			if (host == null) {
+				host = Inet4Address.getLocalHost().getHostAddress();
+			}
+			port = ConfigUtil.getPositiveIntegerValue(CONFIG_PROP_MONITOR_SERVER_PORT, serverConfig,
+					MONITOR_SERVER_PORT_DEFAULT_VALUE);
+
+			MonitoringServer.start(host, port);
+		} catch (UnknownHostException | MonitoringException e) {
+			throw new IllegalStateException("Failed to start the monitoring server", e);
+		}
+
+		monitoringServerURL = MONITORING_SERVER_URL_PREFIX + host + ":" + port + MonitoringServer.CONTEXT_PATH
+				+ MonitoringServer.MONITOR_END_POINT;
+	}
+
+	/**
+	 * Returns the monitoring server URL. This method must be invoked only after {@link #initMonitoringServer(Map)},
+	 * otherwise <code>null</code> is returned.
+	 * 
+	 * @return the monitoring server URL
+	 * @see #initMonitoringServer(Map)
+	 */
+	public String getMonitoringServerURL() {
+		return monitoringServerURL;
 	}
 
 	Object runScript(String scriptName, Object runtimeId, Deque<String> callStack) throws ScriptException {

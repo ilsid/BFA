@@ -213,7 +213,7 @@ public class ScriptRuntime {
 		try {
 			host = serverConfig.get(CONFIG_PROP_MONITOR_SERVER_HOST);
 			if (host == null) {
-				host = Inet4Address.getLocalHost().getHostAddress();
+				host = Inet4Address.getLocalHost().getCanonicalHostName();
 			}
 			port = ConfigUtil.getPositiveIntegerValue(CONFIG_PROP_MONITOR_SERVER_PORT, serverConfig,
 					MONITOR_SERVER_PORT_DEFAULT_VALUE);

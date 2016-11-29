@@ -51,7 +51,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 		repositoryConfig.put("bfa.persistence.fs.root_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
 		repositoryConfig.put("bfa.tmp_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
 		repositoryConfig.putAll(getDatabaseServerManager().getConfig());
-		repositoryConfig.put("bfa.monitor.server.port", "8057");
+		repositoryConfig.put("bfa.monitor.server.port", IntegrationTestConstants.MONITORING_SERVER_PORT);
 
 		getDatabaseServerManager().startServer();
 

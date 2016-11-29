@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response.Status;
 import org.junit.After;
 import org.junit.Test;
 
+import com.ilsid.bfa.IntegrationTestConstants;
 import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.action.persistence.ActionClassLoader;
 import com.ilsid.bfa.common.DateHelper;
@@ -18,6 +19,7 @@ import com.ilsid.bfa.persistence.QueryPage;
 import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
 import com.ilsid.bfa.runtime.dto.ScriptRuntimeCriteria;
 import com.ilsid.bfa.runtime.dto.ScriptRuntimeDTO;
+import com.ilsid.bfa.runtime.monitor.MonitoringServer;
 import com.ilsid.bfa.runtime.persistence.cassandra.RuntimeDatabaseFixture;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.RuntimeStatus;
@@ -188,8 +190,9 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 		final ClientResponse response = webResource.get(ClientResponse.class);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		assertEquals("ws://" + Inet4Address.getLocalHost().getHostAddress() + ":8057/bfa/monitor",
-				response.getEntity(String.class));
+		assertEquals("ws://" + Inet4Address.getLocalHost().getCanonicalHostName() + ":"
+				+ IntegrationTestConstants.MONITORING_SERVER_PORT + MonitoringServer.CONTEXT_PATH
+				+ MonitoringServer.MONITOR_END_POINT, response.getEntity(String.class));
 	}
 
 	private void verifyScriptWithParameterizedActionCanBeRun(String scriptName) throws Exception {

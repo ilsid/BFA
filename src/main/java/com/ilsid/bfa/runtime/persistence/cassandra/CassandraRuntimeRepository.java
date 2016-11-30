@@ -61,11 +61,20 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 	static final String FAILED_FLOWS_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
 			+ "start_time, call_stack, end_time, error_details FROM failed_flows WHERE start_date=?";
 
+	static final String FAILED_FLOWS_WITHIN_TIMEFRAME_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
+			+ "start_time, call_stack, end_time, error_details FROM failed_flows WHERE start_date=? AND start_time>=? AND start_time<?";
+
 	static final String RUNNING_FLOWS_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
 			+ "start_time, call_stack FROM running_flows WHERE start_date=? AND completed=false";
 
+	static final String RUNNING_FLOWS_WITHIN_TIMEFRAME_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
+			+ "start_time, call_stack FROM running_flows WHERE start_date=? AND completed=false AND start_time>=? AND start_time<?";
+
 	static final String COMPLETED_FLOWS_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
 			+ "start_time, call_stack, end_time FROM completed_flows WHERE start_date=?";
+
+	static final String COMPLETED_FLOWS_WITHIN_TIMEFRAME_SELECT_STMT = "SELECT runtime_id, user_name, script_name, parameters, start_date, "
+			+ "start_time, call_stack, end_time FROM completed_flows WHERE start_date=? AND start_time>=? AND start_time<?";
 
 	private final Map<String, PreparedStatement> preparedStatements = new HashMap<>();
 
@@ -73,7 +82,9 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 	protected void prepareStatements(Session session) throws PersistenceException {
 		String[] statements = { NEXT_RUNTIME_ID_QUERY, RUNNING_FLOWS_INSERT_STMT, RUNNING_FLOWS_UPDATE_STMT,
 				COMPLETED_FLOWS_INSERT_STMT, FAILED_FLOWS_INSERT_STMT, FAILED_FLOWS_SELECT_STMT,
-				RUNNING_FLOWS_SELECT_STMT, COMPLETED_FLOWS_SELECT_STMT };
+				FAILED_FLOWS_WITHIN_TIMEFRAME_SELECT_STMT, RUNNING_FLOWS_SELECT_STMT,
+				RUNNING_FLOWS_WITHIN_TIMEFRAME_SELECT_STMT, COMPLETED_FLOWS_SELECT_STMT,
+				COMPLETED_FLOWS_WITHIN_TIMEFRAME_SELECT_STMT };
 
 		for (String stmt : statements) {
 			preparedStatements.put(stmt, session.prepare(stmt));
@@ -163,21 +174,41 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 		QueryPage<ScriptRuntimeDTO> result;
 		PreparedStatement stmt;
 		RuntimeRowConverter rowConverter;
+		// TODO: the logic should be refactored to avoid multiple and nested if/then/else
 		try {
 			if (status == RuntimeStatusType.FAILED) {
-				stmt = preparedStatements.get(FAILED_FLOWS_SELECT_STMT);
 				rowConverter = FAILED_FLOW_CONVERTER;
+				if (isTimeframeQuery(criteria)) {
+					stmt = preparedStatements.get(FAILED_FLOWS_WITHIN_TIMEFRAME_SELECT_STMT);
+				} else {
+					stmt = preparedStatements.get(FAILED_FLOWS_SELECT_STMT);
+				}
 			} else if (status == RuntimeStatusType.INPROGRESS) {
-				stmt = preparedStatements.get(RUNNING_FLOWS_SELECT_STMT);
 				rowConverter = RUNNING_FLOW_CONVERTER;
+				if (isTimeframeQuery(criteria)) {
+					stmt = preparedStatements.get(RUNNING_FLOWS_WITHIN_TIMEFRAME_SELECT_STMT);
+				} else {
+					stmt = preparedStatements.get(RUNNING_FLOWS_SELECT_STMT);
+				}
 			} else if (status == RuntimeStatusType.COMPLETED) {
-				stmt = preparedStatements.get(COMPLETED_FLOWS_SELECT_STMT);
 				rowConverter = COMPLETED_FLOW_CONVERTER;
+				if (isTimeframeQuery(criteria)) {
+					stmt = preparedStatements.get(COMPLETED_FLOWS_WITHIN_TIMEFRAME_SELECT_STMT);
+				} else {
+					stmt = preparedStatements.get(COMPLETED_FLOWS_SELECT_STMT);
+				}
 			} else {
 				throw new IllegalArgumentException("Wrong flow runtime status: " + status);
 			}
 
-			BoundStatement boundStmt = stmt.bind(CassandraUtil.timestampToDateToken(criteria.getStartDate()));
+			final String startDate = CassandraUtil.timestampToDateToken(criteria.getStartDate());
+			BoundStatement boundStmt;
+			if (isTimeframeQuery(criteria)) {
+				boundStmt = stmt.bind(startDate, criteria.getMinStartTime(), criteria.getMaxStartTime());
+			} else {
+				boundStmt = stmt.bind(startDate);
+			}
+
 			result = getPagedResult(session, boundStmt, rowConverter, pagingOptions);
 
 		} catch (RuntimeException e) {
@@ -185,6 +216,18 @@ public class CassandraRuntimeRepository extends CassandraRepository implements R
 		}
 
 		return result;
+	}
+
+	private boolean isTimeframeQuery(ScriptRuntimeCriteria criteria) throws PersistenceException {
+		final Date minTime = criteria.getMinStartTime();
+		final Date maxTime = criteria.getMaxStartTime();
+
+		if ((minTime != null && maxTime == null) || (minTime == null && maxTime != null)) {
+			throw new PersistenceException(
+					"Incorrect query criteria: both minStartTime and maxStartTime must be set or none of them");
+		}
+
+		return minTime != null && maxTime != null;
 	}
 
 	private BoundStatement createCompletedFlowInsertStatement(Session session, ScriptRuntimeDTO record) {

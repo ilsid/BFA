@@ -59,8 +59,8 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(RuntimeDatabaseFixture.USER_NAME, rec.getUserName());
 		assertEquals("Test Script 1", rec.getScriptName());
 		assertEquals(getParameters(), rec.getParameters());
-		assertEquals(addMinutes(startTime, 1), rec.getStartTime());
-		assertEquals(addMinutes(startTime, 1), rec.getEndTime());
+		assertEquals(startTime, rec.getStartTime());
+		assertEquals(startTime, rec.getEndTime());
 		assertEquals(getCallStack(), rec.getCallStack());
 		assertEquals(getErrorDetails(), rec.getErrorDetails());
 		assertEquals(RuntimeStatusType.FAILED, rec.getStatus());
@@ -86,7 +86,7 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(RuntimeDatabaseFixture.USER_NAME, rec.getUserName());
 		assertEquals("Test Script 1", rec.getScriptName());
 		assertEquals(getParameters(), rec.getParameters());
-		assertEquals(addMinutes(startTime, 1), rec.getStartTime());
+		assertEquals(startTime, rec.getStartTime());
 		assertEquals(getCallStack(), rec.getCallStack());
 		assertEquals(RuntimeStatusType.INPROGRESS, rec.getStatus());
 	}
@@ -111,8 +111,8 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		assertEquals(RuntimeDatabaseFixture.USER_NAME, rec.getUserName());
 		assertEquals("Test Script 1", rec.getScriptName());
 		assertEquals(getParameters(), rec.getParameters());
-		assertEquals(addMinutes(startTime, 1), rec.getStartTime());
-		assertEquals(addMinutes(startTime, 1), rec.getEndTime());
+		assertEquals(startTime, rec.getStartTime());
+		assertEquals(startTime, rec.getEndTime());
 		assertEquals(getCallStack(), rec.getCallStack());
 		assertEquals(RuntimeStatusType.COMPLETED, rec.getStatus());
 	}
@@ -151,6 +151,54 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 				new QueryPagingOptions());
 
 		assertResultIsSortedByDescendingStartTime(fetchResult, startTime);
+	}
+
+	@Test
+	public void failedFlowsAreFetchedWithinDefinedTimeframe() throws Exception {
+		final Date startTime = new Date();
+		final Date minQueriedStartTime = addMinutes(startTime, 1);
+		final Date maxQueriedStartTime = addMinutes(startTime, 3);
+
+		RuntimeDatabaseFixture.insertFailedFlows(3, startTime);
+
+		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
+				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.FAILED).setStartDate(startTime)
+						.setMinStartTime(minQueriedStartTime).setMaxStartTime(maxQueriedStartTime),
+				new QueryPagingOptions());
+
+		assertEquals(2, fetchResult.getResult().size());
+	}
+
+	@Test
+	public void runningFlowsAreFetchedWithinDefinedTimeframe() throws Exception {
+		final Date startTime = new Date();
+		final Date minQueriedStartTime = addMinutes(startTime, 1);
+		final Date maxQueriedStartTime = addMinutes(startTime, 3);
+
+		RuntimeDatabaseFixture.insertRunningFlows(3, startTime);
+
+		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
+				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.INPROGRESS).setStartDate(startTime)
+						.setMinStartTime(minQueriedStartTime).setMaxStartTime(maxQueriedStartTime),
+				new QueryPagingOptions());
+
+		assertEquals(2, fetchResult.getResult().size());
+	}
+
+	@Test
+	public void completedFlowsAreFetchedWithinDefinedTimeframe() throws Exception {
+		final Date startTime = new Date();
+		final Date minQueriedStartTime = addMinutes(startTime, 1);
+		final Date maxQueriedStartTime = addMinutes(startTime, 3);
+
+		RuntimeDatabaseFixture.insertCompletedFlows(3, startTime);
+
+		final QueryPage<ScriptRuntimeDTO> fetchResult = repository.fetch(
+				new ScriptRuntimeCriteria().setStatus(RuntimeStatusType.COMPLETED).setStartDate(startTime)
+						.setMinStartTime(minQueriedStartTime).setMaxStartTime(maxQueriedStartTime),
+				new QueryPagingOptions());
+
+		assertEquals(2, fetchResult.getResult().size());
 	}
 
 	@Test
@@ -219,13 +267,13 @@ public class CassandraRuntimeRepositoryUnitTest extends BaseUnitTestCase {
 		assertNull(fetchResult.getNextPageToken());
 		assertEquals(3, records.size());
 
-		assertEquals(addMinutes(initTime, 3), records.get(0).getStartTime());
+		assertEquals(addMinutes(initTime, 2), records.get(0).getStartTime());
 		assertEquals("Test Script 3", records.get(0).getScriptName());
 
-		assertEquals(addMinutes(initTime, 2), records.get(1).getStartTime());
+		assertEquals(addMinutes(initTime, 1), records.get(1).getStartTime());
 		assertEquals("Test Script 2", records.get(1).getScriptName());
 
-		assertEquals(addMinutes(initTime, 1), records.get(2).getStartTime());
+		assertEquals(initTime, records.get(2).getStartTime());
 		assertEquals("Test Script 1", records.get(2).getScriptName());
 	}
 

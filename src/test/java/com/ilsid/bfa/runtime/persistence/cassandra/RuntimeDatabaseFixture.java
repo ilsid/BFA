@@ -26,13 +26,13 @@ public class RuntimeDatabaseFixture {
 
 		final String startDate = TOKEN_DATE_FORMAT.format(initTime);
 
-		for (int cnt = 1; cnt < recordsCount + 1; cnt++) {
+		for (int cnt = 0; cnt < recordsCount; cnt++) {
 			Date startTime = DateHelper.addMinutes(initTime, cnt);
 			Date endTime = startTime;
 
 			CassandraEmbeddedServer.getClient().executeBoundStatement(
 					CassandraRuntimeRepository.FAILED_FLOWS_INSERT_STMT, UUID.randomUUID(), USER_NAME,
-					"Test Script " + cnt, parameters, startDate, startTime, callStack, endTime, errorDetails);
+					"Test Script " + (cnt + 1), parameters, startDate, startTime, callStack, endTime, errorDetails);
 
 		}
 	}
@@ -46,12 +46,12 @@ public class RuntimeDatabaseFixture {
 
 		final String startDate = TOKEN_DATE_FORMAT.format(initTime);
 
-		for (int cnt = 1; cnt < recordsCount + 1; cnt++) {
+		for (int cnt = 0; cnt < recordsCount; cnt++) {
 			Date startTime = DateHelper.addMinutes(initTime, cnt);
 
 			CassandraEmbeddedServer.getClient().executeBoundStatement(
 					CassandraRuntimeRepository.RUNNING_FLOWS_INSERT_STMT, UUID.randomUUID(), USER_NAME,
-					"Test Script " + cnt, parameters, startDate, startTime, callStack);
+					"Test Script " + (cnt + 1), parameters, startDate, startTime, callStack);
 
 		}
 	}
@@ -65,17 +65,17 @@ public class RuntimeDatabaseFixture {
 
 		final String startDate = TOKEN_DATE_FORMAT.format(initTime);
 
-		for (int cnt = 1; cnt < recordsCount + 1; cnt++) {
+		for (int cnt = 0; cnt < recordsCount; cnt++) {
 			Date startTime = DateHelper.addMinutes(initTime, cnt);
 			Date endTime = startTime;
 
 			CassandraEmbeddedServer.getClient().executeBoundStatement(
 					CassandraRuntimeRepository.COMPLETED_FLOWS_INSERT_STMT, UUID.randomUUID(), USER_NAME,
-					"Test Script " + cnt, parameters, startDate, startTime, callStack, endTime);
+					"Test Script " + (cnt + 1), parameters, startDate, startTime, callStack, endTime);
 
 		}
 	}
-	
+
 	public static void clearData() {
 		CassandraEmbeddedServer.getClient().query("TRUNCATE failed_flows");
 		CassandraEmbeddedServer.getClient().query("TRUNCATE running_flows");

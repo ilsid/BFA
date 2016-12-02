@@ -1,11 +1,18 @@
 package com.ilsid.bfa.runtime.monitor;
 
-import javax.inject.Inject;
+import java.io.IOException;
+
 import javax.websocket.OnMessage;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
-import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
+import com.ilsid.bfa.common.JsonUtil;
+import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.QueryPage;
+import com.ilsid.bfa.persistence.QueryPagingOptions;
+import com.ilsid.bfa.runtime.dto.ScriptRuntimeCriteria;
+import com.ilsid.bfa.runtime.dto.ScriptRuntimeDTO;
+import com.ilsid.bfa.service.dto.ScriptRuntimeQuery;
 
 /**
  * Provides scripting runtime information in real-time via WebSockets interface.
@@ -16,23 +23,32 @@ import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 @ServerEndpoint(value = MonitoringServer.MONITOR_END_POINT)
 public class MonitorEndpoint {
 
-	private RuntimeRepository repository;
-
 	@OnMessage
 	public String getResponse(String message, Session session) {
-		// TODO: put actual implementation
-		return session.getId() + ": " + message;
-	}
+		ScriptRuntimeQuery query;
+		try {
+			query = JsonUtil.toObject(message, ScriptRuntimeQuery.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "Query paring error: " + e.getMessage();
+		}
 
-	/**
-	 * Defines a code repository implementation.
-	 * 
-	 * @param repository
-	 *            a code repository
-	 */
-	@Inject
-	public void setRepository(RuntimeRepository repository) {
-		this.repository = repository;
-	}
+		final ScriptRuntimeCriteria criteria = query.getCriteria();
 
+		QueryPagingOptions pagingOptions = new QueryPagingOptions();
+		pagingOptions.setResultsPerPage(query.getResultsPerPage());
+
+		QueryPage<ScriptRuntimeDTO> result;
+		String json;
+		try {
+			result = MonitoringServer.getRepository().fetch(criteria, pagingOptions);
+			json = JsonUtil.toJsonString(result);
+		} catch (PersistenceException | IOException e) {
+			e.printStackTrace();
+			return "Query execution error: " + e.getMessage();
+		}
+
+		// return session.getId() + ": " + response;
+		return json;
+	}
 }

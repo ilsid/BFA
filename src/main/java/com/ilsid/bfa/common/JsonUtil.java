@@ -19,6 +19,8 @@ public class JsonUtil {
 	private static final TypeReference<LinkedHashMap<String, String>> MAP_TYPE_REF = new TypeReference<LinkedHashMap<String, String>>() {
 	};
 
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
 	/**
 	 * Converts JSON string to {@link Map} instance.
 	 * 
@@ -29,8 +31,7 @@ public class JsonUtil {
 	 *             in case the string can't be parsed
 	 */
 	public static Map<String, String> toMap(String json) throws IOException {
-		ObjectMapper mapper = new ObjectMapper();
-		return mapper.readValue(json, MAP_TYPE_REF);
+		return OBJECT_MAPPER.readValue(json, MAP_TYPE_REF);
 	}
 
 	/**
@@ -43,22 +44,20 @@ public class JsonUtil {
 	 *             in case the file can't be parsed
 	 */
 	public static Map<String, String> toMap(File file) throws IOException {
-		ObjectMapper mapper = new ObjectMapper();
-		return mapper.readValue(file, MAP_TYPE_REF);
+		return OBJECT_MAPPER.readValue(file, MAP_TYPE_REF);
 	}
 
 	/**
-	 * Converts {@link Map} instance to JSON string.
+	 * Converts an object to JSON string.
 	 * 
-	 * @param map
-	 *            a map to convert
+	 * @param obj
+	 *            an object to convert
 	 * @return JSON string
 	 * @throws IOException
-	 *             in case a map can't be converted
+	 *             in case an object can't be converted
 	 */
-	public static String toJsonString(Map<String, String> map) throws IOException {
-		ObjectMapper mapper = new ObjectMapper();
-		return mapper.writeValueAsString(map);
+	public static String toJsonString(Object obj) throws IOException {
+		return OBJECT_MAPPER.writeValueAsString(obj);
 	}
 
 	/**
@@ -73,8 +72,7 @@ public class JsonUtil {
 	 *             in case the string can't be converted
 	 */
 	public static <T> T toObject(String json, Class<T> type) throws IOException {
-		ObjectMapper mapper = new ObjectMapper();
-		return mapper.readValue(json, type);
+		return OBJECT_MAPPER.readValue(json, type);
 	}
 
 	/**
@@ -86,7 +84,7 @@ public class JsonUtil {
 	 */
 	public static boolean isValidJsonString(String content) {
 		try {
-			new ObjectMapper().readTree(content);
+			OBJECT_MAPPER.readTree(content);
 		} catch (IOException e) {
 			return false;
 		}

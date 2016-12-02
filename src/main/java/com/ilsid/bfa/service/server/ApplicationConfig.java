@@ -71,6 +71,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 				requestStaticInjection(DynamicClassLoader.class);
 				requestStaticInjection(ActionClassLoader.class);
 				requestStaticInjection(ClassCompiler.class);
+				requestStaticInjection(MonitoringServer.class);
 
 				Map<String, String> webConfig = new HashMap<>();
 				// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping

@@ -3,9 +3,12 @@ package com.ilsid.bfa.runtime.monitor;
 import java.io.IOException;
 import java.net.Inet4Address;
 
+import javax.inject.Inject;
 import javax.websocket.DeploymentException;
 
 import org.glassfish.tyrus.server.Server;
+
+import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 
 /**
  * WebSockets server for the runtime monitoring.
@@ -19,10 +22,12 @@ public class MonitoringServer {
 	 * Server's context path.
 	 */
 	public static final String CONTEXT_PATH = "/bfa";
-	
+
 	public static final String MONITOR_END_POINT = "/monitor";
 
 	private static Server server;
+
+	private static RuntimeRepository repository;
 
 	/**
 	 * Starts the server.
@@ -50,12 +55,26 @@ public class MonitoringServer {
 		}
 	}
 
+	/**
+	 * Defined a runtime repository implementation.
+	 * 
+	 * @param repository
+	 *            repository implementation
+	 */
+	@Inject
+	public static void setRepository(RuntimeRepository repository) {
+		MonitoringServer.repository = repository;
+	}
+
+	static RuntimeRepository getRepository() {
+		return repository;
+	}
+
 	public static void main(String[] args) throws MonitoringException, IOException {
-		// System.out.println(Inet4Address.getLocalHost().getHostAddress());
-		System.out.println(Inet4Address.getLocalHost().getHostAddress());
-		MonitoringServer.start(Inet4Address.getLocalHost().getHostAddress(), 8025);
+		System.out.println(Inet4Address.getLocalHost().getCanonicalHostName());
+		MonitoringServer.start(Inet4Address.getLocalHost().getCanonicalHostName(), 8027);
 		System.in.read();
-		// MonitorServer.stop();
+		MonitoringServer.stop();
 	}
 
 }

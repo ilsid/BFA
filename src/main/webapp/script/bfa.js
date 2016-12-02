@@ -219,6 +219,7 @@ function startMonitoring(serverURL) {
 			var intervalMillis = 4000;
 			var monitorTimeframe = null;
 			var startDate = new Date();
+			var status = document.getElementById('runtimeMonitorTab_status').value;
 			
 			monitorInterval = window.setInterval(function() {
 				if (monitorTimeframe != null) {
@@ -244,6 +245,7 @@ function startMonitoring(serverURL) {
 				var query = {
 					criteria: {
 						startDate: startDate,
+						status: status,
 						minStartTime: monitorTimeframe.minTime,
 						maxStartTime: monitorTimeframe.maxTime
 					}

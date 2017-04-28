@@ -1,17 +1,16 @@
 package com.ilsid.bfa.runtime.persistence.orientdb;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.persistence.PersistenceException;
+import com.ilsid.bfa.persistence.QueryPage;
+import com.ilsid.bfa.persistence.QueryPagingOptions;
 import com.ilsid.bfa.persistence.orientdb.DatabaseCallback;
 import com.ilsid.bfa.persistence.orientdb.OrientdbRepository;
 import com.ilsid.bfa.persistence.orientdb.VoidDatabaseCallback;
+import com.ilsid.bfa.runtime.dto.ScriptRuntimeCriteria;
 import com.ilsid.bfa.runtime.dto.ScriptRuntimeDTO;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 import com.orientechnologies.orient.core.record.impl.ODocument;
@@ -54,6 +53,7 @@ public class OrientdbRuntimeRepository extends OrientdbRepository implements Run
 	 * @see com.ilsid.bfa.runtime.persistence.RuntimeRepository#createRuntimeRecord(com.ilsid.bfa.runtime.dto.
 	 * ScriptRuntimeDTO)
 	 */
+	@Override
 	public void createRuntimeRecord(final ScriptRuntimeDTO record) throws PersistenceException {
 		executeInTransaction(new VoidDatabaseCallback() {
 
@@ -84,6 +84,7 @@ public class OrientdbRuntimeRepository extends OrientdbRepository implements Run
 	 * @see com.ilsid.bfa.runtime.persistence.RuntimeRepository#updateRuntimeRecord(com.ilsid.bfa.runtime.dto.
 	 * ScriptRuntimeDTO)
 	 */
+	@Override
 	public void updateRuntimeRecord(final ScriptRuntimeDTO record) throws PersistenceException {
 		executeInTransaction(new VoidDatabaseCallback() {
 
@@ -100,8 +101,8 @@ public class OrientdbRuntimeRepository extends OrientdbRepository implements Run
 
 				dbRecord.field("status", record.getStatus());
 				dbRecord.field("endTime", record.getEndTime());
-				if (record.getError() != null) {
-					dbRecord.field("errorDetails", getDetails(record.getError()));
+				if (record.getErrorDetails() != null) {
+					dbRecord.field("errorDetails", record.getErrorDetails());
 				}
 
 				dbRecord.save();
@@ -113,8 +114,17 @@ public class OrientdbRuntimeRepository extends OrientdbRepository implements Run
 
 	}
 
-	private List<String> getDetails(Exception error) {
-		String[] chain = ExceptionUtil.getExceptionMessageChain(error).split(StringUtils.LF);
-		return Arrays.asList(chain);
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.runtime.persistence.RuntimeRepository#fetch(com.ilsid.bfa.runtime.dto. ScriptRuntimeCriteria,
+	 * com.ilsid.bfa.persistence.QueryPagingOptions)
+	 */
+	@Override
+	public QueryPage<ScriptRuntimeDTO> fetch(ScriptRuntimeCriteria criteria, QueryPagingOptions pagingOptions)
+			throws PersistenceException {
+
+		throw new RuntimeException("Not implemented");
 	}
+
 }

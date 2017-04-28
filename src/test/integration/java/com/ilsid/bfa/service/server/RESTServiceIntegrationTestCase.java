@@ -30,6 +30,7 @@ import com.ilsid.bfa.persistence.PersistenceLogger;
 import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.cassandra.CassandraServerManager;
+import com.ilsid.bfa.runtime.monitor.MonitoringServerConfig;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 import com.ilsid.bfa.runtime.persistence.cassandra.CassandraRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
@@ -169,6 +170,13 @@ public abstract class RESTServiceIntegrationTestCase extends BaseUnitTestCase {
 				@Singleton
 				@ManagerConfig
 				protected Map<String, String> provideManagerConfiguration() {
+					return repositoryConfig;
+				}
+				
+				@Provides
+				@Singleton
+				@MonitoringServerConfig
+				protected Map<String, String> provideMonitoringServerConfiguration() {
 					return repositoryConfig;
 				}
 

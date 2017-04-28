@@ -23,6 +23,8 @@ import com.ilsid.bfa.persistence.RepositoryConfig;
 import com.ilsid.bfa.persistence.ScriptingRepository;
 import com.ilsid.bfa.persistence.cassandra.CassandraResourceManager;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
+import com.ilsid.bfa.runtime.monitor.MonitoringServer;
+import com.ilsid.bfa.runtime.monitor.MonitoringServerConfig;
 import com.ilsid.bfa.runtime.persistence.RuntimeRepository;
 import com.ilsid.bfa.runtime.persistence.cassandra.CassandraRuntimeRepository;
 import com.ilsid.bfa.script.ClassCompiler;
@@ -53,6 +55,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 	public void contextDestroyed(javax.servlet.ServletContextEvent servletContextEvent) {
 		super.contextDestroyed(servletContextEvent);
 		CassandraResourceManager.releaseResources();
+		MonitoringServer.stop();
 	}
 
 	@Override
@@ -68,6 +71,7 @@ public class ApplicationConfig extends GuiceServletContextListener {
 				requestStaticInjection(DynamicClassLoader.class);
 				requestStaticInjection(ActionClassLoader.class);
 				requestStaticInjection(ClassCompiler.class);
+				requestStaticInjection(MonitoringServer.class);
 
 				Map<String, String> webConfig = new HashMap<>();
 				// org.codehaus.jackson.jaxrs package contains the provider for POJO JSON mapping
@@ -82,21 +86,28 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			@Singleton
 			@RepositoryConfig
 			protected Map<String, String> provideRepositoryConfiguration() {
-				return ConfigUtil.getApplicationSettings();
+				return getApplicationConfig();
 			}
 
 			@Provides
 			@Singleton
 			@LoggingConfig
 			protected Map<String, String> provideLoggingConfiguration() {
-				return ConfigUtil.getApplicationSettings();
+				return getApplicationConfig();
 			}
 
 			@Provides
 			@Singleton
 			@ManagerConfig
 			protected Map<String, String> provideManagerConfiguration() {
-				return ConfigUtil.getApplicationSettings();
+				return getApplicationConfig();
+			}
+
+			@Provides
+			@Singleton
+			@MonitoringServerConfig
+			protected Map<String, String> provideMonitoringServerConfiguration() {
+				return getApplicationConfig();
 			}
 
 			@Provides
@@ -118,6 +129,10 @@ public class ApplicationConfig extends GuiceServletContextListener {
 			@PersistenceLogger
 			protected Logger providePersistenceLogger() {
 				return LoggerFactory.getLogger(PERSISTENCE_LOGGER_NAME);
+			}
+
+			private Map<String, String> getApplicationConfig() {
+				return ConfigUtil.getApplicationSettings();
 			}
 		});
 	}

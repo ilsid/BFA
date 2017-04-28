@@ -7,6 +7,7 @@ html, body {
 html,
 body,
 label,
+select,
 table.dijitDialogPaneContentArea,
 .dijitTextBox,
 .dijitValidationTextBox
@@ -26,7 +27,8 @@ table.dijitDialogPaneContentArea,
 .toolbarIconInfo,
 .toolbarIconUpdate,
 .toolbarIconDownload,
-.toolbarIconRuntimeMonitor
+.toolbarIconRuntimeMonitor,
+.toolbarIconFilter
  {
   background-repeat: no-repeat;
   width: 16px;
@@ -82,6 +84,10 @@ table.dijitDialogPaneContentArea,
   background-image: url("../icons/runtime_monitor_16x16.png");
 }
 
+.toolbarIconFilter {
+  background-image: url("../icons/filter_16x16.png");
+}
+
 .fixedTextArea{
   height: 95%; 
   width:100%; 
@@ -124,6 +130,11 @@ table.dijitDialogPaneContentArea,
   margin: 0;
   font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
   font-size: 13px;	
+}
+
+.dojoxGridCell {
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .consoleMessage {

@@ -12,12 +12,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ilsid.bfa.persistence.QueryPage;
 import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
+import com.ilsid.bfa.runtime.dto.ScriptRuntimeCriteria;
+import com.ilsid.bfa.runtime.dto.ScriptRuntimeDTO;
 import com.ilsid.bfa.script.ScriptException;
 import com.ilsid.bfa.script.ScriptRuntime;
 import com.ilsid.bfa.service.common.Paths;
 import com.ilsid.bfa.service.dto.RuntimeStatus;
 import com.ilsid.bfa.service.dto.ScriptRuntimeParams;
+import com.ilsid.bfa.service.dto.ScriptRuntimeQuery;
 
 /**
  * Provides the script runtime services.
@@ -80,8 +84,51 @@ public class ScriptRuntimeResource {
 		return Response.status(Status.NOT_FOUND).build();
 	}
 
+	/**
+	 * Fetches scripting runtime records by the given query. The result is paginated.
+	 * 
+	 * @param query
+	 *            query to execute
+	 * @return response with {@link QueryPage} entity
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the query contains a page token and this token is invalid</li>
+	 *             <li>in case of the repository access failure</li>
+	 *             </ul>
+	 */
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.FETCH_OPERATION)
+	public Response fetch(ScriptRuntimeQuery query) {
+		QueryPage<ScriptRuntimeDTO> result;
+		final int fetchLimit = query.getResultsPerPage();
+		final String pageToken = query.getPageToken();
+		final ScriptRuntimeCriteria criteria = query.getCriteria();
+
+		try {
+			if (pageToken != null) {
+				result = scriptRuntime.fetch(criteria, fetchLimit, pageToken);
+			} else {
+				result = scriptRuntime.fetch(criteria, fetchLimit);
+			}
+		} catch (ScriptException e) {
+			throw new ResourceException(Paths.SCRIPT_RUNTIME_FETCH_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).entity(result).build();
+	}
+
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	@Path(Paths.GET_MONITORING_SERVER_URL_OPERATION)
+	public String getMonitoringServerURL() {
+		return scriptRuntime.getMonitoringServerURL();
+	}
+
 	@Inject
 	public void setScriptRuntime(ScriptRuntime scriptRuntime) {
 		this.scriptRuntime = scriptRuntime;
 	}
+
 }

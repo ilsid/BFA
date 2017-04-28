@@ -15,6 +15,7 @@ import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.LoggingConfigurator;
 import com.ilsid.bfa.persistence.filesystem.FilesystemScriptingRepository;
+import com.ilsid.bfa.runtime.monitor.MonitoringServer;
 
 public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegrationTestCase {
 
@@ -50,6 +51,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 		repositoryConfig.put("bfa.persistence.fs.root_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
 		repositoryConfig.put("bfa.tmp_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
 		repositoryConfig.putAll(getDatabaseServerManager().getConfig());
+		repositoryConfig.put("bfa.monitor.server.port", IntegrationTestConstants.MONITORING_SERVER_PORT);
 
 		getDatabaseServerManager().startServer();
 
@@ -62,6 +64,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 		stopWebServer();
 		getDatabaseServerManager().stopServer();
 		FileUtils.forceDelete(IntegrationTestConstants.CODE_REPOSITORY_DIR);
+		MonitoringServer.stop();
 	}
 
 	protected void assertFilesExist(String dirPath, String[] fileNames) {

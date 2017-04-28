@@ -1,5 +1,8 @@
 package com.ilsid.bfa.common;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
@@ -41,6 +44,23 @@ public class ExceptionUtilUnitTest extends BaseUnitTestCase {
 				.append(CAUSEDBY_STR).append(causeMsg3);
 
 		assertEquals(msgChain.toString(), ExceptionUtil.getExceptionMessageChain(e));
+	}
+
+	@Test
+	public void messagesAreConvertedToException() {
+		String expectedErrMessage = "Msg01" + StringUtils.LF + "Msg02" + StringUtils.LF + "Msg03" + StringUtils.LF;
+		@SuppressWarnings("serial")
+		List<String> messages = new LinkedList<String>() {
+			{
+				add("Msg01");
+				add("Msg02");
+				add("Msg03");
+			}
+		};
+
+		final Exception excp = ExceptionUtil.toException(messages);
+		assertEquals(expectedErrMessage, excp.getMessage());
+		assertNull(excp.getCause());
 	}
 
 	private Exception createException(String msg, String[] causeMessages) {

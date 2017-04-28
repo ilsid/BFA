@@ -12,4 +12,6 @@ public class IntegrationTestConstants {
 	
 	public final static File DATABASE_DIR = new File(ORIENTDB_HOME_DIR, "databases");
 	
+	public final static String MONITORING_SERVER_PORT = "8057";
+	
 }

@@ -35,7 +35,7 @@ public class ScriptRuntimeDTO {
 
 	private Collection<String> callStack;
 
-	private Exception error;
+	private Collection<String> errorDetails;
 
 	public Object getRuntimeId() {
 		return runtimeId;
@@ -109,12 +109,12 @@ public class ScriptRuntimeDTO {
 		return this;
 	}
 
-	public Exception getError() {
-		return error;
+	public Collection<String> getErrorDetails() {
+		return errorDetails;
 	}
 
-	public ScriptRuntimeDTO setError(Exception error) {
-		this.error = error;
+	public ScriptRuntimeDTO setErrorDetails(Collection<String> error) {
+		this.errorDetails = error;
 		return this;
 	}
 

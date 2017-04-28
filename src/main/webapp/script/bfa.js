@@ -1,3 +1,16 @@
+(function () {
+	bfa = {};
+	
+	bfa.TIME_PATTERN = {datePattern: 'HH:mm:ss', selector: 'date', locale: 'en-us'};
+	// FIXME: date format should be obtained dynamically from server
+	bfa.DATE_PATTERN = {datePattern: 'yyyy-MM-dd', selector: 'date', locale: 'en-us'};
+
+	createTree('script', createScriptTab, undefined, 'getSource');
+	createTree('entity', createEntityTab, 'toolbarIconEntity', 'getSource');	
+	createTree('action', createActionTab, 'toolbarIconAction', 'getInfo');
+}());
+
+
 function isEmptyObject(obj) {
 	var keys = [];
 	for (var key in obj) {
@@ -6,6 +19,28 @@ function isEmptyObject(obj) {
 	}
 	return keys.length == 0;
 }
+
+function convertArrayToLines(arr) { 
+	var lines = '';
+	if (arr) {
+		arr.forEach(function(item, i, arr) {
+			lines = lines + item + '<br/>';
+		});
+	}
+	return lines;
+}	
+
+function convertMillisecondsToTime(millis) { 
+	var result = '';
+	require(['dojo/date/locale'],
+		function(locale) {
+			if (millis) {
+				result = locale.format(new Date(millis), bfa.TIME_PATTERN);
+			}
+	});
+	
+	return result;
+}	
 
 function getSelectedGroupName(tree, groupType) {
 	var selectedItem = tree.selectedItems[0];
@@ -32,6 +67,14 @@ function writeInfo(message) {
 			domConstruct.place('<tr class="consoleMessage"><td><pre>' + message + '</pre></td></tr>', 
 				'infoTable', 'first');
 			registry.byId('messageContainer').selectChild(registry.byId('infoTab'));	
+		});
+}
+
+function writeInfoInBackground(message) {
+	require([ 'dojo/dom-construct', 'dojo/domReady!'],
+		function(domConstruct) {
+			domConstruct.place('<tr class="consoleMessage"><td><pre>' + message + '</pre></td></tr>', 
+				'infoTable', 'first');
 		});
 }
 
@@ -108,6 +151,154 @@ function drawFlowChart(scriptName, canvasId) {
 				}, function(err) {
 					writeError(err);
 				});
+		});
+}
+
+function fetchFlowsRuntimeRecords() {
+	require(['dojo/request/xhr', 'dijit/registry', 'dojo/data/ObjectStore', 
+			'dojo/store/Memory', 'dojo/date/locale', 'dojo/domReady!'],
+		function(request, registry, ObjectStore, Memory, locale) {
+			var status = document.getElementById('runtimeMonitorTab_status').value;
+			var dateObj = registry.byId('runtimeMonitorTab_startDate').get('value');
+			var date = locale.format(dateObj, bfa.DATE_PATTERN);
+			
+			request('service/script/runtime/fetch', {
+					headers: { 'Content-Type': 'application/json' },
+					method: 'POST',
+					handleAs: 'json',
+					data: '{"criteria": {"startDate": "' + date + '", "status": "' + status + '"}}'
+				}).then(function(resp){
+				
+					var grid = registry.byId('runtimeMonitorTab_dataGrid');
+					
+					delete grid.store;
+					grid.setStore(new ObjectStore({ 
+						objectStore: new Memory({ data: []}),
+						modified: false
+					}));
+					
+					var records = resp.result;
+					records.forEach(function(rec, i, records) {
+						grid.store.newItem(
+							{fldScriptName: rec.scriptName, 
+							 fldRuntimeId: rec.runtimeId, 
+							 fldStartTime: rec.startTime, 
+							 fldEndTime: rec.endTime, 
+							 fldParams: rec.parameters,
+							 fldCallStack: rec.callStack, 
+							 fldErrors: rec.errorDetails, 
+							 fldStatus: rec.status,
+							 fldUser: rec.userName});
+					});
+										
+					grid.store.save();
+					grid.render();
+					
+				}, function(err) {
+					writeError(err);
+				});
+		});
+}
+
+function startMonitoring(serverURL) {
+	require(['dijit/registry'],
+		function(registry) {
+			//TODO: handle connection error
+			monitorConnection = new WebSocket(serverURL);
+			
+			var filterBtn = registry.byId('runtimeMonitorTab_filterBtn');
+			var dateBox = registry.byId('runtimeMonitorTab_startDate');
+			filterBtn.set('disabled', true);
+			dateBox.set('disabled', true);
+			
+			monitorConnection.onmessage = function(e){
+				writeInfoInBackground(e.data);
+			}
+			
+			//TODO: make the interval configurable
+			var intervalMillis = 4000;
+			var monitorTimeframe = null;
+			var startDate = new Date();
+			var status = document.getElementById('runtimeMonitorTab_status').value;
+			
+			monitorInterval = window.setInterval(function() {
+				if (monitorTimeframe != null) {
+					monitorTimeframe.minTime = monitorTimeframe.maxTime;
+					monitorTimeframe.maxTime = new Date().getTime();
+				} else {
+					var maxTimeMillis = new Date().getTime();
+					var minTime = new Date();
+					minTime.setMilliseconds(minTime.getMilliseconds() - 2 * intervalMillis);
+					var minTimeMillis = minTime.getTime();
+					
+					monitorTimeframe = {
+						minTime: minTimeMillis, 
+						maxTime:  maxTimeMillis
+					};
+				}
+				
+				// A case when a date is changed during the monitoring session
+				if (startDate.getDate() != new Date().getDate()) {
+					startDate = new Date();
+				}
+				
+				var query = {
+					criteria: {
+						startDate: startDate,
+						status: status,
+						minStartTime: monitorTimeframe.minTime,
+						maxStartTime: monitorTimeframe.maxTime
+					}
+				};
+				
+				monitorConnection.send(JSON.stringify(query));
+				
+			}, intervalMillis);
+		
+		});
+}
+
+function stopMonitoring() {
+	require(['dijit/registry'],
+		function(registry) {
+			var filterBtn = registry.byId('runtimeMonitorTab_filterBtn');
+			var dateBox = registry.byId('runtimeMonitorTab_startDate');
+						
+			filterBtn.set('disabled', false);
+			dateBox.set('disabled', false);
+			
+			if (monitorInterval) {
+				window.clearInterval(monitorInterval);
+				delete monitorInterval;
+			}
+			
+			if (monitorConnection) {
+				monitorConnection.close();
+				delete monitorConnection;
+				writeInfoInBackground('Monitor connection closed');
+			}
+		});
+}
+
+function changeRealTimeMonitoringMode() {
+	require(['dijit/registry', 'dojo/request/xhr'],
+		function(registry, request) {
+			var checkBox = registry.byId('runtimeMonitorTab_realtimeCheck');
+						
+			if (checkBox.checked) {
+				request('service/script/runtime/getMonitoringServerUrl', {
+					method: 'GET'
+				}).then(function(resp){
+					var url = resp;
+					//var url = 'ws://localhost:8027/bfa/monitor';
+					startMonitoring(url);
+				}, function(err) {
+					checkBox.set('checked', false);	
+					writeErrorMessage('Failed to get the monitoring server info: ' + err);
+				});
+			} else {
+				stopMonitoring();
+			}
 		});
 }
 

@@ -1,5 +1,7 @@
 package com.ilsid.bfa.common;
 
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -33,6 +35,23 @@ public class ExceptionUtil {
 		}
 
 		return chain.toString();
+	}
+
+	/**
+	 * Transforms error messages into a single {@link Exception} instance.
+	 * 
+	 * @param messages
+	 *            error messages
+	 * @return {@link Exception} instance with no root cause and with a composite message containing all passing
+	 *         messages
+	 */
+	public static Exception toException(List<String> messages) {
+		StringBuilder sb = new StringBuilder();
+		for (String msg : messages) {
+			sb.append(msg).append(StringUtils.LF);
+		}
+
+		return new Exception(sb.toString());
 	}
 
 }

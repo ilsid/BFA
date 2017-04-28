@@ -2,6 +2,7 @@ package com.ilsid.bfa.common;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +50,20 @@ public class JsonUtilUnitTest extends BaseUnitTestCase {
 		};
 
 		assertEquals("{\"var1\":\"Integer\",\"var2\":\"Double\",\"var3\":\"String\"}", JsonUtil.toJsonString(map));
+	}
+
+	@Test
+	public void objectCanBeConvertedToJsonString() throws Exception {
+		List<SimpleObject> list = new LinkedList<>();
+		list.add(new SimpleObject("aaa", 1));
+		list.add(new SimpleObject("bbb", 2));
+		ComplexObject obj = new ComplexObject();
+		obj.setStrField("ccc");
+		obj.setSomeList(list);
+
+		assertEquals(
+				"{\"strField\":\"ccc\",\"someList\":[{\"field1\":\"aaa\",\"field2\":1},{\"field1\":\"bbb\",\"field2\":2}]}",
+				JsonUtil.toJsonString(obj));
 	}
 
 	@Test

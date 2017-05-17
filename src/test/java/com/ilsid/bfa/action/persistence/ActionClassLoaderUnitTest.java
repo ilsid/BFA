@@ -138,6 +138,15 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 		String newActionResult = TEST_ACTION_RESULT + " Updated";
 		assertEquals(newActionResult, reloadedAction.execute()[0]);
 	}
+	
+	@Test
+	@SuppressWarnings("unchecked")
+	public void actionClassIsLoadedOnceBySameLoader() throws Exception {
+		Class<Action> clazz1 = (Class<Action>) loader.loadClass(ACTION_IMPL_CLASS_NAME);
+		Class<Action> clazz2 = (Class<Action>) loader.loadClass(ACTION_IMPL_CLASS_NAME);
+		
+		assertSame(clazz1, clazz2);
+	}	
 
 	@Test
 	public void generatedClassCanBeLoadedFromScriptingRepository() throws Exception {

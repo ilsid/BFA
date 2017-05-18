@@ -2,7 +2,9 @@ package com.ilsid.bfa.service.server;
 
 import java.net.Inet4Address;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
@@ -108,6 +110,15 @@ public class ScriptRuntimeResourceWithFSRepositoryIntegrationTest extends FSCode
 		// First input param conforms Contract entity in the repository
 		verifyScriptWithInputParametersCanBeRun("Custom Group 02::Script with Entity Param", "{\"Days\":\"55\"}",
 				"9.99");
+	}
+
+	@Test
+	public void scriptWithInputMapParameterIsRun() throws Exception {
+		Map<String, String> param = new HashMap<>();
+		param.put("Days", "55");
+		
+		// First input param conforms Contract entity in the repository
+		verifyScriptWithInputParametersCanBeRun("Custom Group 02::Script with Entity Param", param, "9.99");
 	}
 
 	@Test

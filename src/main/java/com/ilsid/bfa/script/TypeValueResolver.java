@@ -1,6 +1,7 @@
 package com.ilsid.bfa.script;
 
 import java.io.IOException;
+import java.util.Map;
 
 import com.ilsid.bfa.common.BooleanUtil;
 import com.ilsid.bfa.common.ClassNameUtil;
@@ -144,7 +145,7 @@ public abstract class TypeValueResolver {
 		}
 
 	}
-	
+
 	static class ArrayResolver extends PredefinedTypeResolver {
 
 		public ArrayResolver() {
@@ -156,7 +157,7 @@ public abstract class TypeValueResolver {
 			if (Object[].class.isInstance(value)) {
 				return value;
 			}
-			
+
 			throw createInvalidTypeException(value);
 		}
 
@@ -172,21 +173,25 @@ public abstract class TypeValueResolver {
 		public Object resolve(Object value) throws InvalidTypeException {
 			if (value.getClass().getName().equals(typeName)) {
 				return value;
+			} else if (value instanceof Map || JsonUtil.isValidJsonString(value.toString())) {
+				final Object actualValue = tryGetActualValue(value);
+				return actualValue;
 			} else {
-				final String valueAsString = value.toString();
-				if (JsonUtil.isValidJsonString(valueAsString)) {
-					final Object actualValue = tryGetActualValue(valueAsString);
-					return actualValue;
-				}
+				throw new InvalidTypeException(
+						String.format(INVALID_VALUE_MSG_TPLT, value, ClassNameUtil.getShortClassName(typeName)));
 			}
-
-			throw new InvalidTypeException(
-					String.format(INVALID_VALUE_MSG_TPLT, value, ClassNameUtil.getShortClassName(typeName)));
 		}
 
-		private Object tryGetActualValue(String stringValue) throws InvalidTypeException {
+		private Object tryGetActualValue(Object value) throws InvalidTypeException {
 			Object result;
+			String stringValue = null;
 			try {
+				if (value instanceof Map) {
+					stringValue = JsonUtil.toJsonString(value);
+				} else {
+					stringValue = value.toString();
+				}
+
 				Class<?> typeClass = DynamicClassLoader.getInstance().loadClass(typeName);
 				result = JsonUtil.toObject(stringValue, typeClass);
 			} catch (ClassNotFoundException | IllegalStateException | IOException e) {

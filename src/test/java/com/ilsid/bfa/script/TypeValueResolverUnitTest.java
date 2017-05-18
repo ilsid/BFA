@@ -1,5 +1,8 @@
 package com.ilsid.bfa.script;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
@@ -12,6 +15,7 @@ import com.ilsid.bfa.script.TypeValueResolver.PredefinedTypeResolver;
 import com.ilsid.bfa.script.TypeValueResolver.StringResolver;
 import com.ilsid.bfa.script.TypeValueResolver.ArrayResolver;
 import com.ilsid.bfa.test.types.Contract;
+import com.ilsid.bfa.test.types.ContractHolder;
 
 public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 
@@ -123,19 +127,19 @@ public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 	public void arrayValueIsResolvedToSameInstance() throws Exception {
 		Object[] array = new Object[] {};
 		assertSame(array, arrayResolver.resolve(array));
-		
-		array = new Object[] {null}; 
+
+		array = new Object[] { null };
 		assertSame(array, arrayResolver.resolve(array));
-		
-		array = new Object[] {"aaa", new Object(), 22};
+
+		array = new Object[] { "aaa", new Object(), 22 };
 		assertSame(array, arrayResolver.resolve(array));
 	}
-	
+
 	@Test
 	public void nonArrayValueIsNotResolvedToArray() throws Exception {
 		exceptionRule.expect(InvalidTypeException.class);
 		exceptionRule.expectMessage("[abcde] is not a value of type Array");
-		
+
 		arrayResolver.resolve("abcde");
 	}
 
@@ -163,6 +167,41 @@ public class TypeValueResolverUnitTest extends BaseUnitTestCase {
 		assertEquals(33, contract.Days);
 		assertEquals(77.99, contract.MonthlyFee);
 		assertEquals("abc", contract.ID);
+	}
+
+	@Test
+	public void mapInstanceIsResolvedToEntity() throws Exception {
+		Map<String, String> value = new HashMap<>();
+		value.put("Days", "33");
+		value.put("MonthlyFee", "77.99");
+		value.put("ID", "abc");
+
+		EntityResolver resolver = new EntityResolver(Contract.class.getName());
+		Contract contract = (Contract) resolver.resolve(value);
+
+		assertEquals(33, contract.Days);
+		assertEquals(77.99, contract.MonthlyFee);
+		assertEquals("abc", contract.ID);
+	}
+
+	@Test
+	public void compositeMapInstanceIsResolvedToEntity() throws Exception {
+		Map<String, String> nestedValue = new HashMap<>();
+		nestedValue.put("Days", "33");
+		nestedValue.put("MonthlyFee", "77.99");
+		nestedValue.put("ID", "abc");
+
+		Map<String, Object> value = new HashMap<>();
+		value.put("ID", "11");
+		value.put("Contract", nestedValue);
+
+		EntityResolver resolver = new EntityResolver(ContractHolder.class.getName());
+		ContractHolder contractHolder = (ContractHolder) resolver.resolve(value);
+
+		assertEquals(11, contractHolder.ID);
+		assertEquals(33, contractHolder.Contract.Days);
+		assertEquals(77.99, contractHolder.Contract.MonthlyFee);
+		assertEquals("abc", contractHolder.Contract.ID);
 	}
 
 	@Test

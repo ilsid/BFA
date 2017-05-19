@@ -58,7 +58,8 @@ function getSelectedGroupName(tree, groupType) {
 }
 
 function escapeScriptSource(source)  {
-	return source.replace(/"/g,'\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+	return source.replace(/"/g,'\\"').replace(/\\{2}"/g,'\\\\\\"')
+		.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
 
 function writeInfo(message) {

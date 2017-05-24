@@ -377,7 +377,8 @@ public class FilesystemActionRepository extends FilesystemRepository implements 
 		try (OutputStream out = new FileOutputStream(tmpPackageFile)) {
 			IOUtils.copy(actionPackage, out);
 			IOUtil.unzip(tmpPackageFile, actionDir);
-		} catch (IOException e) {
+		} catch (IOException | RuntimeException e) {
+			FileUtils.deleteQuietly(actionDir);
 			throw new PersistenceException(String.format("Failed to save the action [%s]", actionName), e);
 		} finally {
 			FileUtils.deleteQuietly(tmpPackageFile);

@@ -394,6 +394,40 @@ function showNewEntityFieldDialog() {
 		});
 }
 
+function showDeleteDialog(objectType) {
+	require([ 'dijit/registry', 'dijit/ConfirmDialog', 'dojo/request/xhr'],
+		function(registry, ConfirmDialog, request) {
+			var tree = registry.byId(objectType + 'Tree');
+			var selectedItem = tree.selectedItems[0];
+			var objectName = selectedItem.name;
+			
+			if (!bfa['confirmDeletionDialog']) {
+				bfa['confirmDeletionDialog'] = new ConfirmDialog();
+			}
+			
+			var dialog = bfa['confirmDeletionDialog'];
+			dialog.set('title', 'Deletion of ' + objectType);
+			dialog.set('content', '<img src="res/icons/warn_16x16.png" />&nbsp;Please confirm deletion of ' 
+				+ objectType + ' [' + objectName + ']');
+			
+			dialog.onExecute = function() {
+				request('service/' + objectType + '/admin/delete', {
+					headers: { 'Content-Type': 'text/plain' },
+					method: 'POST',
+					data: objectName,
+					handleAs: 'json'
+				}).then(function(resp) {
+					dialog.hide();
+					//TODO: update tree and tab container
+				}, function(err) {
+					dialog.hide();
+					//writeError(err);
+				});
+			};
+			
+			dialog.show();
+		});
+}
 
 function hideDialog(id) {
 	require([ 'dijit/registry'],

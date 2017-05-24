@@ -250,7 +250,7 @@
 							<div data-dojo-type="dijit/form/Button" id="scriptToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
 								disabled="true">Delete Group</div>
 							<div data-dojo-type="dijit/form/Button" id="scriptToolbar_delete" data-dojo-props="iconClass:'toolbarIconDeleteItem', showLabel:false"
-								disabled="true">Delete Script</div>
+								disabled="true" onclick="showDeleteDialog('script');">Delete Script</div>
 						</div>
 					</div>
 					<div data-dojo-type="dijit/layout/ContentPane"  data-dojo-props="region:'center'" style="border: none; margin: 0; padding: 0;">
@@ -269,7 +269,7 @@
 							<div data-dojo-type="dijit/form/Button" id="entityToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
 								disabled="true">Delete Group</div>
 							<div data-dojo-type="dijit/form/Button" id="entityToolbar_delete" data-dojo-props="iconClass:'toolbarIconDeleteEntity', showLabel:false"
-								disabled="true">Delete Entity</div>
+								disabled="true" onclick="showDeleteDialog('entity');">Delete Entity</div>
 							<div data-dojo-type="dijit/ToolbarSeparator"></div>	
 							<div data-dojo-type="dijit/form/Button" id="entityToolbar_download" data-dojo-props="iconClass:'toolbarIconDownload', showLabel:false"
 								onclick="window.location.href='service/entity/admin/getLibrary'">Download Library</div>	
@@ -291,7 +291,7 @@
 							<div data-dojo-type="dijit/form/Button" id="actionToolbar_deleteGroup" data-dojo-props="iconClass:'toolbarIconDeleteFolder', showLabel:false"
 								disabled="true">Delete Group</div>
 							<div data-dojo-type="dijit/form/Button" id="actionToolbar_delete" data-dojo-props="iconClass:'toolbarIconDeleteEntity', showLabel:false"
-								disabled="true">Delete Action</div>
+								disabled="true" onclick="showDeleteDialog('action');">Delete Action</div>
 						</div>
 					</div>
 					<div data-dojo-type="dijit/layout/ContentPane"  data-dojo-props="region:'center'" style="border: none; margin: 0; padding: 0;">

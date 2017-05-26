@@ -115,7 +115,7 @@ public class ScriptManager extends AbstractManager implements Configurable {
 		ScriptUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
-			deleteScript(scriptName);
+			doDeleteScript(scriptName);
 			saveScript(compilationUnit, scriptBody);
 			saveScriptMetadata(compilationUnit);
 			commitTransaction();
@@ -124,6 +124,34 @@ public class ScriptManager extends AbstractManager implements Configurable {
 			throw new ManagementException(String.format("Failed to update the script [%s]", scriptName), e);
 		}
 
+		DynamicClassLoader.reloadClasses();
+	}
+
+	/**
+	 * Deletes script from the repository. If no group is defined then the script is searched in the Default Group.
+	 * 
+	 * @param scriptName
+	 *            the name of the script to delete
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if the script's group does not exists in the repository</li>
+	 *             <li>if the script with such name does not exist in the repository within the given group</li>
+	 *             <li>if the script itself can't be deleted for any reason</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public void deleteScript(String scriptName) throws ManagementException {
+		checkParentScriptGroupExists(scriptName);
+
+		try {
+			startTransaction();
+			doDeleteScript(scriptName);
+			commitTransaction();
+		} catch (PersistenceException e) {
+			rollbackTransaction();
+			throw new ManagementException(String.format("Failed to delete the script [%s]", scriptName), e);
+		}
+		
 		DynamicClassLoader.reloadClasses();
 	}
 
@@ -216,7 +244,7 @@ public class ScriptManager extends AbstractManager implements Configurable {
 		EntityUnit compilationUnit = compileEntity(entityName, entityBody);
 		try {
 			startTransaction();
-			deleteEntity(entityName);
+			doDeleteEntity(entityName);
 			saveEntity(compilationUnit, entityBody);
 			saveEntityMetadata(compilationUnit);
 			commitTransaction();
@@ -225,6 +253,34 @@ public class ScriptManager extends AbstractManager implements Configurable {
 			throw new ManagementException(String.format("Failed to update the entity [%s]", entityName), e);
 		}
 
+		DynamicClassLoader.reloadClasses();
+	}
+
+	/**
+	 * Deletes entity from the repository. If no group is defined then the script is searched in the Default Group.
+	 * 
+	 * @param entityName
+	 *            the name of the entity to delete
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if the entity's group does not exists in the repository</li>
+	 *             <li>if the entity with such name does not exist in the repository within the given group</li>
+	 *             <li>if the entity itself can't be deleted for any reason</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public void deleteEntity(String entityName) throws ManagementException {
+		checkParentEntityGroupExists(entityName);
+
+		try {
+			startTransaction();
+			doDeleteEntity(entityName);
+			commitTransaction();
+		} catch (PersistenceException e) {
+			rollbackTransaction();
+			throw new ManagementException(String.format("Failed to delete the entity [%s]", entityName), e);
+		}
+		
 		DynamicClassLoader.reloadClasses();
 	}
 
@@ -570,7 +626,7 @@ public class ScriptManager extends AbstractManager implements Configurable {
 		repository.saveMetadata(compilationUnit.entityClassName, metaData);
 	}
 
-	private void deleteScript(String scriptName) throws ManagementException {
+	private void doDeleteScript(String scriptName) throws ManagementException {
 		String scriptClassName = TypeNameResolver.resolveScriptClassName(scriptName);
 		String scriptPackageName = ClassNameUtil.getPackageName(scriptClassName);
 
@@ -657,7 +713,7 @@ public class ScriptManager extends AbstractManager implements Configurable {
 		}
 	}
 
-	private void deleteEntity(String entityName) throws ManagementException {
+	private void doDeleteEntity(String entityName) throws ManagementException {
 		String className = TypeNameResolver.resolveEntityClassName(entityName);
 
 		int deletedCnt;

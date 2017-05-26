@@ -176,6 +176,39 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
+	public void scriptIsDeletedFromFileSystem() throws Exception {
+		long version = getRepositoryVersion();
+
+		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/scripttodelete");
+
+		assertEquals(4, scriptDir.list().length);
+		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToDelete.class", "ScriptToDelete.src",
+				"ScriptToDelete_generated.src", ClassNameUtil.METADATA_FILE_NAME });
+
+		WebResource webResource = getWebResource(Paths.SCRIPT_DELETE_SERVICE);
+		ClientResponse response = webResource.type(MediaType.TEXT_PLAIN).post(ClientResponse.class, "ScriptToDelete");
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		assertFalse(scriptDir.exists());
+		assertIncrementedVersion(version);
+	}
+
+	@Test
+	public void nonExistentScriptIsNotAllowedWhenTryingToDelete() throws Exception {
+		long version = getRepositoryVersion();
+
+		WebResource webResource = getWebResource(Paths.SCRIPT_DELETE_SERVICE);
+		ClientResponse response = webResource.type(MediaType.TEXT_PLAIN).post(ClientResponse.class,
+				"NonExistentScript");
+
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+		assertTrue(response.getEntity(String.class)
+				.startsWith("The script [NonExistentScript] does not exist in the repository"));
+		assertSameVersion(version);
+	}
+
+	@Test
 	public void sourceCodeForScriptIsLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams();

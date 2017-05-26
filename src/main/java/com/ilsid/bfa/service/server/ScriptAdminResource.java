@@ -89,6 +89,38 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	}
 
 	/**
+	 * Deletes script from the code repository. If the script's group is not specified, it is searched within the
+	 * Default Group.
+	 * 
+	 * @param scriptName
+	 *            the script name
+	 * @return the {@link Status#OK} response.
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the script's group does not exists in the repository</li>
+	 *             <li>if the script with such name does not exist in the repository within the given group</li>
+	 *             <li>if the script itself can't be deleted for any reason</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@POST
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.DELETE_OPERATION)
+	public Response delete(String scriptName) {
+		validateNonEmptyParameter(Paths.DELETE_OPERATION, NAME_PARAM, scriptName);
+
+		try {
+			scriptManager.deleteScript(scriptName);
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.SCRIPT_DELETE_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+
+	/**
 	 * Loads the source code for the given script. If the script's group is not specified, it is searched within the
 	 * Default Group.
 	 * 

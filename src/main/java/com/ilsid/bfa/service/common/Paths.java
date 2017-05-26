@@ -27,6 +27,8 @@ public final class Paths {
 	public final static String UPDATE_OPERATION = "update";
 
 	public final static String UPDATE_QUIETLY_OPERATION = "updateQuietly";
+	
+	public final static String DELETE_OPERATION = "delete";
 
 	public final static String GET_SOURCE_OPERATION = "getSource";
 
@@ -51,6 +53,8 @@ public final class Paths {
 	public final static String SCRIPT_CREATE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + CREATE_OPERATION;
 
 	public final static String SCRIPT_UPDATE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + UPDATE_OPERATION;
+	
+	public final static String SCRIPT_DELETE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + DELETE_OPERATION;
 
 	public final static String SCRIPT_GET_SOURCE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + GET_SOURCE_OPERATION;
 
@@ -101,6 +105,8 @@ public final class Paths {
 	public final static String ENTITY_CREATE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + CREATE_OPERATION;
 
 	public final static String ENTITY_UPDATE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + UPDATE_OPERATION;
+	
+	public final static String ENTITY_DELETE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + DELETE_OPERATION;
 
 	public final static String ENTITY_GET_SOURCE_SERVICE = ENTITY_SERVICE_ADMIN_ROOT + "/" + GET_SOURCE_OPERATION;
 
@@ -123,6 +129,8 @@ public final class Paths {
 	public final static String ACTION_CREATE_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + CREATE_OPERATION;
 
 	public final static String ACTION_UPDATE_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + UPDATE_OPERATION;
+	
+	public final static String ACTION_DELETE_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/" + DELETE_OPERATION;
 
 	public final static String ACTION_CREATE_QUIETLY_SERVICE = ACTION_SERVICE_ADMIN_ROOT + "/"
 			+ CREATE_QUIETLY_OPERATION;

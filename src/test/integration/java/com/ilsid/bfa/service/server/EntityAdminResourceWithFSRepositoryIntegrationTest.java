@@ -180,6 +180,38 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
+	public void entityIsDeletedFromFileSystem() throws Exception {
+		copyFileFromEntityDefaulGroupDirToRepository("EntityToDelete.class");
+		copyFileFromEntityDefaulGroupDirToRepository("EntityToDelete.src");
+		copyFileFromEntityDefaulGroupDirToRepository("EntityToDelete_meta.data");
+
+		File entityDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_ENTITY_DEFAULT_GROUP_PATH);
+
+		assertFilesExist(entityDir.getPath(),
+				new String[] { "EntityToDelete.class", "EntityToDelete.src", "EntityToDelete_meta.data" });
+
+		WebResource webResource = getWebResource(Paths.ENTITY_DELETE_SERVICE);
+		ClientResponse response = webResource.type(MediaType.TEXT_PLAIN).post(ClientResponse.class, "EntityToDelete");
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		assertFalse(new File(entityDir, "EntityToDelete.class").exists());
+		assertFalse(new File(entityDir, "EntityToDelete.src").exists());
+		assertFalse(new File(entityDir, "EntityToDelete_meta.data").exists());
+	}
+
+	@Test
+	public void nonExistentEntityIsNotAllowedWhenTryingToDelete() throws Exception {
+		WebResource webResource = getWebResource(Paths.ENTITY_DELETE_SERVICE);
+		ClientResponse response = webResource.type(MediaType.TEXT_PLAIN).post(ClientResponse.class,
+				"NonExistentEntity");
+
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+		assertTrue(response.getEntity(String.class)
+				.startsWith("The entity [NonExistentEntity] does not exist in the repository"));
+	}
+
+	@Test
 	public void sourceCodeForEntityIsLoaded() throws Exception {
 		copyFileFromEntityDefaulGroupDirToRepository("EntityToRead.class");
 		copyFileFromEntityDefaulGroupDirToRepository("EntityToRead.src");
@@ -276,7 +308,7 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		@SuppressWarnings("unchecked")
 		final List<Map<String, String>> metaDatas = response.getEntity(List.class);
-		assertEquals(3, metaDatas.size());
+		assertEquals(4, metaDatas.size());
 
 		Map<String, String> metaData = metaDatas.get(0);
 		assertEquals(4, metaData.keySet().size());
@@ -288,11 +320,18 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		metaData = metaDatas.get(1);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.ENTITY_TYPE, metaData.get(Metadata.TYPE));
+		assertEquals("default_group::EntityToDelete", metaData.get(Metadata.NAME));
+		assertEquals("EntityToDelete", metaData.get(Metadata.TITLE));
+		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
+
+		metaData = metaDatas.get(2);
+		assertEquals(4, metaData.keySet().size());
+		assertEquals(Metadata.ENTITY_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("EntityToRead", metaData.get(Metadata.NAME));
 		assertEquals("EntityToRead", metaData.get(Metadata.TITLE));
 		assertEquals(Metadata.DEFAULT_GROUP_NAME, metaData.get(Metadata.PARENT));
 
-		metaData = metaDatas.get(2);
+		metaData = metaDatas.get(3);
 		assertEquals(4, metaData.keySet().size());
 		assertEquals(Metadata.ENTITY_TYPE, metaData.get(Metadata.TYPE));
 		assertEquals("EntityToUpdate", metaData.get(Metadata.NAME));
@@ -333,16 +372,15 @@ public class EntityAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		final File jarDir = new File(IntegrationTestConstants.CODE_REPOSITORY_DIR, "__tmp_jar");
 		List<File> jarFiles = IOHelper.unzip(jarFile, jarDir);
 
-		assertEquals(5, jarFiles.size());
+		assertEquals(6, jarFiles.size());
 
 		assertTrue(jarFiles.contains(new File(jarDir, "META-INF/MANIFEST.MF")));
 		assertTrue(jarFiles
-				.contains(new File(jarDir, "com/ilsid/bfa/generated/entity/custom_x20_group_x20_01/Subscriber.class")));
-		assertTrue(jarFiles.contains(new File(jarDir, "com/ilsid/bfa/generated/entity/default_group/Contract.class")));
-		assertTrue(
-				jarFiles.contains(new File(jarDir, "com/ilsid/bfa/generated/entity/default_group/EntityToRead.class")));
-		assertTrue(jarFiles
-				.contains(new File(jarDir, "com/ilsid/bfa/generated/entity/default_group/EntityToUpdate.class")));
+				.contains(new File(jarDir, GENERATED_ENTITY_ROOT_PATH + "/custom_x20_group_x20_01/Subscriber.class")));
+		assertTrue(jarFiles.contains(new File(jarDir, GENERATED_ENTITY_DEFAULT_GROUP_PATH + "/Contract.class")));
+		assertTrue(jarFiles.contains(new File(jarDir, GENERATED_ENTITY_DEFAULT_GROUP_PATH + "/EntityToRead.class")));
+		assertTrue(jarFiles.contains(new File(jarDir, GENERATED_ENTITY_DEFAULT_GROUP_PATH + "/EntityToUpdate.class")));
+		assertTrue(jarFiles.contains(new File(jarDir, GENERATED_ENTITY_DEFAULT_GROUP_PATH + "/EntityToDelete.class")));
 	}
 
 	private void entityGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

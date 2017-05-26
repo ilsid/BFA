@@ -98,6 +98,37 @@ public class EntityAdminResource extends AbstractAdminResource {
 	}
 
 	/**
+	 * Deletes entity from the code repository. If the entity's group is not specified, it is searched within the
+	 * Default Group.
+	 * 
+	 * @param entityName
+	 *            the entity name
+	 * @return the {@link Status#OK} response.
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the entity's group does not exists in the repository</li>
+	 *             <li>if the entity with such name does not exist in the repository within the given group</li>
+	 *             <li>if the entity itself can't be deleted for any reason</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@POST
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Path(Paths.DELETE_OPERATION)
+	public Response delete(String entityName) {
+		validateNonEmptyParameter(Paths.DELETE_OPERATION, NAME_PARAM, entityName);
+
+		try {
+			scriptManager.deleteEntity(entityName);
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.ENTITY_DELETE_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+
+	/**
 	 * Loads the source code for the given entity. If the entities's group is not specified, it is searched within the
 	 * Default Group.
 	 * 

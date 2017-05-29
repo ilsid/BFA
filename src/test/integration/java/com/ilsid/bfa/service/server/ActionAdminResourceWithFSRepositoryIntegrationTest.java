@@ -142,7 +142,7 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void actionIsCreatedInExistingGroup() throws Exception {
 		long version = getRepositoryVersion();
-		
+
 		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_SERVICE, NEW_ACTION_NAME, true);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -161,7 +161,7 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void actionIsNotCreatedIfActionNameIsNotDefined() throws Exception {
 		long version = getRepositoryVersion();
-		
+
 		ClientResponse response = tryCreateAction(Paths.ACTION_CREATE_SERVICE, "", false);
 		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertSameVersion(version);
@@ -209,6 +209,44 @@ public class ActionAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void existingActionCanBeUpdatedQuietlyInFileSystemAndActionClassesAreReloaded() throws Exception {
 		updateAndVerifyAction(Paths.ACTION_UPDATE_QUIETLY_SERVICE);
+	}
+
+	@Test
+	public void existingActionCanBeDeletedFromFileSystem() throws Exception {
+		final String actionToDeleteSubDir = "write_x20_system_x20_property_x20_2";
+		copyActionFromDefaultGroupToRepository(actionToDeleteSubDir);
+
+		final File actionToDeleteDir = new File(ACTION_REPOSITORY_DEFAULT_GROUP_DIR_PATH, actionToDeleteSubDir);
+		assertTrue(actionToDeleteDir.isDirectory());
+
+		final String actionNameToDelete = "Write System Property 2";
+
+		// make sure the action implementation can be loaded
+		ActionClassLoader.getLoader(actionNameToDelete).loadClass(EXISTING_ACTION_IMPL_CLASS_NAME);
+
+		WebResource webResource = getWebResource(Paths.ACTION_DELETE_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, actionNameToDelete);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		// make sure the action implementation is no longer available
+		try {
+			ActionClassLoader.getLoader(actionNameToDelete).loadClass(EXISTING_ACTION_IMPL_CLASS_NAME);
+			fail(ClassNotFoundException.class.getName() + " was expected to raise");
+		} catch (ClassNotFoundException e) {
+		}
+
+		assertFalse(actionToDeleteDir.exists());
+	}
+
+	@Test
+	public void nonExistentActionIsNotAllowedWhenTryingToDelete() throws Exception {
+		WebResource webResource = getWebResource(Paths.ACTION_DELETE_SERVICE);
+		ClientResponse response = webResource.post(ClientResponse.class, "NonExistentAction");
+
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+		assertTrue(response.getEntity(String.class)
+				.startsWith("The action [NonExistentAction] does not exist in the repository"));
 	}
 
 	private void actionGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

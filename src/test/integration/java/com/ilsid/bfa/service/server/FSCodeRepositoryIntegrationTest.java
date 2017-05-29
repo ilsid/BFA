@@ -26,6 +26,11 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	private static final String GENERATED_ENTITY_DEFAULT_GROUP_DIR = GENERATED_ENTITY_ROOT_PATH + "/"
 			+ ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
 
+	private static final String ACTION_ROOT_PATH = "action";
+
+	private static final String ACTION_DEFAULT_GROUP_DIR = ACTION_ROOT_PATH + "/"
+			+ ClassNameUtil.DEFAULT_GROUP_SUBPACKAGE;
+
 	protected static final String CODE_REPOSITORY_PATH = IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath();
 
 	protected static final File ENTITY_REPOSITORY_ROOT_DIR = new File(IntegrationTestConstants.CODE_REPOSITORY_DIR,
@@ -34,13 +39,19 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 	protected static final File ENTITY_REPOSITORY_DEFAULT_GROUP_DIR_PATH = new File(
 			IntegrationTestConstants.CODE_REPOSITORY_DIR, GENERATED_ENTITY_DEFAULT_GROUP_DIR);
 
+	protected static final File ACTION_REPOSITORY_ROOT_DIR = new File(IntegrationTestConstants.CODE_REPOSITORY_DIR,
+			ACTION_ROOT_PATH);
+
+	protected static final File ACTION_REPOSITORY_DEFAULT_GROUP_DIR_PATH = new File(IntegrationTestConstants.CODE_REPOSITORY_DIR,
+			ACTION_DEFAULT_GROUP_DIR);
+
 	@BeforeClass
 	public static void setUp() throws Exception {
 		if (IntegrationTestConstants.CODE_REPOSITORY_DIR.exists()) {
 			FileUtils.forceDelete(IntegrationTestConstants.CODE_REPOSITORY_DIR);
 		}
 		FileUtils.forceMkdir(IntegrationTestConstants.CODE_REPOSITORY_DIR);
-		
+
 		LoggingConfigurator.configureLog4j(LOGGING_CONFIG_FILE);
 
 		// Creating the "pre-condition" scripts required for some tests
@@ -90,6 +101,12 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 		String entityActualDir = "/integration_tests/to_copy/com/ilsid/bfa/generated/entity/" + dir;
 		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + entityActualDir),
 				new File(ENTITY_REPOSITORY_ROOT_DIR, dir));
+	}
+
+	protected void copyActionFromDefaultGroupToRepository(String dir) throws Exception {
+		String actionActualDir = "/integration_tests/to_copy/action/default_group/" + dir;
+		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + actionActualDir),
+				new File(ACTION_REPOSITORY_DEFAULT_GROUP_DIR_PATH, dir));
 	}
 
 	protected void deleteFileFromEntityRepository(String filePath) throws Exception {

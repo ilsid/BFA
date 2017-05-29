@@ -163,6 +163,38 @@ public class ActionAdminResource extends AbstractAdminResource {
 	}
 
 	/**
+	 * Deletes action from the code repository. If the action's group is not specified, it is searched within the
+	 * Default Group.
+	 * 
+	 * @param actionName
+	 *            the action name
+	 * @return the {@link Status#OK} response.
+	 * @throws ResourceException
+	 *             <ul>
+	 *             <li>if the action's group does not exists in the repository</li>
+	 *             <li>if the action with such name does not exist in the repository within the given group</li>
+	 *             <li>if the action itself can't be deleted for any reason</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 * @see WebApplicationExceptionMapper
+	 */
+	@POST
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path(Paths.DELETE_OPERATION)
+	public Response deleteAction(String actionName) {
+		validateNonEmptyParameter(Paths.ACTION_DELETE_SERVICE, NAME_PARAM, actionName);
+
+		try {
+			actionManager.deleteAction(actionName);
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.ACTION_DELETE_SERVICE, e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+
+	/**
 	 * Provides details for the given action.
 	 * 
 	 * @param action

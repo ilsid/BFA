@@ -132,6 +132,35 @@ public class ActionManager extends AbstractManager {
 	}
 
 	/**
+	 * Deletes action from the repository.
+	 * 
+	 * @param actionName
+	 *            action name
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if action with the given name does not exists in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public void deleteAction(String actionName) throws ManagementException {
+		ActionClassLoader.releaseResources(actionName);
+
+		try {
+			startTransaction();
+			boolean deleted = repository.delete(actionName);
+			if (!deleted) {
+				rollbackTransaction();
+				throw new ManagementException(
+						String.format("The action [%s] does not exist in the repository", actionName));
+			}
+			commitTransaction();
+		} catch (PersistenceException e) {
+			rollbackTransaction();
+			throw new ManagementException(String.format("Failed to delete the action [%s]", actionName), e);
+		}
+	}
+
+	/**
 	 * Provides details for the given action.
 	 * 
 	 * @param actionName

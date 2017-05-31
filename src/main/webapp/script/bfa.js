@@ -57,6 +57,21 @@ function getSelectedGroupName(tree, groupType) {
 	}
 }
 
+function getSelectedGroupItem(tree) {
+	var selectedItem = tree.selectedItems[0];
+	
+	if (selectedItem) {
+		if (tree.model.mayHaveChildren(selectedItem)) {
+			return selectedItem;
+		} else {
+			// reference to parent item
+			return tree.path[tree.path.length - 2];
+		}
+	} else {
+		return null;
+	}
+}
+
 function escapeScriptSource(source)  {
 	return source.replace(/"/g,'\\"').replace(/\\{2}"/g,'\\\\\\"')
 		.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
@@ -418,10 +433,26 @@ function showDeleteDialog(objectType) {
 					handleAs: 'json'
 				}).then(function(resp) {
 					dialog.hide();
-					//TODO: update tree and tab container
+					
+					var tree = registry.byId(objectType + 'Tree');
+					var groupItem = getSelectedGroupItem(tree);
+					tree.refreshChildrenSubTree(groupItem.name);
+					
+					var btnDelete = registry.byId(objectType + 'Toolbar_delete');
+					var btnNew = registry.byId(objectType + 'Toolbar_new');
+					btnDelete.set('disabled', true);
+					btnNew.set('disabled', true);
+					
+					var tabContainer = registry.byId('tabContainer');
+					var tabId = 'tab_' + objectType + '_' + objectName;
+					var tab = registry.byId(tabId);
+					if (tab) {
+						tabContainer.removeChild(tab);
+						tab.destroyRecursive();
+					}
 				}, function(err) {
 					dialog.hide();
-					//writeError(err);
+					writeError(err);
 				});
 			};
 			

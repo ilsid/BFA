@@ -450,6 +450,8 @@ function showDeleteDialog(objectType) {
 						tabContainer.removeChild(tab);
 						tab.destroyRecursive();
 					}
+					writeInfo(objectType.charAt(0).toUpperCase() + objectType.slice(1) 
+						+ ' [' + objectName + '] is deleted');
 				}, function(err) {
 					dialog.hide();
 					writeError(err);

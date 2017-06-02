@@ -191,6 +191,8 @@ public class DynamicClassLoader extends ClassLoader {
 		// Force reloading of all cached classes
 		Set<String> cachedClassNames = new HashSet<>(cache.keySet());
 		cache.clear();
+		cache = new ConcurrentHashMap<>();
+
 		for (String className : cachedClassNames) {
 			try {
 				instance.loadClass(className);
@@ -209,6 +211,13 @@ public class DynamicClassLoader extends ClassLoader {
 			listener.execute();
 		}
 		reloadListeners.clear();
+		reloadListeners = Collections.newSetFromMap(new ConcurrentHashMap<ReloadListener, Boolean>());
+
+		Set<ReloadListener> tmpPermanentReloadListeners = Collections
+				.newSetFromMap(new ConcurrentHashMap<ReloadListener, Boolean>());
+		tmpPermanentReloadListeners.addAll(permanentReloadListeners);
+		permanentReloadListeners.clear();
+		permanentReloadListeners = tmpPermanentReloadListeners;
 	}
 
 	private URL doFindResource(String name) {

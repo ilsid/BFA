@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
 import com.ilsid.bfa.test.types.Contract;
+import com.ilsid.bfa.test.types.ContractHolder;
 import com.ilsid.bfa.test.types.Subscriber;
 
 public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
@@ -472,6 +473,30 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void nestedEntityFieldCanBeParsed() throws Exception {
+		createContext(new Variable("contractHolder", ContractHolder.class.getName(), new ContractHolder()));
+
+		assertOutput("contractHolder.Contract.Days",
+				"Integer.valueOf(((com.ilsid.bfa.test.types.ContractHolder)scriptContext.getVar(\"contractHolder\").getValue()).Contract.Days.intValue())");
+	}
+
+	@Test
+	public void nestedEntityFieldOfSecondLevelCanBeParsed() throws Exception {
+		createContext(new Variable("contractHolder", ContractHolder.class.getName(), new ContractHolder()));
+
+		assertOutput("contractHolder.Contract.Details.Discount",
+				"Double.valueOf(((com.ilsid.bfa.test.types.ContractHolder)scriptContext.getVar(\"contractHolder\").getValue()).Contract.Details.Discount.doubleValue())");
+	}
+
+	@Test
+	public void nonExistentNestedEntityFieldIsNotAllowed() throws Exception {
+		createContext(new Variable("contractHolder", ContractHolder.class.getName(), new ContractHolder()));
+
+		assertException("contractHolder.Contract.NonExistentField",
+				"Could not parse expression [contractHolder.Contract.NonExistentField]: Unexpected token [contractHolder.Contract.NonExistentField]");
+	}
+
+	@Test
 	public void singleStringLiteralCanBeParsed() throws Exception {
 		assertOutput("'abc'", "(\"abc\")");
 	}
@@ -670,8 +695,8 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void arrayAccessExpressionForNonArrayVariableIsNotAllowed() throws Exception {
 		createContext(new Variable("Subscriber", Subscriber.class.getName(), new Subscriber()));
-		assertException("Subscriber[0]",
-				"Could not parse expression [Subscriber[0]]: Unexpected token [Subscriber[0]]");
+		assertException("Subscriber[1]",
+				"Could not parse expression [Subscriber[1]]: Unexpected token [Subscriber[1]]");
 	}
 
 	private void createContext(final Variable... vars) {

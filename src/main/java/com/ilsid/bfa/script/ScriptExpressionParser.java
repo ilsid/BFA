@@ -723,24 +723,50 @@ public class ScriptExpressionParser {
 		}
 
 		private static boolean isField(String token, ScriptContext context, Class<?> fieldType, FieldInfo info) {
-			// Expect Variable.Field expression
+			// Expect Variable.Field[.Field[.Field[...]]] expression
 			String[] parts = token.split("\\.");
-			if (parts.length != 2) {
+			if (parts.length < 2) {
 				return false;
 			}
 
 			String varName = parts[0];
+			String[] fieldNames = new String[parts.length - 1];
+			System.arraycopy(parts, 1, fieldNames, 0, fieldNames.length);
 
 			if (isVariable(varName, context)) {
 				Variable var = context.getVar(varName);
 				Class<?> varClass = resolveClass(var.getJavaType());
-				String fieldName = parts[1];
-				if (varClass != null && isPublicField(varClass, fieldName, fieldType)) {
-					info.varName = varName;
-					info.fieldName = fieldName;
-					info.varType = varClass.getName();
 
-					return true;
+				if (varClass == null) {
+					return false;
+				}
+
+				StringBuilder fieldNamesExpr = new StringBuilder();
+				Class<?> fieldOwnerClass = varClass;
+
+				for (int i = 0; i < fieldNames.length; i++) {
+					final String fieldName = fieldNames[i];
+
+					if (i == fieldNames.length - 1) {
+						if (isPublicFieldOfGivenType(fieldOwnerClass, fieldName, fieldType)) {
+							fieldNamesExpr.append(fieldName);
+
+							info.varName = varName;
+							info.fieldName = fieldNamesExpr.toString();
+							info.varType = varClass.getName();
+
+							return true;
+						}
+					} else {
+						Class<?> fieldClass = getPublicFieldType(fieldOwnerClass, fieldName);
+
+						if (fieldClass == null) {
+							return false;
+						}
+
+						fieldNamesExpr.append(fieldName).append('.');
+						fieldOwnerClass = fieldClass;
+					}
 				}
 			}
 
@@ -770,9 +796,18 @@ public class ScriptExpressionParser {
 			}
 		}
 
-		private static boolean isPublicField(Class<?> clazz, String fieldName, Class<?> fieldType) {
+		private static boolean isPublicFieldOfGivenType(Class<?> clazz, String fieldName, Class<?> fieldType) {
 			Field fld = FieldUtils.getField(clazz, fieldName);
 			return fld != null && fld.getType() == fieldType;
+		}
+
+		private static Class<?> getPublicFieldType(Class<?> clazz, String fieldName) {
+			Field fld = FieldUtils.getField(clazz, fieldName);
+			if (fld != null) {
+				return fld.getType();
+			} else {
+				return null;
+			}
 		}
 
 		private static Class<?> resolveClass(String name) {

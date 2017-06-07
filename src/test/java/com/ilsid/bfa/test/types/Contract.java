@@ -13,5 +13,7 @@ public class Contract {
 	public Boolean IsAnnual = true;
 	
 	public String ID;
+	
+	public ContractDetails Details = new ContractDetails();
 
 }

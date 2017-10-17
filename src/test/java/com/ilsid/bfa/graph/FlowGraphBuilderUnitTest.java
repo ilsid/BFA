@@ -31,12 +31,12 @@ public class FlowGraphBuilderUnitTest extends BaseUnitTestCase {
 		final String subCondition21 = "Var1 - Var3 == 5 ?";
 
 		edge(FlowConstants.START, "Some Action 1");
-		edge("Some Action 1", "Set Var3");
-		edge("Set Var3", "Some Sub-Flow 1");
+		edge("Some Action 1", "Assign Var3");
+		edge("Assign Var3", "Some Sub-Flow 1");
 		edge("Some Sub-Flow 1", "Some Action 33");
-		edge("Some Action 33", "Set Var4");
-		edge("Set Var4", "Set Var5");
-		edge("Set Var5", condition1);
+		edge("Some Action 33", "Assign Var4");
+		edge("Assign Var4", "Assign Var5");
+		edge("Assign Var5", condition1);
 		edge(condition1, "Some Action 2", FlowConstants.YES_LABEL);
 		edge("Some Action 2", "Some Sub-Flow 2");
 		edge("Some Sub-Flow 2", condition2);

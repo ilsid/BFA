@@ -68,7 +68,7 @@ public abstract class Script {
 			@ExprParam Object expr) throws ScriptException {
 		scriptContext.updateLocalVar(name, expr);
 	}
-
+	
 	public Object GetGlobalVar(String name) {
 		return GlobalContext.getInstance().getGlobalVar(name);
 	}
@@ -194,12 +194,12 @@ public abstract class Script {
 
 	public interface ActionResult {
 
-		@FlowElement(type = FlowConstants.OPERATION, description = "Set %0")
+		@FlowElement(type = FlowConstants.OPERATION, description = "Assign %0")
 		public ActionResult SetLocalVar(
 				@ExprParam(replaceOnCompile = false, type = ExprParam.Type.VAR_OR_FLD_NAME) String name)
 				throws ScriptException;
 
-		@FlowElement(type = FlowConstants.OPERATION, description = "Set %0")
+		@FlowElement(type = FlowConstants.OPERATION, description = "Assign %0")
 		public void SetResult(@ExprParam(replaceOnCompile = false, type = ExprParam.Type.VAR_NAME) String name)
 				throws ScriptException;
 

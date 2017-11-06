@@ -1,0 +1,31 @@
+
+.element {
+	fill: #CEE3F6;
+	opacity: 1;
+}
+
+.selectedElement { 
+	stroke: black;
+	stroke-width: 2;
+	opacity: 0.5;
+	cursor: move;
+}
+
+.unselectedElement { 
+	stroke: none;
+	opacity: 1;
+	cursor: default;
+}
+
+.selectedElementText { 
+	cursor: move;
+}
+
+.unselectedElementText { 
+	cursor: default;
+}
+
+.labelText {
+  font-family: Verdana, Geneva, sans-serif; 
+  font-size: 12px;
+}

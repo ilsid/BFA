@@ -1,18 +1,20 @@
 
 .element {
+	stroke: black;
+	stroke-width: 1;
 	fill: #CEE3F6;
 	opacity: 1;
 }
 
 .selectedElement { 
-	stroke: black;
+	stroke: blue;
 	stroke-width: 2;
 	opacity: 0.5;
 	cursor: move;
 }
 
 .unselectedElement { 
-	stroke: none;
+	stroke-width: 1;
 	opacity: 1;
 	cursor: default;
 }

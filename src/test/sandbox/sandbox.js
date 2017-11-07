@@ -119,12 +119,13 @@ function elementMouseDown(event) {
 }
 
 function moveArrowHead(line) {
-	var arrowHead = line.arrowHead;
+	var lineStart = line.pointAt(0);
+	var lineEnd = line.pointAt(line.length());
 	
-	var lineStartX = line.attr('x1');
-	var lineStartY = line.attr('y1');
-	var lineEndX = line.attr('x2');
-	var lineEndY = line.attr('y2');
+	var lineStartX = lineStart.x;
+	var lineStartY = lineStart.y;
+	var lineEndX = lineEnd.x;
+	var lineEndY = lineEnd.y;
 	
 	var angleRad = (lineEndX != lineStartX) ? 
 					Math.atan(Math.abs((lineEndY - lineStartY)) / Math.abs((lineEndX - lineStartX))) : 
@@ -145,7 +146,7 @@ function moveArrowHead(line) {
 	var pos2 = new SVG.Point(arrowLine.attr('x2'), arrowLine.attr('y2'));
 	pos2 = pos2.transform(matrix);
 	
-	arrowHead.plot(lineEndX + ',' + lineEndY + ' ' 
+	line.arrowHead.plot(lineEndX + ',' + lineEndY + ' ' 
 					+ pos1.x + ',' + pos1.y + ' ' 
 					+ pos2.x + ',' + pos2.y)
 	
@@ -153,7 +154,8 @@ function moveArrowHead(line) {
 }
 
 function moveArrow(line, points) {
-	line.plot(points.start.x, points.start.y, points.end.x, points.end.y);
+	line.plot('M ' + points.start.x + ' ' + points.start.y + 
+			 ' L ' + points.end.x + ' ' + points.end.y);
 	moveArrowHead(line);
 }
 
@@ -199,17 +201,17 @@ function elementUnselect() {
 }
 
 function elementTextMouseDown(event) {
+	stopEventPropagation(event);
 	currentX = event.clientX;
 	currentY = event.clientY;
 	this.containerElement.fire('mousedown'); 
-	stopEventPropagation(event);
 }
 
 function elementTextMouseMove(event) {
+	stopEventPropagation(event);
 	currentX = event.clientX;
 	currentY = event.clientY;
 	this.containerElement.fire('mousemove'); 
-	stopEventPropagation(event);
 }
 
 function drawElementText(elm, label) {
@@ -271,10 +273,13 @@ function drawDiamond(cx, cy, label) {
 }
 
 function drawArrowHead(line) {
-	var lineStartX = line.attr('x1');
-	var lineStartY = line.attr('y1');
-	var lineEndX = line.attr('x2');
-	var lineEndY = line.attr('y2');
+	var lineStart = line.pointAt(0);
+	var lineEnd = line.pointAt(line.length());
+	
+	var lineStartX = lineStart.x;
+	var lineStartY = lineStart.y;
+	var lineEndX = lineEnd.x;
+	var lineEndY = lineEnd.y;
 
 	var angleRad = (lineEndY - lineStartY) / (lineEndX - lineStartX);
 	
@@ -304,8 +309,8 @@ function drawArrowHead(line) {
 function drawLine(elm1, elm2) {
 	var points = determineLinePoints(elm1, elm2);
 
-	var line = draw.line(points.start.x, points.start.y, points.end.x, points.end.y)
-			.stroke({width: 2});
+	var line = draw.path('M ' + points.start.x + ' ' + points.start.y + 
+						' L ' + points.end.x + ' ' + points.end.y).stroke({width: 2});
 
 	elm1.outLines.push(line);
 	elm2.inLines.push(line);

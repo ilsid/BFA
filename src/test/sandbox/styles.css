@@ -31,3 +31,24 @@
   font-family: Verdana, Geneva, sans-serif; 
   font-size: 12px;
 }
+
+.lineLabelText {
+  font-family: Verdana, Geneva, sans-serif; 
+  font-size: 11px;
+}
+
+.labelBackground {
+	stroke: black;
+	stroke-width: 0.5;
+	fill: #CEE3F6;
+	opacity: 1;
+}
+
+.subProcess {
+	stroke-width: 3;
+	stroke-dasharray: 5,1;
+}
+
+.endState {
+	stroke-width: 2;
+}

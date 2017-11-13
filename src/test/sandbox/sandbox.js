@@ -26,32 +26,54 @@ function AttachPointsProvider() {
 		this.y = y;
 	}
 
-	// midpoints of each rectangle's edge
-	function getEdgeMidpoints(rect) {
+	// midpoints of each rectangle's edge + 1/4 width points of horizontal edges
+	function getRectPoints(rect) {
 		return [new Point(rect.cx()+rect.width()/2, rect.cy()),
 				new Point(rect.cx(), rect.cy()+rect.height()/2),
+				new Point(rect.cx()-rect.width()/4, rect.cy()+rect.height()/2),
+				new Point(rect.cx()+rect.width()/4, rect.cy()+rect.height()/2),
 				new Point(rect.cx()-rect.width()/2, rect.cy()),
-				new Point(rect.cx(), rect.cy()-rect.height()/2)];
+				new Point(rect.cx(), rect.cy()-rect.height()/2),
+				new Point(rect.cx()-rect.width()/4, rect.cy()-rect.height()/2),
+				new Point(rect.cx()+rect.width()/4, rect.cy()-rect.height()/2)];
 	}
 	
 	// vertex points of diamond
-	function getVertexPoints(diam) {
+	function getDiamondPoints(diam) {
 		var pts = diam.array().value;
 		
+		
+		// diamond vertex points + midpoints of each diamond's edge 
 		return [new Point(pts[0][0], pts[0][1]),
 				new Point(pts[1][0], pts[1][1]),
 				new Point(pts[2][0], pts[2][1]),
-				new Point(pts[3][0], pts[3][1])];
+				new Point(pts[3][0], pts[3][1]),
+		        new Point((pts[0][0]+pts[1][0])/2, (pts[0][1]+pts[1][1])/2),
+				new Point((pts[1][0]+pts[2][0])/2, (pts[1][1]+pts[2][1])/2),
+				new Point((pts[2][0]+pts[3][0])/2, (pts[2][1]+pts[3][1])/2),
+				new Point((pts[3][0]+pts[0][0])/2, (pts[3][1]+pts[0][1])/2)];
+	}
+	
+	function getCirclePoints(circ) {
+		var radius = circ.height() / 2;
+		
+		return [new Point(circ.cx()+radius, circ.cy()),
+		        new Point(circ.cx()-radius, circ.cy()),
+		        new Point(circ.cx(), circ.cy()+radius),
+		        new Point(circ.cx(), circ.cy()-radius)];
 	}
 	
 	var provider = {
 	
 		getAttachPoints: function(element) {
 			if (element.customType && element.customType == 'diamond') {
-				return getVertexPoints(element);
+				return getDiamondPoints(element);
+			}
+			else if (element.customType && element.customType == 'circle') {
+				return getCirclePoints(element);
 			}
 			else {
-				return getEdgeMidpoints(element);
+				return getRectPoints(element);
 			}
 		}
 	
@@ -120,7 +142,7 @@ function elementMouseDown(event) {
 
 function moveArrowHead(line) {
 	var lineStart = line.pointAt(0);
-	var lineEnd = line.pointAt(line.length());
+	var lineEnd = line.pointAt(line.length()-1);
 	
 	var lineStartX = lineStart.x;
 	var lineStartY = lineStart.y;
@@ -153,9 +175,21 @@ function moveArrowHead(line) {
 	arrowLine.remove();
 }
 
+function moveLineLabel(line) {
+	if (line.label) {
+		var label = line.label;
+		label.forEach(function(elm) {
+			elm.cx(line.cx());
+			elm.cy(line.cy());
+		});
+	}
+} 
+
 function moveArrow(line, points) {
 	line.plot('M ' + points.start.x + ' ' + points.start.y + 
 			 ' L ' + points.end.x + ' ' + points.end.y);
+	
+	moveLineLabel(line);
 	moveArrowHead(line);
 }
 
@@ -235,13 +269,67 @@ function drawElementText(elm, label) {
 	text.on('mousemove', elementTextMouseMove);
 }
 
-function drawRectangle(cx, cy, label) {
+function drawLineText(line, label) {
+	var textTplt = draw.text('Yes');
+	
+	var rect = draw.rect(10, 10);
+	rect.rx(10);
+	rect.ry(10);
+	rect.width(textTplt.bbox().width);
+	rect.height(textTplt.bbox().height);
+	rect.cx(line.cx());
+	rect.cy(line.cy());
+	rect.addClass('labelBackground');
+
+	textTplt.remove();
+	
+	var text = draw.text(label);
+	text.addClass('lineLabelText');
+	text.cx(line.cx());
+	text.cy(line.cy());
+	
+	var elements = [];
+	elements.push(rect);
+	elements.push(text);
+	
+	line.label = elements;
+}
+
+function drawCircle(cx, cy, label, additionalStyle) {
+	var circ = draw.circle(40);
+	circ.customType = 'circle';
+	circ.cx(cx);
+	circ.cy(cy);
+	circ.addClass('element');
+	
+	if (additionalStyle) {
+		circ.addClass(additionalStyle);
+	}
+	
+	circ.selected = false;
+	circ.inLines = [];
+	circ.outLines = [];
+	circ.on('mousedown', elementMouseDown);
+	circ.on('mousemove', elementMouseMove);
+	circ.on('unselect', elementUnselect);
+	
+	drawElementText(circ, label);
+	
+	return circ;
+}
+
+function drawRectangle(cx, cy, label, additionalStyle) {
 	var rect = draw.rect(100, 40);
 	rect.cx(cx);
 	rect.cy(cy);
 	rect.rx(10);
 	rect.ry(10);
 	rect.addClass('element');
+	
+	if (additionalStyle) {
+		rect.addClass(additionalStyle);
+	}
+	
 	rect.selected = false;
 	rect.inLines = [];
 	rect.outLines = [];
@@ -274,7 +362,7 @@ function drawDiamond(cx, cy, label) {
 
 function drawArrowHead(line) {
 	var lineStart = line.pointAt(0);
-	var lineEnd = line.pointAt(line.length());
+	var lineEnd = line.pointAt(line.length()-1);
 	
 	var lineStartX = lineStart.x;
 	var lineStartY = lineStart.y;
@@ -306,7 +394,7 @@ function drawArrowHead(line) {
 	arrowLine.remove();
 }
 
-function drawLine(elm1, elm2) {
+function drawLine(elm1, elm2, label) {
 	var points = determineLinePoints(elm1, elm2);
 
 	var line = draw.path('M ' + points.start.x + ' ' + points.start.y + 
@@ -320,6 +408,10 @@ function drawLine(elm1, elm2) {
 	//FIXME: fix drawArrowHead() to abandon moveArrowHead() call
 	drawArrowHead(line);
 	moveArrowHead(line);
+	
+	if (label) {
+		drawLineText(line, label);
+	}
 	
 	return line;
 }
@@ -339,24 +431,39 @@ function sandbox() {
 	var currentX = 0;
 	var currentY = 0;
 	
+	var startCx = width/6;
+	var startCy = height/6;
 	var rect1Cx = width/4;
-	var rect1Cy = height/4;
+	var rect1Cy = height/2;
 	var rect2Cx = width/2.5;
 	var rect2Cy = height/2.5;
 	var rect3Cx = width/1.5;
 	var rect3Cy = height/1.5;
 	var diamCx = width/2.5;
 	var diamCy = height/1.5;
+	var subCx = width/1.2;
+	var subCy = height/2;
+	var endCx = width/1.2;
+	var endCy = height/1.2;
 	
-	var rect1 = drawRectangle(rect1Cx, rect1Cy, 'Action 1');
-	var rect2 = drawRectangle(rect2Cx, rect2Cy, 'Action 2222222222222222');
-	var rect3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3');
-	var diam = drawDiamond(diamCx, diamCy, 'Is Condition Met?');
+	var start = drawCircle(startCx, startCy, 'Start');
+	var action1 = drawRectangle(rect1Cx, rect1Cy, 'Action 1');
+	var action2 = drawRectangle(rect2Cx, rect2Cy, 'Action 2222222222222222');
+	var action3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3');
+	var cond = drawDiamond(diamCx, diamCy, 'Is Condition Met?');
+	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'subProcess');
+	var end = drawCircle(endCx, endCy, 'End', 'endState');
 	
 	selectedElement = null;
 	
-	drawLine(rect1, diam);
-	drawLine(diam, rect2);
-	drawLine(diam, rect3);
+	drawLine(start, action1);
+	drawLine(action1, cond);
+	drawLine(cond, action2, 'Yes');
+	drawLine(cond, action3, 'No');
+	drawLine(action2, sub);
+	drawLine(sub, end);
+	drawLine(action3, end);
+	
+	//alert(document.getElementById('canvas').innerHTML);
 
 }

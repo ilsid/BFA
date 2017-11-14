@@ -124,30 +124,139 @@ function elementMouseDown(event) {
 
 	if (!this.selected) {
 		this.selected = true;
+		
 		if (this.hasClass('unselectedElement')) {
 			this.removeClass('unselectedElement');
 			this.text.removeClass('unselectedElementText');
 		}
+		
 		this.addClass('selectedElement');
 		this.text.addClass('selectedElementText');
 		
 		if (selectedElement != null) {
 			selectedElement.fire('unselect');
 		}
+		
 		selectedElement = this;
 	}
 	
 	stopEventPropagation(event);
 }
 
-function moveArrowHead(line) {
-	var lineStart = line.pointAt(0);
-	var lineEnd = line.pointAt(line.length()-1);
+function dragPointMouseOver(event) {
+	if (this.hasClass('unselectedDragPoint')) {
+		this.removeClass('unselectedDragPoint');
+	}
+	this.addClass('selectedDragPoint');
 	
-	var lineStartX = lineStart.x;
-	var lineStartY = lineStart.y;
-	var lineEndX = lineEnd.x;
-	var lineEndY = lineEnd.y;
+	stopEventPropagation(event);
+}
+
+function dragPointMouseOut(event) {
+	if (this.hasClass('selectedDragPoint')) {
+		this.removeClass('selectedDragPoint');
+	}
+	this.addClass('unselectedDragPoint');
+	
+	stopEventPropagation(event);
+}
+
+function dragPointMouseDown(event) {
+	currentX = event.clientX;
+	currentY = event.clientY;
+	
+	stopEventPropagation(event);
+}
+
+function dragPointMouseMove(event) {
+	stopEventPropagation(event);
+	
+	if (isLeftMouseButtonPressed(event)) {
+		var dx = event.clientX - currentX;
+		var dy = event.clientY - currentY;
+		this.cx(this.cx()+dx).cy(this.cy()+dy);
+		
+		var line = this.line;
+		var lineStart = line.pointAt(0);
+		var elms = line.array().value;
+		var lineEnd = new SVG.Point(elms[elms.length-1][1], elms[elms.length-1][2]);
+		
+		line.plot('M ' + lineStart.x + ' ' + lineStart.y +
+				 ' L ' + this.cx() + ' ' + this.cy() +
+				 ' L ' + lineEnd.x + ' ' + lineEnd.y);
+		
+		moveArrowHead(line);
+		
+		currentX = event.clientX;
+		currentY = event.clientY;
+	}
+	
+	stopEventPropagation(event);
+}
+
+function drawDragPoints(line) {
+	var dragPoints = [];
+	var TRACE_STEP = 20;
+	var traceLength = TRACE_STEP;
+	
+	while (traceLength < line.length() - TRACE_STEP) {
+		var tracePt = line.pointAt(traceLength);
+		var point = draw.circle(7);
+		point.line = line;
+		point.cx(tracePt.x).cy(tracePt.y);
+		point.addClass('dragPoint');
+		point.on('mouseover', dragPointMouseOver);
+		point.on('mouseout', dragPointMouseOut);
+		point.on('mousedown', dragPointMouseDown);
+		point.on('mousemove', dragPointMouseMove);
+		dragPoints.push(point);
+		traceLength = traceLength + TRACE_STEP;
+	}
+	
+	line.dragPoints = dragPoints;
+} 
+
+function deleteDragPoints(line) {
+	line.dragPoints.forEach(function(point) {
+		point.remove();
+	});
+	
+	delete line.dragPoints;
+}
+
+function lineMouseDown(event) {
+	currentX = event.clientX;
+	currentY = event.clientY;
+	
+	if (!this.selected) {
+		this.selected = true;
+		
+		if (this.hasClass('unselectedLine')) {
+			this.removeClass('unselectedLine');
+			this.arrowHead.removeClass('unselectedArrowHead');
+		}
+		
+		this.addClass('selectedLine');
+		this.arrowHead.addClass('selectedArrowHead');
+		
+		if (selectedElement != null) {
+			selectedElement.fire('unselect');
+		}
+		
+		selectedElement = this;
+		drawDragPoints(this);
+	}	
+	
+	stopEventPropagation(event);
+}
+
+function moveArrowHead(line) {
+	var elms = line.array().value;
+	
+	var lineStartX = elms[elms.length-2][1];
+	var lineStartY = elms[elms.length-2][2];
+	var lineEndX = elms[elms.length-1][1];
+	var lineEndY = elms[elms.length-1][2];
 	
 	var angleRad = (lineEndX != lineStartX) ? 
 					Math.atan(Math.abs((lineEndY - lineStartY)) / Math.abs((lineEndX - lineStartX))) : 
@@ -226,12 +335,27 @@ function elementMouseMove(event) {
 
 function elementUnselect() {
 	this.selected = false;
+	
 	if (this.hasClass('selectedElement')) {
 		this.removeClass('selectedElement');
 		this.text.removeClass('selectedElementText');
 	}
+	
 	this.addClass('unselectedElement');
 	this.text.addClass('unselectedElementText');
+}
+
+function lineUnselect() {
+	this.selected = false;
+	
+	if (this.hasClass('selectedLine')) {
+		this.removeClass('selectedLine');
+		this.arrowHead.removeClass('selectedArrowHead');
+	}
+	
+	deleteDragPoints(this);	
+	this.addClass('unselectedLine');
+	this.arrowHead.addClass('unselectedArrowHead');
 }
 
 function elementTextMouseDown(event) {
@@ -361,13 +485,12 @@ function drawDiamond(cx, cy, label) {
 }
 
 function drawArrowHead(line) {
-	var lineStart = line.pointAt(0);
-	var lineEnd = line.pointAt(line.length()-1);
+	var elms = line.array().value;
 	
-	var lineStartX = lineStart.x;
-	var lineStartY = lineStart.y;
-	var lineEndX = lineEnd.x;
-	var lineEndY = lineEnd.y;
+	var lineStartX = elms[elms.length-2][1];
+	var lineStartY = elms[elms.length-2][2];
+	var lineEndX = elms[elms.length-1][1];
+	var lineEndY = elms[elms.length-1][2];
 
 	var angleRad = (lineEndY - lineStartY) / (lineEndX - lineStartX);
 	
@@ -398,8 +521,9 @@ function drawLine(elm1, elm2, label) {
 	var points = determineLinePoints(elm1, elm2);
 
 	var line = draw.path('M ' + points.start.x + ' ' + points.start.y + 
-						' L ' + points.end.x + ' ' + points.end.y).stroke({width: 2});
-
+						' L ' + points.end.x + ' ' + points.end.y)
+						.stroke({width: 2}).fill('none');
+	
 	elm1.outLines.push(line);
 	elm2.inLines.push(line);
 	line.incomingVertex = elm1;
@@ -413,6 +537,10 @@ function drawLine(elm1, elm2, label) {
 		drawLineText(line, label);
 	}
 	
+	line.selected = false;
+	line.on('mousedown', lineMouseDown);
+	line.on('unselect', lineUnselect);
+	
 	return line;
 }
 
@@ -425,6 +553,7 @@ function sandbox() {
 	draw.viewbox(0,0,width,height)
 	
 	draw.on('mousedown', drawMouseDown);
+	draw.on('mousemove', function(event){ stopEventPropagation(event); });
 	
 	var background = draw.rect(width, height).fill('#FAFAFA');
 	
@@ -460,9 +589,10 @@ function sandbox() {
 	drawLine(action1, cond);
 	drawLine(cond, action2, 'Yes');
 	drawLine(cond, action3, 'No');
+	drawLine(action3, action1);
 	drawLine(action2, sub);
 	drawLine(sub, end);
-	drawLine(action3, end);
+	//drawLine(action3, end);
 	
 	//alert(document.getElementById('canvas').innerHTML);
 

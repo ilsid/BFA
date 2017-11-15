@@ -165,30 +165,102 @@ function dragPointMouseDown(event) {
 	currentX = event.clientX;
 	currentY = event.clientY;
 	
+	prevX = 0;
+	prevY = 0;
+	
 	stopEventPropagation(event);
 }
 
-function dragPointMouseMove(event) {
-	stopEventPropagation(event);
+function LineElementsComparator(elms) {
+	var startX = elms[0][1];
+	var startY = elms[0][2];
+	var endX = elms[elms.length-1][1];
+	var endY = elms[elms.length-1][2];
 	
+	var func;
+	
+	// elm[1] - x-coord, elm[2] - y-coord
+	
+	if (startX < endX) {
+		func = function(a, b) {
+			return a[1] - b[1];
+		} 
+	} else if (startX > endX) {
+		func = function(a, b) {
+			return b[1] - a[1];
+		} 
+	} else {
+		// startX == endX (vertical line)
+		
+		if (startY < endY) {
+			func = function(a, b) {
+				return a[2] - b[2];
+			} 
+		} else {
+			func = function(a, b) {
+				return b[2] - a[2];
+			} 
+		}
+	}
+	
+	var impl = {
+		compare: func 
+	};
+	
+	return impl;
+}
+
+function dragPointMouseMove(event) {
 	if (isLeftMouseButtonPressed(event)) {
+		this.active = true;
+		
 		var dx = event.clientX - currentX;
 		var dy = event.clientY - currentY;
+		
 		this.cx(this.cx()+dx).cy(this.cy()+dy);
 		
 		var line = this.line;
-		var lineStart = line.pointAt(0);
-		var elms = line.array().value;
-		var lineEnd = new SVG.Point(elms[elms.length-1][1], elms[elms.length-1][2]);
+		var elms = line.array().value.slice();
+		console.log('elms: ' + elms.toString());
+
+		for(var i in elms){
+		    if(elms[i][1] == prevX && elms[i][2] == prevY) {
+		        elms.splice(i,1);
+		        break;
+		    }
+		}
 		
-		line.plot('M ' + lineStart.x + ' ' + lineStart.y +
-				 ' L ' + this.cx() + ' ' + this.cy() +
-				 ' L ' + lineEnd.x + ' ' + lineEnd.y);
+		var startElm = elms.splice(0,1)[0];
+		var endElm = elms.splice(elms.length-1,1)[0];
+		
+		var newElm = ['L', this.cx(), this.cy()];
+		elms.push(newElm);
+		
+		var comparator = new LineElementsComparator(elms).compare;
+		elms.sort(comparator);
+		
+		var pathExpr = startElm[0] + ' ' + startElm[1] + ' ' + startElm[2] + ' ';
+		
+		elms.forEach(function(elm) {
+			pathExpr += elm[0] + ' ' + elm[1] + ' ' + elm[2] + ' ';
+		});
+		
+		pathExpr += endElm[0] + ' ' + endElm[1] + ' ' + endElm[2];
+		
+		line.plot(pathExpr);
+		console.log(pathExpr);
 		
 		moveArrowHead(line);
+		deleteNonActiveDragPoints(line);
+		drawDragPoints(line);
+		line.dragPoints.push(this);
 		
 		currentX = event.clientX;
 		currentY = event.clientY;
+		prevX = this.cx();
+		prevY = this.cy();
+		
+		this.active = false;
 	}
 	
 	stopEventPropagation(event);
@@ -201,7 +273,7 @@ function drawDragPoints(line) {
 	
 	while (traceLength < line.length() - TRACE_STEP) {
 		var tracePt = line.pointAt(traceLength);
-		var point = draw.circle(7);
+		var point = draw.circle(6);
 		point.line = line;
 		point.cx(tracePt.x).cy(tracePt.y);
 		point.addClass('dragPoint');
@@ -216,12 +288,20 @@ function drawDragPoints(line) {
 	line.dragPoints = dragPoints;
 } 
 
+function deleteNonActiveDragPoints(line) {
+	line.dragPoints.forEach(function(point) {
+		if (!point.active) {
+			point.remove();
+		}
+	});
+}
+
 function deleteDragPoints(line) {
 	line.dragPoints.forEach(function(point) {
 		point.remove();
 	});
 	
-	delete line.dragPoints;
+	line.dragPoints = [];
 }
 
 function lineMouseDown(event) {
@@ -549,8 +629,8 @@ function sandbox() {
 
 	var width = 800, height = 500;
 	
-	draw = SVG('canvas').size(width, height)
-	draw.viewbox(0,0,width,height)
+	draw = SVG('flow_editor_canvas').size(width, height);
+	draw.viewbox(0,0,width,height);
 	
 	draw.on('mousedown', drawMouseDown);
 	draw.on('mousemove', function(event){ stopEventPropagation(event); });

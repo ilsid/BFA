@@ -1,3 +1,15 @@
+
+svg text {
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+}
+
+svg text::selection {
+    background: none;
+}
+
 .element {
 	stroke: black;
 	stroke-width: 1;
@@ -52,10 +64,12 @@
 
 .selectedDragPoint { 
 	cursor: move;
+	r: 7;
 }
 
 .unselectedDragPoint { 
 	cursor: default;
+	r: 3;
 }
 
 .labelText {

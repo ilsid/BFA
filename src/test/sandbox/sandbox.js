@@ -69,7 +69,6 @@ function LineGroup(line) {
 		} while (line);
 		
 		deleteDragPoints(this);
-		
 		this.selected = false;
 	}
 	
@@ -371,76 +370,6 @@ function elementMouseDown(event) {
 	stopEventPropagation(event);
 }
 
-
-//FIXME: incorrect comparator in some cases
-function LineElementsComparator(elms) {
-	var startX = elms[0][1];
-	var startY = elms[0][2];
-	var endX = elms[elms.length-1][1];
-	var endY = elms[elms.length-1][2];
-	
-	var func;
-	
-	// elm[1] - x-coord, elm[2] - y-coord
-	
-	if (startX < endX) {
-		func = function(a, b) {
-			return a[1] - b[1];
-		} 
-	} else if (startX > endX) {
-		func = function(a, b) {
-			return b[1] - a[1];
-		} 
-	} else {
-		// startX == endX (vertical line)
-		
-		if (startY < endY) {
-			func = function(a, b) {
-				return a[2] - b[2];
-			} 
-		} else {
-			func = function(a, b) {
-				return b[2] - a[2];
-			} 
-		}
-	}
-	
-	var impl = {
-		compare: func 
-	};
-	
-	return impl;
-}
-
-function drawDragPoints(line) {
-	//var dragPoints = [];
-	var TRACE_STEP = 20;
-	var traceLength = TRACE_STEP;
-	
-	while (traceLength < line.length() - TRACE_STEP) {
-		var tracePt = line.pointAt(traceLength);
-		var point = draw.circle(6);
-		point.line = line;
-		point.cx(tracePt.x).cy(tracePt.y);
-		point.addClass('dragPoint');
-		point.on('mouseover', dragPointMouseOver);
-		point.on('mouseout', dragPointMouseOut);
-		point.on('mousedown', dragPointMouseDown);
-		point.on('mousemove', dragPointMouseMove);
-		line.dragPoints.push(point);
-		traceLength = traceLength + TRACE_STEP;
-	}
-	
-	//line.dragPoints = dragPoints;
-} 
-
-function deleteNonActiveDragPoints(line) {
-	line.dragPoints.forEach(function(point) {
-		if (!point.active) {
-			point.remove();
-		}
-	});
-}
 
 function moveArrowHead(line) {
 	var lineStartX = line.attr('x1');

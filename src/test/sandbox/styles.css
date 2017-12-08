@@ -46,6 +46,7 @@ svg text::selection {
 .unselectedLine { 
 	stroke: black;
 	stroke-width: 2;
+	cursor: default;
 }
 
 .selectedArrowHead { 

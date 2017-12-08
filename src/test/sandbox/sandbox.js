@@ -1,3 +1,231 @@
+function LineGroup(line) {
+	this.constructor.call(this, SVG.create('lineGroup'));
+	
+	var DRAG_POINT_DIAMETER = 6;
+	
+	line.group = this;
+	line.on('mousedown', mouseDown);
+	
+	// head is a line with arrow head
+	this.head = line;
+	this.tail = line;
+	this.on('unselect', unselect);
+	
+	this.addAfter = function(newLine, line) {
+		var oldNext = line.nextLine;
+		line.nextLine = newLine;
+		if (oldNext) {
+			newLine.nextLine = oldNext;
+		} else {
+			this.tail = newLine;
+		}
+		
+		newLine.group = this;
+		newLine.on('mousedown', mouseDown);
+		selectLine(newLine);
+	};
+	
+	this.remove = function() {
+		var line = this.head;
+		do {
+			line.remove();
+			line = line.nextLine;
+		} while (line);
+	};
+	
+	function selectLine(line) {
+		if (line.hasClass('unselectedLine')) {
+			line.removeClass('unselectedLine');
+			if (line.arrowHead) {
+				line.arrowHead.removeClass('unselectedArrowHead');
+			}
+		}
+		
+		line.addClass('selectedLine');
+		if (line.arrowHead) {
+			line.arrowHead.addClass('selectedArrowHead');
+		}
+	}
+	
+	function unselectLine(line) {
+		if (line.hasClass('selectedLine')) {
+			line.removeClass('selectedLine');
+			if (line.arrowHead) {
+				line.arrowHead.removeClass('selectedArrowHead');
+			}
+		}
+		
+		line.addClass('unselectedLine');
+		if (line.arrowHead) {
+			line.arrowHead.addClass('unselectedArrowHead');
+		}
+	}
+
+	function unselect() {
+		var line = this.head;
+		do {
+			unselectLine(line);
+			line = line.nextLine;
+		} while (line);
+		
+		deleteDragPoints(this);
+		
+		this.selected = false;
+	}
+	
+	function mouseDown(event) {
+		currentX = event.clientX;
+		currentY = event.clientY;
+		
+		var group = this.group;
+		
+		if (!group.selected) {
+			if (selectedElement != null) {
+				selectedElement.fire('unselect');
+			}
+			
+			group.selected = true;
+			selectedElement = group;
+			
+			var line = group.head;
+			do {
+				selectLine(line, event);
+				line = line.nextLine;
+			} while (line);
+			
+			drawDragPoints(group);
+		}
+
+		stopEventPropagation(event);
+	}
+	
+	function drawDragPoints(group) {
+		var points = [];
+		
+		var line = group.head;
+		var prevLine;
+		do {
+			var point = drawPoint(line.cx(), line.cy());
+			points.push(point);
+			line.dragPoint = point;
+			point.line = line;
+						
+			var nextLine = line.nextLine; 
+			if (nextLine) {
+				point = drawPoint(line.attr("x1"), line.attr("y1"));
+				points.push(point);
+				point.outLine = line;
+				point.inLine = nextLine;
+			}
+					
+			line = nextLine;
+		} while (line);
+		
+		group.dragPoints = points;
+	} 
+	
+	function drawMidDragPoint(line) {
+		var point = drawPoint(line.cx(), line.cy());
+		line.dragPoint = point;
+		point.line = line;
+		line.group.dragPoints.push(point);
+	}
+	
+	function moveMidDragPoint(line) {
+		line.dragPoint.cx(line.cx()).cy(line.cy());
+	}
+	
+	function drawPoint(cx, cy) {
+		var point = draw.circle(DRAG_POINT_DIAMETER);
+		point.cx(cx).cy(cy);
+		point.addClass('dragPoint');
+		point.on('mouseover', dragPointMouseOver);
+		point.on('mouseout', dragPointMouseOut);
+		point.on('mousedown', dragPointMouseDown);
+		point.on('mousemove', dragPointMouseMove);
+		
+		return point;
+	}
+	
+	function deleteDragPoints(group) {
+			group.dragPoints.forEach(function(point) {
+				point.remove();
+			});
+			
+			delete group.dragPoints;
+	}
+	
+	function dragPointMouseOver(event) {
+		if (this.hasClass('unselectedDragPoint')) {
+			this.removeClass('unselectedDragPoint');
+		}
+		this.addClass('selectedDragPoint');
+
+		stopEventPropagation(event);
+	}
+
+	function dragPointMouseOut(event) {
+		if (this.hasClass('selectedDragPoint')) {
+			this.removeClass('selectedDragPoint');
+		}
+		this.addClass('unselectedDragPoint');
+		
+		stopEventPropagation(event);
+	}
+
+	function dragPointMouseDown(event) {
+		currentX = event.clientX;
+		currentY = event.clientY;
+		
+		stopEventPropagation(event);
+	}
+
+	function dragPointMouseMove(event) {
+		if (isLeftMouseButtonPressed(event)) {
+			
+			var dx = event.clientX - currentX;
+			var dy = event.clientY - currentY;
+			
+			this.cx(this.cx()+dx).cy(this.cy()+dy);
+			
+			if (!this.inLine) {
+				var line = this.line;
+				var newLine = draw.line(line.attr("x1"), line.attr("y1"), currentX, currentY)
+							.stroke({width: 2});
+				var group = line.group;
+				group.addAfter(newLine, line);
+				line.plot(currentX, currentY, line.attr("x2"), line.attr("y2"));
+				this.inLine = newLine;
+				this.outLine = line;
+				
+				// This is not mid point any more
+				delete this.line;
+				drawMidDragPoint(line);
+				drawMidDragPoint(newLine);
+			} else {
+				var inLine = this.inLine;
+				var outLine = this.outLine;
+				inLine.plot(inLine.attr("x1"), inLine.attr("y1"), this.cx(), this.cy());
+				outLine.plot(this.cx(), this.cy(), outLine.attr("x2"), outLine.attr("y2"));
+				moveMidDragPoint(inLine);
+				moveMidDragPoint(outLine);
+			}
+			
+			if (this.outLine.arrowHead) {
+				moveArrowHead(this.outLine);
+			}
+			
+			currentX = event.clientX;
+			currentY = event.clientY;
+		}
+		
+		stopEventPropagation(event);
+	}
+
+}
+
+LineGroup.prototype = Object.create(SVG.Shape.prototype);
+
 
 function stopEventPropagation(event)
 {
@@ -111,7 +339,7 @@ function determineLinePoints(elm1, elm2) {
 	return linePoints;
 }
 
-function drawMouseDown() {
+function canvasMouseDown() {
 	if (selectedElement != null) {
 		selectedElement.fire('unselect');
 		selectedElement = null;
@@ -143,34 +371,8 @@ function elementMouseDown(event) {
 	stopEventPropagation(event);
 }
 
-function dragPointMouseOver(event) {
-	if (this.hasClass('unselectedDragPoint')) {
-		this.removeClass('unselectedDragPoint');
-	}
-	this.addClass('selectedDragPoint');
-	
-	stopEventPropagation(event);
-}
 
-function dragPointMouseOut(event) {
-	if (this.hasClass('selectedDragPoint')) {
-		this.removeClass('selectedDragPoint');
-	}
-	this.addClass('unselectedDragPoint');
-	
-	stopEventPropagation(event);
-}
-
-function dragPointMouseDown(event) {
-	currentX = event.clientX;
-	currentY = event.clientY;
-	
-	prevX = 0;
-	prevY = 0;
-	
-	stopEventPropagation(event);
-}
-
+//FIXME: incorrect comparator in some cases
 function LineElementsComparator(elms) {
 	var startX = elms[0][1];
 	var startY = elms[0][2];
@@ -210,64 +412,8 @@ function LineElementsComparator(elms) {
 	return impl;
 }
 
-function dragPointMouseMove(event) {
-	if (isLeftMouseButtonPressed(event)) {
-		this.active = true;
-		
-		var dx = event.clientX - currentX;
-		var dy = event.clientY - currentY;
-		
-		this.cx(this.cx()+dx).cy(this.cy()+dy);
-		
-		var line = this.line;
-		var elms = line.array().value.slice();
-		console.log('elms: ' + elms.toString());
-
-		for(var i in elms){
-		    if(elms[i][1] == prevX && elms[i][2] == prevY) {
-		        elms.splice(i,1);
-		        break;
-		    }
-		}
-		
-		var startElm = elms.splice(0,1)[0];
-		var endElm = elms.splice(elms.length-1,1)[0];
-		
-		var newElm = ['L', this.cx(), this.cy()];
-		elms.push(newElm);
-		
-		var comparator = new LineElementsComparator(elms).compare;
-		elms.sort(comparator);
-		
-		var pathExpr = startElm[0] + ' ' + startElm[1] + ' ' + startElm[2] + ' ';
-		
-		elms.forEach(function(elm) {
-			pathExpr += elm[0] + ' ' + elm[1] + ' ' + elm[2] + ' ';
-		});
-		
-		pathExpr += endElm[0] + ' ' + endElm[1] + ' ' + endElm[2];
-		
-		line.plot(pathExpr);
-		console.log(pathExpr);
-		
-		moveArrowHead(line);
-		deleteNonActiveDragPoints(line);
-		drawDragPoints(line);
-		line.dragPoints.push(this);
-		
-		currentX = event.clientX;
-		currentY = event.clientY;
-		prevX = this.cx();
-		prevY = this.cy();
-		
-		this.active = false;
-	}
-	
-	stopEventPropagation(event);
-}
-
 function drawDragPoints(line) {
-	var dragPoints = [];
+	//var dragPoints = [];
 	var TRACE_STEP = 20;
 	var traceLength = TRACE_STEP;
 	
@@ -281,11 +427,11 @@ function drawDragPoints(line) {
 		point.on('mouseout', dragPointMouseOut);
 		point.on('mousedown', dragPointMouseDown);
 		point.on('mousemove', dragPointMouseMove);
-		dragPoints.push(point);
+		line.dragPoints.push(point);
 		traceLength = traceLength + TRACE_STEP;
 	}
 	
-	line.dragPoints = dragPoints;
+	//line.dragPoints = dragPoints;
 } 
 
 function deleteNonActiveDragPoints(line) {
@@ -296,47 +442,11 @@ function deleteNonActiveDragPoints(line) {
 	});
 }
 
-function deleteDragPoints(line) {
-	line.dragPoints.forEach(function(point) {
-		point.remove();
-	});
-	
-	line.dragPoints = [];
-}
-
-function lineMouseDown(event) {
-	currentX = event.clientX;
-	currentY = event.clientY;
-	
-	if (!this.selected) {
-		this.selected = true;
-		
-		if (this.hasClass('unselectedLine')) {
-			this.removeClass('unselectedLine');
-			this.arrowHead.removeClass('unselectedArrowHead');
-		}
-		
-		this.addClass('selectedLine');
-		this.arrowHead.addClass('selectedArrowHead');
-		
-		if (selectedElement != null) {
-			selectedElement.fire('unselect');
-		}
-		
-		selectedElement = this;
-		drawDragPoints(this);
-	}	
-	
-	stopEventPropagation(event);
-}
-
 function moveArrowHead(line) {
-	var elms = line.array().value;
-	
-	var lineStartX = elms[elms.length-2][1];
-	var lineStartY = elms[elms.length-2][2];
-	var lineEndX = elms[elms.length-1][1];
-	var lineEndY = elms[elms.length-1][2];
+	var lineStartX = line.attr('x1');
+	var lineStartY = line.attr('y1');
+	var lineEndX = line.attr('x2');
+	var lineEndY = line.attr('y2');
 	
 	var angleRad = (lineEndX != lineStartX) ? 
 					Math.atan(Math.abs((lineEndY - lineStartY)) / Math.abs((lineEndX - lineStartX))) : 
@@ -375,8 +485,7 @@ function moveLineLabel(line) {
 } 
 
 function moveArrow(line, points) {
-	line.plot('M ' + points.start.x + ' ' + points.start.y + 
-			 ' L ' + points.end.x + ' ' + points.end.y);
+	line.plot(points.start.x, points.start.y, points.end.x, points.end.y);
 	
 	moveLineLabel(line);
 	moveArrowHead(line);
@@ -423,19 +532,6 @@ function elementUnselect() {
 	
 	this.addClass('unselectedElement');
 	this.text.addClass('unselectedElementText');
-}
-
-function lineUnselect() {
-	this.selected = false;
-	
-	if (this.hasClass('selectedLine')) {
-		this.removeClass('selectedLine');
-		this.arrowHead.removeClass('selectedArrowHead');
-	}
-	
-	deleteDragPoints(this);	
-	this.addClass('unselectedLine');
-	this.arrowHead.addClass('unselectedArrowHead');
 }
 
 function elementTextMouseDown(event) {
@@ -565,12 +661,10 @@ function drawDiamond(cx, cy, label) {
 }
 
 function drawArrowHead(line) {
-	var elms = line.array().value;
-	
-	var lineStartX = elms[elms.length-2][1];
-	var lineStartY = elms[elms.length-2][2];
-	var lineEndX = elms[elms.length-1][1];
-	var lineEndY = elms[elms.length-1][2];
+	var lineStartX = line.attr('x1');
+	var lineStartY = line.attr('y1');
+	var lineEndX = line.attr('x2');
+	var lineEndY = line.attr('y2');
 
 	var angleRad = (lineEndY - lineStartY) / (lineEndX - lineStartX);
 	
@@ -599,10 +693,8 @@ function drawArrowHead(line) {
 
 function drawLine(elm1, elm2, label) {
 	var points = determineLinePoints(elm1, elm2);
-
-	var line = draw.path('M ' + points.start.x + ' ' + points.start.y + 
-						' L ' + points.end.x + ' ' + points.end.y)
-						.stroke({width: 2}).fill('none');
+	var line = draw.line(points.start.x, points.start.y, points.end.x, points.end.y)
+						.stroke({width: 2});
 	
 	elm1.outLines.push(line);
 	elm2.inLines.push(line);
@@ -617,13 +709,10 @@ function drawLine(elm1, elm2, label) {
 		drawLineText(line, label);
 	}
 	
-	line.selected = false;
-	line.on('mousedown', lineMouseDown);
-	line.on('unselect', lineUnselect);
+	new LineGroup(line);
 	
 	return line;
 }
-
 
 function sandbox() {
 
@@ -632,7 +721,7 @@ function sandbox() {
 	draw = SVG('flow_editor_canvas').size(width, height);
 	draw.viewbox(0,0,width,height);
 	
-	draw.on('mousedown', drawMouseDown);
+	draw.on('mousedown', canvasMouseDown);
 	draw.on('mousemove', function(event){ stopEventPropagation(event); });
 	
 	var background = draw.rect(width, height).fill('#FAFAFA');

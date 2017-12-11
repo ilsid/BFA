@@ -11,6 +11,14 @@ function LineGroup(line) {
 	this.tail = line;
 	this.on('unselect', unselect);
 	
+	this.getHead = function() {
+		return this.head;
+	};
+	
+	this.getTail = function() {
+		return this.tail;
+	};
+	
 	this.addAfter = function(newLine, line) {
 		var oldNext = line.nextLine;
 		line.nextLine = newLine;
@@ -309,12 +317,11 @@ function AttachPointsProvider() {
 	return provider;	
 }
 
+function getDistance(point1, point2) {
+	return Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2));
+}
+
 function determineLinePoints(elm1, elm2) {
-	
-	function getDistance(point1, point2) {
-		return Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2));
-	}
-	
 	var pointsProvider = new AttachPointsProvider();
 	var points1 = pointsProvider.getAttachPoints(elm1);
 	var points2 = pointsProvider.getAttachPoints(elm2);
@@ -336,6 +343,23 @@ function determineLinePoints(elm1, elm2) {
 	}
 	
 	return linePoints;
+}
+
+function determineSecondLinePoint(elm, firstPoint) {
+	var points = new AttachPointsProvider().getAttachPoints(elm);
+	var startPoint;
+	
+	var minDistance = Number.MAX_VALUE;
+	
+	for (var i = 0; i < points.length; i++) {
+		var distance = getDistance(points[i], firstPoint);
+		if (distance < minDistance) {
+			minDistance = distance;
+			startPoint = points[i];
+		}	
+	}
+	
+	return startPoint;
 }
 
 function canvasMouseDown() {
@@ -413,11 +437,22 @@ function moveLineLabel(line) {
 	}
 } 
 
-function moveArrow(line, points) {
+function moveSingleArrow(line, points) {
 	line.plot(points.start.x, points.start.y, points.end.x, points.end.y);
 	
 	moveLineLabel(line);
 	moveArrowHead(line);
+}
+
+function moveLineGroupTail(inElm, line) {
+	var endPoint = {x: line.attr('x2'), y: line.attr('y2')};
+	var startPoint = determineSecondLinePoint(inElm, endPoint);
+
+	line.plot(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+}
+
+function moveLineGroupHead(inElm, line) {
+	//TODO: implement
 }
 
 function elementMouseMove(event) {
@@ -431,17 +466,29 @@ function elementMouseMove(event) {
 		text.cx(this.cx()).cy(this.cy());
 		
 		this.outLines.forEach(function(outLine){
-			var inElm = this;
-			var outElm = outLine.outgoingVertex;
-			var points = determineLinePoints(inElm, outElm);
-			moveArrow(outLine, points);
+			var outLineGroup = outLine.group;
+
+			if (outLineGroup.head === outLineGroup.tail) {
+				var inElm = this;
+				var outElm = outLine.outgoingVertex;
+				var points = determineLinePoints(inElm, outElm);
+				moveSingleArrow(outLine, points);
+			} else {
+				moveLineGroupTail(this, outLineGroup.tail);
+			}
 		}, this);
 		
 		this.inLines.forEach(function(inLine){
-			var inElm = inLine.incomingVertex;
-			var outElm = this;
-			var points = determineLinePoints(inElm, outElm);
-			moveArrow(inLine, points);
+			var inLineGroup = inLine.group;
+			
+			if (inLineGroup.head === inLineGroup.tail) {
+				var inElm = inLine.incomingVertex;
+				var outElm = this;
+				var points = determineLinePoints(inElm, outElm);
+				moveSingleArrow(inLine, points);
+			} else {
+				moveLineGroupHead(this, inLineGroup.head);
+			}
 		}, this);
 		
 		currentX = event.clientX;

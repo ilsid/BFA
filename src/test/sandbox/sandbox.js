@@ -451,8 +451,12 @@ function moveLineGroupTail(inElm, line) {
 	line.plot(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 }
 
-function moveLineGroupHead(inElm, line) {
-	//TODO: implement
+function moveLineGroupHead(outElm, line) {
+	var startPoint = {x: line.attr('x1'), y: line.attr('y1')};
+	var endPoint = determineSecondLinePoint(outElm, startPoint);
+	
+	line.plot(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+	moveArrowHead(line);
 }
 
 function elementMouseMove(event) {

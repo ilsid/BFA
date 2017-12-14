@@ -195,13 +195,19 @@ function LineGroup(line) {
 			
 			this.cx(this.cx()+dx).cy(this.cy()+dy);
 			
-			if (!this.inLine) {
+			if (this.line) {
 				var line = this.line;
 				var newLine = draw.line(line.attr("x1"), line.attr("y1"), currentX, currentY)
 							.stroke({width: 2});
 				var group = line.group;
 				group.addAfter(newLine, line);
 				line.plot(currentX, currentY, line.attr("x2"), line.attr("y2"));
+				
+				if (line.incomingVertex) {
+					newLine.incomingVertex = line.incomingVertex;
+					delete line.incomingVertex;
+				}
+				
 				this.inLine = newLine;
 				this.outLine = line;
 				
@@ -218,8 +224,12 @@ function LineGroup(line) {
 				moveMidDragPoint(outLine);
 			}
 			
-			if (this.outLine.arrowHead) {
-				moveArrowHead(this.outLine);
+			if (this.outLine.outgoingVertex) {
+				moveLineGroupHead(this.outLine.outgoingVertex, this.outLine);
+			}
+			
+			if (this.inLine.incomingVertex) {
+				moveLineGroupTail(this.inLine.incomingVertex, this.inLine);
 			}
 			
 			currentX = event.clientX;

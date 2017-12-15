@@ -162,6 +162,18 @@ function LineGroup(line) {
 			delete group.dragPoints;
 	}
 	
+	function removeLineText(line) {
+		var elms = line.label;
+		elms[0].remove();
+		elms[1].remove();
+		elms = [];
+		delete line.label;
+	}
+
+	function getLineTextValue(line) {
+		return line.label[1].text();
+	}
+
 	function dragPointMouseOver(event) {
 		if (this.hasClass('unselectedDragPoint')) {
 			this.removeClass('unselectedDragPoint');
@@ -206,6 +218,12 @@ function LineGroup(line) {
 				if (line.incomingVertex) {
 					newLine.incomingVertex = line.incomingVertex;
 					delete line.incomingVertex;
+				}
+				
+				if (line.label) {
+					var text = getLineTextValue(line);
+					removeLineText(line);
+					drawLineText(newLine, text);
 				}
 				
 				this.inLine = newLine;
@@ -459,6 +477,7 @@ function moveLineGroupTail(inElm, line) {
 	var startPoint = determineSecondLinePoint(inElm, endPoint);
 
 	line.plot(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+	moveLineLabel(line);
 }
 
 function moveLineGroupHead(outElm, line) {

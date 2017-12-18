@@ -5,6 +5,8 @@ function LineGroup(line) {
 	
 	line.group = this;
 	line.on('mousedown', mouseDown);
+	line.on('mouseover', mouseOver);
+	line.on('mouseout', mouseOut);
 	
 	// head is a line with arrow head
 	this.head = line;
@@ -30,6 +32,8 @@ function LineGroup(line) {
 		
 		newLine.group = this;
 		newLine.on('mousedown', mouseDown);
+		newLine.on('mouseover', mouseOver);
+		newLine.on('mouseout', mouseOut);
 		selectLine(newLine);
 	};
 	
@@ -96,13 +100,37 @@ function LineGroup(line) {
 			
 			var line = group.head;
 			do {
-				selectLine(line, event);
+				selectLine(line);
 				line = line.nextLine;
 			} while (line);
 			
 			drawDragPoints(group);
 		}
 
+		stopEventPropagation(event);
+	}
+	
+	function mouseOver(event) {
+		var group = this.group;
+		var line = group.head;
+		do {
+			line.removeClass('mouseOutLine');
+			line.addClass('mouseOverLine');
+			line = line.nextLine;
+		} while (line);
+		
+		stopEventPropagation(event);
+	}
+	
+	function mouseOut(event) {
+		var group = this.group;
+		var line = group.head;
+		do {
+			line.removeClass('mouseOverLine');
+			line.addClass('mouseOutLine');
+			line = line.nextLine;
+		} while (line);
+		
 		stopEventPropagation(event);
 	}
 	
@@ -557,6 +585,10 @@ function elementTextMouseMove(event) {
 	this.containerElement.fire('mousemove'); 
 }
 
+function elementTextDblClick(event) {
+	alert(this.text());
+}
+
 function drawElementText(elm, label) {
 	var text = draw.text(label);
 	text.addClass('labelText');
@@ -576,6 +608,7 @@ function drawElementText(elm, label) {
 	
 	text.on('mousedown', elementTextMouseDown);
 	text.on('mousemove', elementTextMouseMove);
+	text.on('dblclick', elementTextDblClick);
 }
 
 function drawLineText(line, label) {
@@ -725,7 +758,7 @@ function drawLine(elm1, elm2, label) {
 
 function sandbox() {
 
-	var width = 800, height = 500;
+	var width = 1200, height = 700;
 	
 	draw = SVG('flow_editor_canvas').size(width, height);
 	draw.viewbox(0,0,width,height);
@@ -770,8 +803,5 @@ function sandbox() {
 	drawLine(action3, action1);
 	drawLine(action2, sub);
 	drawLine(sub, end);
-	//drawLine(action3, end);
-	
-	//alert(document.getElementById('canvas').innerHTML);
 
 }

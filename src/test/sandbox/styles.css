@@ -49,6 +49,18 @@ svg text::selection {
 	cursor: default;
 }
 
+.mouseOverLine { 
+	opacity: 0.2;
+	stroke-width: 5;
+	cursor: crosshair;
+}
+
+.mouseOutLine { 
+	opacity: 1;
+	stroke-width: 2;
+	cursor: default;
+}
+
 .selectedArrowHead { 
 	fill: #8181F7;
 	stroke: blue;

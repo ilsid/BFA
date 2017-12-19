@@ -110,27 +110,23 @@ function LineGroup(line) {
 		stopEventPropagation(event);
 	}
 	
-	function mouseOver(event) {
-		var group = this.group;
+	function addRemoveCssClass(lineInGroup, clsToRemove, clsToAdd) {
+		var group = lineInGroup.group;
 		var line = group.head;
 		do {
-			line.removeClass('mouseOutLine');
-			line.addClass('mouseOverLine');
+			line.removeClass(clsToRemove);
+			line.addClass(clsToAdd);
 			line = line.nextLine;
 		} while (line);
-		
+	}
+	
+	function mouseOver(event) {
+		addRemoveCssClass(this, 'mouseOutLine', 'mouseOverLine');
 		stopEventPropagation(event);
 	}
 	
 	function mouseOut(event) {
-		var group = this.group;
-		var line = group.head;
-		do {
-			line.removeClass('mouseOverLine');
-			line.addClass('mouseOutLine');
-			line = line.nextLine;
-		} while (line);
-		
+		addRemoveCssClass(this, 'mouseOverLine', 'mouseOutLine');
 		stopEventPropagation(event);
 	}
 	
@@ -756,6 +752,56 @@ function drawLine(elm1, elm2, label) {
 	return line;
 }
 
+function btnNewStartOnClick() {
+	var start = drawCircle(50, 50, 'Start');
+	start.fire('mousedown');
+}
+
+function btnNewEndOnClick() {
+	var end = drawCircle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
+						'End', 'endState');
+	
+	drawLine(selectedElement, end);
+	end.fire('mousedown');
+}
+
+function drawFlowElement(textPrefix, elementCssClass) {
+	var elm = drawRectangle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
+			textPrefix + ' ' + elementCounter++, elementCssClass);
+
+	if (selectedElement.customType == 'diamond' && selectedElement.outLines.length == 0) {
+		drawLine(selectedElement, elm, 'Yes');
+	} else if (selectedElement.customType == 'diamond' && selectedElement.outLines.length == 1) {
+		drawLine(selectedElement, elm, 'No');
+	} else if (selectedElement.customType == 'diamond' && selectedElement.outLines.length == 2) {
+		alert('No more elements allowed');
+		elm.remove();
+		elm.text.remove();
+		elementCounter--;
+		return;
+	} else {
+		drawLine(selectedElement, elm);
+	}
+	
+	elm.fire('mousedown');
+}
+
+function btnNewActionOnClick() {
+	drawFlowElement('Action');
+}
+
+function btnNewSubprocessOnClick() {
+	drawFlowElement('Sub-Process', 'subProcess');
+}
+
+function btnNewConditionOnClick() {
+	var diam = drawDiamond(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
+							'Is Condition Met?');
+	
+	drawLine(selectedElement, diam);
+	diam.fire('mousedown');
+}
+
 function sandbox() {
 
 	var width = 1200, height = 700;
@@ -795,6 +841,7 @@ function sandbox() {
 	var end = drawCircle(endCx, endCy, 'End', 'endState');
 	
 	selectedElement = null;
+	elementCounter = 10;
 	
 	drawLine(start, action1);
 	drawLine(action1, cond);

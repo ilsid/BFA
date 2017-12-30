@@ -142,9 +142,10 @@ table.dijitDialogPaneContentArea,
   font-size: 12px;
 }
 
-.flowEditorTab .tabLabel {
+.flowEditorArea .tabLabel {
   font-family: Verdana, Geneva, sans-serif; 
   font-size: 10px;
+  font-weight: bold;
 }
 
 div[ace-script-editor="true"] { 

@@ -776,8 +776,8 @@ function buildEntitySource(grid) {
 
 function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 	require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/Toolbar', 
-	          'dijit/form/Button', 'dijit/layout/TabContainer', 'dojo/domReady!'],
-		function(registry, ContentPane, Toolbar, Button, TabContainer) {
+	          'dijit/form/Button', 'dijit/layout/TabContainer', 'dojo/dom-class', 'dojo/domReady!'],
+		function(registry, ContentPane, Toolbar, Button, TabContainer, domClass) {
 			var tabContainer = registry.byId('tabContainer');
 			var groupName = getSelectedGroupName(registry.byId('scriptTree'), 'SCRIPT_GROUP');
 			
@@ -834,6 +834,8 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			});
 			flowEditorArea.startup();
 			
+			domClass.add(flowEditorArea.domNode, 'flowEditorArea');
+			
 			var scriptTab = new ContentPane({
 				title: 'Source',
 				style: 'overflow: auto;',
@@ -844,7 +846,7 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			var chartTab = new ContentPane({
 				title: 'Flow Chart',
 				style: 'overflow: auto;',
-				className: 'nestedPane',
+				className: 'flowEditorTab',
 				chartCreated: false,
 				
 				onShow: function() {
@@ -859,10 +861,6 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			
 			flowEditorArea.addChild(scriptTab);
 			flowEditorArea.addChild(chartTab);
-			
-			//FIXME: addClass() does not work here
-			dojo.addClass(scriptTab.domNode, 'flowEditorTab');
-			dojo.addClass(chartTab.domNode, 'flowEditorTab');
 			
 			tab.addChild(toolBar);
 			tab.addChild(flowEditorArea);

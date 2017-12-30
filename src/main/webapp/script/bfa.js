@@ -122,7 +122,7 @@ function escapeEntitySource(source)  {
 	return source.replace(/"/g,'\\"');
 }
 
-function createScriptEditor(scriptSource, parentPanel, topPosition, onChangeHandler) {
+function createScriptEditor(scriptSource, parentPanel, onChangeHandler) {
 	require(['dojo/dom-construct', 'dojo/domReady!'],
 		function(domConstruct) {
 			var parentId = parentPanel.id;
@@ -135,7 +135,7 @@ function createScriptEditor(scriptSource, parentPanel, topPosition, onChangeHand
 			editor.setTheme("ace/theme/eclipse");
 			editor.getSession().setMode("ace/mode/java");
 			
-			document.getElementById(scriptHolderId).style.top = topPosition;
+			document.getElementById(scriptHolderId).style.top = 0;
 			
 			if (scriptSource) {
 				editor.setValue(scriptSource);
@@ -539,7 +539,7 @@ function onCreateScriptDialog_btnOkClick() {
 			
 			var tabContainer = registry.byId('tabContainer');
 			var scriptTab = tabContainer.selectedChildWidget;
-			var scriptEditor = scriptTab.getChildren()[1].editor;
+			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
 			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
 			
@@ -571,7 +571,7 @@ function onUpdateScriptDialog_btnOkClick() {
 			
 			var tabContainer = registry.byId('tabContainer');
 			var scriptTab = tabContainer.selectedChildWidget;
-			var scriptEditor = scriptTab.getChildren()[1].editor;
+			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
 			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
 			
@@ -775,11 +775,9 @@ function buildEntitySource(grid) {
 }
 
 function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
-	require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/form/SimpleTextarea', 
-		'dijit/Toolbar', 'dijit/form/Button', 'dijit/form/RadioButton', 'dojo/dom-construct', 
-		'dojo/dom-geometry', 'dojo/domReady!'],
-		function(registry, ContentPane, SimpleTextarea, Toolbar, Button, RadioButton, 
-			domConstruct, domGeom) {
+	require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/Toolbar', 
+	          'dijit/form/Button', 'dijit/layout/TabContainer', 'dojo/domReady!'],
+		function(registry, ContentPane, Toolbar, Button, TabContainer) {
 			var tabContainer = registry.byId('tabContainer');
 			var groupName = getSelectedGroupName(registry.byId('scriptTree'), 'SCRIPT_GROUP');
 			
@@ -788,6 +786,7 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				title: tabTitle,
 				closable: true,
 				iconClass: 'dijitLeaf',
+				className: 'nestedPane',
 				style: 'overflow: auto;',
 				objectInfo: {name: tabTitle, group: groupName}
 			});
@@ -818,65 +817,55 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			btnSave.startup();
 			btnRun.startup();
 			
-			var radioSource = new RadioButton({
-				name: tabId,
-				checked: true,
-				chartCreated: false,
-				onChange: function(event) {
-					if (this.checked) {
-						this.scriptArea.domNode.style.display = 'block';
-						this.chartCanvas.domNode.style.display = 'none';
-					} else {
-						this.scriptArea.domNode.style.display = 'none';
-						this.chartCanvas.domNode.style.display = 'block';
-						
-						if (!this.chartCreated) {
-							var scriptName = groupName + '::' + tabTitle;
-							drawFlowChart(scriptName, this.chartCanvas.id);
-							this.chartCreated = true;
-						}
-					}
-				}
-			});
-			radioSource.startup();
-			
-			var radioChart = new RadioButton({
-				name: tabId,
-				checked: false
-			});
-			radioChart.startup();	
-								
 			var toolBar = new Toolbar({
 				className: 'nestedPane'
 			});
 			toolBar.addChild(btnSave);
 			toolBar.addChild(btnRun);
-			toolBar.addChild(radioSource);
-			toolBar.addChild(radioChart);
 			toolBar.startup();
 			
-			domConstruct.place('<label>&nbsp;&nbsp;&nbsp;&nbsp;</label>', 
-				radioSource.domNode, 'before');
-			domConstruct.place('<label for="' + radioSource.id + '">Source&nbsp;&nbsp;</label>', 
-				radioSource.domNode, 'after');
-			domConstruct.place('<label for="' + radioChart.id + '">Flow Chart</label>', 
-				radioChart.domNode, 'after');
-		
-			var scriptArea = new ContentPane({
+			var flowEditorArea = new TabContainer({
+				tabStrip: true,
+				region: 'bottom',
+				//FIXME: 95% is a magic number here. 100% causes overflow
+				style: 'height: 95%;',
+				className: 'nestedPane',
+				tabPosition: 'bottom'
+			});
+			flowEditorArea.startup();
+			
+			var scriptTab = new ContentPane({
+				title: 'Source',
+				style: 'overflow: auto;',
 				className: 'nestedPane'
 			});
-			scriptArea.startup();
-			radioSource.scriptArea = scriptArea;
+			scriptTab.startup();
 			
-			var chartArea = new ContentPane({
-				className: 'hiddenBorderedFixedPane'
+			var chartTab = new ContentPane({
+				title: 'Flow Chart',
+				style: 'overflow: auto;',
+				className: 'nestedPane',
+				chartCreated: false,
+				
+				onShow: function() {
+					if (!this.chartCreated && isExistingScript) {
+						var scriptName = groupName + '::' + tabTitle;
+						drawFlowChart(scriptName, this.id);
+						this.chartCreated = true;
+					}
+				}
 			});
-			chartArea.startup();
-			radioSource.chartCanvas = chartArea;
+			chartTab.startup();
+			
+			flowEditorArea.addChild(scriptTab);
+			flowEditorArea.addChild(chartTab);
+			
+			//FIXME: addClass() does not work here
+			dojo.addClass(scriptTab.domNode, 'flowEditorTab');
+			dojo.addClass(chartTab.domNode, 'flowEditorTab');
 			
 			tab.addChild(toolBar);
-			tab.addChild(scriptArea);
-			tab.addChild(chartArea);
+			tab.addChild(flowEditorArea);
 			
 			if (indexInContainer > -1) {
 				tabContainer.addChild(tab, indexInContainer);
@@ -886,15 +875,14 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			
 			tabContainer.selectChild(tab);
 			
-			var scriptEditorTopPos = domGeom.position(toolBar.domNode).h + 8;
 			var editorOnChangeHandler = function() {
 				if (isExistingScript && btnSave.get('disabled')) {
 					btnSave.set('disabled', false);
 					tab.set('title', '*' + tab.title);
 				}
 			};
-			createScriptEditor(scriptSource, scriptArea, scriptEditorTopPos, editorOnChangeHandler);
 			
+			createScriptEditor(scriptSource, scriptTab, editorOnChangeHandler);
 	});
 }
 

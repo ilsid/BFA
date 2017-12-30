@@ -241,6 +241,21 @@
 						</configuration>
 					</execution>
 					<execution>
+						<id>pack-svgjs-lib</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<copy
+									todir="${project.basedir}/target/${project.build.finalName}/script/svg.js">
+									<fileset dir="${project.basedir}/lib/svg.js-2.6.3" />
+								</copy>
+							</tasks>
+						</configuration>
+					</execution>
+					<execution>
 						<id>create-integration-test-output-directory</id>
 						<phase>pre-integration-test</phase>
 						<goals>

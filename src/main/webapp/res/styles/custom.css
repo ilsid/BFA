@@ -142,6 +142,11 @@ table.dijitDialogPaneContentArea,
   font-size: 12px;
 }
 
+.flowEditorTab .tabLabel {
+  font-family: Verdana, Geneva, sans-serif; 
+  font-size: 10px;
+}
+
 div[ace-script-editor="true"] { 
 	position: absolute;
 	right: 0;

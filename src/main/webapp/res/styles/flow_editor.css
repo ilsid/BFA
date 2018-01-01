@@ -1,0 +1,112 @@
+
+svg text {
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+}
+
+svg text::selection {
+    background: none;
+}
+
+.element {
+	stroke: black;
+	stroke-width: 1;
+	fill: #CEE3F6;
+	opacity: 1;
+}
+
+.selectedElement { 
+	stroke: blue;
+	stroke-width: 2;
+	opacity: 0.5;
+	cursor: move;
+}
+
+.unselectedElement { 
+	stroke-width: 1;
+	opacity: 1;
+	cursor: default;
+}
+
+.selectedElementText { 
+	cursor: move;
+}
+
+.unselectedElementText { 
+	cursor: default;
+}
+
+.selectedLine { 
+	stroke: #8181F7;
+	stroke-width: 3;
+}
+
+.unselectedLine { 
+	stroke: black;
+	stroke-width: 2;
+	cursor: default;
+}
+
+.mouseOverLine { 
+	opacity: 0.2;
+	stroke-width: 5;
+	cursor: crosshair;
+}
+
+.mouseOutLine { 
+	opacity: 1;
+	stroke-width: 2;
+	cursor: default;
+}
+
+.selectedArrowHead { 
+	fill: #8181F7;
+	stroke: blue;
+}
+
+.unselectedArrowHead { 
+	fill: black;
+	stroke: black;
+}
+
+.dragPoint { 
+	fill: #8181F7;
+}
+
+.selectedDragPoint { 
+	cursor: move;
+	r: 7;
+}
+
+.unselectedDragPoint { 
+	cursor: default;
+	r: 3;
+}
+
+.labelText {
+  font-family: Verdana, Geneva, sans-serif; 
+  font-size: 12px;
+}
+
+.lineLabelText {
+  font-family: Verdana, Geneva, sans-serif; 
+  font-size: 11px;
+}
+
+.labelBackground {
+	stroke: black;
+	stroke-width: 0.5;
+	fill: #CEE3F6;
+	opacity: 1;
+}
+
+.subProcess {
+	stroke-width: 3;
+	stroke-dasharray: 5,1;
+}
+
+.endState {
+	stroke-width: 2;
+}

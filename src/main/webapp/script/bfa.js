@@ -170,6 +170,10 @@ function drawFlowChart(scriptName, canvasId) {
 		});
 }
 
+function drawFlowDesign(scriptName, canvasId) {
+	drawMockDiagram(scriptName, canvasId);
+}
+
 function fetchFlowsRuntimeRecords() {
 	require(['dojo/request/xhr', 'dijit/registry', 'dojo/data/ObjectStore', 
 			'dojo/store/Memory', 'dojo/date/locale', 'dojo/domReady!'],
@@ -776,8 +780,8 @@ function buildEntitySource(grid) {
 
 function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 	require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/Toolbar', 
-	          'dijit/form/Button', 'dijit/layout/TabContainer', 'dojo/dom-class', 'dojo/domReady!'],
-		function(registry, ContentPane, Toolbar, Button, TabContainer, domClass) {
+	          'dijit/form/Button', 'dijit/layout/TabContainer', 'dojo/domReady!'],
+		function(registry, ContentPane, Toolbar, Button, TabContainer) {
 			var tabContainer = registry.byId('tabContainer');
 			var groupName = getSelectedGroupName(registry.byId('scriptTree'), 'SCRIPT_GROUP');
 			
@@ -829,12 +833,10 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				region: 'bottom',
 				//FIXME: 95% is a magic number here. 100% causes overflow
 				style: 'height: 95%;',
-				className: 'nestedPane',
+				className: 'nestedPane flowEditorArea',
 				tabPosition: 'bottom'
 			});
 			flowEditorArea.startup();
-			
-			domClass.add(flowEditorArea.domNode, 'flowEditorArea');
 			
 			var scriptTab = new ContentPane({
 				title: 'Source',
@@ -844,9 +846,9 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			scriptTab.startup();
 			
 			var chartTab = new ContentPane({
-				title: 'Flow Chart',
+				title: 'Chart View',
 				style: 'overflow: auto;',
-				className: 'flowEditorTab',
+				className: 'nestedPane',
 				chartCreated: false,
 				
 				onShow: function() {
@@ -859,8 +861,25 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			});
 			chartTab.startup();
 			
+			var designerTab = new ContentPane({
+				title: 'Designer',
+				style: 'overflow: auto;',
+				className: 'nestedPane',
+				chartCreated: false,
+				
+				onShow: function() {
+					if (!this.chartCreated) {
+						var scriptName = groupName + '::' + tabTitle;
+						drawFlowDesign(scriptName, this.id);
+						this.chartCreated = true;
+					}
+				}
+			});
+			designerTab.startup();
+			
 			flowEditorArea.addChild(scriptTab);
 			flowEditorArea.addChild(chartTab);
+			flowEditorArea.addChild(designerTab);
 			
 			tab.addChild(toolBar);
 			tab.addChild(flowEditorArea);

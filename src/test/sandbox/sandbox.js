@@ -285,6 +285,32 @@ function LineGroup(line) {
 
 LineGroup.prototype = Object.create(SVG.Shape.prototype);
 
+SVG.RecordableRect = function() {
+	SVG.Rect.call(this);
+	this.type = 'recordableRect';
+}
+
+SVG.RecordableRect.prototype = Object.create(SVG.Rect.prototype);
+
+SVG.RecordableCircle = function() {
+	SVG.Circle.call(this);
+	this.type = 'recordableCircle';
+}
+
+SVG.RecordableCircle.prototype = Object.create(SVG.Circle.prototype);
+
+SVG.extend(SVG.Container, {
+	recordableRect: function(width, height) {
+		console.log('recordableRect: ' + width + ', ' + height);
+		return this.put(new SVG.RecordableRect).size(width, height);
+	},
+
+	recordableCircle: function(size) {
+		console.log('recordableCircle: ' + size);
+		return this.put(new SVG.RecordableCircle).rx(new SVG.Number(size).divide(2)).move(0, 0);
+	}
+});
+
 
 function stopEventPropagation(event)
 {
@@ -634,7 +660,8 @@ function drawLineText(line, label) {
 }
 
 function drawCircle(cx, cy, label, additionalStyle) {
-	var circ = draw.circle(40);
+	//var circ = draw.circle(40);
+	var circ = draw.recordableCircle(40);
 	circ.customType = 'circle';
 	circ.cx(cx);
 	circ.cy(cy);
@@ -657,7 +684,8 @@ function drawCircle(cx, cy, label, additionalStyle) {
 }
 
 function drawRectangle(cx, cy, label, additionalStyle) {
-	var rect = draw.rect(100, 40);
+	//var rect = draw.rect(100, 40);
+	var rect = draw.recordableRect(100, 40);
 	rect.cx(cx);
 	rect.cy(cy);
 	rect.rx(10);
@@ -807,6 +835,57 @@ function sandbox() {
 	var width = 1200, height = 700;
 	
 	draw = SVG('flow_editor_canvas').size(width, height);
+	draw.viewbox(0,0,width,height);
+	
+	draw.on('mousedown', canvasMouseDown);
+	draw.on('mousemove', function(event){ stopEventPropagation(event); });
+	
+	var background = draw.rect(width, height).fill('#FAFAFA');
+	
+	var currentX = 0;
+	var currentY = 0;
+	
+	var startCx = width/6;
+	var startCy = height/6;
+	var rect1Cx = width/4;
+	var rect1Cy = height/2;
+	var rect2Cx = width/2.5;
+	var rect2Cy = height/2.5;
+	var rect3Cx = width/1.5;
+	var rect3Cy = height/1.5;
+	var diamCx = width/2.5;
+	var diamCy = height/1.5;
+	var subCx = width/1.2;
+	var subCy = height/2;
+	var endCx = width/1.2;
+	var endCy = height/1.2;
+	
+	var start = drawCircle(startCx, startCy, 'Start');
+	var action1 = drawRectangle(rect1Cx, rect1Cy, 'Action 1');
+	var action2 = drawRectangle(rect2Cx, rect2Cy, 'Action 2222222222222222');
+	var action3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3');
+	var cond = drawDiamond(diamCx, diamCy, 'Is Condition Met?');
+	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'subProcess');
+	var end = drawCircle(endCx, endCy, 'End', 'endState');
+	
+	selectedElement = null;
+	elementCounter = 10;
+	
+	drawLine(start, action1);
+	drawLine(action1, cond);
+	drawLine(cond, action2, 'Yes');
+	drawLine(cond, action3, 'No');
+	drawLine(action3, action1);
+	drawLine(action2, sub);
+	drawLine(sub, end);
+
+}
+
+function drawMockDiagram(scriptName, canvasId) {
+
+	var width = 1500, height = 500;
+	
+	draw = SVG(canvasId).size(width, height);
 	draw.viewbox(0,0,width,height);
 	
 	draw.on('mousedown', canvasMouseDown);

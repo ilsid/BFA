@@ -288,26 +288,47 @@ LineGroup.prototype = Object.create(SVG.Shape.prototype);
 SVG.RecordableRect = function() {
 	SVG.Rect.call(this);
 	this.type = 'recordableRect';
-}
-
-SVG.RecordableRect.prototype = Object.create(SVG.Rect.prototype);
+};
 
 SVG.RecordableCircle = function() {
 	SVG.Circle.call(this);
 	this.type = 'recordableCircle';
-}
+};
 
+SVG.RecordableRect.prototype = Object.create(SVG.Rect.prototype);
 SVG.RecordableCircle.prototype = Object.create(SVG.Circle.prototype);
 
+SVG.extend(SVG.RecordableRect, {
+	remove: function() {
+		draw.state.removeRect(this);
+		SVG.Rect.prototype.remove.call(this);
+	}
+});
+
+SVG.extend(SVG.RecordableCircle, {
+	remove: function() {
+		draw.state.removeCircle(this);
+		SVG.Circle.prototype.remove.call(this);
+	}
+});
+
 SVG.extend(SVG.Container, {
-	recordableRect: function(width, height) {
+	recordableRect: function(width, height, flowId) {
 		console.log('recordableRect: ' + width + ', ' + height);
-		return this.put(new SVG.RecordableRect).size(width, height);
+		var elm=this.put(new SVG.RecordableRect).size(width, height);
+		elm.flowId = flowId;
+		draw.state.addRect(elm);
+		
+		return elm;
 	},
 
-	recordableCircle: function(size) {
+	recordableCircle: function(size, flowId) {
 		console.log('recordableCircle: ' + size);
-		return this.put(new SVG.RecordableCircle).rx(new SVG.Number(size).divide(2)).move(0, 0);
+		var elm=this.put(new SVG.RecordableCircle).rx(new SVG.Number(size).divide(2)).move(0, 0);
+		elm.flowId = flowId;
+		draw.state.addCircle(elm);
+		
+		return elm;
 	}
 });
 
@@ -840,6 +861,31 @@ function sandbox() {
 	draw.on('mousedown', canvasMouseDown);
 	draw.on('mousemove', function(event){ stopEventPropagation(event); });
 	
+	draw.state = {
+		rects: [],
+		circles: [],
+		diamonds: [],
+		lines: [],
+		lineGroups: [],
+		
+		addRect: function(rect) {
+			this.rects.push(rect);
+		},
+		
+		addCircle: function(circ) {
+			this.circles.push(circ);
+		},
+		
+		removeRect: function(rect) {
+			//Stub
+		},
+		
+		removeCircle: function(circ) {
+			//Stub
+		}
+	
+	};
+	
 	var background = draw.rect(width, height).fill('#FAFAFA');
 	
 	var currentX = 0;
@@ -886,6 +932,7 @@ function drawMockDiagram(scriptName, canvasId) {
 	var width = 1500, height = 500;
 	
 	draw = SVG(canvasId).size(width, height);
+	
 	draw.viewbox(0,0,width,height);
 	
 	draw.on('mousedown', canvasMouseDown);

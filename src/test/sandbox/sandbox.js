@@ -295,8 +295,14 @@ SVG.RecordableCircle = function() {
 	this.type = 'recordableCircle';
 };
 
+SVG.RecordablePolygon = function() {
+	SVG.Polygon.call(this);
+	this.type = 'recordablePolygon';
+};
+
 SVG.RecordableRect.prototype = Object.create(SVG.Rect.prototype);
 SVG.RecordableCircle.prototype = Object.create(SVG.Circle.prototype);
+SVG.RecordablePolygon.prototype = Object.create(SVG.Polygon.prototype);
 
 SVG.extend(SVG.RecordableRect, {
 	remove: function() {
@@ -312,10 +318,17 @@ SVG.extend(SVG.RecordableCircle, {
 	}
 });
 
+SVG.extend(SVG.RecordablePolygon, {
+	remove: function() {
+		draw.state.removeDiamond(this);
+		SVG.Polygon.prototype.remove.call(this);
+	}
+});
+
 SVG.extend(SVG.Container, {
 	recordableRect: function(width, height, flowId) {
 		console.log('recordableRect: ' + width + ', ' + height);
-		var elm=this.put(new SVG.RecordableRect).size(width, height);
+		var elm = this.put(new SVG.RecordableRect).size(width, height);
 		elm.flowId = flowId;
 		draw.state.addRect(elm);
 		
@@ -324,9 +337,18 @@ SVG.extend(SVG.Container, {
 
 	recordableCircle: function(size, flowId) {
 		console.log('recordableCircle: ' + size);
-		var elm=this.put(new SVG.RecordableCircle).rx(new SVG.Number(size).divide(2)).move(0, 0);
+		var elm = this.put(new SVG.RecordableCircle).rx(new SVG.Number(size).divide(2)).move(0, 0);
 		elm.flowId = flowId;
 		draw.state.addCircle(elm);
+		
+		return elm;
+	},
+	
+	recordablePolygon: function(p, flowId) {
+		console.log('recordablePolygon: ' + p);
+		var elm = this.put(new SVG.RecordablePolygon).plot(p);
+		elm.flowId = flowId;
+		draw.state.addDiamond(elm);
 		
 		return elm;
 	}
@@ -730,7 +752,7 @@ function drawRectangle(cx, cy, label, additionalStyle) {
 }
 
 function drawDiamond(cx, cy, label) {
-	var diam = draw.polygon('0,40 60,0, 120,40, 60,80');
+	var diam = draw.recordablePolygon('0,40 60,0, 120,40, 60,80');
 	diam.customType = 'diamond';
 	diam.addClass('element');
 	diam.cx(cx);
@@ -796,7 +818,8 @@ function drawLine(elm1, elm2, label) {
 		drawLineText(line, label);
 	}
 	
-	new LineGroup(line);
+	var group = new LineGroup(line);
+	draw.state.addLineGroup(group);
 	
 	return line;
 }
@@ -865,7 +888,6 @@ function sandbox() {
 		rects: [],
 		circles: [],
 		diamonds: [],
-		lines: [],
 		lineGroups: [],
 		
 		addRect: function(rect) {
@@ -876,12 +898,37 @@ function sandbox() {
 			this.circles.push(circ);
 		},
 		
+		addDiamond: function(diam) {
+			this.diamonds.push(diam);
+		},
+		
+		addLineGroup: function(grp) {
+			this.lineGroups.push(grp);
+		},
+		
 		removeRect: function(rect) {
-			//Stub
+			this._removeElement(this.rects, rect);
 		},
 		
 		removeCircle: function(circ) {
-			//Stub
+			this._removeElement(this.circles, circ);
+		},
+		
+		removeDiamond: function(diam) {
+			this._removeElement(this.diamonds, diam);
+		},
+		
+		removeLineGroup: function(grp) {
+			this._removeElement(this.lineGroups, grp);
+		},
+		
+		_removeElement: function(arr, elm) {
+			arr.some(function(e, i, a) {
+				if (e === elm) {
+					a.splice(i, 1);
+					return true;
+				}
+			});
 		}
 	
 	};
@@ -913,6 +960,9 @@ function sandbox() {
 	var cond = drawDiamond(diamCx, diamCy, 'Is Condition Met?');
 	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'subProcess');
 	var end = drawCircle(endCx, endCy, 'End', 'endState');
+	
+	//end.remove();
+	//action1.remove();
 	
 	selectedElement = null;
 	elementCounter = 10;

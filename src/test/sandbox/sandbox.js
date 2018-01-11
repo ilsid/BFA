@@ -1,5 +1,8 @@
-function LineGroup(line) {
+function LineGroup(line, flowId) {
 	this.constructor.call(this, SVG.create('lineGroup'));
+	
+	this.flowId = flowId;
+	draw.state.addLineGroup(this);
 	
 	var DRAG_POINT_DIAMETER = 6;
 	
@@ -43,6 +46,8 @@ function LineGroup(line) {
 			line.remove();
 			line = line.nextLine;
 		} while (line);
+		
+		draw.state.removeLineGroup(this);
 	};
 	
 	function selectLine(line) {
@@ -717,6 +722,9 @@ function drawCircle(cx, cy, label, additionalStyle) {
 	circ.selected = false;
 	circ.inLines = [];
 	circ.outLines = [];
+	//TODO: remove redundant inLines/outLines and move related logic to inLineGroups/outLineGroups
+	circ.inLineGroups = [];
+	circ.outLineGroups = [];
 	circ.on('mousedown', elementMouseDown);
 	circ.on('mousemove', elementMouseMove);
 	circ.on('unselect', elementUnselect);
@@ -742,6 +750,9 @@ function drawRectangle(cx, cy, label, additionalStyle) {
 	rect.selected = false;
 	rect.inLines = [];
 	rect.outLines = [];
+	//TODO: remove redundant inLines/outLines and move related logic to inLineGroups/outLineGroups
+	rect.inLineGroups = [];
+	rect.outLineGroups = [];
 	rect.on('mousedown', elementMouseDown);
 	rect.on('mousemove', elementMouseMove);
 	rect.on('unselect', elementUnselect);
@@ -760,6 +771,9 @@ function drawDiamond(cx, cy, label) {
 	diam.selected = false;
 	diam.inLines = [];
 	diam.outLines = [];
+	//TODO: remove redundant inLines/outLines and move related logic to inLineGroups/outLineGroups
+	diam.inLineGroups = [];
+	diam.outLineGroups = [];
 	diam.on('mousedown', elementMouseDown);
 	diam.on('mousemove', elementMouseMove);
 	diam.on('unselect', elementUnselect);
@@ -819,7 +833,9 @@ function drawLine(elm1, elm2, label) {
 	}
 	
 	var group = new LineGroup(line);
-	draw.state.addLineGroup(group);
+	//TODO: remove redundant inLines/outLines and move related logic to inLineGroups/outLineGroups
+	elm1.outLineGroups.push(group);
+	elm2.inLineGroups.push(group);
 	
 	return line;
 }
@@ -891,19 +907,19 @@ function sandbox() {
 		lineGroups: [],
 		
 		addRect: function(rect) {
-			this.rects.push(rect);
+			this._addElement(this.rects, rect);
 		},
 		
 		addCircle: function(circ) {
-			this.circles.push(circ);
+			this._addElement(this.circles, circ);
 		},
 		
 		addDiamond: function(diam) {
-			this.diamonds.push(diam);
+			this._addElement(this.diamonds, diam);
 		},
 		
 		addLineGroup: function(grp) {
-			this.lineGroups.push(grp);
+			this._addElement(this.lineGroups, grp);
 		},
 		
 		removeRect: function(rect) {
@@ -920,6 +936,31 @@ function sandbox() {
 		
 		removeLineGroup: function(grp) {
 			this._removeElement(this.lineGroups, grp);
+		},
+		
+		save: function() {
+			var rectStates = [];
+			this.rects.forEach(function(rect){
+				var state = {
+					id: rect.flowId,	
+					cx: rect.cx(),
+					cy: rect.cy(),
+					height: rect.height(),
+					width: rect.width(),
+					label: rect.text.text()
+				}
+				rectStates.push(state);
+			});
+			
+			var res = {
+				rects: rectStates	
+			}
+			
+			return res;
+		},
+		
+		_addElement: function(arr, elm) {
+			arr.push(elm);
 		},
 		
 		_removeElement: function(arr, elm) {
@@ -974,7 +1015,9 @@ function sandbox() {
 	drawLine(action3, action1);
 	drawLine(action2, sub);
 	drawLine(sub, end);
-
+	
+	var state = draw.state.save();
+	console.log(state);
 }
 
 function drawMockDiagram(scriptName, canvasId) {

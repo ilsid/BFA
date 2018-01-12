@@ -707,16 +707,16 @@ function drawLineText(line, label) {
 	line.label = elements;
 }
 
-function drawCircle(cx, cy, label, additionalStyle) {
-	//var circ = draw.circle(40);
+function drawCircle(cx, cy, label, subType) {
 	var circ = draw.recordableCircle(40);
 	circ.customType = 'circle';
 	circ.cx(cx);
 	circ.cy(cy);
 	circ.addClass('element');
 	
-	if (additionalStyle) {
-		circ.addClass(additionalStyle);
+	if (subType) {
+		circ.subType = subType;
+		circ.addClass(subType);
 	}
 	
 	circ.selected = false;
@@ -734,7 +734,7 @@ function drawCircle(cx, cy, label, additionalStyle) {
 	return circ;
 }
 
-function drawRectangle(cx, cy, label, additionalStyle) {
+function drawRectangle(cx, cy, label, subType) {
 	//var rect = draw.rect(100, 40);
 	var rect = draw.recordableRect(100, 40);
 	rect.cx(cx);
@@ -743,8 +743,9 @@ function drawRectangle(cx, cy, label, additionalStyle) {
 	rect.ry(10);
 	rect.addClass('element');
 	
-	if (additionalStyle) {
-		rect.addClass(additionalStyle);
+	if (subType) {
+		rect.subType = subType;
+		rect.addClass(subType);
 	}
 	
 	rect.selected = false;
@@ -947,14 +948,55 @@ function sandbox() {
 					cy: rect.cy(),
 					height: rect.height(),
 					width: rect.width(),
-					label: rect.text.text()
+					label: rect.text.text(),
+					inLineGroupIds: [],
+					outLineGroupIds: []
+				};
+				
+				if (rect.subType) {
+					state.subType = rect.subType;
 				}
+				
+				rect.inLineGroups.forEach(function(grp) {
+					state.inLineGroupIds.push(grp.flowId);
+				});
+				rect.outLineGroups.forEach(function(grp) {
+					state.outLineGroupIds.push(grp.flowId);
+				});
+				
 				rectStates.push(state);
 			});
 			
+			var circleStates = [];
+			this.circles.forEach(function(circ) {
+				var state = {
+					id: circ.flowId,
+					cx: circ.cx(),
+					cy: circ.cy(),
+					radius: circ.attr('r'),
+					label: circ.text.text(),
+					inLineGroupIds: [],
+					outLineGroupIds: []
+				};
+				
+				if (circ.subType) {
+					state.subType = circ.subType;
+				}
+				
+				circ.inLineGroups.forEach(function(grp) {
+					state.inLineGroupIds.push(grp.flowId);
+				});
+				circ.outLineGroups.forEach(function(grp) {
+					state.outLineGroupIds.push(grp.flowId);
+				});
+				
+				circleStates.push(state);
+			});
+			
 			var res = {
-				rects: rectStates	
-			}
+				rects: rectStates,
+				circles: circleStates
+			};
 			
 			return res;
 		},

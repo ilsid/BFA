@@ -50,6 +50,25 @@ function LineGroup(line, flowId) {
 		draw.state.removeLineGroup(this);
 	};
 	
+	this.getState = function() {
+		var state = {
+			flowId: this.flowId,
+			inElement: this.tail.incomingVertex.flowId,
+			outElement: this.head.outgoingVertex.flowId,
+			lines: []	
+		};
+		
+		var line = this.head;
+		do {
+			var lineCoords = [line.attr('x1'), line.attr('y1'), 
+			                  line.attr('x2'), line.attr('y2')];
+			state.lines.push(lineCoords);
+			line = line.nextLine;
+		} while (line);
+		
+		return state;
+	}
+	
 	function selectLine(line) {
 		if (line.hasClass('unselectedLine')) {
 			line.removeClass('unselectedLine');
@@ -313,6 +332,32 @@ SVG.extend(SVG.RecordableRect, {
 	remove: function() {
 		draw.state.removeRect(this);
 		SVG.Rect.prototype.remove.call(this);
+	},
+	
+	getState: function() {
+		var state = {
+			id: this.flowId,	
+			cx: this.cx(),
+			cy: this.cy(),
+			height: this.height(),
+			width: this.width(),
+			label: this.text.text(),
+			inLineGroupIds: [],
+			outLineGroupIds: []
+		};
+		
+		if (this.subType) {
+			state.subType = this.subType;
+		}
+		
+		this.inLineGroups.forEach(function(grp) {
+			state.inLineGroupIds.push(grp.flowId);
+		});
+		this.outLineGroups.forEach(function(grp) {
+			state.outLineGroupIds.push(grp.flowId);
+		});
+		
+		return state;
 	}
 });
 
@@ -320,6 +365,27 @@ SVG.extend(SVG.RecordableCircle, {
 	remove: function() {
 		draw.state.removeCircle(this);
 		SVG.Circle.prototype.remove.call(this);
+	},
+
+	getState: function() {
+		var state = {
+			id: this.flowId,
+			cx: this.cx(),
+			cy: this.cy(),
+			radius: this.attr('r'),
+			label: this.text.text(),
+			inLineGroupIds: [],
+			outLineGroupIds: []
+		};
+		
+		this.inLineGroups.forEach(function(grp) {
+			state.inLineGroupIds.push(grp.flowId);
+		});
+		this.outLineGroups.forEach(function(grp) {
+			state.outLineGroupIds.push(grp.flowId);
+		});
+					
+		return state;
 	}
 });
 
@@ -327,6 +393,38 @@ SVG.extend(SVG.RecordablePolygon, {
 	remove: function() {
 		draw.state.removeDiamond(this);
 		SVG.Polygon.prototype.remove.call(this);
+	},
+
+	getState: function() {
+		var pa = this.array().value;
+		
+		var state = {
+			id: this.flowId,
+			cx: this.cx(),
+			cy: this.cy(),
+			
+			points: pa[0][0] + ',' + pa[0][1] + ' ' +
+					pa[1][0] + ',' + pa[1][1] + ' ' +
+					pa[2][0] + ',' + pa[2][1] + ' ' +
+					pa[3][0] + ',' + pa[3][1],
+			
+			label: this.text.text(),
+			inLineGroupIds: [],
+			outLineGroupIds: []
+		};
+		
+		if (this.subType) {
+			state.subType = this.subType;
+		}
+		
+		this.inLineGroups.forEach(function(grp) {
+			state.inLineGroupIds.push(grp.flowId);
+		});
+		this.outLineGroups.forEach(function(grp) {
+			state.outLineGroupIds.push(grp.flowId);
+		});
+					
+		return state;
 	}
 });
 
@@ -854,6 +952,11 @@ function btnNewEndOnClick() {
 	end.fire('mousedown');
 }
 
+function btnSaveOnClick() {
+	var state = draw.state.save();
+	console.log('State: ' + JSON.stringify(state, null, 4));
+}
+
 function drawFlowElement(textPrefix, elementCssClass) {
 	var elm = drawRectangle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
 			textPrefix + ' ' + elementCounter++, elementCssClass);
@@ -942,60 +1045,29 @@ function sandbox() {
 		save: function() {
 			var rectStates = [];
 			this.rects.forEach(function(rect){
-				var state = {
-					id: rect.flowId,	
-					cx: rect.cx(),
-					cy: rect.cy(),
-					height: rect.height(),
-					width: rect.width(),
-					label: rect.text.text(),
-					inLineGroupIds: [],
-					outLineGroupIds: []
-				};
-				
-				if (rect.subType) {
-					state.subType = rect.subType;
-				}
-				
-				rect.inLineGroups.forEach(function(grp) {
-					state.inLineGroupIds.push(grp.flowId);
-				});
-				rect.outLineGroups.forEach(function(grp) {
-					state.outLineGroupIds.push(grp.flowId);
-				});
-				
-				rectStates.push(state);
+				rectStates.push(rect.getState());
 			});
 			
 			var circleStates = [];
 			this.circles.forEach(function(circ) {
-				var state = {
-					id: circ.flowId,
-					cx: circ.cx(),
-					cy: circ.cy(),
-					radius: circ.attr('r'),
-					label: circ.text.text(),
-					inLineGroupIds: [],
-					outLineGroupIds: []
-				};
-				
-				if (circ.subType) {
-					state.subType = circ.subType;
-				}
-				
-				circ.inLineGroups.forEach(function(grp) {
-					state.inLineGroupIds.push(grp.flowId);
-				});
-				circ.outLineGroups.forEach(function(grp) {
-					state.outLineGroupIds.push(grp.flowId);
-				});
-				
-				circleStates.push(state);
+				circleStates.push(circ.getState());
+			});
+			
+			var diamStates = [];
+			this.diamonds.forEach(function(diam) {
+				diamStates.push(diam.getState());
+			});
+			
+			var lineGroupStates = [];
+			this.lineGroups.forEach(function(grp) {
+				lineGroupStates.push(grp.getState());
 			});
 			
 			var res = {
 				rects: rectStates,
-				circles: circleStates
+				circles: circleStates,
+				diamonds: diamStates,
+				lineGroups: lineGroupStates
 			};
 			
 			return res;
@@ -1044,6 +1116,7 @@ function sandbox() {
 	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'subProcess');
 	var end = drawCircle(endCx, endCy, 'End', 'endState');
 	
+	//var diamArr = cond.array();
 	//end.remove();
 	//action1.remove();
 	

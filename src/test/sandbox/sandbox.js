@@ -52,7 +52,7 @@ function LineGroup(line, flowId) {
 	
 	this.getState = function() {
 		var state = {
-			flowId: this.flowId,
+			id: this.flowId,
 			inElement: this.tail.incomingVertex.flowId,
 			outElement: this.head.outgoingVertex.flowId,
 			lines: []	
@@ -342,13 +342,10 @@ SVG.extend(SVG.RecordableRect, {
 			height: this.height(),
 			width: this.width(),
 			label: this.text.text(),
+			subType: this.subType,
 			inLineGroupIds: [],
 			outLineGroupIds: []
 		};
-		
-		if (this.subType) {
-			state.subType = this.subType;
-		}
 		
 		this.inLineGroups.forEach(function(grp) {
 			state.inLineGroupIds.push(grp.flowId);
@@ -374,6 +371,7 @@ SVG.extend(SVG.RecordableCircle, {
 			cy: this.cy(),
 			radius: this.attr('r'),
 			label: this.text.text(),
+			subType: this.subType,
 			inLineGroupIds: [],
 			outLineGroupIds: []
 		};
@@ -805,8 +803,8 @@ function drawLineText(line, label) {
 	line.label = elements;
 }
 
-function drawCircle(cx, cy, label, subType) {
-	var circ = draw.recordableCircle(40);
+function drawCircle(cx, cy, label, flowId, subType) {
+	var circ = draw.recordableCircle(40, flowId);
 	circ.customType = 'circle';
 	circ.cx(cx);
 	circ.cy(cy);
@@ -832,9 +830,9 @@ function drawCircle(cx, cy, label, subType) {
 	return circ;
 }
 
-function drawRectangle(cx, cy, label, subType) {
+function drawRectangle(cx, cy, label, flowId, subType) {
 	//var rect = draw.rect(100, 40);
-	var rect = draw.recordableRect(100, 40);
+	var rect = draw.recordableRect(100, 40, flowId);
 	rect.cx(cx);
 	rect.cy(cy);
 	rect.rx(10);
@@ -861,8 +859,8 @@ function drawRectangle(cx, cy, label, subType) {
 	return rect;
 }
 
-function drawDiamond(cx, cy, label) {
-	var diam = draw.recordablePolygon('0,40 60,0, 120,40, 60,80');
+function drawDiamond(cx, cy, label, flowId) {
+	var diam = draw.recordablePolygon('0,40 60,0, 120,40, 60,80', flowId);
 	diam.customType = 'diamond';
 	diam.addClass('element');
 	diam.cx(cx);
@@ -931,7 +929,8 @@ function drawLine(elm1, elm2, label) {
 		drawLineText(line, label);
 	}
 	
-	var group = new LineGroup(line);
+	var groupId = elm1.flowId + '-->' + elm2.flowId; 
+	var group = new LineGroup(line, groupId);
 	//TODO: remove redundant inLines/outLines and move related logic to inLineGroups/outLineGroups
 	elm1.outLineGroups.push(group);
 	elm2.inLineGroups.push(group);
@@ -1108,13 +1107,13 @@ function sandbox() {
 	var endCx = width/1.2;
 	var endCy = height/1.2;
 	
-	var start = drawCircle(startCx, startCy, 'Start');
-	var action1 = drawRectangle(rect1Cx, rect1Cy, 'Action 1');
-	var action2 = drawRectangle(rect2Cx, rect2Cy, 'Action 2222222222222222');
-	var action3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3');
-	var cond = drawDiamond(diamCx, diamCy, 'Is Condition Met?');
-	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'subProcess');
-	var end = drawCircle(endCx, endCy, 'End', 'endState');
+	var start = drawCircle(startCx, startCy, 'Start', 'str001');
+	var action1 = drawRectangle(rect1Cx, rect1Cy, 'Action 1', 'act001');
+	var action2 = drawRectangle(rect2Cx, rect2Cy, 'Action 2222222222222222', 'act002');
+	var action3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3', 'act003');
+	var cond = drawDiamond(diamCx, diamCy, 'Is Condition Met?', 'cnd001');
+	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'sub001', 'subProcess');
+	var end = drawCircle(endCx, endCy, 'End', 'end001', 'endState');
 	
 	//var diamArr = cond.array();
 	//end.remove();

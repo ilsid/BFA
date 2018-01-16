@@ -4,7 +4,7 @@ function LineGroup(line, flowId) {
 	this.flowId = flowId;
 	draw.state.addLineGroup(this);
 	
-	var DRAG_POINT_DIAMETER = 6;
+	var DRAG_POINT_SIZE = 8;
 	
 	line.group = this;
 	line.on('mousedown', mouseDown);
@@ -191,7 +191,7 @@ function LineGroup(line, flowId) {
 	}
 	
 	function drawPoint(cx, cy) {
-		var point = draw.circle(DRAG_POINT_DIAMETER);
+		var point = draw.rect(DRAG_POINT_SIZE, DRAG_POINT_SIZE);
 		point.cx(cx).cy(cy);
 		point.addClass('dragPoint');
 		point.on('mouseover', dragPointMouseOver);
@@ -203,11 +203,11 @@ function LineGroup(line, flowId) {
 	}
 	
 	function deleteDragPoints(group) {
-			group.dragPoints.forEach(function(point) {
-				point.remove();
-			});
-			
-			delete group.dragPoints;
+		group.dragPoints.forEach(function(point) {
+			point.remove();
+		});
+		
+		delete group.dragPoints;
 	}
 	
 	function removeLineText(line) {

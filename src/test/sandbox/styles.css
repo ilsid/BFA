@@ -77,12 +77,10 @@ svg text::selection {
 
 .selectedDragPoint { 
 	cursor: move;
-	r: 7;
 }
 
 .unselectedDragPoint { 
 	cursor: default;
-	r: 3;
 }
 
 .labelText {

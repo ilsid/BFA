@@ -60,9 +60,18 @@ function LineGroup(line, flowId) {
 		
 		var line = this.head;
 		do {
-			var lineCoords = [line.attr('x1'), line.attr('y1'), 
-			                  line.attr('x2'), line.attr('y2')];
-			state.lines.push(lineCoords);
+			var lineState = {
+				x1: line.attr('x1'),
+				y1: line.attr('y1'),
+				x2: line.attr('x2'),
+				y2: line.attr('y2')
+			};
+			
+			if (line.label) {
+				lineState.label = line.label[1].text();
+			}
+			
+			state.lines.push(lineState);
 			line = line.nextLine;
 		} while (line);
 		

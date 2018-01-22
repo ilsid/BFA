@@ -962,7 +962,23 @@ function btnNewEndOnClick() {
 
 function btnSaveOnClick() {
 	var state = draw.state.save();
-	console.log('State: ' + JSON.stringify(state, null, 4));
+	var stateStr=JSON.stringify(state, null, 4);
+	console.log('State: ' + stateStr);
+	
+	document.getElementById('flowState').value = stateStr;
+}
+
+function btnRestoreOnClick() {
+	var state = JSON.parse(document.getElementById('flowState').value);
+}
+
+function btnClearOnClick() {
+	document.getElementById('flow_editor_canvas').innerHTML = '';
+	delete draw.state;
+	
+	var width = 1200, height = 700;
+	draw = SVG('flow_editor_canvas').size(width, height);
+	draw.state = new State();
 }
 
 function drawFlowElement(textPrefix, elementCssClass) {
@@ -1002,6 +1018,90 @@ function btnNewConditionOnClick() {
 	diam.fire('mousedown');
 }
 
+function State() {
+	this.rects = [];
+	this.circles = [];
+	this.diamonds = [];
+	this.lineGroups = [];
+	
+	this.addRect = function(rect) {
+		addElement(this.rects, rect);
+	};
+	
+	this.addCircle = function(circ) {
+		addElement(this.circles, circ);
+	};
+	
+	this.addDiamond = function(diam) {
+		addElement(this.diamonds, diam);
+	};
+	
+	this.addLineGroup = function(grp) {
+		addElement(this.lineGroups, grp);
+	};
+	
+	this.removeRect = function(rect) {
+		removeElement(this.rects, rect);
+	};
+	
+	this.removeCircle = function(circ) {
+		removeElement(this.circles, circ);
+	};
+	
+	this.removeDiamond = function(diam) {
+		removeElement(this.diamonds, diam);
+	};
+	
+	this.removeLineGroup = function(grp) {
+		removeElement(this.lineGroups, grp);
+	},
+	
+	this.save = function() {
+		var rectStates = [];
+		this.rects.forEach(function(rect){
+			rectStates.push(rect.getState());
+		});
+		
+		var circleStates = [];
+		this.circles.forEach(function(circ) {
+			circleStates.push(circ.getState());
+		});
+		
+		var diamStates = [];
+		this.diamonds.forEach(function(diam) {
+			diamStates.push(diam.getState());
+		});
+		
+		var lineGroupStates = [];
+		this.lineGroups.forEach(function(grp) {
+			lineGroupStates.push(grp.getState());
+		});
+		
+		var res = {
+			rects: rectStates,
+			circles: circleStates,
+			diamonds: diamStates,
+			lineGroups: lineGroupStates
+		};
+		
+		return res;
+	};
+	
+	function addElement(arr, elm) {
+		arr.push(elm);
+	};
+	
+	function removeElement(arr, elm) {
+		arr.some(function(e, i, a) {
+			if (e === elm) {
+				a.splice(i, 1);
+				return true;
+			}
+		});
+	};
+}
+
+
 function sandbox() {
 
 	var width = 1200, height = 700;
@@ -1012,89 +1112,90 @@ function sandbox() {
 	draw.on('mousedown', canvasMouseDown);
 	draw.on('mousemove', function(event){ stopEventPropagation(event); });
 	
-	draw.state = {
-		rects: [],
-		circles: [],
-		diamonds: [],
-		lineGroups: [],
-		
-		addRect: function(rect) {
-			this._addElement(this.rects, rect);
-		},
-		
-		addCircle: function(circ) {
-			this._addElement(this.circles, circ);
-		},
-		
-		addDiamond: function(diam) {
-			this._addElement(this.diamonds, diam);
-		},
-		
-		addLineGroup: function(grp) {
-			this._addElement(this.lineGroups, grp);
-		},
-		
-		removeRect: function(rect) {
-			this._removeElement(this.rects, rect);
-		},
-		
-		removeCircle: function(circ) {
-			this._removeElement(this.circles, circ);
-		},
-		
-		removeDiamond: function(diam) {
-			this._removeElement(this.diamonds, diam);
-		},
-		
-		removeLineGroup: function(grp) {
-			this._removeElement(this.lineGroups, grp);
-		},
-		
-		save: function() {
-			var rectStates = [];
-			this.rects.forEach(function(rect){
-				rectStates.push(rect.getState());
-			});
-			
-			var circleStates = [];
-			this.circles.forEach(function(circ) {
-				circleStates.push(circ.getState());
-			});
-			
-			var diamStates = [];
-			this.diamonds.forEach(function(diam) {
-				diamStates.push(diam.getState());
-			});
-			
-			var lineGroupStates = [];
-			this.lineGroups.forEach(function(grp) {
-				lineGroupStates.push(grp.getState());
-			});
-			
-			var res = {
-				rects: rectStates,
-				circles: circleStates,
-				diamonds: diamStates,
-				lineGroups: lineGroupStates
-			};
-			
-			return res;
-		},
-		
-		_addElement: function(arr, elm) {
-			arr.push(elm);
-		},
-		
-		_removeElement: function(arr, elm) {
-			arr.some(function(e, i, a) {
-				if (e === elm) {
-					a.splice(i, 1);
-					return true;
-				}
-			});
-		}
-	
-	};
+	draw.state = new State();
+//	draw.state = {
+//		rects: [],
+//		circles: [],
+//		diamonds: [],
+//		lineGroups: [],
+//		
+//		addRect: function(rect) {
+//			this._addElement(this.rects, rect);
+//		},
+//		
+//		addCircle: function(circ) {
+//			this._addElement(this.circles, circ);
+//		},
+//		
+//		addDiamond: function(diam) {
+//			this._addElement(this.diamonds, diam);
+//		},
+//		
+//		addLineGroup: function(grp) {
+//			this._addElement(this.lineGroups, grp);
+//		},
+//		
+//		removeRect: function(rect) {
+//			this._removeElement(this.rects, rect);
+//		},
+//		
+//		removeCircle: function(circ) {
+//			this._removeElement(this.circles, circ);
+//		},
+//		
+//		removeDiamond: function(diam) {
+//			this._removeElement(this.diamonds, diam);
+//		},
+//		
+//		removeLineGroup: function(grp) {
+//			this._removeElement(this.lineGroups, grp);
+//		},
+//		
+//		save: function() {
+//			var rectStates = [];
+//			this.rects.forEach(function(rect){
+//				rectStates.push(rect.getState());
+//			});
+//			
+//			var circleStates = [];
+//			this.circles.forEach(function(circ) {
+//				circleStates.push(circ.getState());
+//			});
+//			
+//			var diamStates = [];
+//			this.diamonds.forEach(function(diam) {
+//				diamStates.push(diam.getState());
+//			});
+//			
+//			var lineGroupStates = [];
+//			this.lineGroups.forEach(function(grp) {
+//				lineGroupStates.push(grp.getState());
+//			});
+//			
+//			var res = {
+//				rects: rectStates,
+//				circles: circleStates,
+//				diamonds: diamStates,
+//				lineGroups: lineGroupStates
+//			};
+//			
+//			return res;
+//		},
+//		
+//		_addElement: function(arr, elm) {
+//			arr.push(elm);
+//		},
+//		
+//		_removeElement: function(arr, elm) {
+//			arr.some(function(e, i, a) {
+//				if (e === elm) {
+//					a.splice(i, 1);
+//					return true;
+//				}
+//			});
+//		}
+//	
+//	};
 	
 	var background = draw.rect(width, height).fill('#FAFAFA');
 	
@@ -1105,6 +1206,8 @@ function sandbox() {
 	var startCy = height/6;
 	var rect1Cx = width/4;
 	var rect1Cy = height/2;
+	var rect12Cx = width/3.7;
+	var rect12Cy = height/1.7;
 	var rect2Cx = width/2.5;
 	var rect2Cy = height/2.5;
 	var rect3Cx = width/1.5;
@@ -1119,8 +1222,9 @@ function sandbox() {
 	var start = drawCircle(startCx, startCy, 'Start', 'str001');
 	var action1 = drawRectangle(rect1Cx, rect1Cy, 'Action 1', 'act001');
 	var action2 = drawRectangle(rect2Cx, rect2Cy, 'Action 2222222222222222', 'act002');
-	var action3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3', 'act003');
 	var cond = drawDiamond(diamCx, diamCy, 'Is Condition Met?', 'cnd001');
+	var action12 = drawRectangle(rect12Cx, rect12Cy, 'Action 1', 'act001-02');
+	var action3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3', 'act003');
 	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'sub001', 'subProcess');
 	var end = drawCircle(endCx, endCy, 'End', 'end001', 'endState');
 	
@@ -1135,12 +1239,11 @@ function sandbox() {
 	drawLine(action1, cond);
 	drawLine(cond, action2, 'Yes');
 	drawLine(cond, action3, 'No');
-	drawLine(action3, action1);
+	drawLine(action3, action12);
+	drawLine(action12, cond);
 	drawLine(action2, sub);
 	drawLine(sub, end);
-	
-	var state = draw.state.save();
-	console.log(state);
+
 }
 
 function drawMockDiagram(scriptName, canvasId) {

@@ -947,6 +947,37 @@ function drawLine(elm1, elm2, label) {
 	return line;
 }
 
+function drawLineGroup(state, elms) {
+	var headLineIdx = state.lines.length-1;
+	
+	var headState = state.lines[headLineIdx];
+	var inElm = elms.get(state.inElement);
+	var outElm = elms.get(state.outElement);
+	
+	var line = drawLine(inElm, outElm, headState.label);
+	var group = line.group;
+	
+	// head line is already drawn. Skipping it
+	for (var i = 0; i < headLineIdx; i++) {
+		var state = state.lines[i];
+		var newLine = draw.line(state.x1, state.y1, state.x2, state.y2)
+								.stroke({width: 2});
+		group.addAfter(newLine, line);
+		
+		if (line.incomingVertex) {
+			newLine.incomingVertex = line.incomingVertex;
+			delete line.incomingVertex;
+		}
+		
+		if (state.label) {
+			removeLineText(line);
+			drawLineText(newLine, state.label);
+		}
+		
+		line = newLine;
+	}
+}
+
 function btnNewStartOnClick() {
 	var start = drawCircle(50, 50, 'Start');
 	start.fire('mousedown');
@@ -970,6 +1001,26 @@ function btnSaveOnClick() {
 
 function btnRestoreOnClick() {
 	var state = JSON.parse(document.getElementById('flowState').value);
+	var elms = new ElementsMap();
+	
+	state.circles.forEach(function(state) {
+		var circ = drawCircle(state.cx, state.cy, state.label, state.id, state.subType);
+		elms.put(state.id, circ);
+	});
+	
+	state.rects.forEach(function(state) {
+		var rect = drawRectangle(state.cx, state.cy, state.label, state.id, state.subType);
+		elms.put(state.id, rect);
+	});
+	
+	state.diamonds.forEach(function(state) {
+		var diam = drawDiamond(state.cx, state.cy, state.label, state.id);
+		elms.put(state.id, diam);
+	});
+	
+	state.lineGroups.forEach(function(state) {
+		drawLineGroup(state, elms);
+	});
 }
 
 function btnClearOnClick() {
@@ -978,6 +1029,10 @@ function btnClearOnClick() {
 	
 	var width = 1200, height = 700;
 	draw = SVG('flow_editor_canvas').size(width, height);
+	
+	draw.on('mousedown', canvasMouseDown);
+	draw.on('mousemove', function(event){ stopEventPropagation(event); });
+	
 	draw.state = new State();
 }
 
@@ -1016,6 +1071,31 @@ function btnNewConditionOnClick() {
 	
 	drawLine(selectedElement, diam);
 	diam.fire('mousedown');
+}
+
+function ElementsMap() {
+	this._elements = [];
+	
+	this.put = function(elmId, flowElm) {
+		var elm = {
+			id: elmId,
+			object: flowElm
+		};
+		
+		this._elements.push(elm);
+	};
+	
+	this.get = function(elmId) {
+		var res = this._elements.find(function(e) {
+			return e.id == elmId;
+		});
+		
+		return res.object;
+	};
+	
+	this.clear = function() {
+		this._elements = [];
+	};
 }
 
 function State() {
@@ -1113,89 +1193,6 @@ function sandbox() {
 	draw.on('mousemove', function(event){ stopEventPropagation(event); });
 	
 	draw.state = new State();
-//	draw.state = {
-//		rects: [],
-//		circles: [],
-//		diamonds: [],
-//		lineGroups: [],
-//		
-//		addRect: function(rect) {
-//			this._addElement(this.rects, rect);
-//		},
-//		
-//		addCircle: function(circ) {
-//			this._addElement(this.circles, circ);
-//		},
-//		
-//		addDiamond: function(diam) {
-//			this._addElement(this.diamonds, diam);
-//		},
-//		
-//		addLineGroup: function(grp) {
-//			this._addElement(this.lineGroups, grp);
-//		},
-//		
-//		removeRect: function(rect) {
-//			this._removeElement(this.rects, rect);
-//		},
-//		
-//		removeCircle: function(circ) {
-//			this._removeElement(this.circles, circ);
-//		},
-//		
-//		removeDiamond: function(diam) {
-//			this._removeElement(this.diamonds, diam);
-//		},
-//		
-//		removeLineGroup: function(grp) {
-//			this._removeElement(this.lineGroups, grp);
-//		},
-//		
-//		save: function() {
-//			var rectStates = [];
-//			this.rects.forEach(function(rect){
-//				rectStates.push(rect.getState());
-//			});
-//			
-//			var circleStates = [];
-//			this.circles.forEach(function(circ) {
-//				circleStates.push(circ.getState());
-//			});
-//			
-//			var diamStates = [];
-//			this.diamonds.forEach(function(diam) {
-//				diamStates.push(diam.getState());
-//			});
-//			
-//			var lineGroupStates = [];
-//			this.lineGroups.forEach(function(grp) {
-//				lineGroupStates.push(grp.getState());
-//			});
-//			
-//			var res = {
-//				rects: rectStates,
-//				circles: circleStates,
-//				diamonds: diamStates,
-//				lineGroups: lineGroupStates
-//			};
-//			
-//			return res;
-//		},
-//		
-//		_addElement: function(arr, elm) {
-//			arr.push(elm);
-//		},
-//		
-//		_removeElement: function(arr, elm) {
-//			arr.some(function(e, i, a) {
-//				if (e === elm) {
-//					a.splice(i, 1);
-//					return true;
-//				}
-//			});
-//		}
-//	
-//	};
 	
 	var background = draw.rect(width, height).fill('#FAFAFA');
 	

@@ -37,7 +37,6 @@ function LineGroup(line, flowId) {
 		newLine.on('mousedown', mouseDown);
 		newLine.on('mouseover', mouseOver);
 		newLine.on('mouseout', mouseOut);
-		selectLine(newLine);
 	};
 	
 	this.remove = function() {
@@ -270,6 +269,7 @@ function LineGroup(line, flowId) {
 							.stroke({width: 2});
 				var group = line.group;
 				group.addAfter(newLine, line);
+				selectLine(newLine);
 				line.plot(currentX, currentY, line.attr("x2"), line.attr("y2"));
 				
 				if (line.incomingVertex) {
@@ -948,34 +948,48 @@ function drawLine(elm1, elm2, label) {
 }
 
 function drawLineGroup(state, elms) {
-	var headLineIdx = state.lines.length-1;
-	
-	var headState = state.lines[headLineIdx];
+	var headState = state.lines[0];
 	var inElm = elms.get(state.inElement);
 	var outElm = elms.get(state.outElement);
 	
-	var line = drawLine(inElm, outElm, headState.label);
-	var group = line.group;
+	var line = draw.line(headState.x1, headState.y1, headState.x2, headState.y2)
+				.stroke({width: 2});
+	drawArrowHead(line);
+	moveArrowHead(line);
 	
-	// head line is already drawn. Skipping it
-	for (var i = 0; i < headLineIdx; i++) {
-		var state = state.lines[i];
-		var newLine = draw.line(state.x1, state.y1, state.x2, state.y2)
-								.stroke({width: 2});
-		group.addAfter(newLine, line);
+	var group = new LineGroup(line, state.id);
+	
+	if (state.lines.length > 1) {
 		
-		if (line.incomingVertex) {
-			newLine.incomingVertex = line.incomingVertex;
-			delete line.incomingVertex;
+		for (var i = 1; i < state.lines.length; i++) {
+			var lineState = state.lines[i];
+			var newLine = draw.line(lineState.x1, lineState.y1, lineState.x2, lineState.y2)
+					.stroke({width: 2});
+			
+			group.addAfter(newLine, line);
+			line = newLine;
 		}
-		
-		if (state.label) {
-			removeLineText(line);
-			drawLineText(newLine, state.label);
-		}
-		
-		line = newLine;
 	}
+	
+	
+//	for (var i = 0; i < headLineIdx; i++) {
+//		var state = state.lines[i];
+//		var newLine = draw.line(state.x1, state.y1, state.x2, state.y2)
+//								.stroke({width: 2});
+//		group.addAfter(newLine, line);
+//		
+//		if (line.incomingVertex) {
+//			newLine.incomingVertex = line.incomingVertex;
+//			delete line.incomingVertex;
+//		}
+//		
+//		if (state.label) {
+//			removeLineText(line);
+//			drawLineText(newLine, state.label);
+//		}
+//		
+//		line = newLine;
+//	}
 }
 
 function btnNewStartOnClick() {

@@ -765,7 +765,9 @@ function drawElementText(elm, label) {
 	var elmWidth = elm.width();
 	
 	if (textWidth >= elmWidth)  {
+		var origCx = elm.cx();
 		elm.width(textWidth + 10);
+		elm.cx(origCx);
 	}
 	
 	text.cx(elm.cx());
@@ -830,7 +832,6 @@ function drawCircle(cx, cy, label, flowId, subType) {
 }
 
 function drawRectangle(cx, cy, label, flowId, subType) {
-	//var rect = draw.rect(100, 40);
 	var rect = draw.recordableRect(100, 40, flowId);
 	rect.cx(cx);
 	rect.cy(cy);
@@ -985,7 +986,6 @@ function btnNewEndOnClick() {
 function btnSaveOnClick() {
 	var state = draw.state.save();
 	var stateStr=JSON.stringify(state, null, 4);
-	console.log('State: ' + stateStr);
 	
 	document.getElementById('flowState').value = stateStr;
 }

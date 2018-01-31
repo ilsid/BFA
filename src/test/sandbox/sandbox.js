@@ -437,7 +437,6 @@ SVG.extend(SVG.RecordablePolygon, {
 
 SVG.extend(SVG.Container, {
 	recordableRect: function(width, height, flowId) {
-		console.log('recordableRect: ' + width + ', ' + height);
 		var elm = this.put(new SVG.RecordableRect).size(width, height);
 		elm.flowId = flowId;
 		draw.state.addRect(elm);
@@ -446,7 +445,6 @@ SVG.extend(SVG.Container, {
 	},
 
 	recordableCircle: function(size, flowId) {
-		console.log('recordableCircle: ' + size);
 		var elm = this.put(new SVG.RecordableCircle).rx(new SVG.Number(size).divide(2)).move(0, 0);
 		elm.flowId = flowId;
 		draw.state.addCircle(elm);
@@ -455,7 +453,6 @@ SVG.extend(SVG.Container, {
 	},
 	
 	recordablePolygon: function(p, flowId) {
-		console.log('recordablePolygon: ' + p);
 		var elm = this.put(new SVG.RecordablePolygon).plot(p);
 		elm.flowId = flowId;
 		draw.state.addDiamond(elm);
@@ -701,27 +698,23 @@ function elementMouseMove(event) {
 		var text = this.text;
 		text.cx(this.cx()).cy(this.cy());
 		
-		this.outLines.forEach(function(outLine){
-			var outLineGroup = outLine.group;
-
+		this.outLineGroups.forEach(function(outLineGroup){
 			if (outLineGroup.head === outLineGroup.tail) {
 				var inElm = this;
-				var outElm = outLine.outgoingVertex;
+				var outElm = outLineGroup.head.outgoingVertex;
 				var points = determineLinePoints(inElm, outElm);
-				moveSingleArrow(outLine, points);
+				moveSingleArrow(outLineGroup.head, points);
 			} else {
 				moveLineGroupTail(this, outLineGroup.tail);
 			}
 		}, this);
 		
-		this.inLines.forEach(function(inLine){
-			var inLineGroup = inLine.group;
-			
+		this.inLineGroups.forEach(function(inLineGroup){
 			if (inLineGroup.head === inLineGroup.tail) {
-				var inElm = inLine.incomingVertex;
+				var inElm = inLineGroup.head.incomingVertex;
 				var outElm = this;
 				var points = determineLinePoints(inElm, outElm);
-				moveSingleArrow(inLine, points);
+				moveSingleArrow(inLineGroup.head, points);
 			} else {
 				moveLineGroupHead(this, inLineGroup.head);
 			}
@@ -825,9 +818,6 @@ function drawCircle(cx, cy, label, flowId, subType) {
 	}
 	
 	circ.selected = false;
-	circ.inLines = [];
-	circ.outLines = [];
-	//TODO: remove redundant inLines/outLines and move related logic to inLineGroups/outLineGroups
 	circ.inLineGroups = [];
 	circ.outLineGroups = [];
 	circ.on('mousedown', elementMouseDown);
@@ -854,9 +844,6 @@ function drawRectangle(cx, cy, label, flowId, subType) {
 	}
 	
 	rect.selected = false;
-	rect.inLines = [];
-	rect.outLines = [];
-	//TODO: remove redundant inLines/outLines and move related logic to inLineGroups/outLineGroups
 	rect.inLineGroups = [];
 	rect.outLineGroups = [];
 	rect.on('mousedown', elementMouseDown);
@@ -875,9 +862,6 @@ function drawDiamond(cx, cy, label, flowId) {
 	diam.cx(cx);
 	diam.cy(cy);
 	diam.selected = false;
-	diam.inLines = [];
-	diam.outLines = [];
-	//TODO: remove redundant inLines/outLines and move related logic to inLineGroups/outLineGroups
 	diam.inLineGroups = [];
 	diam.outLineGroups = [];
 	diam.on('mousedown', elementMouseDown);
@@ -925,8 +909,6 @@ function drawLine(elm1, elm2, label) {
 	var line = draw.line(points.start.x, points.start.y, points.end.x, points.end.y)
 						.stroke({width: 2});
 	
-	elm1.outLines.push(line);
-	elm2.inLines.push(line);
 	line.incomingVertex = elm1;
 	line.outgoingVertex = elm2;
 	
@@ -940,7 +922,7 @@ function drawLine(elm1, elm2, label) {
 	
 	var groupId = elm1.flowId + '-->' + elm2.flowId; 
 	var group = new LineGroup(line, groupId);
-	//TODO: remove redundant inLines/outLines and move related logic to inLineGroups/outLineGroups
+	
 	elm1.outLineGroups.push(group);
 	elm2.inLineGroups.push(group);
 	
@@ -949,47 +931,42 @@ function drawLine(elm1, elm2, label) {
 
 function drawLineGroup(state, elms) {
 	var headState = state.lines[0];
-	var inElm = elms.get(state.inElement);
-	var outElm = elms.get(state.outElement);
-	
 	var line = draw.line(headState.x1, headState.y1, headState.x2, headState.y2)
 				.stroke({width: 2});
 	drawArrowHead(line);
 	moveArrowHead(line);
 	
 	var group = new LineGroup(line, state.id);
+	var label = headState.label;
 	
 	if (state.lines.length > 1) {
 		
 		for (var i = 1; i < state.lines.length; i++) {
 			var lineState = state.lines[i];
+
+			if (lineState.label) {
+				label = lineState.label;
+			}			
+			
 			var newLine = draw.line(lineState.x1, lineState.y1, lineState.x2, lineState.y2)
 					.stroke({width: 2});
-			
 			group.addAfter(newLine, line);
 			line = newLine;
 		}
 	}
 	
+	if (label) {
+		drawLineText(group.tail, label);
+	}
 	
-//	for (var i = 0; i < headLineIdx; i++) {
-//		var state = state.lines[i];
-//		var newLine = draw.line(state.x1, state.y1, state.x2, state.y2)
-//								.stroke({width: 2});
-//		group.addAfter(newLine, line);
-//		
-//		if (line.incomingVertex) {
-//			newLine.incomingVertex = line.incomingVertex;
-//			delete line.incomingVertex;
-//		}
-//		
-//		if (state.label) {
-//			removeLineText(line);
-//			drawLineText(newLine, state.label);
-//		}
-//		
-//		line = newLine;
-//	}
+	var inElm = elms.get(state.inElement);
+	var outElm = elms.get(state.outElement);
+	
+	group.head.outgoingVertex = outElm;
+	group.tail.incomingVertex = inElm;
+	
+	inElm.outLineGroups.push(group);
+	outElm.inLineGroups.push(group);
 }
 
 function btnNewStartOnClick() {
@@ -1054,11 +1031,11 @@ function drawFlowElement(textPrefix, elementCssClass) {
 	var elm = drawRectangle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
 			textPrefix + ' ' + elementCounter++, elementCssClass);
 
-	if (selectedElement.customType == 'diamond' && selectedElement.outLines.length == 0) {
+	if (selectedElement.customType == 'diamond' && selectedElement.outLineGroups.length == 0) {
 		drawLine(selectedElement, elm, 'Yes');
-	} else if (selectedElement.customType == 'diamond' && selectedElement.outLines.length == 1) {
+	} else if (selectedElement.customType == 'diamond' && selectedElement.outLineGroups.length == 1) {
 		drawLine(selectedElement, elm, 'No');
-	} else if (selectedElement.customType == 'diamond' && selectedElement.outLines.length == 2) {
+	} else if (selectedElement.customType == 'diamond' && selectedElement.outLineGroups.length == 2) {
 		alert('No more elements allowed');
 		elm.remove();
 		elm.text.remove();

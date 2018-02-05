@@ -170,8 +170,8 @@ function drawFlowChart(scriptName, canvasId) {
 		});
 }
 
-function drawFlowDesign(scriptName, canvasId) {
-	drawMockDiagram(scriptName, canvasId);
+function drawFlowDesign(scriptName, canvas) {
+	drawMockDiagram(scriptName, canvas);
 }
 
 function fetchFlowsRuntimeRecords() {
@@ -870,9 +870,16 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				onShow: function() {
 					if (!this.chartCreated) {
 						var scriptName = groupName + '::' + tabTitle;
-						drawFlowDesign(scriptName, this.id);
+						this.canvas = SVG(this.id).size(1500, 500);
+						
+						drawFlowDesign(scriptName, this.canvas);
 						this.chartCreated = true;
 					}
+				},
+			
+				onFocus: function() {
+					// global var defined in flow_editor.js
+					draw = this.canvas;
 				}
 			});
 			designerTab.startup();

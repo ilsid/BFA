@@ -802,12 +802,16 @@ function btnNewConditionOnClick() {
 	diam.fire('mousedown');
 }
 
-function drawMockDiagram(scriptName, canvasId) {
+function drawMockDiagram(scriptName, canvas) {
 
-	var width = 1500, height = 500;
+	//var width = 1500, height = 500;
+	draw = canvas;
+	var width = draw.attr('width');
+	var height = draw.attr('height');
 	
-	draw = SVG(canvasId).size(width, height);
-	draw.viewbox(0,0,width,height);
+	//draw = SVG(canvasId).size(width, height);
+	//draw.viewbox(0, 0, width, height);
+	draw.viewbox(0, 0, width, height);
 	
 	draw.on('mousedown', canvasMouseDown);
 	draw.on('mousemove', function(event){ stopEventPropagation(event); });

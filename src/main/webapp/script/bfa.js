@@ -578,11 +578,15 @@ function onUpdateScriptDialog_btnOkClick() {
 			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
 			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
+			var flowDiagram = scriptTab.getChildren()[1].getChildren()[2].canvas;
+			var flowDiagramState = flowDiagram.state.save(); 
+			var flowDiagramStateStr = JSON.stringify(flowDiagramState, null, 4);
 			
 			request('service/script/admin/update', {
 					headers: { 'Content-Type': 'application/json' },
 					method: 'POST',
-					data: '{"name": "' + scriptName +'", "body": "' + scriptBody + '"}'
+					//data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagramState": ' + flowDiagramStateStr + '}'
+					data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '"}'
 				}).then(function(resp){
 					hideDialog('updateScriptDialog');
 					var tabIdx = tabContainer.getIndexOfChild(scriptTab);
@@ -868,12 +872,12 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				chartCreated: false,
 				
 				onShow: function() {
-					if (!this.chartCreated) {
+					if (!this.canvas) {
 						var scriptName = groupName + '::' + tabTitle;
+						//TODO: calculate canvas size
 						this.canvas = SVG(this.id).size(1500, 500);
 						
 						drawFlowDesign(scriptName, this.canvas);
-						this.chartCreated = true;
 					}
 				},
 			

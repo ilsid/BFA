@@ -1173,63 +1173,6 @@ function State() {
 }
 
 
-function sandbox() {
-
-	var width = 1200, height = 700;
-	
-	draw = SVG('flow_editor_canvas').size(width, height);
-	draw.viewbox(0,0,width,height);
-	
-	draw.on('mousedown', canvasMouseDown);
-	draw.on('mousemove', function(event){ stopEventPropagation(event); });
-	
-	draw.state = new State();
-	
-	var background = draw.rect(width, height).fill('#FAFAFA');
-	
-	var currentX = 0;
-	var currentY = 0;
-	
-	var startCx = width/6;
-	var startCy = height/6;
-	var rect1Cx = width/4;
-	var rect1Cy = height/2;
-	var rect12Cx = width/3.7;
-	var rect12Cy = height/1.7;
-	var rect2Cx = width/2.5;
-	var rect2Cy = height/2.5;
-	var rect3Cx = width/1.5;
-	var rect3Cy = height/1.5;
-	var diamCx = width/2.5;
-	var diamCy = height/1.5;
-	var subCx = width/1.2;
-	var subCy = height/2;
-	var endCx = width/1.2;
-	var endCy = height/1.2;
-	
-	var start = drawCircle(startCx, startCy, 'Start', 'str001');
-	var action1 = drawRectangle(rect1Cx, rect1Cy, 'Action 1', 'act001');
-	var action2 = drawRectangle(rect2Cx, rect2Cy, 'Action 2222222222222222', 'act002');
-	var cond = drawDiamond(diamCx, diamCy, 'Is Condition Met?', 'cnd001');
-	var action12 = drawRectangle(rect12Cx, rect12Cy, 'Action 1', 'act001-02');
-	var action3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3', 'act003');
-	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'sub001', 'subProcess');
-	var end = drawCircle(endCx, endCy, 'End', 'end001', 'endState');
-	
-	selectedElement = null;
-	elementCounter = 10;
-	
-	drawLine(start, action1);
-	drawLine(action1, cond);
-	drawLine(cond, action2, 'Yes');
-	drawLine(cond, action3, 'No');
-	drawLine(action3, action12);
-	drawLine(action12, cond);
-	drawLine(action2, sub);
-	drawLine(sub, end);
-
-}
-
 function drawMockDiagram(scriptName, canvas) {
 	draw = canvas;
 	var width = draw.attr('width');

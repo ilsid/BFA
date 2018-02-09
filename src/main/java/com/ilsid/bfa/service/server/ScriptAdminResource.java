@@ -49,7 +49,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	public Response create(ScriptAdminParams script) {
 		validateNonEmptyNameAndBody(Paths.SCRIPT_CREATE_SERVICE, script);
 		try {
-			scriptManager.createScript(script.getName(), script.getBody());
+			scriptManager.createScript(script.getName(), script.getBody(), script.getFlowDiagram());
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_CREATE_SERVICE, e);
 		}
@@ -80,7 +80,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	public Response update(ScriptAdminParams script) {
 		validateNonEmptyNameAndBody(Paths.SCRIPT_UPDATE_SERVICE, script);
 		try {
-			scriptManager.updateScript(script.getName(), script.getBody());
+			scriptManager.updateScript(script.getName(), script.getBody(), script.getFlowDiagram());
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_UPDATE_SERVICE, e);
 		}

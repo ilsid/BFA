@@ -69,13 +69,16 @@ public interface ScriptingRepository extends Configurable, Transactional {
 	 * @param generatedCode
 	 *            the auto-generated code derived from the original source. This code that is actually executed in
 	 *            runtime
+	 * @param diagram
+	 *            diagram representation of the class
 	 * @throws PersistenceException
 	 *             <ul>
 	 *             <li>if the class with the given name already exists in the repository</li>
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
-	void save(String className, byte[] byteCode, String sourceCode, String generatedCode) throws PersistenceException;
+	void save(String className, byte[] byteCode, String sourceCode, String generatedCode, String diagram)
+			throws PersistenceException;
 
 	/**
 	 * Saves new class.

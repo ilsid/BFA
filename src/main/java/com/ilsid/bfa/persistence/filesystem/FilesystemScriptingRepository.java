@@ -34,6 +34,8 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 
 	private static final String SOURCE_FILE_EXTENSION = ".src";
 
+	private static final String DIAGRAM_FILE_EXTENSION = ".dgm";
+
 	private static final String GENERATED_SOURCE_FILE_PREFIX = "_generated" + SOURCE_FILE_EXTENSION;
 
 	private static final String CLASS_METADATA_SUFFIX = '_' + ClassNameUtil.METADATA_FILE_NAME;
@@ -94,13 +96,13 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 	 */
 	@Override
 	public void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
-		doSave(className, byteCode, sourceCode, null);
+		doSave(className, byteCode, sourceCode, null, null);
 	}
 
 	@Override
-	public void save(String className, byte[] byteCode, String sourceCode, String generatedCode)
+	public void save(String className, byte[] byteCode, String sourceCode, String generatedCode, String diagram)
 			throws PersistenceException {
-		doSave(className, byteCode, sourceCode, generatedCode);
+		doSave(className, byteCode, sourceCode, generatedCode, diagram);
 	}
 
 	/*
@@ -110,7 +112,7 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 	 */
 	@Override
 	public void save(String className, byte[] byteCode) throws PersistenceException {
-		doSave(className, byteCode, null, null);
+		doSave(className, byteCode, null, null, null);
 	}
 
 	/*
@@ -368,7 +370,7 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 		return className;
 	}
 
-	private void doSave(String className, byte[] byteCode, String sourceCode, String generatedCode)
+	private void doSave(String className, byte[] byteCode, String sourceCode, String generatedCode, String diagram)
 			throws PersistenceException {
 		if (rootDirPath == null) {
 			throw new IllegalStateException("Root directory is not set");
@@ -418,6 +420,18 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 			} catch (IOException e) {
 				throw new PersistenceException(
 						String.format("Failed to save a generated source code for class [%s] in directory %s",
+								className, rootDirPath),
+						e);
+			}
+		}
+		
+		if (diagram != null) {
+			File diagramFile = new File(fileClassDir, shortClassName + DIAGRAM_FILE_EXTENSION);
+			try {
+				FileUtils.writeStringToFile(diagramFile, diagram, "UTF-8");
+			} catch (IOException e) {
+				throw new PersistenceException(
+						String.format("Failed to save a diagram for class [%s] in directory %s",
 								className, rootDirPath),
 						e);
 			}

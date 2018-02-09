@@ -34,6 +34,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 	private static final String SCRIPT_GENERATED_SOURCE_FILE_NAME = "dummy-generated-script.txt";
 
+	private static final String SCRIPT_DIAGRAM_FILE_NAME = "dummy-flow-diagram.txt";
+
 	private final static String SCRIPT_CLASS_NAME = CompileHelper.GENERATED_SCRIPT_PACKAGE
 			+ FilesystemScriptingRepositoryUnitTest.class.getSimpleName() + "Script01";
 
@@ -45,6 +47,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	private final static File SAVED_SCRIPT_SRC_FILE = new File(PATH_WO_EXTENSION + ".src");
 
 	private final static File SAVED_SCRIPT_GENERATED_SRC_FILE = new File(PATH_WO_EXTENSION + "_generated.src");
+
+	private final static File SAVED_SCRIPT_DIAGRAM_FILE = new File(PATH_WO_EXTENSION + ".dgm");
 
 	private ScriptingRepository repository = new FilesystemScriptingRepository();
 
@@ -84,12 +88,13 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void classAndSourceCodeCanBeSaved() throws Exception {
-		saveClassAndSource();
+	public void classAndSourceCodeAndDiagramCanBeSaved() throws Exception {
+		saveClassAndSourceAndDiagram();
 
 		assertTrue(SAVED_SCRIPT_CLASS_FILE.exists());
 		assertTrue(SAVED_SCRIPT_SRC_FILE.exists());
 		assertTrue(SAVED_SCRIPT_GENERATED_SRC_FILE.exists());
+		assertTrue(SAVED_SCRIPT_DIAGRAM_FILE.exists());
 
 		String savedScriptBodySource;
 		try (InputStream savedScriptBody = new FileInputStream(SAVED_SCRIPT_SRC_FILE)) {
@@ -106,6 +111,14 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		String expectedScriptGeneratedSource = IOHelper.loadScript(SCRIPT_GENERATED_SOURCE_FILE_NAME);
 
 		assertEquals(expectedScriptGeneratedSource, savedScriptGeneratedSource);
+
+		String savedScriptDiagram;
+		try (InputStream savedDiagram = new FileInputStream(SAVED_SCRIPT_DIAGRAM_FILE)) {
+			savedScriptDiagram = IOUtils.toString(savedDiagram, "UTF-8");
+		}
+		String expectedScriptDiagram = IOHelper.loadScript(SCRIPT_DIAGRAM_FILE_NAME);
+
+		assertEquals(expectedScriptDiagram, savedScriptDiagram);
 	}
 
 	@Test
@@ -148,8 +161,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		exceptionRule.expectMessage(
 				"Class [com.ilsid.bfa.generated.script.FilesystemScriptingRepositoryUnitTestScript01] already exists in directory src/test/resources/__tmp_class_repository");
 
-		saveClassAndSource();
-		saveClassAndSource();
+		saveClassAndSourceAndDiagram();
+		saveClassAndSourceAndDiagram();
 	}
 
 	@Test
@@ -548,7 +561,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		FileUtils.copyDirectory(CODE_REPOSITORY_SOURCE_DIR, REPOSITORY_ROOT_DIR);
 	}
 
-	private void saveClassAndSource() throws Exception {
+	private void saveClassAndSourceAndDiagram() throws Exception {
 		saveClass(true);
 	}
 
@@ -556,13 +569,14 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		saveClass(false);
 	}
 
-	private void saveClass(boolean saveSource) throws Exception {
+	private void saveClass(boolean saveSourceAndDiagram) throws Exception {
 		String body = IOHelper.loadScript(SCRIPT_SOURCE_FILE_NAME);
 		String generatedSource = IOHelper.loadScript(SCRIPT_GENERATED_SOURCE_FILE_NAME);
 		byte[] byteCode = CompileHelper.compileScript(SCRIPT_CLASS_NAME, IOUtils.toInputStream(body));
+		String diagram = IOHelper.loadScript(SCRIPT_DIAGRAM_FILE_NAME);
 
-		if (saveSource) {
-			repository.save(SCRIPT_CLASS_NAME, byteCode, body, generatedSource);
+		if (saveSourceAndDiagram) {
+			repository.save(SCRIPT_CLASS_NAME, byteCode, body, generatedSource, diagram);
 		} else {
 			repository.save(SCRIPT_CLASS_NAME, byteCode);
 		}

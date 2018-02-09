@@ -426,6 +426,8 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams(scriptName,
 				IOHelper.loadScript("duplicated-expression-script.txt"));
+		
+		script.setFlowDiagram("{\"rects\": []}");
 
 		File scriptDir = new File(expectedScriptPath);
 		try {
@@ -434,9 +436,9 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 			assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 			assertTrue(scriptDir.isDirectory());
-			assertEquals(4, scriptDir.list().length);
+			assertEquals(5, scriptDir.list().length);
 			assertFilesExist(scriptDir.getPath(), new String[] { "Script_x20_001.class", "Script_x20_001.src",
-					"Script_x20_001_generated.src", ClassNameUtil.METADATA_FILE_NAME });
+					"Script_x20_001_generated.src", "Script_x20_001.dgm", ClassNameUtil.METADATA_FILE_NAME });
 		} finally {
 			FileUtils.forceDelete(scriptDir);
 		}

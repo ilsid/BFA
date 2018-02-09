@@ -2,6 +2,8 @@ package com.ilsid.bfa.service.dto;
 
 public class ScriptAdminParams extends TypeAdminParams {
 	
+	private String flowDiagram;
+	
 	public ScriptAdminParams() {
 		super();
 	}
@@ -14,5 +16,13 @@ public class ScriptAdminParams extends TypeAdminParams {
 		super(name, body, title);
 	}
 
+	public String getFlowDiagram() {
+		return flowDiagram;
+	}
+	
+	public void setFlowDiagram(String flowDiagram) {
+		this.flowDiagram = flowDiagram;
+	}
+	
 }
 

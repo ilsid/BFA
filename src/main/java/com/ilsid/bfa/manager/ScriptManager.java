@@ -70,6 +70,8 @@ public class ScriptManager extends AbstractManager implements Configurable {
 	 *            script name
 	 * @param scriptBody
 	 *            script body
+	 * @param scriptFlowDiagram
+	 *            diagram representation
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script's group does not exists in the repository</li>
@@ -78,13 +80,14 @@ public class ScriptManager extends AbstractManager implements Configurable {
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
-	public void createScript(String scriptName, String scriptBody) throws ManagementException {
+	public void createScript(String scriptName, String scriptBody, String scriptFlowDiagram)
+			throws ManagementException {
 		checkParentScriptGroupExists(scriptName);
 
 		ScriptUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
-			saveScript(compilationUnit, scriptBody);
+			saveScript(compilationUnit, scriptBody, scriptFlowDiagram);
 			saveScriptMetadata(compilationUnit);
 			commitTransaction();
 		} catch (PersistenceException e) {
@@ -101,6 +104,8 @@ public class ScriptManager extends AbstractManager implements Configurable {
 	 *            the name of the script to update
 	 * @param scriptBody
 	 *            the modified script body
+	 * @param scriptFlowDiagram
+	 *            diagram representation
 	 * @throws ManagementException
 	 *             <ul>
 	 *             <li>if the script's group does not exists in the repository</li>
@@ -109,14 +114,15 @@ public class ScriptManager extends AbstractManager implements Configurable {
 	 *             <li>in case of any repository access issues</li>
 	 *             </ul>
 	 */
-	public void updateScript(String scriptName, String scriptBody) throws ManagementException {
+	public void updateScript(String scriptName, String scriptBody, String scriptFlowDiagram)
+			throws ManagementException {
 		checkParentScriptGroupExists(scriptName);
 
 		ScriptUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
 			doDeleteScript(scriptName);
-			saveScript(compilationUnit, scriptBody);
+			saveScript(compilationUnit, scriptBody, scriptFlowDiagram);
 			saveScriptMetadata(compilationUnit);
 			commitTransaction();
 		} catch (PersistenceException e) {
@@ -151,7 +157,7 @@ public class ScriptManager extends AbstractManager implements Configurable {
 			rollbackTransaction();
 			throw new ManagementException(String.format("Failed to delete the script [%s]", scriptName), e);
 		}
-		
+
 		DynamicClassLoader.reloadClasses();
 	}
 
@@ -280,7 +286,7 @@ public class ScriptManager extends AbstractManager implements Configurable {
 			rollbackTransaction();
 			throw new ManagementException(String.format("Failed to delete the entity [%s]", entityName), e);
 		}
-		
+
 		DynamicClassLoader.reloadClasses();
 	}
 
@@ -585,8 +591,8 @@ public class ScriptManager extends AbstractManager implements Configurable {
 		return repository.getTransactionManager();
 	}
 
-	private void saveScript(ScriptUnit unit, String scriptBody) throws PersistenceException {
-		repository.save(unit.scriptClassName, unit.scriptByteCode, scriptBody, unit.generatedSource);
+	private void saveScript(ScriptUnit unit, String scriptBody, String scriptFlowDiagram) throws PersistenceException {
+		repository.save(unit.scriptClassName, unit.scriptByteCode, scriptBody, unit.generatedSource, scriptFlowDiagram);
 	}
 
 	private void saveScriptMetadata(ScriptUnit compilationUnit) throws PersistenceException {

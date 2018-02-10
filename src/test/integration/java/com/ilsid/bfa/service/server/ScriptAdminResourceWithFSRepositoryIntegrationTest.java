@@ -135,25 +135,31 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		File scriptDir = new File(CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/scripttoupdate");
 
-		assertEquals(4, scriptDir.list().length);
+		assertEquals(5, scriptDir.list().length);
 		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
-				"ScriptToUpdate_generated.src", ClassNameUtil.METADATA_FILE_NAME });
+				"ScriptToUpdate_generated.src", "ScriptToUpdate.dgm", ClassNameUtil.METADATA_FILE_NAME });
 
 		WebResource webResource = getWebResource(Paths.SCRIPT_UPDATE_SERVICE);
 		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script-upd.txt");
+		String updatedDiagram = IOHelper.loadScript("dummy-flow-diagram.txt");
+		
 		ScriptAdminParams script = new ScriptAdminParams("ScriptToUpdate", updatedScriptBody, "Script to Update");
+		script.setFlowDiagram(updatedDiagram);
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
 		assertTrue(scriptDir.isDirectory());
-		assertEquals(4, scriptDir.list().length);
+		assertEquals(5, scriptDir.list().length);
 		assertFilesExist(scriptDir.getPath(), new String[] { "ScriptToUpdate.class", "ScriptToUpdate.src",
-				"ScriptToUpdate_generated.src", ClassNameUtil.METADATA_FILE_NAME });
+				"ScriptToUpdate_generated.src", "ScriptToUpdate.dgm", ClassNameUtil.METADATA_FILE_NAME });
 
 		String actualScriptBody = IOHelper.loadFileContents(scriptDir.getPath(), "ScriptToUpdate.src");
+		String actualDiagram = IOHelper.loadFileContents(scriptDir.getPath(), "ScriptToUpdate.dgm");
+		
 		assertEquals(updatedScriptBody, actualScriptBody);
+		assertEquals(updatedDiagram, actualDiagram);
 		assertIncrementedVersion(version);
 	}
 

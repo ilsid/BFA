@@ -1,0 +1,19 @@
+{
+    "rects": [
+        {
+            "id": "act001",
+            "cx": 228,
+            "cy": 470,
+            "height": 40,
+            "width": 100,
+            "label": "Action 1",
+            "inLineGroupIds": [
+                "str001-->act001",
+                "act003-->act001"
+            ],
+            "outLineGroupIds": [
+                "act001-->cnd001"
+            ]
+        }
+    ]
+}

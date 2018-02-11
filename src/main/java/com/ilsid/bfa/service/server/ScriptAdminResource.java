@@ -11,6 +11,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.ilsid.bfa.common.Metadata;
 import com.ilsid.bfa.graph.MermaidConverter;
 import com.ilsid.bfa.manager.ManagementException;
@@ -149,6 +151,26 @@ public class ScriptAdminResource extends AbstractAdminResource {
 		}
 
 		return Response.status(Status.OK).entity(scriptSource).build();
+	}
+	
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@Path(Paths.GET_DIAGRAM_OPERATION)
+	public Response getDiagram(ScriptAdminParams script) {
+		validateNonEmptyName(Paths.SCRIPT_GET_DIAGRAM_SERVICE, script);
+		String diagram;
+		try {
+			diagram = scriptManager.getScriptDiagram(script.getName());
+		} catch (ManagementException e) {
+			throw new ResourceException(Paths.SCRIPT_GET_DIAGRAM_SERVICE, e);
+		}
+		
+		if (diagram == null) {
+			diagram = StringUtils.EMPTY;
+		}
+
+		return Response.status(Status.OK).entity(diagram).build();
 	}
 
 	/**

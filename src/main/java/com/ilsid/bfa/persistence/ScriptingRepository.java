@@ -153,7 +153,7 @@ public interface ScriptingRepository extends Configurable, Transactional {
 	int deletePackage(String packageName) throws PersistenceException;
 
 	/**
-	 * Deletes the class and its source, if any.
+	 * Deletes a class and its source, if any.
 	 * 
 	 * @param className
 	 *            the name of class to delete
@@ -172,7 +172,7 @@ public interface ScriptingRepository extends Configurable, Transactional {
 	int deleteClass(String className) throws PersistenceException;
 
 	/**
-	 * Loads the source code associated with the given class.
+	 * Loads a source code associated with the given class.
 	 * 
 	 * @param className
 	 *            class name including the full package
@@ -181,6 +181,17 @@ public interface ScriptingRepository extends Configurable, Transactional {
 	 *             in case of any repository access issues
 	 */
 	String loadSourceCode(String className) throws PersistenceException;
+	
+	/**
+	 * Loads a diagram representation associated with the given class.
+	 * 
+	 * @param className
+	 *            class name including the full package
+	 * @return the diagram representation or <code>null</code>, if class is not found or has no associated diagram
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	String loadDiagram(String className) throws PersistenceException;
 
 	/**
 	 * Loads meta-data items for child packages. Only meta-data items of the specified types will be loaded. If the

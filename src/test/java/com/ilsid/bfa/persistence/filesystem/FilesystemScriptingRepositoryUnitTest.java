@@ -239,6 +239,23 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	public void noByteCodeIsLoadedforNonExistentScript() throws Exception {
 		assertNull(repository.load("some.nonexistent.script.Script001"));
 	}
+	
+	@Test
+	public void diagramForExistingScriptCanBeLoaded() throws Exception {
+		createCodeRepository();
+
+		String diagram = repository
+				.loadDiagram("com.ilsid.bfa.generated.script.default_group.script001.Script001");
+		String expectedDiagram = IOHelper.loadFileContents(TestConstants.TEST_RESOURCES_DIR
+				+ "/code_repository/com/ilsid/bfa/generated/script/default_group/script001", "Script001.dgm");
+
+		assertEquals(expectedDiagram, diagram);
+	}
+	
+	@Test
+	public void noDiagramIsLoadedforNonExistentScript() throws Exception {
+		assertNull(repository.loadDiagram("some.nonexistent.script.Script001"));
+	}
 
 	@Test
 	public void classesForExistingPackageCanBeLoaded() throws Exception {

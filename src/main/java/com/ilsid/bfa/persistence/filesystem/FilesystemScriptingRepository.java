@@ -36,6 +36,10 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 
 	private static final String DIAGRAM_FILE_EXTENSION = ".dgm";
 
+	private static final String DIAGRAM_FILE_HUMAN_NAME = "diagram";
+	
+	private static final String SOURCE_FILE_HUMAN_NAME = "source file";
+	
 	private static final String GENERATED_SOURCE_FILE_PREFIX = "_generated" + SOURCE_FILE_EXTENSION;
 
 	private static final String CLASS_METADATA_SUFFIX = '_' + ClassNameUtil.METADATA_FILE_NAME;
@@ -98,7 +102,13 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 	public void save(String className, byte[] byteCode, String sourceCode) throws PersistenceException {
 		doSave(className, byteCode, sourceCode, null, null);
 	}
-
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#save(java.lang.String, byte[], java.lang.String,
+	 * java.lang.String, java.lang.String)
+	 */
 	@Override
 	public void save(String className, byte[] byteCode, String sourceCode, String generatedCode, String diagram)
 			throws PersistenceException {
@@ -255,31 +265,17 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 	 */
 	@Override
 	public String loadSourceCode(String className) throws PersistenceException {
-		final String classDirPath = getClassDirectoryPath(className);
-		File classDir = new File(classDirPath);
-
-		if (!classDir.isDirectory()) {
-			return null;
-		}
-
-		File sourceFile = new File(
-				classDirPath + File.separator + ClassNameUtil.getShortClassName(className) + SOURCE_FILE_EXTENSION);
-
-		if (!sourceFile.exists()) {
-			return null;
-		}
-
-		String sourceCode;
-		try (InputStream is = new FileInputStream(sourceFile)) {
-			sourceCode = IOUtils.toString(is);
-		} catch (IOException e) {
-			throw new PersistenceException(String.format("Failed to load the source file [%s]", sourceFile.getPath()),
-					e);
-		}
-
-		return sourceCode;
+		return loadAssociatedFileContents(className, SOURCE_FILE_EXTENSION, SOURCE_FILE_HUMAN_NAME);
 	}
-
+	
+	/*
+	 * (non-Javadoc)
+	 * @see com.ilsid.bfa.persistence.ScriptingRepository#loadDiagram(java.lang.String)
+	 */
+	public String loadDiagram(String className) throws PersistenceException {
+		return loadAssociatedFileContents(className, DIAGRAM_FILE_EXTENSION, DIAGRAM_FILE_HUMAN_NAME);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -436,6 +432,34 @@ public class FilesystemScriptingRepository extends FilesystemRepository implemen
 						e);
 			}
 		}
+	}
+	
+	private String loadAssociatedFileContents(String className, String fileExtension, String fileHumanName)
+			throws PersistenceException {
+
+		final String classDirPath = getClassDirectoryPath(className);
+		File classDir = new File(classDirPath);
+
+		if (!classDir.isDirectory()) {
+			return null;
+		}
+
+		File associatedFile = new File(
+				classDirPath + File.separator + ClassNameUtil.getShortClassName(className) + fileExtension);
+
+		if (!associatedFile.exists()) {
+			return null;
+		}
+
+		String sourceCode;
+		try (InputStream is = new FileInputStream(associatedFile)) {
+			sourceCode = IOUtils.toString(is);
+		} catch (IOException e) {
+			throw new PersistenceException(String.format("Failed to load the %s [%s]", fileHumanName, associatedFile.getPath()),
+					e);
+		}
+
+		return sourceCode;
 	}
 
 	private String getClassDirectoryPath(String className) {

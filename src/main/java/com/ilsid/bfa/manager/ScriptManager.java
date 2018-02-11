@@ -162,7 +162,7 @@ public class ScriptManager extends AbstractManager implements Configurable {
 	}
 
 	/**
-	 * Loads the body of the given script from the repository. If no group is defined then the script is searched in the
+	 * Loads a body of the given script from the repository. If no group is defined then the script is searched in the
 	 * Default Group.
 	 * 
 	 * @param scriptName
@@ -193,6 +193,35 @@ public class ScriptManager extends AbstractManager implements Configurable {
 		}
 
 		return body;
+	}
+	
+	/**
+	 * Loads a diagram representation of the given script from the repository. If no group is defined then the script
+	 * is searched in the Default Group.
+	 * 
+	 * @param scriptName
+	 *            the name of the script to load
+	 * @return a diagram representation or <code>null</code>, if no diagram exists for the given script
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if the script's group does not exists in the repository</li>
+	 *             <li>if the script with such name does not exist in the repository</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public String getScriptDiagram(String scriptName) throws ManagementException {
+		checkParentScriptGroupExists(scriptName);
+
+		String className = TypeNameResolver.resolveScriptClassName(scriptName);
+		String diagram;
+		try {
+			diagram = repository.loadDiagram(className);
+		} catch (PersistenceException e) {
+			throw new ManagementException(String.format("Failed to load a diagram of the script [%s]", scriptName),
+					e);
+		}
+
+		return diagram;
 	}
 
 	/**

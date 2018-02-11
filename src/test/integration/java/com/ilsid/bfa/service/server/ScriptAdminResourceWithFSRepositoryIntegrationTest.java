@@ -8,6 +8,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import com.ilsid.bfa.common.ClassNameUtil;
@@ -246,24 +247,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertEquals(expectedSource, response.getEntity(String.class));
 	}
-
-	@Test
-	public void sourceCodeForScriptInNonDefaultGroupIsLoaded() throws Exception {
-		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
-		ScriptAdminParams script = new ScriptAdminParams();
-		script.setName("Custom Group 01::Script 002");
-
-		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
-
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-
-		String expectedSource = IOHelper.loadFileContents(
-				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/script_x20_002",
-				"Script_x20_002.src");
-
-		assertEquals(expectedSource, response.getEntity(String.class));
-	}
-
+	
 	@Test
 	public void sourceCodeForNonExistingScriptIsNotLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
@@ -275,6 +259,51 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 		assertTrue(response.getEntity(String.class)
 				.startsWith("The script [NonExistentScript] does not exist in the repository"));
+	}
+	
+	@Test
+	public void diagramForScriptIsLoaded() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_DIAGRAM_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams();
+		script.setName("ScriptToRead");
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		String expectedDiagram = IOHelper.loadFileContents(
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/scripttoread", "ScriptToRead.dgm");
+
+		assertEquals(expectedDiagram, response.getEntity(String.class));
+	}
+	
+	@Test
+	public void diagramForScriptFromNonDefaultGroupIsLoaded() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_DIAGRAM_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams();
+		script.setName("Custom Group 01::Script 002");
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+
+		String expectedDiagram = IOHelper.loadFileContents(
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/script_x20_002",
+				"Script_x20_002.dgm");
+
+		assertEquals(expectedDiagram, response.getEntity(String.class));
+	}
+	
+	@Test
+	public void emptyDiagramForNonExistingScriptIsLoaded() throws Exception {
+		WebResource webResource = getWebResource(Paths.SCRIPT_GET_DIAGRAM_SERVICE);
+		ScriptAdminParams script = new ScriptAdminParams();
+		script.setName("NonExistentScript");
+
+		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
+
+		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		assertEquals(StringUtils.EMPTY, response.getEntity(String.class));
 	}
 
 	@Test

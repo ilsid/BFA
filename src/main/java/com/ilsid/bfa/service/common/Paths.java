@@ -31,7 +31,7 @@ public final class Paths {
 	public final static String DELETE_OPERATION = "delete";
 
 	public final static String GET_SOURCE_OPERATION = "getSource";
-
+	
 	public final static String CREATE_GROUP_OPERATION = "createGroup";
 
 	public final static String GET_ITEMS_OPERATION = "getItems";
@@ -47,6 +47,8 @@ public final class Paths {
 	public final static String GET_INPUT_PARAMS_OPERATION = "getInputParameters";
 
 	public final static String GET_FLOW_CHART_OPERATION = "getFlowChart";
+	
+	public final static String GET_DIAGRAM_OPERATION = "getDiagram";
 
 	public final static String SCRIPT_SERVICE_ADMIN_ROOT = SCRIPT_SERVICE_ROOT + "/admin";
 
@@ -57,6 +59,8 @@ public final class Paths {
 	public final static String SCRIPT_DELETE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + DELETE_OPERATION;
 
 	public final static String SCRIPT_GET_SOURCE_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + GET_SOURCE_OPERATION;
+	
+	public final static String SCRIPT_GET_DIAGRAM_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + GET_DIAGRAM_OPERATION;
 
 	public final static String SCRIPT_GET_ITEMS_SERVICE = SCRIPT_SERVICE_ADMIN_ROOT + "/" + GET_ITEMS_OPERATION;
 

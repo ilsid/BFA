@@ -404,11 +404,13 @@ SVG.extend(SVG.RecordablePolygon, {
 
 	getState: function() {
 		var pa = this.array().value;
+		var centerPoint = this._getCenter();
 		
 		var state = {
 			id: this.flowId,
-			cx: this.cx(),
-			cy: this.cy(),
+			// cx(), cy() getters return 0
+			cx: centerPoint.x,
+			cy: centerPoint.y,
 			
 			points: pa[0][0] + ',' + pa[0][1] + ' ' +
 					pa[1][0] + ',' + pa[1][1] + ' ' +
@@ -432,6 +434,19 @@ SVG.extend(SVG.RecordablePolygon, {
 		});
 					
 		return state;
+	},
+	
+	_getCenter: function() {
+		var pa = this.array().value;
+		var x1 = pa[0][0];
+		var y1 = pa[0][1];
+		var x2 = pa[2][0];
+		var y2 = pa[2][1];
+		
+		var midX= x1 + (x2 - x1) * 0.5;
+		var midY= y1 + (y2 - y1) * 0.5;
+		
+		return {x: midX, y: midY};
 	}
 });
 
@@ -1172,8 +1187,52 @@ function State() {
 	};
 }
 
+function drawEmptyDiagram(canvas) {
+	drawDiagram(canvas);
+}
 
-function drawMockDiagram(scriptName, canvas) {
+function drawDiagram(canvas, diagramState) {
+	draw = canvas;
+	var width = draw.attr('width');
+	var height = draw.attr('height');
+	
+	draw.viewbox(0, 0, width, height);
+	
+	draw.on('mousedown', canvasMouseDown);
+	draw.on('mousemove', function(event){ stopEventPropagation(event); });
+	
+	draw.state = new State();
+	
+	var background = draw.rect(width, height).fill('#FAFAFA');
+	
+	selectedElement = null;
+	
+	if (diagramState) {
+		var elms = new ElementsMap();
+		
+		diagramState.circles.forEach(function(state) {
+			var circ = drawCircle(state.cx, state.cy, state.label, state.id, state.subType);
+			elms.put(state.id, circ);
+		});
+		
+		diagramState.rects.forEach(function(state) {
+			var rect = drawRectangle(state.cx, state.cy, state.label, state.id, state.subType);
+			elms.put(state.id, rect);
+		});
+		
+		diagramState.diamonds.forEach(function(state) {
+			var diam = drawDiamond(state.cx, state.cy, state.label, state.id);
+			elms.put(state.id, diam);
+		});
+		
+		diagramState.lineGroups.forEach(function(state) {
+			drawLineGroup(state, elms);
+		});
+	}
+	
+}
+
+function drawMockDiagram(canvas) {
 	draw = canvas;
 	var width = draw.attr('width');
 	var height = draw.attr('height');

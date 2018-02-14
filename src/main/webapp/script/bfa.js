@@ -77,6 +77,10 @@ function escapeScriptSource(source)  {
 		.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
 
+function escapeFlowDiagramState(source) {
+	return escapeScriptSource(source);
+}
+
 function writeInfo(message) {
 	require([ 'dijit/registry', 'dojo/dom-construct', 'dojo/domReady!'],
 		function(registry, domConstruct) {
@@ -170,8 +174,24 @@ function drawFlowChart(scriptName, canvasId) {
 		});
 }
 
-function drawFlowDesign(scriptName, canvas) {
-	drawMockDiagram(scriptName, canvas);
+function drawFlowDiagram(scriptName, canvas) {
+	require(['dojo/request/xhr', 'dojo/dom-construct', 'dojo/domReady!'],
+		function(request, domConstruct) {
+			request('service/script/admin/getDiagram', {
+					headers: { 'Content-Type': 'application/json' },
+					method: 'POST',
+					data: '{"name": "' + scriptName + '"}'
+				}).then(function(resp){
+					if (resp.length > 0) {
+						var diagram = JSON.parse(resp);
+						drawDiagram(canvas, diagram)
+					} else {
+						drawMockDiagram(canvas);
+					}
+				}, function(err) {
+					writeError(err);
+				});
+		});
 }
 
 function fetchFlowsRuntimeRecords() {
@@ -578,15 +598,14 @@ function onUpdateScriptDialog_btnOkClick() {
 			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
 			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
-			var flowDiagram = scriptTab.getChildren()[1].getChildren()[2].canvas;
-			var flowDiagramState = flowDiagram.state.save(); 
-			var flowDiagramStateStr = JSON.stringify(flowDiagramState, null, 4);
+			var flowCanvas = scriptTab.getChildren()[1].getChildren()[2].canvas;
+			var flowDiagramState = flowCanvas.state.save(); 
+			var flowDiagramStateStr = escapeFlowDiagramState(JSON.stringify(flowDiagramState, null, 4));
 			
 			request('service/script/admin/update', {
 					headers: { 'Content-Type': 'application/json' },
 					method: 'POST',
-					//data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagramState": ' + flowDiagramStateStr + '}'
-					data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '"}'
+					data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"	}'
 				}).then(function(resp){
 					hideDialog('updateScriptDialog');
 					var tabIdx = tabContainer.getIndexOfChild(scriptTab);
@@ -873,11 +892,15 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				
 				onShow: function() {
 					if (!this.canvas) {
-						var scriptName = groupName + '::' + tabTitle;
 						//TODO: calculate canvas size
 						this.canvas = SVG(this.id).size(1500, 500);
-						
-						drawFlowDesign(scriptName, this.canvas);
+
+						if (isExistingScript) {
+							var scriptName = groupName + '::' + tabTitle;
+							drawFlowDiagram(scriptName, this.canvas);
+						} else {
+							drawEmptyDiagram(this.canvas);
+						}
 					}
 				},
 			
@@ -887,10 +910,11 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				}
 			});
 			designerTab.startup();
-			
+
 			flowEditorArea.addChild(scriptTab);
 			flowEditorArea.addChild(chartTab);
 			flowEditorArea.addChild(designerTab);
+			flowEditorArea.startup();
 			
 			tab.addChild(toolBar);
 			tab.addChild(flowEditorArea);

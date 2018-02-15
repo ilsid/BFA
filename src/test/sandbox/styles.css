@@ -105,6 +105,11 @@ svg text::selection {
 	stroke-dasharray: 5,1;
 }
 
+.subProcessIcon {
+	stroke-width: 2;
+	stroke-dasharray: 3,1;
+}
+
 .endState {
 	stroke-width: 2;
 }

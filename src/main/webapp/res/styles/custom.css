@@ -28,7 +28,12 @@ table.dijitDialogPaneContentArea,
 .toolbarIconUpdate,
 .toolbarIconDownload,
 .toolbarIconRuntimeMonitor,
-.toolbarIconFilter
+.toolbarIconFilter,
+.toolbarIconFlowStart,
+.toolbarIconFlowEnd,
+.toolbarIconFlowAction,
+.toolbarIconFlowCondition,
+.toolbarIconFlowSubprocess
  {
   background-repeat: no-repeat;
   width: 16px;
@@ -86,6 +91,26 @@ table.dijitDialogPaneContentArea,
 
 .toolbarIconFilter {
   background-image: url("../icons/filter_16x16.png");
+}
+
+.toolbarIconFlowStart {
+  background-image: url("../icons/flow_start_16x16.png");
+}
+
+.toolbarIconFlowEnd {
+  background-image: url("../icons/flow_end_16x16.png");
+}
+
+.toolbarIconFlowAction {
+  background-image: url("../icons/flow_action_16x16.png");
+}
+
+.toolbarIconFlowCondition {
+  background-image: url("../icons/flow_condition_16x16.png");
+}
+
+.toolbarIconFlowSubprocess {
+  background-image: url("../icons/flow_subproc_16x16.png");
 }
 
 .fixedTextArea{

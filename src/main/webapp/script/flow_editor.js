@@ -1203,8 +1203,6 @@ function drawDiagram(canvas, diagramState) {
 	
 	draw.state = new State();
 	
-	var background = draw.rect(width, height).fill('#FAFAFA');
-	
 	selectedElement = null;
 	
 	if (diagramState) {
@@ -1243,8 +1241,6 @@ function drawMockDiagram(canvas) {
 	draw.on('mousemove', function(event){ stopEventPropagation(event); });
 	
 	draw.state = new State();
-	
-	var background = draw.rect(width, height).fill('#FAFAFA');
 	
 	var startCx = width/6;
 	var startCy = height/6;

@@ -698,7 +698,7 @@ function elementMouseMove(event) {
 		var text = this.text;
 		text.cx(this.cx()).cy(this.cy());
 		
-		this.outLineGroups.forEach(function(outLineGroup){
+		this.outLineGroups.forEach(function(outLineGroup) {
 			if (outLineGroup.head === outLineGroup.tail) {
 				var inElm = this;
 				var outElm = outLineGroup.head.outgoingVertex;
@@ -709,7 +709,7 @@ function elementMouseMove(event) {
 			}
 		}, this);
 		
-		this.inLineGroups.forEach(function(inLineGroup){
+		this.inLineGroups.forEach(function(inLineGroup) {
 			if (inLineGroup.head === inLineGroup.tail) {
 				var inElm = inLineGroup.head.incomingVertex;
 				var outElm = this;
@@ -1027,6 +1027,10 @@ function btnClearOnClick() {
 	draw.state = new State();
 }
 
+function btnIconsOnClick() {
+	drawFlowIcons();
+}
+
 function drawFlowElement(textPrefix, elementCssClass) {
 	var elm = drawRectangle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
 			textPrefix + ' ' + elementCounter++, elementCssClass);
@@ -1185,7 +1189,7 @@ function sandbox() {
 	
 	draw.state = new State();
 	
-	var background = draw.rect(width, height).fill('#FAFAFA');
+	//var background = draw.rect(width, height).fill('#FAFAFA');
 	
 	var currentX = 0;
 	var currentY = 0;
@@ -1216,10 +1220,6 @@ function sandbox() {
 	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'sub001', 'subProcess');
 	var end = drawCircle(endCx, endCy, 'End', 'end001', 'endState');
 	
-	//var diamArr = cond.array();
-	//end.remove();
-	//action1.remove();
-	
 	selectedElement = null;
 	elementCounter = 10;
 	
@@ -1231,7 +1231,8 @@ function sandbox() {
 	drawLine(action12, cond);
 	drawLine(action2, sub);
 	drawLine(sub, end);
-
+	
+	draw2 = SVG('icons_canvas').size(16, 16);
 }
 
 function drawMockDiagram(scriptName, canvasId) {
@@ -1284,4 +1285,44 @@ function drawMockDiagram(scriptName, canvasId) {
 	drawLine(action2, sub);
 	drawLine(sub, end);
 
+}
+
+function drawFlowIcons() {
+	var elementAttrs = {stroke: 'black', 'stroke-width': 1, fill: '#CEE3F6'};
+	
+//	var circ = draw2.circle(12);
+//	circ.cx(8);
+//	circ.cy(8);
+//	circ.attr(elementAttrs);
+	
+//	var rect = draw2.rect(15, 10);
+//	rect.cx(8);
+//	rect.cy(8);
+//	rect.rx(1);
+//	rect.ry(1);
+//	rect.attr(elementAttrs);
+
+		
+//	var sub = draw2.rect(15, 10);
+//	sub.cx(8);
+//	sub.cy(8);
+//	sub.rx(1);
+//	sub.ry(1);
+//	var subAttrs = {stroke: 'black', 'stroke-width': 2, fill: '#CEE3F6', 'stroke-dasharray': '3,1'};
+//	sub.attr(subAttrs);
+
+	
+//	var diam = draw2.polygon('0,7 8,0, 16,7, 8,14');
+//	diam.cx(8);
+//	diam.cy(8);
+//	diam.attr(elementAttrs);
+//	
+	var circ = draw2.circle(12);
+	circ.cx(8);
+	circ.cy(8);
+	var endCircAttrs = {stroke: 'black', 'stroke-width': 2, fill: '#CEE3F6'};
+	circ.attr(endCircAttrs);
+
+	
+	saveSvgAsPng(document.getElementById('icons_canvas').firstChild, "icon.png");
 }

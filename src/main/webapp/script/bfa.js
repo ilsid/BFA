@@ -598,7 +598,7 @@ function onUpdateScriptDialog_btnOkClick() {
 			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
 			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
-			var flowCanvas = scriptTab.getChildren()[1].getChildren()[2].canvas;
+			var flowCanvas = scriptTab.getChildren()[1].getChildren()[2].getChildren()[0].getChildren()[0].canvas;
 			var flowDiagramState = flowCanvas.state.save(); 
 			var flowDiagramStateStr = escapeFlowDiagramState(JSON.stringify(flowDiagramState, null, 4));
 			
@@ -803,8 +803,9 @@ function buildEntitySource(grid) {
 
 function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 	require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/Toolbar', 
-	          'dijit/form/Button', 'dijit/layout/TabContainer', 'dojo/domReady!'],
-		function(registry, ContentPane, Toolbar, Button, TabContainer) {
+	          'dijit/form/Button', 'dijit/layout/TabContainer', 
+	          'dijit/layout/BorderContainer', 'dojo/dom-construct', 'dojo/domReady!'],
+		function(registry, ContentPane, Toolbar, Button, TabContainer, BorderContainer, domConstruct) {
 			var tabContainer = registry.byId('tabContainer');
 			var groupName = getSelectedGroupName(registry.byId('scriptTree'), 'SCRIPT_GROUP');
 			
@@ -832,7 +833,7 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				iconClass: 'toolbarIconRun',
 				onClick: onRunScriptBtnClick
 			});
-								
+			
 			if (isExistingScript) {
 				btnSave.set('disabled', true);
 				btnSave.onClick = showUpdateScriptDialog;
@@ -843,7 +844,7 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			
 			btnSave.startup();
 			btnRun.startup();
-			
+
 			var toolBar = new Toolbar({
 				className: 'nestedPane'
 			});
@@ -886,9 +887,18 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			
 			var designerTab = new ContentPane({
 				title: 'Designer',
+				className: 'nestedPane'	
+			});
+			
+			var designerBorderContainer = new BorderContainer({
+				style: 'overflow: auto;',
+				className: 'nestedPane'
+			});
+			
+			var canvasPane = new ContentPane({
 				style: 'overflow: auto;',
 				className: 'nestedPane',
-				chartCreated: false,
+				region: 'center',
 				
 				onShow: function() {
 					if (!this.canvas) {
@@ -909,6 +919,36 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 					draw = this.canvas;
 				}
 			});
+			canvasPane.startup();
+			
+			var palettePane = new ContentPane({
+				style: 'overflow: auto;',
+				className: 'nestedPane',
+				region: 'right',
+			});
+			
+			var paletteButtonNames = ['Start', 'End', 'Action', 'Condition', 'Sub-Process'];
+			
+			paletteButtonNames.forEach(function(name){
+				var classNamePrefix = (name == 'Sub-Process') ? 'Subprocess' : name;
+				
+				var btn = new Button({ 
+					label: name,
+					iconClass: 'toolbarIconFlow' + classNamePrefix
+				});
+				btn.startup();
+				
+				domConstruct.place(btn.domNode, palettePane.domNode);
+				domConstruct.place('<br/>', palettePane.domNode);
+			});
+			
+			palettePane.startup();
+			
+			designerBorderContainer.addChild(canvasPane);
+			designerBorderContainer.addChild(palettePane);
+			designerBorderContainer.startup();
+			
+			designerTab.addChild(designerBorderContainer);
 			designerTab.startup();
 
 			flowEditorArea.addChild(scriptTab);

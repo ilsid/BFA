@@ -1,3 +1,13 @@
+(function () {
+	
+	//dgm = {};
+	//dgm.selectedElement = null;
+	//dgm.elementCounter = 10;
+	selectedElement = null;
+	elementCounter = 1;
+
+}());
+
 function LineGroup(line, flowId) {
 	this.constructor.call(this, SVG.create('lineGroup'));
 	
@@ -985,19 +995,6 @@ function drawLineGroup(state, elms) {
 	outElm.inLineGroups.push(group);
 }
 
-function btnNewStartOnClick() {
-	var start = drawCircle(50, 50, 'Start');
-	start.fire('mousedown');
-}
-
-function btnNewEndOnClick() {
-	var end = drawCircle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
-						'End', 'endState');
-	
-	drawLine(selectedElement, end);
-	end.fire('mousedown');
-}
-
 function btnSaveOnClick() {
 	var state = draw.state.save();
 	var stateStr=JSON.stringify(state, null, 4);
@@ -1042,9 +1039,40 @@ function btnClearOnClick() {
 	draw.state = new State();
 }
 
+function btnNewStartOnClick() {
+	var start = drawCircle(50, 50, 'Start', 'str' + elementCounter++);
+	start.fire('mousedown');
+}
+
+function btnNewEndOnClick() {
+	var end = drawCircle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
+						'End', 'end' + elementCounter++, 'endState');
+	
+	drawLine(selectedElement, end);
+	end.fire('mousedown');
+}
+
+function btnNewActionOnClick() {
+	drawFlowElement('Action');
+}
+
+function btnNewSubprocessOnClick() {
+	drawFlowElement('Sub-Process', 'subProcess');
+}
+
+function btnNewConditionOnClick() {
+	var diam = drawDiamond(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
+							'Is Condition Met?', 'cond' + elementCounter++);
+	
+	drawLine(selectedElement, diam);
+	diam.fire('mousedown');
+}
+
 function drawFlowElement(textPrefix, elementCssClass) {
 	var elm = drawRectangle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
-			textPrefix + ' ' + elementCounter++, elementCssClass);
+			textPrefix + ' ' + elementCounter, textPrefix.toLowerCase() + elementCounter, elementCssClass);
+	
+	elementCounter++;
 
 	if (selectedElement.customType == 'diamond' && selectedElement.outLineGroups.length == 0) {
 		drawLine(selectedElement, elm, 'Yes');
@@ -1061,22 +1089,6 @@ function drawFlowElement(textPrefix, elementCssClass) {
 	}
 	
 	elm.fire('mousedown');
-}
-
-function btnNewActionOnClick() {
-	drawFlowElement('Action');
-}
-
-function btnNewSubprocessOnClick() {
-	drawFlowElement('Sub-Process', 'subProcess');
-}
-
-function btnNewConditionOnClick() {
-	var diam = drawDiamond(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
-							'Is Condition Met?');
-	
-	drawLine(selectedElement, diam);
-	diam.fire('mousedown');
 }
 
 function ElementsMap() {
@@ -1203,8 +1215,6 @@ function drawDiagram(canvas, diagramState) {
 	
 	draw.state = new State();
 	
-	selectedElement = null;
-	
 	if (diagramState) {
 		var elms = new ElementsMap();
 		
@@ -1267,9 +1277,6 @@ function drawMockDiagram(canvas) {
 	var action3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3', 'act003');
 	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'sub001', 'subProcess');
 	var end = drawCircle(endCx, endCy, 'End', 'end001', 'endState');
-	
-	selectedElement = null;
-	elementCounter = 10;
 	
 	drawLine(start, action1);
 	drawLine(action1, cond);

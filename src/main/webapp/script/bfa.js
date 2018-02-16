@@ -566,11 +566,14 @@ function onCreateScriptDialog_btnOkClick() {
 			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
 			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
+			var flowCanvas = scriptTab.getChildren()[1].getChildren()[2].getChildren()[0].getChildren()[0].canvas;
+			var flowDiagramState = flowCanvas.state.save(); 
+			var flowDiagramStateStr = escapeFlowDiagramState(JSON.stringify(flowDiagramState, null, 4));
 			
 			request('service/script/admin/create', {
 					headers: { 'Content-Type': 'application/json' },
 					method: 'POST',
-					data: '{"name": "' + scriptName +'", "body": "' + scriptBody + '"}'
+					data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
 				}).then(function(resp){
 					tree.refreshChildrenSubTree(groupName);
 					hideDialog('createScriptDialog');
@@ -605,7 +608,7 @@ function onUpdateScriptDialog_btnOkClick() {
 			request('service/script/admin/update', {
 					headers: { 'Content-Type': 'application/json' },
 					method: 'POST',
-					data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"	}'
+					data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
 				}).then(function(resp){
 					hideDialog('updateScriptDialog');
 					var tabIdx = tabContainer.getIndexOfChild(scriptTab);
@@ -930,18 +933,30 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			var paletteButtonNames = ['Start', 'Action', 'Condition', 'Sub-Process', 'End'];
 			
 			paletteButtonNames.forEach(function(name){
-				var classNamePrefix = (name == 'Sub-Process') ? 'Subprocess' : name;
+				var btnId = (name == 'Sub-Process') ? 'Subprocess' : name;
 				
 				var btn = new Button({ 
 					label: name,
 					showLabel: false,
-					iconClass: 'toolbarIconFlow' + classNamePrefix
+					iconClass: 'toolbarIconFlow' + btnId
 				});
+				btn.on('click', window['btnNew' + btnId + 'OnClick']);
 				btn.startup();
 				
 				domConstruct.place(btn.domNode, palettePane.domNode);
 				domConstruct.place('<br/>', palettePane.domNode);
 			});
+			
+			domConstruct.place('<hr/>', palettePane.domNode);
+			
+			var btnDeleteElm = new Button({ 
+				label: 'Delete',
+				showLabel: false,
+				iconClass: 'toolbarIconDeleteEntity'
+			});
+			btnDeleteElm.startup();
+			
+			domConstruct.place(btnDeleteElm.domNode, palettePane.domNode);
 			
 			palettePane.startup();
 			

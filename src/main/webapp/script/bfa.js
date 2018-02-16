@@ -890,7 +890,7 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				className: 'nestedPane'	
 			});
 			
-			var designerBorderContainer = new BorderContainer({
+			var drawingContainer = new BorderContainer({
 				style: 'overflow: auto;',
 				className: 'nestedPane'
 			});
@@ -927,13 +927,14 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				region: 'right',
 			});
 			
-			var paletteButtonNames = ['Start', 'End', 'Action', 'Condition', 'Sub-Process'];
+			var paletteButtonNames = ['Start', 'Action', 'Condition', 'Sub-Process', 'End'];
 			
 			paletteButtonNames.forEach(function(name){
 				var classNamePrefix = (name == 'Sub-Process') ? 'Subprocess' : name;
 				
 				var btn = new Button({ 
 					label: name,
+					showLabel: false,
 					iconClass: 'toolbarIconFlow' + classNamePrefix
 				});
 				btn.startup();
@@ -944,11 +945,11 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			
 			palettePane.startup();
 			
-			designerBorderContainer.addChild(canvasPane);
-			designerBorderContainer.addChild(palettePane);
-			designerBorderContainer.startup();
+			drawingContainer.addChild(canvasPane);
+			drawingContainer.addChild(palettePane);
+			drawingContainer.startup();
 			
-			designerTab.addChild(designerBorderContainer);
+			designerTab.addChild(drawingContainer);
 			designerTab.startup();
 
 			flowEditorArea.addChild(scriptTab);

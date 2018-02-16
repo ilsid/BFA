@@ -28,17 +28,24 @@ table.dijitDialogPaneContentArea,
 .toolbarIconUpdate,
 .toolbarIconDownload,
 .toolbarIconRuntimeMonitor,
-.toolbarIconFilter,
+.toolbarIconFilter
+{
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  text-align: center;
+}
+
 .toolbarIconFlowStart,
 .toolbarIconFlowEnd,
 .toolbarIconFlowAction,
 .toolbarIconFlowCondition,
 .toolbarIconFlowSubprocess
- {
+{
   background-repeat: no-repeat;
-  width: 16px;
+  width: 24px;
   height: 16px;
-  text-align: center;
+  margin-left: 8px; 
 }
 
 .toolbarIconDeleteItem{

@@ -1323,6 +1323,6 @@ function drawFlowIcons() {
 	var endCircAttrs = {stroke: 'black', 'stroke-width': 2, fill: '#CEE3F6'};
 	circ.attr(endCircAttrs);
 
-	
+	// https://github.com/exupero/saveSvgAsPng
 	saveSvgAsPng(document.getElementById('icons_canvas').firstChild, "icon.png");
 }

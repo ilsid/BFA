@@ -642,6 +642,9 @@ function elementMouseDown(event) {
 		}
 		
 		selectedElement = this;
+
+		var selectionEvent = new CustomEvent('diagramElementSelect', { 'detail': {'element': this}});
+		document.dispatchEvent(selectionEvent);
 	}
 	
 	stopEventPropagation(event);
@@ -762,6 +765,9 @@ function elementUnselect() {
 	
 	this.addClass('unselectedElement');
 	this.text.addClass('unselectedElementText');
+	
+	var selectionEvent = new CustomEvent('diagramElementUnselect', { 'detail': {'element': this}});
+	document.dispatchEvent(selectionEvent);
 }
 
 function elementTextMouseDown(event) {
@@ -1000,30 +1006,6 @@ function btnSaveOnClick() {
 	var stateStr=JSON.stringify(state, null, 4);
 	
 	document.getElementById('flowState').value = stateStr;
-}
-
-function btnRestoreOnClick() {
-	var state = JSON.parse(document.getElementById('flowState').value);
-	var elms = new ElementsMap();
-	
-	state.circles.forEach(function(state) {
-		var circ = drawCircle(state.cx, state.cy, state.label, state.id, state.subType);
-		elms.put(state.id, circ);
-	});
-	
-	state.rects.forEach(function(state) {
-		var rect = drawRectangle(state.cx, state.cy, state.label, state.id, state.subType);
-		elms.put(state.id, rect);
-	});
-	
-	state.diamonds.forEach(function(state) {
-		var diam = drawDiamond(state.cx, state.cy, state.label, state.id);
-		elms.put(state.id, diam);
-	});
-	
-	state.lineGroups.forEach(function(state) {
-		drawLineGroup(state, elms);
-	});
 }
 
 function btnClearOnClick() {

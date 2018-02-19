@@ -53,7 +53,7 @@
 		</div>
 	</div>
 	
-	<div data-dojo-type="dijit/Dialog" id="createScriptDialog" title="Save script" style="display: none">
+	<div data-dojo-type="dijit/Dialog" id="createScriptDialog" title="Save script" style="display: none;">
 		<table class="dijitDialogPaneContentArea">
 			<tr>
 				<td><label for="createScriptDialog_textGroupName">Group:</label></td>
@@ -71,7 +71,7 @@
 		</div>
 	</div>
 	
-	<div data-dojo-type="dijit/Dialog" id="updateScriptDialog" title="Update script" style="display: none">
+	<div data-dojo-type="dijit/Dialog" id="updateScriptDialog" title="Update script" style="display: none;">
 		<table class="dijitDialogPaneContentArea">
 			<tr>
 				<td><label for="updateScriptDialog_textGroupName">Group:</label></td>
@@ -88,7 +88,7 @@
 		</div>
 	</div>
 	
-	<div data-dojo-type="dijit/Dialog" id="createEntityDialog" title="Save entity" style="display: none">
+	<div data-dojo-type="dijit/Dialog" id="createEntityDialog" title="Save entity" style="display: none;">
 		<table class="dijitDialogPaneContentArea">
 			<tr>
 				<td><label for="createEntityDialog_textGroupName">Group:</label></td>
@@ -106,7 +106,7 @@
 		</div>
 	</div>
 	
-	<div data-dojo-type="dijit/Dialog" id="updateEntityDialog" title="Update entity" style="display: none">
+	<div data-dojo-type="dijit/Dialog" id="updateEntityDialog" title="Update entity" style="display: none;">
 		<table class="dijitDialogPaneContentArea">
 			<tr>
 				<td><label for="updateEntityDialog_textGroupName">Group:</label></td>
@@ -123,7 +123,7 @@
 		</div>
 	</div>
 	
-	<div data-dojo-type="dijit/Dialog" id="newEntityFieldDialog" title="New field" style="display: none">
+	<div data-dojo-type="dijit/Dialog" id="newEntityFieldDialog" title="New field" style="display: none;">
 		<table class="dijitDialogPaneContentArea">
 			<tr>
 				<td><label for="newEntityFieldDialog_textName">Name:</label></td>
@@ -142,7 +142,7 @@
 		</div>
 	</div>
 	
-	<div data-dojo-type="dijit/Dialog" id="createActionDialog" title="New action" style="display: none">
+	<div data-dojo-type="dijit/Dialog" id="createActionDialog" title="New action" style="display: none;">
 		<form data-dojo-type="dijit/form/Form" id="createActionForm" enctype="multipart/form-data" action="service/action/admin/createQuietly" method="post">
 			<table class="dijitDialogPaneContentArea">
 				<tr>
@@ -179,7 +179,7 @@
 		</form>
 	</div>
 	
-	<div data-dojo-type="dijit/Dialog" id="updateActionDialog" title="Update action" style="display: none">
+	<div data-dojo-type="dijit/Dialog" id="updateActionDialog" title="Update action" style="display: none;">
 		<form data-dojo-type="dijit/form/Form" id="updateActionForm" enctype="multipart/form-data" action="service/action/admin/updateQuietly" method="post">
 			<table class="dijitDialogPaneContentArea">
 				<tr>
@@ -308,7 +308,7 @@
 			<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="isLayoutContainer:true, className:'nestedBorderContainer'">
 				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props="region:'center', splitter:true, tabStrip:true" id="tabContainer">
 				</div>
-				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props="region:'bottom', splitter:true, tabStrip:true" style="height: 20%;" id="messageContainer">
+				<div data-dojo-type="dijit/layout/TabContainer" data-dojo-props="region:'bottom', splitter:true, tabStrip:true" style="height: 20%;" id="bottomTabContainer">
 					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="iconClass:'toolbarIconInfo'" title="Info" id="infoTab">
 						<table id="infoTable"></table>
 					</div>
@@ -359,6 +359,23 @@
 								</table>
 							</div>
 						</div>
+					</div>
+					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="iconClass:'toolbarIconProperties'" title="Properties" style="display: none;" 
+						id="elementPropertiesTab" >
+						<div id="elementPropertiesToolbar" data-dojo-type="dijit/Toolbar">
+							<div data-dojo-type="dijit/form/Button" id="elementPropertiesToolbar_apply" data-dojo-props="iconClass:'toolbarIconApply', showLabel:false" 
+								onclick="">Apply</div>
+						</div>
+						<table>
+							<tr>
+								<td><label for="elmProps_textName">Name:</label></td>
+								<td><input data-dojo-type="dijit/form/TextBox" id="elmProps_textName" style="width: 500px;" /></td>
+							</tr>
+							<tr>
+								<td><label for="elmProps_textLabel">Label:</label></td>
+								<td><input data-dojo-type="dijit/form/TextBox" id="elmProps_textLabel" style="width: 500px;" /></td>
+							</tr>
+						</table>
 					</div>
 				</div>
 			</div>

@@ -29,6 +29,8 @@ table.dijitDialogPaneContentArea,
 .toolbarIconDownload,
 .toolbarIconRuntimeMonitor,
 .toolbarIconFilter,
+.toolbarIconProperties,
+.toolbarIconApply,
 .toolbarIconFlowStart,
 .toolbarIconFlowEnd,
 .toolbarIconFlowAction,
@@ -91,6 +93,14 @@ table.dijitDialogPaneContentArea,
 
 .toolbarIconFilter {
   background-image: url("../icons/filter_16x16.png");
+}
+
+.toolbarIconProperties {
+  background-image: url("../icons/properties_16x16.png");
+}
+
+.toolbarIconApply {
+  background-image: url("../icons/apply_16x16.png");
 }
 
 .toolbarIconFlowStart {

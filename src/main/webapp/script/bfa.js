@@ -8,6 +8,9 @@
 	createTree('script', createScriptTab, undefined, 'getSource');
 	createTree('entity', createEntityTab, 'toolbarIconEntity', 'getSource');	
 	createTree('action', createActionTab, 'toolbarIconAction', 'getInfo');
+	
+	initDiagramElementPropertiesPane();
+	
 }());
 
 
@@ -86,7 +89,7 @@ function writeInfo(message) {
 		function(registry, domConstruct) {
 			domConstruct.place('<tr class="consoleMessage"><td><pre>' + message + '</pre></td></tr>', 
 				'infoTable', 'first');
-			registry.byId('messageContainer').selectChild(registry.byId('infoTab'));	
+			registry.byId('bottomTabContainer').selectChild(registry.byId('infoTab'));	
 		});
 }
 
@@ -105,7 +108,7 @@ function writeErrorMessage(msg) {
 				+ '<tr class="consoleMessage"><td>'
 				+ '----------------------------------------------------------------</td></tr>'
 				,'errorTable', 'first');
-			registry.byId('messageContainer').selectChild(registry.byId('errorTab'));	
+			registry.byId('bottomTabContainer').selectChild(registry.byId('errorTab'));	
 		});
 }
 
@@ -804,6 +807,28 @@ function buildEntitySource(grid) {
 	return dojo.toJson(entity);
 }
 
+function initDiagramElementPropertiesPane() {
+	require(['dojo/ready', 'dijit/registry'], function(ready, registry) {
+		ready(function(){
+			var elmPropsPane = registry.byId('elementPropertiesTab');
+			var tabContainer = registry.byId('bottomTabContainer');
+			tabContainer.removeChild(elmPropsPane);
+			
+			document.addEventListener('diagramElementSelect', function(event) {
+				tabContainer.addChild(elmPropsPane);
+				tabContainer.selectChild(elmPropsPane);
+			});
+			
+			document.addEventListener('diagramElementUnselect', function(event) {
+				tabContainer.removeChild(elmPropsPane);
+				tabContainer.selectChild(tabContainer.getChildren()[0]);
+			});
+
+		});
+	});
+
+}
+
 function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 	require([ 'dijit/registry', 'dijit/layout/ContentPane', 'dijit/Toolbar', 
 	          'dijit/form/Button', 'dijit/layout/TabContainer', 
@@ -907,7 +932,7 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 					if (!this.canvas) {
 						//TODO: calculate canvas size
 						this.canvas = SVG(this.id).size(1500, 500);
-
+						
 						if (isExistingScript) {
 							var scriptName = groupName + '::' + tabTitle;
 							drawFlowDiagram(scriptName, this.canvas);

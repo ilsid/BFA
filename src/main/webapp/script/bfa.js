@@ -1,6 +1,6 @@
 (function () {
 	bfa = {
-		activeFlowEditorTab: undefined,
+		flowEditorContext: {},
 
 		TIME_PATTERN: {datePattern: 'HH:mm:ss', selector: 'date', locale: 'en-us'},
 		// FIXME: date format should be obtained dynamically from server
@@ -828,27 +828,31 @@ function initFlowEditorEventHandlers() {
 	require(['dijit/registry'], function(registry) {
 		
 		var flowSourceChangeHandler = function(event) {
-			var activeTab = bfa.activeFlowEditorTab;
-			var btnSave = activeTab.getChildren()[0].getChildren()[0]; 
+			var btnSave = bfa.flowEditorContext.btnSaveFlow;
+			var tab = bfa.flowEditorContext.activeTab;
 			
 			if (btnSave.get('disabled')) {
 				btnSave.set('disabled', false);
-				activeTab.set('title', '*' + activeTab.title);
+				tab.set('title', '*' + tab.title);
 			}
 		}
 		
 		document.addEventListener('diagramElementSelect', function(event) {
 			var elmPropsPane = registry.byId('elementPropertiesTab');
 			var bottomTabContainer = registry.byId('bottomTabContainer');
+			var btnDelete = bfa.flowEditorContext.btnDeleteElement;
 			bottomTabContainer.addChild(elmPropsPane);
 			bottomTabContainer.selectChild(elmPropsPane);
+			btnDelete.set('disabled', false);
 		});
 		
 		document.addEventListener('diagramElementUnselect', function(event) {
 			var elmPropsPane = registry.byId('elementPropertiesTab');
 			var bottomTabContainer = registry.byId('bottomTabContainer');
+			var btnDelete = bfa.flowEditorContext.btnDeleteElement;
 			bottomTabContainer.removeChild(elmPropsPane);
 			bottomTabContainer.selectChild(bottomTabContainer.getChildren()[0]);
+			btnDelete.set('disabled', true);
 		});
 		
 		document.addEventListener('flowSourceChange', flowSourceChangeHandler);
@@ -892,10 +896,8 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			});
 			
 			if (isExistingScript) {
-				//btnSave.set('disabled', true);
 				btnSave.onClick = showUpdateScriptDialog;
 			} else {
-				//btnRun.set('disabled', true);
 				btnSave.onClick = showCreateScriptDialog;
 			}
 			btnSave.set('disabled', true);
@@ -1007,7 +1009,8 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			var btnDeleteElm = new Button({ 
 				label: 'Delete',
 				showLabel: false,
-				iconClass: 'toolbarIconDeleteEntity'
+				iconClass: 'toolbarIconDeleteEntity',
+				disabled: true
 			});
 			btnDeleteElm.startup();
 			
@@ -1038,7 +1041,9 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			
 			tabContainer.selectChild(tab);
 			
-			bfa.activeFlowEditorTab = tab;
+			bfa.flowEditorContext.btnSaveFlow = btnSave;
+			bfa.flowEditorContext.btnDeleteElement = btnDeleteElm;
+			bfa.flowEditorContext.activeTab = tab;
 			
 			createScriptEditor(scriptSource, scriptTab);
 	});

@@ -319,6 +319,8 @@ function LineGroup(line, flowId) {
 			
 			currentX = event.clientX;
 			currentY = event.clientY;
+			
+			fireElementMoveEvent();
 		}
 		
 		stopEventPropagation(event);
@@ -486,8 +488,24 @@ SVG.extend(SVG.Container, {
 	}
 });
 
-function dispatchEditorEvent(event) {
+function fireEditorEvent(eventName, eventDetails) {
+	var event;
+	
+	if (eventDetails) {
+		event = new CustomEvent(eventName, eventDetails);
+	} else {
+		event = new CustomEvent(eventName);
+	}
+	
 	document.dispatchEvent(event);
+}
+
+function fireElementMoveEvent() {
+	// A single event firing is enough for transition to "diagram changed" state
+	if (!draw.elementMoveEventFired) {
+		fireEditorEvent('diagramElementMove');
+		draw.elementMoveEventFired = true;
+	}
 }
 
 function stopEventPropagation(event) {
@@ -645,7 +663,7 @@ function elementMouseDown(event) {
 		
 		selectedElement = this;
 
-		dispatchEditorEvent(new CustomEvent('diagramElementSelect', { 'detail': {'element': this}}));
+		fireEditorEvent('diagramElementSelect', {'detail': {'element': this}});
 	}
 	
 	stopEventPropagation(event);
@@ -751,6 +769,8 @@ function elementMouseMove(event) {
 		
 		currentX = event.clientX;
 		currentY = event.clientY;
+		
+		fireElementMoveEvent();
 	}
 	
 	stopEventPropagation(event);
@@ -767,7 +787,7 @@ function elementUnselect() {
 	this.addClass('unselectedElement');
 	this.text.addClass('unselectedElementText');
 	
-	dispatchEditorEvent(new CustomEvent('diagramElementUnselect', { 'detail': {'element': this}}));
+	fireEditorEvent('diagramElementUnselect', {'detail': {'element': this}});
 }
 
 function elementTextMouseDown(event) {
@@ -1024,6 +1044,7 @@ function btnClearOnClick() {
 function btnNewStartOnClick() {
 	var start = drawCircle(50, 50, 'Start', 'str' + elementCounter++);
 	start.fire('mousedown');
+	fireEditorEvent('flowSourceChange');
 }
 
 function btnNewEndOnClick() {
@@ -1032,14 +1053,17 @@ function btnNewEndOnClick() {
 	
 	drawLine(selectedElement, end);
 	end.fire('mousedown');
+	fireEditorEvent('flowSourceChange');
 }
 
 function btnNewActionOnClick() {
 	drawFlowElement('Action');
+	fireEditorEvent('flowSourceChange');
 }
 
 function btnNewSubprocessOnClick() {
 	drawFlowElement('Sub-Process', 'subProcess');
+	fireEditorEvent('flowSourceChange');
 }
 
 function btnNewConditionOnClick() {
@@ -1048,6 +1072,7 @@ function btnNewConditionOnClick() {
 	
 	drawLine(selectedElement, diam);
 	diam.fire('mousedown');
+	fireEditorEvent('flowSourceChange');
 }
 
 function drawFlowElement(textPrefix, elementCssClass) {

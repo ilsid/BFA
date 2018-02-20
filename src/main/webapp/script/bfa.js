@@ -153,7 +153,7 @@ function createScriptEditor(scriptSource, parentPanel) {
 			}
 			
 			editor.getSession().on('change', function() {
-				dispatchEditorEvent(new CustomEvent('flowSourceChanged'));
+				fireEditorEvent('flowSourceChange');
 			});
 			
 			parentPanel.editor = editor;
@@ -827,6 +827,16 @@ function initDiagramElementPropertiesPane() {
 function initFlowEditorEventHandlers() {
 	require(['dijit/registry'], function(registry) {
 		
+		var flowSourceChangeHandler = function(event) {
+			var activeTab = bfa.activeFlowEditorTab;
+			var btnSave = activeTab.getChildren()[0].getChildren()[0]; 
+			
+			if (btnSave.get('disabled')) {
+				btnSave.set('disabled', false);
+				activeTab.set('title', '*' + activeTab.title);
+			}
+		}
+		
 		document.addEventListener('diagramElementSelect', function(event) {
 			var elmPropsPane = registry.byId('elementPropertiesTab');
 			var bottomTabContainer = registry.byId('bottomTabContainer');
@@ -841,15 +851,8 @@ function initFlowEditorEventHandlers() {
 			bottomTabContainer.selectChild(bottomTabContainer.getChildren()[0]);
 		});
 		
-		document.addEventListener('flowSourceChanged', function(event) {
-			var activeTab = bfa.activeFlowEditorTab;
-			var btnSave = activeTab.getChildren()[0].getChildren()[0]; 
-			
-			if (btnSave.get('disabled')) {
-				btnSave.set('disabled', false);
-				activeTab.set('title', '*' + activeTab.title);
-			}
-		});
+		document.addEventListener('flowSourceChange', flowSourceChangeHandler);
+		document.addEventListener('diagramElementMove', flowSourceChangeHandler);
 		
 	});
 
@@ -889,12 +892,13 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			});
 			
 			if (isExistingScript) {
-				btnSave.set('disabled', true);
+				//btnSave.set('disabled', true);
 				btnSave.onClick = showUpdateScriptDialog;
 			} else {
+				//btnRun.set('disabled', true);
 				btnSave.onClick = showCreateScriptDialog;
-				btnRun.set('disabled', true);
 			}
+			btnSave.set('disabled', true);
 			
 			btnSave.startup();
 			btnRun.startup();

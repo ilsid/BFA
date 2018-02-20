@@ -486,9 +486,11 @@ SVG.extend(SVG.Container, {
 	}
 });
 
+function dispatchEditorEvent(event) {
+	document.dispatchEvent(event);
+}
 
-function stopEventPropagation(event)
-{
+function stopEventPropagation(event) {
    if (event.stopPropagation) {
        event.stopPropagation();
    }
@@ -643,8 +645,7 @@ function elementMouseDown(event) {
 		
 		selectedElement = this;
 
-		var selectionEvent = new CustomEvent('diagramElementSelect', { 'detail': {'element': this}});
-		document.dispatchEvent(selectionEvent);
+		dispatchEditorEvent(new CustomEvent('diagramElementSelect', { 'detail': {'element': this}}));
 	}
 	
 	stopEventPropagation(event);
@@ -766,8 +767,7 @@ function elementUnselect() {
 	this.addClass('unselectedElement');
 	this.text.addClass('unselectedElementText');
 	
-	var selectionEvent = new CustomEvent('diagramElementUnselect', { 'detail': {'element': this}});
-	document.dispatchEvent(selectionEvent);
+	dispatchEditorEvent(new CustomEvent('diagramElementUnselect', { 'detail': {'element': this}}));
 }
 
 function elementTextMouseDown(event) {

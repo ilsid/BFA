@@ -1,15 +1,18 @@
 (function () {
-	bfa = {};
-	
-	bfa.TIME_PATTERN = {datePattern: 'HH:mm:ss', selector: 'date', locale: 'en-us'};
-	// FIXME: date format should be obtained dynamically from server
-	bfa.DATE_PATTERN = {datePattern: 'yyyy-MM-dd', selector: 'date', locale: 'en-us'};
+	bfa = {
+		activeFlowEditorTab: undefined,
 
+		TIME_PATTERN: {datePattern: 'HH:mm:ss', selector: 'date', locale: 'en-us'},
+		// FIXME: date format should be obtained dynamically from server
+		DATE_PATTERN: {datePattern: 'yyyy-MM-dd', selector: 'date', locale: 'en-us'}
+	};
+	
 	createTree('script', createScriptTab, undefined, 'getSource');
 	createTree('entity', createEntityTab, 'toolbarIconEntity', 'getSource');	
 	createTree('action', createActionTab, 'toolbarIconAction', 'getInfo');
 	
 	initDiagramElementPropertiesPane();
+	initFlowEditorEventHandlers();
 	
 }());
 
@@ -129,7 +132,7 @@ function escapeEntitySource(source)  {
 	return source.replace(/"/g,'\\"');
 }
 
-function createScriptEditor(scriptSource, parentPanel, onChangeHandler) {
+function createScriptEditor(scriptSource, parentPanel) {
 	require(['dojo/dom-construct', 'dojo/domReady!'],
 		function(domConstruct) {
 			var parentId = parentPanel.id;
@@ -148,7 +151,10 @@ function createScriptEditor(scriptSource, parentPanel, onChangeHandler) {
 				editor.setValue(scriptSource);
 				editor.gotoLine(1);
 			}
-			editor.getSession().on('change', onChangeHandler);
+			
+			editor.getSession().on('change', function() {
+				dispatchEditorEvent(new CustomEvent('flowSourceChanged'));
+			});
 			
 			parentPanel.editor = editor;
 	});
@@ -813,18 +819,38 @@ function initDiagramElementPropertiesPane() {
 			var elmPropsPane = registry.byId('elementPropertiesTab');
 			var tabContainer = registry.byId('bottomTabContainer');
 			tabContainer.removeChild(elmPropsPane);
-			
-			document.addEventListener('diagramElementSelect', function(event) {
-				tabContainer.addChild(elmPropsPane);
-				tabContainer.selectChild(elmPropsPane);
-			});
-			
-			document.addEventListener('diagramElementUnselect', function(event) {
-				tabContainer.removeChild(elmPropsPane);
-				tabContainer.selectChild(tabContainer.getChildren()[0]);
-			});
-
 		});
+	});
+
+}
+
+function initFlowEditorEventHandlers() {
+	require(['dijit/registry'], function(registry) {
+		
+		document.addEventListener('diagramElementSelect', function(event) {
+			var elmPropsPane = registry.byId('elementPropertiesTab');
+			var bottomTabContainer = registry.byId('bottomTabContainer');
+			bottomTabContainer.addChild(elmPropsPane);
+			bottomTabContainer.selectChild(elmPropsPane);
+		});
+		
+		document.addEventListener('diagramElementUnselect', function(event) {
+			var elmPropsPane = registry.byId('elementPropertiesTab');
+			var bottomTabContainer = registry.byId('bottomTabContainer');
+			bottomTabContainer.removeChild(elmPropsPane);
+			bottomTabContainer.selectChild(bottomTabContainer.getChildren()[0]);
+		});
+		
+		document.addEventListener('flowSourceChanged', function(event) {
+			var activeTab = bfa.activeFlowEditorTab;
+			var btnSave = activeTab.getChildren()[0].getChildren()[0]; 
+			
+			if (btnSave.get('disabled')) {
+				btnSave.set('disabled', false);
+				activeTab.set('title', '*' + activeTab.title);
+			}
+		});
+		
 	});
 
 }
@@ -1008,14 +1034,9 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 			
 			tabContainer.selectChild(tab);
 			
-			var editorOnChangeHandler = function() {
-				if (isExistingScript && btnSave.get('disabled')) {
-					btnSave.set('disabled', false);
-					tab.set('title', '*' + tab.title);
-				}
-			};
+			bfa.activeFlowEditorTab = tab;
 			
-			createScriptEditor(scriptSource, scriptTab, editorOnChangeHandler);
+			createScriptEditor(scriptSource, scriptTab);
 	});
 }
 

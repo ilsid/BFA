@@ -1,8 +1,5 @@
 (function () {
 	
-	//dgm = {};
-	//dgm.selectedElement = null;
-	//dgm.elementCounter = 10;
 	selectedElement = null;
 	elementCounter = 1;
 
@@ -50,8 +47,24 @@ function LineGroup(line, flowId) {
 	};
 	
 	this.remove = function() {
+		// Assumption: the removal of line group is performed in context of 
+		// the selected element removal
+		// Otherwise, implementation change is needed
+		if (this.head.outgoingVertex != selectedElement) {
+			removeElement(this.head.outgoingVertex.inLineGroups, this);
+		}
+		if (this.tail.incomingVertex != selectedElement) {
+			removeElement(this.tail.incomingVertex.outLineGroups, this);
+		}
+		
 		var line = this.head;
 		do {
+			if (line.arrowHead) {
+				line.arrowHead.remove();
+			};
+			if (line.label) {
+				removeLineText(line);
+			}
 			line.remove();
 			line = line.nextLine;
 		} while (line);
@@ -325,6 +338,15 @@ function LineGroup(line, flowId) {
 		
 		stopEventPropagation(event);
 	}
+	
+	function removeElement(arr, elm) {
+		arr.some(function(e, i, a) {
+			if (e === elm) {
+				a.splice(i, 1);
+				return true;
+			}
+		});
+	};
 
 }
 
@@ -352,6 +374,9 @@ SVG.RecordablePolygon.prototype = Object.create(SVG.Polygon.prototype);
 SVG.extend(SVG.RecordableRect, {
 	remove: function() {
 		draw.state.removeRect(this);
+		if (this.text) {
+			this.text.remove();
+		};
 		SVG.Rect.prototype.remove.call(this);
 	},
 	
@@ -382,6 +407,9 @@ SVG.extend(SVG.RecordableRect, {
 SVG.extend(SVG.RecordableCircle, {
 	remove: function() {
 		draw.state.removeCircle(this);
+		if (this.text) {
+			this.text.remove();
+		};
 		SVG.Circle.prototype.remove.call(this);
 	},
 
@@ -411,6 +439,9 @@ SVG.extend(SVG.RecordableCircle, {
 SVG.extend(SVG.RecordablePolygon, {
 	remove: function() {
 		draw.state.removeDiamond(this);
+		if (this.text) {
+			this.text.remove();
+		};
 		SVG.Polygon.prototype.remove.call(this);
 	},
 
@@ -1098,6 +1129,23 @@ function drawFlowElement(textPrefix, elementCssClass) {
 	elm.fire('mousedown');
 }
 
+function removeSelectedElement() {
+	selectedElement.remove();
+
+	selectedElement.outLineGroups.forEach(function(group) {
+		group.remove();
+	});
+	
+	selectedElement.inLineGroups.forEach(function(group) {
+		group.remove();
+	});
+	
+	selectedElement = null;
+	
+	fireEditorEvent('flowSourceChange');
+	fireEditorEvent('diagramElementUnselect');
+}
+
 function ElementsMap() {
 	this._elements = [];
 	
@@ -1130,40 +1178,40 @@ function State() {
 	this.lineGroups = [];
 	
 	this.addRect = function(rect) {
-		addElement(this.rects, rect);
+		_addElement(this.rects, rect);
 	};
 	
 	this.addCircle = function(circ) {
-		addElement(this.circles, circ);
+		_addElement(this.circles, circ);
 	};
 	
 	this.addDiamond = function(diam) {
-		addElement(this.diamonds, diam);
+		_addElement(this.diamonds, diam);
 	};
 	
 	this.addLineGroup = function(grp) {
-		addElement(this.lineGroups, grp);
+		_addElement(this.lineGroups, grp);
 	};
 	
 	this.removeRect = function(rect) {
-		removeElement(this.rects, rect);
+		_removeElement(this.rects, rect);
 	};
 	
 	this.removeCircle = function(circ) {
-		removeElement(this.circles, circ);
+		_removeElement(this.circles, circ);
 	};
 	
 	this.removeDiamond = function(diam) {
-		removeElement(this.diamonds, diam);
+		_removeElement(this.diamonds, diam);
 	};
 	
 	this.removeLineGroup = function(grp) {
-		removeElement(this.lineGroups, grp);
+		_removeElement(this.lineGroups, grp);
 	},
 	
 	this.save = function() {
 		var rectStates = [];
-		this.rects.forEach(function(rect){
+		this.rects.forEach(function(rect) {
 			rectStates.push(rect.getState());
 		});
 		
@@ -1192,11 +1240,11 @@ function State() {
 		return res;
 	};
 	
-	function addElement(arr, elm) {
+	function _addElement(arr, elm) {
 		arr.push(elm);
 	};
 	
-	function removeElement(arr, elm) {
+	function _removeElement(arr, elm) {
 		arr.some(function(e, i, a) {
 			if (e === elm) {
 				a.splice(i, 1);

@@ -841,7 +841,13 @@ function initFlowEditorEventHandlers() {
 			var elmPropsPane = registry.byId('elementPropertiesTab');
 			var bottomTabContainer = registry.byId('bottomTabContainer');
 			var btnDelete = bfa.flowEditorContext.btnDeleteElement;
-			bottomTabContainer.addChild(elmPropsPane);
+			var tabs = bottomTabContainer.getChildren();
+			var lastTab = tabs[tabs.length - 1];
+			
+			if (lastTab !== elmPropsPane) {
+				bottomTabContainer.addChild(elmPropsPane);
+			}
+			
 			bottomTabContainer.selectChild(elmPropsPane);
 			btnDelete.set('disabled', false);
 		});
@@ -1010,7 +1016,8 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				label: 'Delete',
 				showLabel: false,
 				iconClass: 'toolbarIconDeleteEntity',
-				disabled: true
+				disabled: true,
+				onClick: removeSelectedElement
 			});
 			btnDeleteElm.startup();
 			

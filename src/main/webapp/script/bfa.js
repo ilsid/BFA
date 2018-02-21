@@ -1046,11 +1046,13 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				tabContainer.addChild(tab);
 			}
 			
-			tabContainer.selectChild(tab);
+			tab.onFocus = function() {
+				bfa.flowEditorContext.btnSaveFlow = btnSave;
+				bfa.flowEditorContext.btnDeleteElement = btnDeleteElm;
+				bfa.flowEditorContext.activeTab = this;
+			};
 			
-			bfa.flowEditorContext.btnSaveFlow = btnSave;
-			bfa.flowEditorContext.btnDeleteElement = btnDeleteElm;
-			bfa.flowEditorContext.activeTab = tab;
+			tabContainer.selectChild(tab);
 			
 			createScriptEditor(scriptSource, scriptTab);
 	});

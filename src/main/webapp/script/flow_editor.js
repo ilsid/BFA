@@ -1,9 +1,3 @@
-(function () {
-	
-	selectedElement = null;
-	elementCounter = 1;
-
-}());
 
 function LineGroup(line, flowId) {
 	this.constructor.call(this, SVG.create('lineGroup'));
@@ -50,10 +44,10 @@ function LineGroup(line, flowId) {
 		// Assumption: the removal of line group is performed in context of 
 		// the selected element removal
 		// Otherwise, implementation change is needed
-		if (this.head.outgoingVertex != selectedElement) {
+		if (this.head.outgoingVertex != draw.selectedElement) {
 			removeElement(this.head.outgoingVertex.inLineGroups, this);
 		}
-		if (this.tail.incomingVertex != selectedElement) {
+		if (this.tail.incomingVertex != draw.selectedElement) {
 			removeElement(this.tail.incomingVertex.outLineGroups, this);
 		}
 		
@@ -146,12 +140,12 @@ function LineGroup(line, flowId) {
 		var group = this.group;
 		
 		if (!group.selected) {
-			if (selectedElement != null) {
-				selectedElement.fire('unselect');
+			if (draw.selectedElement != null) {
+				draw.selectedElement.fire('unselect');
 			}
 			
 			group.selected = true;
-			selectedElement = group;
+			draw.selectedElement = group;
 			
 			var line = group.head;
 			do {
@@ -667,9 +661,9 @@ function determineSecondLinePoint(elm, firstPoint) {
 }
 
 function canvasMouseDown() {
-	if (selectedElement != null) {
-		selectedElement.fire('unselect');
-		selectedElement = null;
+	if (draw.selectedElement != null) {
+		draw.selectedElement.fire('unselect');
+		draw.selectedElement = null;
 	}
 }
 
@@ -688,11 +682,11 @@ function elementMouseDown(event) {
 		this.addClass('selectedElement');
 		this.text.addClass('selectedElementText');
 		
-		if (selectedElement != null) {
-			selectedElement.fire('unselect');
+		if (draw.selectedElement != null) {
+			draw.selectedElement.fire('unselect');
 		}
 		
-		selectedElement = this;
+		draw.selectedElement = this;
 
 		fireEditorEvent('diagramElementSelect', {'detail': {'element': this}});
 	}
@@ -1073,16 +1067,16 @@ function btnClearOnClick() {
 }
 
 function btnNewStartOnClick() {
-	var start = drawCircle(50, 50, 'Start', 'str' + elementCounter++);
+	var start = drawCircle(50, 50, 'Start', 'str' + draw.elementCounter++);
 	start.fire('mousedown');
 	fireEditorEvent('flowSourceChange');
 }
 
 function btnNewEndOnClick() {
-	var end = drawCircle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
-						'End', 'end' + elementCounter++, 'endState');
+	var end = drawCircle(draw.selectedElement.cx() + draw.selectedElement.width() + 50, draw.selectedElement.cy(), 
+						'End', 'end' + draw.elementCounter++, 'endState');
 	
-	drawLine(selectedElement, end);
+	drawLine(draw.selectedElement, end);
 	end.fire('mousedown');
 	fireEditorEvent('flowSourceChange');
 }
@@ -1098,19 +1092,21 @@ function btnNewSubprocessOnClick() {
 }
 
 function btnNewConditionOnClick() {
-	var diam = drawDiamond(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
-							'Is Condition Met?', 'cond' + elementCounter++);
+	var diam = drawDiamond(draw.selectedElement.cx() + draw.selectedElement.width() + 50, draw.selectedElement.cy(), 
+							'Is Condition Met?', 'cond' + draw.elementCounter++);
 	
-	drawLine(selectedElement, diam);
+	drawLine(draw.selectedElement, diam);
 	diam.fire('mousedown');
 	fireEditorEvent('flowSourceChange');
 }
 
 function drawFlowElement(textPrefix, elementCssClass) {
-	var elm = drawRectangle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
-			textPrefix + ' ' + elementCounter, textPrefix.toLowerCase() + elementCounter, elementCssClass);
+	var selectedElement = draw.selectedElement;
 	
-	elementCounter++;
+	var elm = drawRectangle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
+			textPrefix + ' ' + draw.elementCounter, textPrefix.toLowerCase() + draw.elementCounter, elementCssClass);
+	
+	draw.elementCounter++;
 
 	if (selectedElement.customType == 'diamond' && selectedElement.outLineGroups.length == 0) {
 		drawLine(selectedElement, elm, 'Yes');
@@ -1120,7 +1116,7 @@ function drawFlowElement(textPrefix, elementCssClass) {
 		alert('No more elements allowed');
 		elm.remove();
 		elm.text.remove();
-		elementCounter--;
+		draw.elementCounter--;
 		return;
 	} else {
 		drawLine(selectedElement, elm);
@@ -1130,17 +1126,17 @@ function drawFlowElement(textPrefix, elementCssClass) {
 }
 
 function removeSelectedElement() {
-	selectedElement.remove();
+	draw.selectedElement.remove();
 
-	selectedElement.outLineGroups.forEach(function(group) {
+	draw.selectedElement.outLineGroups.forEach(function(group) {
 		group.remove();
 	});
 	
-	selectedElement.inLineGroups.forEach(function(group) {
+	draw.selectedElement.inLineGroups.forEach(function(group) {
 		group.remove();
 	});
 	
-	selectedElement = null;
+	draw.selectedElement = null;
 	
 	fireEditorEvent('flowSourceChange');
 	fireEditorEvent('diagramElementUnselect');
@@ -1269,6 +1265,8 @@ function drawDiagram(canvas, diagramState) {
 	draw.on('mousemove', function(event){ stopEventPropagation(event); });
 	
 	draw.state = new State();
+	draw.selectedElement = null;
+	draw.elementCounter = 1
 	
 	if (diagramState) {
 		var elms = new ElementsMap();

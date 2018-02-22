@@ -195,7 +195,7 @@ function drawFlowDiagram(scriptName, canvas) {
 						var diagram = JSON.parse(resp);
 						drawDiagram(canvas, diagram)
 					} else {
-						drawMockDiagram(canvas);
+						drawEmptyDiagram(canvas);
 					}
 				}, function(err) {
 					writeError(err);
@@ -983,6 +983,10 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				onFocus: function() {
 					// global var defined in flow_editor.js
 					draw = this.canvas;
+				},
+				
+				takeFocus: function() {
+					this.onFocus();
 				}
 			});
 			canvasPane.startup();
@@ -1050,6 +1054,8 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				bfa.flowEditorContext.btnSaveFlow = btnSave;
 				bfa.flowEditorContext.btnDeleteElement = btnDeleteElm;
 				bfa.flowEditorContext.activeTab = this;
+				
+				canvasPane.takeFocus();
 			};
 			
 			tabContainer.selectChild(tab);

@@ -365,6 +365,9 @@
 						<div id="elementPropertiesToolbar" data-dojo-type="dijit/Toolbar">
 							<div data-dojo-type="dijit/form/Button" id="elementPropertiesToolbar_apply" data-dojo-props="iconClass:'toolbarIconApply', showLabel:false" 
 								onclick="">Apply</div>
+							<div data-dojo-type="dijit/ToolbarSeparator"></div>	
+							<input type="checkbox" data-dojo-type="dijit/form/CheckBox" id="elementPropertiesToolbar_expressionsCheck" 
+								onchange="" /> <label for="elementPropertiesToolbar_expressionsCheck">Expression(s)</label>	
 						</div>
 						<table>
 							<tr>
@@ -386,6 +389,10 @@
 										<tr>
 											<td><label for="elmProps_textActionOutput">Output:</label></td>
 											<td><input data-dojo-type="dijit/form/TextBox" id="elmProps_textActionOutput" style="width: 400px;" /></td>
+										</tr>
+										<tr>
+											<td><label for="elmProps_textExpressions">Expression(s):</label></td>
+											<td><textarea data-dojo-type="dijit/form/SimpleTextarea" id="elmProps_textExpressions" rows="2" ></textarea></td>
 										</tr>
 									</table>
 								</td>

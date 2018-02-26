@@ -5,7 +5,7 @@ function LineGroup(line, flowId) {
 	this.flowId = flowId;
 	draw.state.addLineGroup(this);
 	
-	var DRAG_POINT_SIZE = 8;
+	var DRAG_POINT_SIZE = 12;
 	
 	line.group = this;
 	line.on('mousedown', mouseDown);
@@ -183,7 +183,6 @@ function LineGroup(line, flowId) {
 		var points = [];
 		
 		var line = group.head;
-		var prevLine;
 		do {
 			var point = drawPoint(line.cx(), line.cy());
 			points.push(point);
@@ -216,13 +215,14 @@ function LineGroup(line, flowId) {
 	}
 	
 	function drawPoint(cx, cy) {
-		var point = draw.rect(DRAG_POINT_SIZE, DRAG_POINT_SIZE);
+		var point = draw.circle(DRAG_POINT_SIZE);
 		point.cx(cx).cy(cy);
 		point.addClass('dragPoint');
 		point.on('mouseover', dragPointMouseOver);
 		point.on('mouseout', dragPointMouseOut);
 		point.on('mousedown', dragPointMouseDown);
-		point.on('mousemove', dragPointMouseMove);
+		point.on('mouseup', dragPointMouseUp);
+		point.move = moveDragPoint;
 		
 		return point;
 	}
@@ -269,68 +269,72 @@ function LineGroup(line, flowId) {
 		currentX = event.clientX;
 		currentY = event.clientY;
 		
+		this.currentX = event.clientX;
+		this.currentY = event.clientY;
+		draw.dragPoint = this;
+
+		stopEventPropagation(event);
+	}
+	
+	function dragPointMouseUp(event) {
+		delete draw.dragPoint;
 		stopEventPropagation(event);
 	}
 
-	function dragPointMouseMove(event) {
-		if (isLeftMouseButtonPressed(event)) {
+	function moveDragPoint(x, y) {
+		var dx = x - this.currentX;
+		var dy = y - this.currentY;
+		
+		this.cx(this.cx()+dx).cy(this.cy()+dy);
+		
+		if (this.line) {
+			var line = this.line;
+			var newLine = draw.line(line.attr("x1"), line.attr("y1"), currentX, currentY)
+						.stroke({width: 2});
+			var group = line.group;
+			group.addAfter(newLine, line);
+			selectLine(newLine);
+			line.plot(currentX, currentY, line.attr("x2"), line.attr("y2"));
 			
-			var dx = event.clientX - currentX;
-			var dy = event.clientY - currentY;
-			
-			this.cx(this.cx()+dx).cy(this.cy()+dy);
-			
-			if (this.line) {
-				var line = this.line;
-				var newLine = draw.line(line.attr("x1"), line.attr("y1"), currentX, currentY)
-							.stroke({width: 2});
-				var group = line.group;
-				group.addAfter(newLine, line);
-				selectLine(newLine);
-				line.plot(currentX, currentY, line.attr("x2"), line.attr("y2"));
-				
-				if (line.incomingVertex) {
-					newLine.incomingVertex = line.incomingVertex;
-					delete line.incomingVertex;
-				}
-				
-				if (line.label) {
-					var text = getLineTextValue(line);
-					removeLineText(line);
-					drawLineText(newLine, text);
-				}
-				
-				this.inLine = newLine;
-				this.outLine = line;
-				
-				// This is not mid point any more
-				delete this.line;
-				drawMidDragPoint(line);
-				drawMidDragPoint(newLine);
-			} else {
-				var inLine = this.inLine;
-				var outLine = this.outLine;
-				inLine.plot(inLine.attr("x1"), inLine.attr("y1"), this.cx(), this.cy());
-				outLine.plot(this.cx(), this.cy(), outLine.attr("x2"), outLine.attr("y2"));
-				moveMidDragPoint(inLine);
-				moveMidDragPoint(outLine);
+			if (line.incomingVertex) {
+				newLine.incomingVertex = line.incomingVertex;
+				delete line.incomingVertex;
 			}
 			
-			if (this.outLine.outgoingVertex) {
-				moveLineGroupHead(this.outLine.outgoingVertex, this.outLine);
+			if (line.label) {
+				var text = getLineTextValue(line);
+				removeLineText(line);
+				drawLineText(newLine, text);
 			}
 			
-			if (this.inLine.incomingVertex) {
-				moveLineGroupTail(this.inLine.incomingVertex, this.inLine);
-			}
+			this.inLine = newLine;
+			this.outLine = line;
 			
-			currentX = event.clientX;
-			currentY = event.clientY;
-			
-			fireElementMoveEvent();
+			// This is not mid point any more
+			delete this.line;
+			drawMidDragPoint(line);
+			drawMidDragPoint(newLine);
+		} else {
+			var inLine = this.inLine;
+			var outLine = this.outLine;
+			inLine.plot(inLine.attr("x1"), inLine.attr("y1"), this.cx(), this.cy());
+			outLine.plot(this.cx(), this.cy(), outLine.attr("x2"), outLine.attr("y2"));
+			moveMidDragPoint(inLine);
+			moveMidDragPoint(outLine);
 		}
 		
-		stopEventPropagation(event);
+		if (this.outLine.outgoingVertex) {
+			moveLineGroupHead(this.outLine.outgoingVertex, this.outLine);
+		}
+		
+		if (this.inLine.incomingVertex) {
+			moveLineGroupTail(this.inLine.incomingVertex, this.inLine);
+		}
+		
+		this.currentX = x;
+		this.currentY = y;
+		
+		fireElementMoveEvent();
 	}
 	
 	function removeElement(arr, elm) {
@@ -829,10 +833,6 @@ function elementTextMouseMove(event) {
 	this.containerElement.fire('mousemove'); 
 }
 
-function elementTextDblClick(event) {
-	alert(this.text());
-}
-
 function drawElementText(elm, label) {
 	var text = draw.text(label);
 	text.addClass('labelText');
@@ -854,7 +854,6 @@ function drawElementText(elm, label) {
 	
 	text.on('mousedown', elementTextMouseDown);
 	text.on('mousemove', elementTextMouseMove);
-	text.on('dblclick', elementTextDblClick);
 }
 
 function drawLineText(line, label) {
@@ -1262,7 +1261,24 @@ function drawDiagram(canvas, diagramState) {
 	draw.viewbox(0, 0, width, height);
 	
 	draw.on('mousedown', canvasMouseDown);
-	draw.on('mousemove', function(event){ stopEventPropagation(event); });
+	
+	draw.on('mousemove', function(event) { 
+		if (isLeftMouseButtonPressed(event)) {
+			if (this.dragPoint) {
+				this.dragPoint.move(event.clientX, event.clientY);
+			}
+		}
+
+		stopEventPropagation(event); 
+	});
+	
+	draw.on('mouseup', function(event) { 
+		if (this.dragPoint) {
+			delete this.dragPoint;
+		}
+	
+		stopEventPropagation(event); 
+	});
 	
 	draw.state = new State();
 	draw.selectedElement = null;

@@ -671,6 +671,22 @@ function canvasMouseDown() {
 	}
 }
 
+function canvasMouseMove(event) {
+	if (isLeftMouseButtonPressed(event) && this.dragPoint) {
+		this.dragPoint.move(event.clientX, event.clientY);
+	}
+
+	stopEventPropagation(event); 
+}
+
+function canvasMouseUp(event) {
+	if (this.dragPoint) {
+		delete this.dragPoint;
+	}
+
+	stopEventPropagation(event); 
+}
+
 function elementMouseDown(event) {
 	currentX = event.clientX;
 	currentY = event.clientY;
@@ -692,7 +708,8 @@ function elementMouseDown(event) {
 		
 		draw.selectedElement = this;
 
-		fireEditorEvent('diagramElementSelect', {'detail': {'element': this}});
+		fireEditorEvent('diagramElementSelect', 
+				{'detail': {'id': this.flowId, 'type': this.flowType}});
 	}
 	
 	stopEventPropagation(event);
@@ -816,7 +833,7 @@ function elementUnselect() {
 	this.addClass('unselectedElement');
 	this.text.addClass('unselectedElementText');
 	
-	fireEditorEvent('diagramElementUnselect', {'detail': {'element': this}});
+	fireEditorEvent('diagramElementUnselect');
 }
 
 function elementTextMouseDown(event) {
@@ -1045,55 +1062,41 @@ function drawLineGroup(state, elms) {
 	outElm.inLineGroups.push(group);
 }
 
-function btnSaveOnClick() {
-	var state = draw.state.save();
-	var stateStr=JSON.stringify(state, null, 4);
-	
-	document.getElementById('flowState').value = stateStr;
-}
-
-function btnClearOnClick() {
-	document.getElementById('flow_editor_canvas').innerHTML = '';
-	delete draw.state;
-	
-	var width = 1200, height = 700;
-	draw = SVG('flow_editor_canvas').size(width, height);
-	
-	draw.on('mousedown', canvasMouseDown);
-	draw.on('mousemove', function(event){ stopEventPropagation(event); });
-	
-	draw.state = new State();
-}
-
-function btnNewStartOnClick() {
+function createStartElement() {
 	var start = drawCircle(50, 50, 'Start', 'str' + draw.elementCounter++);
+	start.flowType = 'start';
 	start.fire('mousedown');
 	fireEditorEvent('flowSourceChange');
 }
 
-function btnNewEndOnClick() {
+function createEndElement() {
 	var end = drawCircle(draw.selectedElement.cx() + draw.selectedElement.width() + 50, draw.selectedElement.cy(), 
 						'End', 'end' + draw.elementCounter++, 'endState');
-	
+	end.flowType = 'end';
 	drawLine(draw.selectedElement, end);
 	end.fire('mousedown');
 	fireEditorEvent('flowSourceChange');
 }
 
-function btnNewActionOnClick() {
-	drawFlowElement('Action');
+function createActionElement() {
+	var action = drawFlowElement('Action');
+	action.flowType = 'action';
+	draw.state.addFlowBlock(action.flowId, action.flowType);
 	fireEditorEvent('flowSourceChange');
 }
 
-function btnNewSubprocessOnClick() {
-	drawFlowElement('Sub-Process', 'subProcess');
+function createSubprocessElement() {
+	var sub = drawFlowElement('Sub-Process', 'subProcess');
+	sub.flowType = 'subprocess';
+	//draw.state.addFlowBlock(sub.flowId, sub.flowType);
 	fireEditorEvent('flowSourceChange');
 }
 
-function btnNewConditionOnClick() {
+function createConditionElement() {
 	var diam = drawDiamond(draw.selectedElement.cx() + draw.selectedElement.width() + 50, draw.selectedElement.cy(), 
 							'Is Condition Met?', 'cond' + draw.elementCounter++);
-	
+	diam.flowType = 'condition';
+	//draw.state.addFlowBlock(diam.flowId, diam.flowType);
 	drawLine(draw.selectedElement, diam);
 	diam.fire('mousedown');
 	fireEditorEvent('flowSourceChange');
@@ -1122,6 +1125,8 @@ function drawFlowElement(textPrefix, elementCssClass) {
 	}
 	
 	elm.fire('mousedown');
+	
+	return elm;
 }
 
 function removeSelectedElement() {
@@ -1172,6 +1177,36 @@ function State() {
 	this.diamonds = [];
 	this.lineGroups = [];
 	
+	this.flow = {
+		inputParameters: [],
+		localVariables: [],
+		blocks: []
+	};
+	
+	this.addFlowBlock = function(flowId, flowType) {
+		this.flow.blocks.push({
+			id: flowId,
+			type: flowType
+		});
+	}
+	
+	this.findFlowBlock = function(flowId) {
+		var res = this.flow.blocks.find(function(e) {
+			return e.id == flowId;
+		});
+		
+		return res;
+	}
+	
+	this._removeFlowBlock = function(flowId) {
+		this.flow.blocks.some(function(e, i, a) {
+			if (e.id == flowId) {
+				a.splice(i, 1);
+				return true;
+			}
+		});
+	}
+	
 	this.addRect = function(rect) {
 		_addElement(this.rects, rect);
 	};
@@ -1190,6 +1225,7 @@ function State() {
 	
 	this.removeRect = function(rect) {
 		_removeElement(this.rects, rect);
+		this._removeFlowBlock(rect.flowId);
 	};
 	
 	this.removeCircle = function(circ) {
@@ -1198,6 +1234,7 @@ function State() {
 	
 	this.removeDiamond = function(diam) {
 		_removeElement(this.diamonds, diam);
+		this._removeFlowBlock(diam.flowId);
 	};
 	
 	this.removeLineGroup = function(grp) {
@@ -1261,24 +1298,8 @@ function drawDiagram(canvas, diagramState) {
 	draw.viewbox(0, 0, width, height);
 	
 	draw.on('mousedown', canvasMouseDown);
-	
-	draw.on('mousemove', function(event) { 
-		if (isLeftMouseButtonPressed(event)) {
-			if (this.dragPoint) {
-				this.dragPoint.move(event.clientX, event.clientY);
-			}
-		}
-
-		stopEventPropagation(event); 
-	});
-	
-	draw.on('mouseup', function(event) { 
-		if (this.dragPoint) {
-			delete this.dragPoint;
-		}
-	
-		stopEventPropagation(event); 
-	});
+	draw.on('mousemove', canvasMouseMove);
+	draw.on('mouseup', canvasMouseUp);
 	
 	draw.state = new State();
 	draw.selectedElement = null;
@@ -1309,50 +1330,3 @@ function drawDiagram(canvas, diagramState) {
 	
 }
 
-function drawMockDiagram(canvas) {
-	draw = canvas;
-	var width = draw.attr('width');
-	var height = draw.attr('height');
-	
-	draw.viewbox(0, 0, width, height);
-	
-	draw.on('mousedown', canvasMouseDown);
-	draw.on('mousemove', function(event){ stopEventPropagation(event); });
-	
-	draw.state = new State();
-	
-	var startCx = width/6;
-	var startCy = height/6;
-	var rect1Cx = width/4;
-	var rect1Cy = height/2;
-	var rect12Cx = width/3.7;
-	var rect12Cy = height/1.7;
-	var rect2Cx = width/2.5;
-	var rect2Cy = height/2.5;
-	var rect3Cx = width/1.5;
-	var rect3Cy = height/1.5;
-	var diamCx = width/2.5;
-	var diamCy = height/1.5;
-	var subCx = width/1.2;
-	var subCy = height/2;
-	var endCx = width/1.2;
-	var endCy = height/1.2;
-	
-	var start = drawCircle(startCx, startCy, 'Start', 'str001');
-	var action1 = drawRectangle(rect1Cx, rect1Cy, 'Action 1', 'act001');
-	var action2 = drawRectangle(rect2Cx, rect2Cy, 'Action 2222222222222222', 'act002');
-	var cond = drawDiamond(diamCx, diamCy, 'Is Condition Met?', 'cnd001');
-	var action12 = drawRectangle(rect12Cx, rect12Cy, 'Action 1', 'act001-02');
-	var action3 = drawRectangle(rect3Cx, rect3Cy, 'Action 3', 'act003');
-	var sub = drawRectangle(subCx, subCy, 'Sub-Process 1', 'sub001', 'subProcess');
-	var end = drawCircle(endCx, endCy, 'End', 'end001', 'endState');
-	
-	drawLine(start, action1);
-	drawLine(action1, cond);
-	drawLine(cond, action2, 'Yes');
-	drawLine(cond, action3, 'No');
-	drawLine(action3, action12);
-	drawLine(action12, cond);
-	drawLine(action2, sub);
-	drawLine(sub, end);
-}

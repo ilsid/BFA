@@ -367,7 +367,7 @@
 								onclick="">Apply</div>
 							<div data-dojo-type="dijit/ToolbarSeparator"></div>	
 							<input type="checkbox" data-dojo-type="dijit/form/CheckBox" id="elementPropertiesToolbar_expressionsCheck" 
-								onchange="" /> <label for="elementPropertiesToolbar_expressionsCheck">Expression(s)</label>	
+								onchange="onElementPropertiesToolbar_expressionsCheckChange();" /> <label for="elementPropertiesToolbar_expressionsCheck">Expression(s)</label>	
 						</div>
 						<table>
 							<tr>
@@ -392,7 +392,7 @@
 										</tr>
 										<tr>
 											<td><label for="elmProps_textExpressions">Expression(s):</label></td>
-											<td><textarea data-dojo-type="dijit/form/SimpleTextarea" id="elmProps_textExpressions" rows="2" ></textarea></td>
+											<td><textarea data-dojo-type="dijit/form/SimpleTextarea" data-dojo-props="disabled:true" id="elmProps_textExpressions" rows="2" ></textarea></td>
 										</tr>
 									</table>
 								</td>

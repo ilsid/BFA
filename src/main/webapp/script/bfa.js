@@ -702,6 +702,21 @@ function onUpdateEntityDialog_btnOkClick() {
 		});
 }
 
+function onElementPropertiesToolbar_expressionsCheckChange() {
+	require([ 'dijit/registry'],
+		function(registry) {
+			var checked = registry.byId('elementPropertiesToolbar_expressionsCheck').checked;
+			var txtName = registry.byId('elmProps_textName');
+			var txtInput = registry.byId('elmProps_textActionInputParams');
+			var txtOutput = registry.byId('elmProps_textActionOutput');
+			var txtExprs = registry.byId('elmProps_textExpressions');
+			txtName.set('disabled', checked);
+			txtInput.set('disabled', checked);
+			txtOutput.set('disabled', checked);
+			txtExprs.set('disabled', !checked);
+		});
+}
+
 function runScript() {
 	require([ 'dijit/registry', 'dojo/request/xhr'],
 		function(registry, request) {
@@ -1007,7 +1022,7 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 					showLabel: false,
 					iconClass: 'toolbarIconFlow' + btnId
 				});
-				btn.on('click', window['btnNew' + btnId + 'OnClick']);
+				btn.on('click', window['create' + btnId + 'Element']);
 				btn.startup();
 				
 				domConstruct.place(btn.domNode, palettePane.domNode);

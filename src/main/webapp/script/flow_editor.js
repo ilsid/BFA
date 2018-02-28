@@ -1198,15 +1198,6 @@ function State() {
 		return res;
 	}
 	
-	this._removeFlowBlock = function(flowId) {
-		this.flow.blocks.some(function(e, i, a) {
-			if (e.id == flowId) {
-				a.splice(i, 1);
-				return true;
-			}
-		});
-	}
-	
 	this.addRect = function(rect) {
 		_addElement(this.rects, rect);
 	};
@@ -1225,7 +1216,7 @@ function State() {
 	
 	this.removeRect = function(rect) {
 		_removeElement(this.rects, rect);
-		this._removeFlowBlock(rect.flowId);
+		_removeFlowBlock.call(this, rect.flowId);
 	};
 	
 	this.removeCircle = function(circ) {
@@ -1234,7 +1225,7 @@ function State() {
 	
 	this.removeDiamond = function(diam) {
 		_removeElement(this.diamonds, diam);
-		this._removeFlowBlock(diam.flowId);
+		_removeFlowBlock.call(this, diam.flowId);
 	};
 	
 	this.removeLineGroup = function(grp) {
@@ -1284,6 +1275,16 @@ function State() {
 			}
 		});
 	};
+	
+	_removeFlowBlock = function(flowId) {
+		this.flow.blocks.some(function(e, i, a) {
+			if (e.id == flowId) {
+				a.splice(i, 1);
+				return true;
+			}
+		});
+	}
+
 }
 
 function drawEmptyDiagram(canvas) {

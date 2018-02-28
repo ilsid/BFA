@@ -706,14 +706,49 @@ function onElementPropertiesToolbar_expressionsCheckChange() {
 	require([ 'dijit/registry'],
 		function(registry) {
 			var checked = registry.byId('elementPropertiesToolbar_expressionsCheck').checked;
-			var txtName = registry.byId('elmProps_textName');
-			var txtInput = registry.byId('elmProps_textActionInputParams');
-			var txtOutput = registry.byId('elmProps_textActionOutput');
-			var txtExprs = registry.byId('elmProps_textExpressions');
-			txtName.set('disabled', checked);
-			txtInput.set('disabled', checked);
-			txtOutput.set('disabled', checked);
-			txtExprs.set('disabled', !checked);
+			
+			registry.byId('elmProps_textName').set('disabled', checked);
+			registry.byId('elmProps_textActionInputParams').set('disabled', checked);
+			registry.byId('elmProps_textActionOutput').set('disabled', checked);
+			registry.byId('elmProps_textPreExpressions').set('disabled', checked);
+			registry.byId('elmProps_textPostExpressions').set('disabled', checked);
+			registry.byId('elmProps_textExpressions').set('disabled', !checked);
+		});
+}
+
+function onElementPropertiesToolbar_btnApplyClick() {
+	function parseExpressions(txtWidget) {
+		var expr = txtWidget.get('value').trim();
+		var res = [];
+		if (expr.length > 0) {
+			var res = expr.split(/\s*,\s*/g);
+		}
+		
+		return res;
+	}
+	
+	require([ 'dijit/registry'],
+		function(registry) {
+			var flowState = bfa.flowEditorContext.canvas.state;
+			var block = flowState.findFlowBlock(bfa.flowEditorContext.elementId);
+			var elmType = bfa.flowEditorContext.elementType;
+						
+			if (elmType === 'action') {
+				var txtName = registry.byId('elmProps_textName');
+				var txtLabel = registry.byId('elmProps_textLabel');
+				var txtInput = registry.byId('elmProps_textActionInputParams');
+				var txtOutput = registry.byId('elmProps_textActionOutput');
+				var txtPreExpr = registry.byId('elmProps_textPreExpressions');
+				var txtPostExpr = registry.byId('elmProps_textPostExpressions');
+				
+				block.type = elmType;
+				block.name = txtName.get('value').trim();
+				block.label = txtLabel.get('value').trim();
+				block.output = txtOutput.get('value').trim();
+				block.inputParameters = parseExpressions(txtInput);
+				block.preExecExpressions = parseExpressions(txtPreExpr);
+				block.postExecExpressions = parseExpressions(txtPostExpr);
+			}
 		});
 }
 
@@ -863,6 +898,9 @@ function initFlowEditorEventHandlers() {
 				bottomTabContainer.addChild(elmPropsPane);
 			}
 			
+			bfa.flowEditorContext.elementId = event.detail.id;
+			bfa.flowEditorContext.elementType = event.detail.type;
+			
 			bottomTabContainer.selectChild(elmPropsPane);
 			btnDelete.set('disabled', false);
 		});
@@ -985,6 +1023,7 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 					if (!this.canvas) {
 						//TODO: calculate canvas size
 						this.canvas = SVG(this.id).size(1500, 500);
+						bfa.flowEditorContext.canvas = this.canvas;
 						
 						if (isExistingScript) {
 							var scriptName = groupName + '::' + tabTitle;
@@ -998,6 +1037,7 @@ function createScriptTab(tabTitle, tabId, scriptSource, indexInContainer) {
 				onFocus: function() {
 					// global var defined in flow_editor.js
 					draw = this.canvas;
+					bfa.flowEditorContext.canvas = this.canvas;
 				},
 				
 				takeFocus: function() {

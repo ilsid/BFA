@@ -363,11 +363,11 @@
 					<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="iconClass:'toolbarIconProperties'" title="Properties" style="display: none;" 
 						id="elementPropertiesTab" >
 						<div id="elementPropertiesToolbar" data-dojo-type="dijit/Toolbar">
-							<div data-dojo-type="dijit/form/Button" id="elementPropertiesToolbar_apply" data-dojo-props="iconClass:'toolbarIconApply', showLabel:false" 
-								onclick="">Apply</div>
+							<div data-dojo-type="dijit/form/Button" id="elementPropertiesToolbar_btnApply" data-dojo-props="iconClass:'toolbarIconApply', showLabel:false" 
+								onclick="onElementPropertiesToolbar_btnApplyClick();">Apply</div>
 							<div data-dojo-type="dijit/ToolbarSeparator"></div>	
 							<input type="checkbox" data-dojo-type="dijit/form/CheckBox" id="elementPropertiesToolbar_expressionsCheck" 
-								onchange="onElementPropertiesToolbar_expressionsCheckChange();" /> <label for="elementPropertiesToolbar_expressionsCheck">Expression(s)</label>	
+								onchange="onElementPropertiesToolbar_expressionsCheckChange();" /> <label for="elementPropertiesToolbar_expressionsCheck">Expression(s) Only</label>	
 						</div>
 						<table>
 							<tr>
@@ -383,6 +383,10 @@
 											<td><input data-dojo-type="dijit/form/TextBox" id="elmProps_textLabel" style="width: 400px;" /></td>
 										</tr>
 										<tr>
+											<td><label for="elmProps_textPreExpressions">Pre-Execute Expression(s):</label></td>
+											<td><textarea data-dojo-type="dijit/form/Textarea" id="elmProps_textPreExpressions" rows="1" ></textarea></td>
+										</tr>
+										<tr>
 											<td><label for="elmProps_textActionInputParams">Input Parameters:</label></td>
 											<td><input data-dojo-type="dijit/form/TextBox" id="elmProps_textActionInputParams" style="width: 400px;" /></td>
 										</tr>
@@ -391,8 +395,8 @@
 											<td><input data-dojo-type="dijit/form/TextBox" id="elmProps_textActionOutput" style="width: 400px;" /></td>
 										</tr>
 										<tr>
-											<td><label for="elmProps_textExpressions">Expression(s):</label></td>
-											<td><textarea data-dojo-type="dijit/form/SimpleTextarea" data-dojo-props="disabled:true" id="elmProps_textExpressions" rows="2" ></textarea></td>
+											<td><label for="elmProps_textPostExpressions">Post-Execute Expression(s):</label></td>
+											<td><textarea data-dojo-type="dijit/form/Textarea" id="elmProps_textPostExpressions" rows="1" ></textarea></td>
 										</tr>
 									</table>
 								</td>
@@ -401,12 +405,16 @@
 										<tr>
 											<td valign="top">
 												<label for="elmProps_textFlowInputVars">Flow Input Parameters:</label><br/>
-												<textarea data-dojo-type="dijit/form/SimpleTextarea" id="elmProps_textFlowInputVars" rows="5" cols="35"></textarea>
+												<textarea data-dojo-type="dijit/form/SimpleTextarea" id="elmProps_textFlowInputVars" rows="4" cols="35"></textarea>
 											</td>
 											<td valign="top">
 												<label for="elmProps_textFlowLocalVars">Flow Local Variables:</label><br/>
-												<textarea data-dojo-type="dijit/form/SimpleTextarea" id="elmProps_textFlowLocalVars" rows="5" cols="35"></textarea>
+												<textarea data-dojo-type="dijit/form/SimpleTextarea" id="elmProps_textFlowLocalVars" rows="4" cols="35"></textarea>
 											</td>
+										</tr>
+										<tr>
+											<td colspan="2"><label for="elmProps_textExpressions">Expression(s):</label><br/>
+											<textarea data-dojo-type="dijit/form/SimpleTextarea" data-dojo-props="disabled:true" id="elmProps_textExpressions" rows="2" ></textarea></td>
 										</tr>
 									</table>
 								</td>

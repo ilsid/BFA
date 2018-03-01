@@ -717,6 +717,7 @@ function onElementPropertiesToolbar_expressionsCheckChange() {
 }
 
 function onElementPropertiesToolbar_btnApplyClick() {
+	
 	function parseExpressions(txtWidget) {
 		var expr = txtWidget.get('value').trim();
 		var res = [];
@@ -727,6 +728,17 @@ function onElementPropertiesToolbar_btnApplyClick() {
 		return res;
 	}
 	
+	function fieldsAreValid(fields) {
+		var valid = true;
+		fields.forEach(function(f) {
+			//f.validate();
+			//valid = valid && f.validate(true);
+			valid = valid && f.isValid();
+		});
+		
+		return valid;
+	}
+	
 	require([ 'dijit/registry'],
 		function(registry) {
 			var flowState = bfa.flowEditorContext.canvas.state;
@@ -734,16 +746,20 @@ function onElementPropertiesToolbar_btnApplyClick() {
 			var elmType = bfa.flowEditorContext.elementType;
 						
 			if (elmType === 'action') {
+				var txtDesc = registry.byId('elmProps_textDesc');
 				var txtName = registry.byId('elmProps_textName');
-				var txtLabel = registry.byId('elmProps_textLabel');
 				var txtInput = registry.byId('elmProps_textActionInputParams');
 				var txtOutput = registry.byId('elmProps_textActionOutput');
 				var txtPreExpr = registry.byId('elmProps_textPreExpressions');
 				var txtPostExpr = registry.byId('elmProps_textPostExpressions');
 				
+				if (!fieldsAreValid([txtDesc, txtName])) {
+					return;
+				}
+				
 				block.type = elmType;
+				block.description = txtDesc.get('value').trim();
 				block.name = txtName.get('value').trim();
-				block.label = txtLabel.get('value').trim();
 				block.output = txtOutput.get('value').trim();
 				block.inputParameters = parseExpressions(txtInput);
 				block.preExecExpressions = parseExpressions(txtPreExpr);

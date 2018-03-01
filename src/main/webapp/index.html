@@ -374,13 +374,15 @@
 								<td valign="top">
 									<table>
 										<tr>
-											<td><label for="elmProps_textName">Name:</label></td>
-											<td><input data-dojo-type="dijit/form/TextBox" id="elmProps_textName" style="width: 400px;" /></td>
-											
+											<td><label for="elmProps_textDesc">Description:</label></td>
+											<td><input data-dojo-type="dijit/form/ValidationTextBox" id="elmProps_textDesc" style="width: 400px;" 
+												required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
 										</tr>
 										<tr>
-											<td><label for="elmProps_textLabel">Label:</label></td>
-											<td><input data-dojo-type="dijit/form/TextBox" id="elmProps_textLabel" style="width: 400px;" /></td>
+											<td><label for="elmProps_textName">Action Name:</label></td>
+											<td><input data-dojo-type="dijit/form/ValidationTextBox" id="elmProps_textName" style="width: 400px;" 
+												required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+											
 										</tr>
 										<tr>
 											<td><label for="elmProps_textPreExpressions">Pre-Execute Expression(s):</label></td>

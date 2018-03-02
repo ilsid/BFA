@@ -376,12 +376,12 @@
 										<tr>
 											<td><label for="elmProps_textDesc">Description:</label></td>
 											<td><input data-dojo-type="dijit/form/ValidationTextBox" id="elmProps_textDesc" style="width: 400px;" 
-												required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+												data-dojo-props="invalidMessage:'The value is required'" /></td>
 										</tr>
 										<tr>
 											<td><label for="elmProps_textName">Action Name:</label></td>
 											<td><input data-dojo-type="dijit/form/ValidationTextBox" id="elmProps_textName" style="width: 400px;" 
-												required="true" data-dojo-props="missingMessage:'The value is required'" /></td>
+												data-dojo-props="invalidMessage:'The value is required'" /></td>
 											
 										</tr>
 										<tr>
@@ -416,7 +416,7 @@
 										</tr>
 										<tr>
 											<td colspan="2"><label for="elmProps_textExpressions">Expression(s):</label><br/>
-											<textarea data-dojo-type="dijit/form/SimpleTextarea" data-dojo-props="disabled:true" id="elmProps_textExpressions" rows="2" ></textarea></td>
+											<textarea data-dojo-type="custom/ValidationTextarea" data-dojo-props="disabled:true, invalidMessage:'The value is required'" id="elmProps_textExpressions" rows="2" ></textarea></td>
 										</tr>
 									</table>
 								</td>

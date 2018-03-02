@@ -728,15 +728,21 @@ function onElementPropertiesToolbar_btnApplyClick() {
 		return res;
 	}
 	
+	function validateNotEmpty(value, constraints) {
+		return value.trim().length > 0;
+	}
+	
 	function fieldsAreValid(fields) {
-		var valid = true;
+		var allValid = true;
 		fields.forEach(function(f) {
-			//f.validate();
-			//valid = valid && f.validate(true);
-			valid = valid && f.isValid();
+			f.validator = validateNotEmpty;
+			if (!f.isValid()) {
+				allValid = false;
+				f.focus();
+			}
 		});
 		
-		return valid;
+		return allValid;
 	}
 	
 	require([ 'dijit/registry'],
@@ -752,8 +758,11 @@ function onElementPropertiesToolbar_btnApplyClick() {
 				var txtOutput = registry.byId('elmProps_textActionOutput');
 				var txtPreExpr = registry.byId('elmProps_textPreExpressions');
 				var txtPostExpr = registry.byId('elmProps_textPostExpressions');
+				//var txtExpr = registry.byId('elmProps_textExpressions');
 				
 				if (!fieldsAreValid([txtDesc, txtName])) {
+					// button focus triggers onBlur() for last invalid field
+					registry.byId('elementPropertiesToolbar_btnApply').focus();
 					return;
 				}
 				

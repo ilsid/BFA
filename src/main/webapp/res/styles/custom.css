@@ -16,6 +16,14 @@ table.dijitDialogPaneContentArea,
   font-size: 12px;
 }
 
+.dijitValidationTextAreaError, 
+.dijitValidationTextAreaError .dijitTextBoxHover 
+{
+  background-image: url("../../script/dijit/themes/claro/form/images/error.png");
+  background-position: right;
+  background-repeat: no-repeat;
+}
+
 .toolbarIconDeleteItem,
 .toolbarIconDeleteFolder,
 .toolbarIconEntity,

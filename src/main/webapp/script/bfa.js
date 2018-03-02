@@ -758,9 +758,18 @@ function onElementPropertiesToolbar_btnApplyClick() {
 				var txtOutput = registry.byId('elmProps_textActionOutput');
 				var txtPreExpr = registry.byId('elmProps_textPreExpressions');
 				var txtPostExpr = registry.byId('elmProps_textPostExpressions');
-				//var txtExpr = registry.byId('elmProps_textExpressions');
+				var txtExpr = registry.byId('elmProps_textExpressions');
 				
-				if (!fieldsAreValid([txtDesc, txtName])) {
+				var expressionsOnly = !txtExpr.get('disabled');
+				var requiredFields = [txtDesc];
+				
+				if (expressionsOnly) {
+					requiredFields.push(txtExpr);
+				} else {
+					requiredFields.push(txtName);
+				}
+				
+				if (!fieldsAreValid(requiredFields)) {
 					// button focus triggers onBlur() for last invalid field
 					registry.byId('elementPropertiesToolbar_btnApply').focus();
 					return;
@@ -768,11 +777,16 @@ function onElementPropertiesToolbar_btnApplyClick() {
 				
 				block.type = elmType;
 				block.description = txtDesc.get('value').trim();
-				block.name = txtName.get('value').trim();
-				block.output = txtOutput.get('value').trim();
-				block.inputParameters = parseExpressions(txtInput);
-				block.preExecExpressions = parseExpressions(txtPreExpr);
-				block.postExecExpressions = parseExpressions(txtPostExpr);
+				
+				if (expressionsOnly) {
+					block.expressions = parseExpressions(txtExpr);
+				} else {
+					block.name = txtName.get('value').trim();
+					block.output = txtOutput.get('value').trim();
+					block.inputParameters = parseExpressions(txtInput);
+					block.preExecExpressions = parseExpressions(txtPreExpr);
+					block.postExecExpressions = parseExpressions(txtPostExpr);
+				}
 			}
 		});
 }

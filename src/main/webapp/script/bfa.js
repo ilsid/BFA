@@ -575,7 +575,7 @@ function onCreateScriptDialog_btnOkClick() {
 			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
 			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
-			var flowCanvas = scriptTab.getChildren()[1].getChildren()[2].getChildren()[0].getChildren()[0].canvas;
+			var flowCanvas = bfa.flowEditorContext.canvas;
 			var flowDiagramState = flowCanvas.state.save(); 
 			var flowDiagramStateStr = escapeFlowDiagramState(JSON.stringify(flowDiagramState, null, 4));
 			
@@ -610,7 +610,7 @@ function onUpdateScriptDialog_btnOkClick() {
 			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
 			var scriptSource = scriptEditor.getValue();
 			var scriptBody = escapeScriptSource(scriptSource);
-			var flowCanvas = scriptTab.getChildren()[1].getChildren()[2].getChildren()[0].getChildren()[0].canvas;
+			var flowCanvas = bfa.flowEditorContext.canvas;
 			var flowDiagramState = flowCanvas.state.save(); 
 			var flowDiagramStateStr = escapeFlowDiagramState(JSON.stringify(flowDiagramState, null, 4));
 			
@@ -749,7 +749,7 @@ function onElementPropertiesToolbar_btnApplyClick() {
 		function(registry) {
 			var flowState = bfa.flowEditorContext.canvas.state;
 			var block = flowState.findFlowBlock(bfa.flowEditorContext.elementId);
-			var elmType = bfa.flowEditorContext.elementType;
+			var elmType = block.type;
 						
 			if (elmType === 'action') {
 				var txtDesc = registry.byId('elmProps_textDesc');
@@ -906,6 +906,16 @@ function initDiagramElementPropertiesPane() {
 	require(['dojo/ready', 'dijit/registry'], function(ready, registry) {
 		ready(function(){
 			var elmPropsPane = registry.byId('elementPropertiesTab');
+			elmPropsPane.fields = [
+	           registry.byId('elmProps_textDesc'),
+	           registry.byId('elmProps_textName'),
+	           registry.byId('elmProps_textActionInputParams'),
+	           registry.byId('elmProps_textActionOutput'),
+	           registry.byId('elmProps_textPreExpressions'),
+	           registry.byId('elmProps_textPostExpressions'),
+	           registry.byId('elmProps_textExpressions')
+	        ];
+			
 			var tabContainer = registry.byId('bottomTabContainer');
 			tabContainer.removeChild(elmPropsPane);
 		});
@@ -937,11 +947,39 @@ function initFlowEditorEventHandlers() {
 				bottomTabContainer.addChild(elmPropsPane);
 			}
 			
+			var flowState = bfa.flowEditorContext.canvas.state;
+			var block = flowState.findFlowBlock(event.detail.id);
 			bfa.flowEditorContext.elementId = event.detail.id;
-			bfa.flowEditorContext.elementType = event.detail.type;
 			
 			bottomTabContainer.selectChild(elmPropsPane);
 			btnDelete.set('disabled', false);
+			
+			elmPropsPane.fields.forEach(function(f) {
+				f.set('value', '');
+			});
+			
+			if (block.type === 'action') {
+				var txtDesc = registry.byId('elmProps_textDesc');
+				var txtName = registry.byId('elmProps_textName');
+				var txtInput = registry.byId('elmProps_textActionInputParams');
+				var txtOutput = registry.byId('elmProps_textActionOutput');
+				var txtPreExpr = registry.byId('elmProps_textPreExpressions');
+				var txtPostExpr = registry.byId('elmProps_textPostExpressions');
+				var txtExpr = registry.byId('elmProps_textExpressions');
+				
+				txtDesc.set('value', block.description);
+
+				var expressionsOnly = block.hasOwnProperty('expressions');
+				if (expressionsOnly) {
+					//txtExpr.set('value', parseExpressions(block.expressions));
+				} else {
+//					block.name = txtName.get('value').trim();
+//					block.output = txtOutput.get('value').trim();
+//					block.inputParameters = parseExpressions(txtInput);
+//					block.preExecExpressions = parseExpressions(txtPreExpr);
+//					block.postExecExpressions = parseExpressions(txtPostExpr);
+				}
+			}
 		});
 		
 		document.addEventListener('diagramElementUnselect', function(event) {

@@ -1257,7 +1257,8 @@ function State() {
 			rects: rectStates,
 			circles: circleStates,
 			diamonds: diamStates,
-			lineGroups: lineGroupStates
+			lineGroups: lineGroupStates,
+			flow: this.flow
 		};
 		
 		return res;
@@ -1327,6 +1328,12 @@ function drawDiagram(canvas, diagramState) {
 		diagramState.lineGroups.forEach(function(state) {
 			drawLineGroup(state, elms);
 		});
+		
+		//TODO: remove flow presence check. This is a temp check for development purposes only 
+		if (diagramState.flow) {
+			draw.state.flow = diagramState.flow; 
+		}
+
 	}
 	
 }

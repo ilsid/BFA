@@ -702,17 +702,23 @@ function onUpdateEntityDialog_btnOkClick() {
 		});
 }
 
+function setDisabledStateForElementFields(exprChecked) {
+	require([ 'dijit/registry'],
+		function(registry) {
+			registry.byId('elmProps_textName').set('disabled', exprChecked);
+			registry.byId('elmProps_textActionInputParams').set('disabled', exprChecked);
+			registry.byId('elmProps_textActionOutput').set('disabled', exprChecked);
+			registry.byId('elmProps_textPreExpressions').set('disabled', exprChecked);
+			registry.byId('elmProps_textPostExpressions').set('disabled', exprChecked);
+			registry.byId('elmProps_textExpressions').set('disabled', !exprChecked);
+		});
+}
+
 function onElementPropertiesToolbar_expressionsCheckChange() {
 	require([ 'dijit/registry'],
 		function(registry) {
 			var checked = registry.byId('elementPropertiesToolbar_expressionsCheck').checked;
-			
-			registry.byId('elmProps_textName').set('disabled', checked);
-			registry.byId('elmProps_textActionInputParams').set('disabled', checked);
-			registry.byId('elmProps_textActionOutput').set('disabled', checked);
-			registry.byId('elmProps_textPreExpressions').set('disabled', checked);
-			registry.byId('elmProps_textPostExpressions').set('disabled', checked);
-			registry.byId('elmProps_textExpressions').set('disabled', !checked);
+			setDisabledStateForElementFields(checked);
 		});
 }
 
@@ -728,14 +734,9 @@ function onElementPropertiesToolbar_btnApplyClick() {
 		return res;
 	}
 	
-	function validateNotEmpty(value, constraints) {
-		return value.trim().length > 0;
-	}
-	
 	function fieldsAreValid(fields) {
 		var allValid = true;
 		fields.forEach(function(f) {
-			f.validator = validateNotEmpty;
 			if (!f.isValid()) {
 				allValid = false;
 				f.focus();
@@ -768,10 +769,12 @@ function onElementPropertiesToolbar_btnApplyClick() {
 				} else {
 					requiredFields.push(txtName);
 				}
+
+				var btnApply = registry.byId('elementPropertiesToolbar_btnApply');
 				
 				if (!fieldsAreValid(requiredFields)) {
 					// button focus triggers onBlur() for last invalid field
-					registry.byId('elementPropertiesToolbar_btnApply').focus();
+					btnApply.focus();
 					return;
 				}
 				
@@ -787,6 +790,8 @@ function onElementPropertiesToolbar_btnApplyClick() {
 					block.preExecExpressions = parseExpressions(txtPreExpr);
 					block.postExecExpressions = parseExpressions(txtPostExpr);
 				}
+				
+				btnApply.set('disabled', true); 
 			}
 		});
 }
@@ -903,18 +908,45 @@ function buildEntitySource(grid) {
 }
 
 function initDiagramElementPropertiesPane() {
+	
+	function validateNotEmpty(value, constraints) {
+		return value.trim().length > 0;
+	}
+	
 	require(['dojo/ready', 'dijit/registry'], function(ready, registry) {
 		ready(function(){
 			var elmPropsPane = registry.byId('elementPropertiesTab');
+			
+			var txtDesc = registry.byId('elmProps_textDesc');
+			var txtName = registry.byId('elmProps_textName');
+			var txtExpr = registry.byId('elmProps_textExpressions');
+			var txtInput = registry.byId('elmProps_textActionInputParams');
+			var txtOutput = registry.byId('elmProps_textActionOutput');
+			var txtPreExpr = registry.byId('elmProps_textPreExpressions');
+			var txtPostExpr = registry.byId('elmProps_textPostExpressions');
+			
 			elmPropsPane.fields = [
-	           registry.byId('elmProps_textDesc'),
-	           registry.byId('elmProps_textName'),
-	           registry.byId('elmProps_textActionInputParams'),
-	           registry.byId('elmProps_textActionOutput'),
-	           registry.byId('elmProps_textPreExpressions'),
-	           registry.byId('elmProps_textPostExpressions'),
-	           registry.byId('elmProps_textExpressions')
+	           txtDesc,
+	           txtName,
+	           txtInput,
+	           txtOutput,
+	           txtPreExpr,
+	           txtPostExpr,
+	           txtExpr
 	        ];
+			
+			txtDesc.validator = validateNotEmpty;
+			txtName.validator = validateNotEmpty;
+			txtExpr.validator = validateNotEmpty;
+			
+			var btnApply = registry.byId('elementPropertiesToolbar_btnApply');
+			
+			elmPropsPane.fields.forEach(function(f) {
+				f.onChange = function(event) {
+					fireEditorEvent('flowSourceChange');
+					btnApply.set('disabled', false);
+				}
+			});
 			
 			var tabContainer = registry.byId('bottomTabContainer');
 			tabContainer.removeChild(elmPropsPane);
@@ -937,6 +969,20 @@ function initFlowEditorEventHandlers() {
 		}
 		
 		document.addEventListener('diagramElementSelect', function(event) {
+
+			function parseExpressions(expressions, newLine) {
+				var res = '';
+				if (expressions) {
+					var tail = (newLine != undefined) ? newLine : '';
+					expressions.forEach(function(expr, i, a) {
+						res += expr;
+						if (i < a.length - 1) res = res + ',' + tail;
+					});
+				}
+				
+				return res;
+			}
+			
 			var elmPropsPane = registry.byId('elementPropertiesTab');
 			var bottomTabContainer = registry.byId('bottomTabContainer');
 			var btnDelete = bfa.flowEditorContext.btnDeleteElement;
@@ -969,18 +1015,24 @@ function initFlowEditorEventHandlers() {
 				
 				txtDesc.set('value', block.description);
 
-				var expressionsOnly = block.hasOwnProperty('expressions');
-				if (expressionsOnly) {
-					//txtExpr.set('value', parseExpressions(block.expressions));
+				var exprOnly = block.hasOwnProperty('expressions');
+				var lf = '\n';
+				
+				if (exprOnly) {
+					txtExpr.set('value', parseExpressions(block.expressions, lf));
 				} else {
-//					block.name = txtName.get('value').trim();
-//					block.output = txtOutput.get('value').trim();
-//					block.inputParameters = parseExpressions(txtInput);
-//					block.preExecExpressions = parseExpressions(txtPreExpr);
-//					block.postExecExpressions = parseExpressions(txtPostExpr);
+					txtName.set('value', block.name);
+					txtInput.set('value', parseExpressions(block.inputParameters));
+					txtOutput.set('value', block.output);
+					txtPreExpr.set('value', parseExpressions(block.preExecExpressions, lf));
+					txtPostExpr.set('value', parseExpressions(block.postExecExpressions, lf));
 				}
+				
+				registry.byId('elementPropertiesToolbar_expressionsCheck').set('checked', exprOnly);
+				setDisabledStateForElementFields(exprOnly);
 			}
 		});
+		
 		
 		document.addEventListener('diagramElementUnselect', function(event) {
 			var elmPropsPane = registry.byId('elementPropertiesTab');
@@ -990,6 +1042,7 @@ function initFlowEditorEventHandlers() {
 			bottomTabContainer.selectChild(bottomTabContainer.getChildren()[0]);
 			btnDelete.set('disabled', true);
 		});
+		
 		
 		document.addEventListener('flowSourceChange', flowSourceChangeHandler);
 		document.addEventListener('diagramElementMove', flowSourceChangeHandler);

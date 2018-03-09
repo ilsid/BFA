@@ -790,9 +790,15 @@ function onElementPropertiesToolbar_btnApplyClick() {
 					block.preExecExpressions = parseExpressions(txtPreExpr);
 					block.postExecExpressions = parseExpressions(txtPostExpr);
 				}
-				
-				btnApply.set('disabled', true); 
 			}
+			
+			var txtInputVars = registry.byId('elmProps_textFlowInputVars');
+			var txtLocalVars = registry.byId('elmProps_textFlowLocalVars');
+			flowState.flow.inputParameters = parseExpressions(txtInputVars);
+			flowState.flow.localVariables = parseExpressions(txtLocalVars);
+
+			btnApply.set('disabled', true);
+			fireEditorEvent('flowSourceChange');
 		});
 }
 
@@ -924,6 +930,8 @@ function initDiagramElementPropertiesPane() {
 			var txtOutput = registry.byId('elmProps_textActionOutput');
 			var txtPreExpr = registry.byId('elmProps_textPreExpressions');
 			var txtPostExpr = registry.byId('elmProps_textPostExpressions');
+			var txtInputVars = registry.byId('elmProps_textFlowInputVars');
+			var txtLocalVars = registry.byId('elmProps_textFlowLocalVars');
 			
 			elmPropsPane.fields = [
 	           txtDesc,
@@ -932,7 +940,9 @@ function initDiagramElementPropertiesPane() {
 	           txtOutput,
 	           txtPreExpr,
 	           txtPostExpr,
-	           txtExpr
+	           txtExpr,
+	           txtInputVars,
+	           txtLocalVars
 	        ];
 			
 			txtDesc.validator = validateNotEmpty;
@@ -942,10 +952,9 @@ function initDiagramElementPropertiesPane() {
 			var btnApply = registry.byId('elementPropertiesToolbar_btnApply');
 			
 			elmPropsPane.fields.forEach(function(f) {
-				f.onChange = function(event) {
-					fireEditorEvent('flowSourceChange');
+				f.on('input', function(event) {
 					btnApply.set('disabled', false);
-				}
+				});
 			});
 			
 			var tabContainer = registry.byId('bottomTabContainer');
@@ -1020,17 +1029,27 @@ function initFlowEditorEventHandlers() {
 				
 				if (exprOnly) {
 					txtExpr.set('value', parseExpressions(block.expressions, lf));
+					txtExpr.set('rows', block.expressions.length);
 				} else {
 					txtName.set('value', block.name);
 					txtInput.set('value', parseExpressions(block.inputParameters));
 					txtOutput.set('value', block.output);
 					txtPreExpr.set('value', parseExpressions(block.preExecExpressions, lf));
 					txtPostExpr.set('value', parseExpressions(block.postExecExpressions, lf));
+					txtExpr.set('rows', 2);
 				}
 				
 				registry.byId('elementPropertiesToolbar_expressionsCheck').set('checked', exprOnly);
 				setDisabledStateForElementFields(exprOnly);
+				
+				var btnApply=registry.byId('elementPropertiesToolbar_btnApply');
+				btnApply.set('disabled', true);
 			}
+			
+			var txtInputVars = registry.byId('elmProps_textFlowInputVars');
+			var txtLocalVars = registry.byId('elmProps_textFlowLocalVars');
+			txtInputVars.set('value', parseExpressions(flowState.flow.inputParameters, lf));
+			txtLocalVars.set('value', parseExpressions(flowState.flow.localVariables, lf));
 		});
 		
 		

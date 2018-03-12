@@ -780,6 +780,7 @@ function onElementPropertiesToolbar_btnApplyClick() {
 				
 				block.type = elmType;
 				block.description = txtDesc.get('value').trim();
+				flowState.setRectLabel(block.id, block.description);
 				
 				if (expressionsOnly) {
 					block.expressions = parseExpressions(txtExpr);
@@ -796,7 +797,7 @@ function onElementPropertiesToolbar_btnApplyClick() {
 			var txtLocalVars = registry.byId('elmProps_textFlowLocalVars');
 			flowState.flow.inputParameters = parseExpressions(txtInputVars);
 			flowState.flow.localVariables = parseExpressions(txtLocalVars);
-
+			
 			btnApply.set('disabled', true);
 			fireEditorEvent('flowSourceChange');
 		});

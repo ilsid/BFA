@@ -853,7 +853,15 @@ function elementTextMouseMove(event) {
 function drawElementText(elm, label) {
 	var text = draw.text(label);
 	text.addClass('labelText');
+	alignElementText(elm, text);
+	elm.text = text;
+	text.containerElement = elm;
 	
+	text.on('mousedown', elementTextMouseDown);
+	text.on('mousemove', elementTextMouseMove);
+}
+
+function alignElementText(elm, text) {
 	var textWidth = text.bbox().width;
 	var elmWidth = elm.width();
 	
@@ -865,12 +873,6 @@ function drawElementText(elm, label) {
 	
 	text.cx(elm.cx());
 	text.cy(elm.cy());
-	
-	elm.text = text;
-	text.containerElement = elm;
-	
-	text.on('mousedown', elementTextMouseDown);
-	text.on('mousemove', elementTextMouseMove);
 }
 
 function drawLineText(line, label) {
@@ -1188,7 +1190,7 @@ function State() {
 			id: flowId,
 			type: flowType
 		});
-	}
+	};
 	
 	this.findFlowBlock = function(flowId) {
 		var res = this.flow.blocks.find(function(e) {
@@ -1196,7 +1198,16 @@ function State() {
 		});
 		
 		return res;
-	}
+	};
+	
+	//TODO: adjust arrows positions in case of rect width increasing  
+	this.setRectLabel = function(flowId, label) {
+		var rect = this.rects.find(function(e) {
+			return e.flowId == flowId;
+		});
+		rect.text.text(label);
+		alignElementText(rect, rect.text);
+	};
 	
 	this.addRect = function(rect) {
 		_addElement(this.rects, rect);

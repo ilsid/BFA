@@ -1,0 +1,6 @@
+DeclareInputVar("id", "Number");
+DeclareInputVar("name", "String");
+
+DeclareLocalVar("aSite", "OSS::Site");
+DeclareLocalVar("zSite", "OSS::Site");
+

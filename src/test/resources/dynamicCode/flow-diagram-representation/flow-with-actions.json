@@ -1,0 +1,52 @@
+{
+    "inputParameters": [
+        "id        Number",
+        "name  String"
+    ],
+    "localVariables": [
+        "aSite  OSS::Site",
+        "zSite  OSS::Site"
+    ],
+    "blocks": [
+    	{
+	        "id": "action2",
+	        "type": "action",
+	        "description": "Action 2",
+	        "name": "Dummy::Action 2",
+	        "output": "cable",
+	        "inputParameters": [
+	            "aSite",
+	            "bSite"
+	        ],
+	        "preExecExpressions": [
+	            "a = 1",
+	            "b=2",
+	            "c = 3"
+	        ],
+	        "postExecExpressions": [
+	            "c=33",
+	            "c2 = 'aaaa'"
+	        ]
+	    },
+	    {
+            "id": "action1",
+            "type": "action",
+            "description": "Action 77",
+            "name": "Test::Action 77",
+            "output": "",
+            "inputParameters": [],
+            "preExecExpressions": [],
+            "postExecExpressions": []
+        },
+        {
+            "id": "action3",
+            "type": "action",
+            "description": "Action 333",
+            "expressions": [
+                "aSite = 'TEST VAL'",
+                "zSite = 'TEST VAL 2'",
+                "cableName = 'A-Z'"
+            ]
+        }	    
+    ]
+}

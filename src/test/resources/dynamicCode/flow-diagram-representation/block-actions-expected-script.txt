@@ -6,3 +6,5 @@ Action("Dummy::Action 2", "aSite", "bSite").SetResult("cable");
 
 SetLocalVar("c", "33");
 SetLocalVar("c2", "'aaaa'");
+
+Action("Test::Action 77");

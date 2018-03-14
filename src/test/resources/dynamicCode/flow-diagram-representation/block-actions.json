@@ -14,13 +14,23 @@
 	        ],
 	        "preExecExpressions": [
 	            "a = 1",
-	            "b = 2",
+	            "b=2",
 	            "c = 3"
 	        ],
 	        "postExecExpressions": [
-	            "c = 33",
+	            "c=33",
 	            "c2 = 'aaaa'"
 	        ]
-	    }
+	    },
+	    {
+            "id": "action1",
+            "type": "action",
+            "description": "Action 77",
+            "name": "Test::Action 77",
+            "output": "",
+            "inputParameters": [],
+            "preExecExpressions": [],
+            "postExecExpressions": []
+        }	    
     ]
 }

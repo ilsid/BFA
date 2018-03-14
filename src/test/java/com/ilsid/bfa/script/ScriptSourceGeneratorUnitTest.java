@@ -17,10 +17,20 @@ public class ScriptSourceGeneratorUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void actionBlockIsParsed() throws Exception {
-		assertScriptCode("block-action.json", "block-action-expected-script.txt");
+	public void actionBlocksAreParsed() throws Exception {
+		assertScriptCode("block-actions.json", "block-actions-expected-script.txt");
 	}
-
+	
+	@Test
+	public void actionBlockWithExpressionIsParsed() throws Exception {
+		assertScriptCode("block-action-expression-only.json", "block-action-expression-only-expected-script.txt");
+	}
+	
+	@Test
+	public void wholeFlowWithActionsIsParsed() throws Exception {
+		assertScriptCode("flow-with-actions.json", "flow-with-actions-expected-script.txt");
+	}
+	
 	private void assertScriptCode(String inFlowFileName, String outScriptFileName) throws Exception {
 		String json = loadContents(inFlowFileName);
 		String script = ScriptSourceGenerator.generate(json);

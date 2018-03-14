@@ -18,15 +18,15 @@ public class ScriptSourceGenerator {
 	private static final String BLANK_REGEX = "\\s+";
 
 	private static final String EQUAL_REGEX = "\\s*=\\s*";
-	
+
 	private static final String NL = "\n";
-	
+
 	private static final String SC = ";";
 
 	private static final String COMMA = ", ";
-	
+
 	private static final String DQ = "\"";
-	
+
 	private static final String DECLARE_INPUT_VAR_EXPR_PATTERN = "DeclareInputVar(\"%s\", \"%s\");";
 
 	private static final String DECLARE_LOCAL_VAR_EXPR_PATTERN = "DeclareLocalVar(\"%s\", \"%s\");";
@@ -53,6 +53,7 @@ public class ScriptSourceGenerator {
 		processInputParameters(code, flow);
 		code.append(NL);
 		processLocalVariables(code, flow);
+		code.append(NL);
 
 		for (Block block : flow.getBlocks()) {
 			processBlock(code, block);
@@ -98,26 +99,33 @@ public class ScriptSourceGenerator {
 	}
 
 	private static void processBlock(StringBuilder code, Block block) throws ParsingException {
-		processAssignExpressions(block.getPreExecExpressions(), code);
-		code.append(NL);
-		
-		String actionName = block.getName();
-		StringBuilder paramsExpr = new StringBuilder();
-		
-		for (String param: block.getInputParameters()) {
-			paramsExpr.append(COMMA).append(DQ).append(param).append(DQ);		
-		}
-		code.append(String.format(ACTION_EXPR_PATTERN, actionName, paramsExpr.toString()));
-		
-		String output = block.getOutput();
-		if (output != null && output.trim().length() > 0) {
-			code.append(String.format(ACTION_RESULT_EXPR_PATTERN, output));
+		List<String> exprs = block.getExpressions();
+
+		if (exprs != null && exprs.size() > 0) {
+			processAssignExpressions(exprs, code);
+			code.append(NL);
 		} else {
-			code.append(SC);
+			processAssignExpressions(block.getPreExecExpressions(), code);
+			code.append(NL);
+
+			String actionName = block.getName();
+			StringBuilder paramsExpr = new StringBuilder();
+
+			for (String param : block.getInputParameters()) {
+				paramsExpr.append(COMMA).append(DQ).append(param).append(DQ);
+			}
+			code.append(String.format(ACTION_EXPR_PATTERN, actionName, paramsExpr.toString()));
+
+			String output = block.getOutput();
+			if (output != null && output.trim().length() > 0) {
+				code.append(String.format(ACTION_RESULT_EXPR_PATTERN, output));
+			} else {
+				code.append(SC);
+			}
+
+			code.append(NL).append(NL);
+			processAssignExpressions(block.getPostExecExpressions(), code);
 		}
-		
-		code.append(NL).append(NL);
-		processAssignExpressions(block.getPostExecExpressions(), code);
 	}
 
 	private static void processAssignExpressions(List<String> expressions, StringBuilder code) throws ParsingException {

@@ -1,0 +1,16 @@
+{
+    "inputParameters": [],
+    "localVariables": [],
+    "blocks": [
+    	{
+            "id": "action3",
+            "type": "action",
+            "description": "Action 333",
+            "expressions": [
+                "aSite = 'TEST VAL'",
+                "zSite = 'TEST VAL 2'",
+                "cableName = 'A-Z'"
+            ]
+        }
+    ]
+}

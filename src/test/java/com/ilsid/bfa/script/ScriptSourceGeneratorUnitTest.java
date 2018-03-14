@@ -16,7 +16,7 @@ public class ScriptSourceGeneratorUnitTest extends BaseUnitTestCase {
 		assertScriptCode("input-params-and-local-vars.json", "input-params-and-local-vars-expected-script.txt");
 	}
 
-	//@Test
+	@Test
 	public void actionBlockIsParsed() throws Exception {
 		assertScriptCode("block-action.json", "block-action-expected-script.txt");
 	}

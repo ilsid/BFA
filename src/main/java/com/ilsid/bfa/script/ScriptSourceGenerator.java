@@ -16,17 +16,25 @@ import com.ilsid.bfa.flow.FlowDefinition.Block;
 public class ScriptSourceGenerator {
 
 	private static final String BLANK_REGEX = "\\s+";
-	
+
 	private static final String EQUAL_REGEX = "\\s*=\\s*";
-
+	
 	private static final String NL = "\n";
+	
+	private static final String SC = ";";
 
+	private static final String COMMA = ", ";
+	
+	private static final String DQ = "\"";
+	
 	private static final String DECLARE_INPUT_VAR_EXPR_PATTERN = "DeclareInputVar(\"%s\", \"%s\");";
 
 	private static final String DECLARE_LOCAL_VAR_EXPR_PATTERN = "DeclareLocalVar(\"%s\", \"%s\");";
-	
-	private static final String ACTION_EXPR_PATTERN = "Action(\"%s\", %s);";
-	
+
+	private static final String ACTION_EXPR_PATTERN = "Action(\"%s\"%s)";
+
+	private static final String ACTION_RESULT_EXPR_PATTERN = ".SetResult(\"%s\");";
+
 	private static final String SET_LOCAL_VAR_EXPR_PATTERN = "SetLocalVar(\"%s\", \"%s\");";
 
 	/**
@@ -41,12 +49,12 @@ public class ScriptSourceGenerator {
 	public static String generate(String flowDefinition) throws ParsingException {
 		FlowDefinition flow = deserialize(flowDefinition);
 		StringBuilder code = new StringBuilder();
-		
+
 		processInputParameters(code, flow);
 		code.append(NL);
 		processLocalVariables(code, flow);
-		
-		for (Block block: flow.getBlocks()) {
+
+		for (Block block : flow.getBlocks()) {
 			processBlock(code, block);
 		}
 
@@ -89,22 +97,39 @@ public class ScriptSourceGenerator {
 		}
 	}
 
-	private static void processBlock(StringBuilder code, Block b) throws ParsingException {
-		processAssignExpressions(b.getPreExecExpressions(), code);
+	private static void processBlock(StringBuilder code, Block block) throws ParsingException {
+		processAssignExpressions(block.getPreExecExpressions(), code);
+		code.append(NL);
 		
-		processAssignExpressions(b.getPostExecExpressions(), code);
+		String actionName = block.getName();
+		StringBuilder paramsExpr = new StringBuilder();
+		
+		for (String param: block.getInputParameters()) {
+			paramsExpr.append(COMMA).append(DQ).append(param).append(DQ);		
+		}
+		code.append(String.format(ACTION_EXPR_PATTERN, actionName, paramsExpr.toString()));
+		
+		String output = block.getOutput();
+		if (output != null && output.trim().length() > 0) {
+			code.append(String.format(ACTION_RESULT_EXPR_PATTERN, output));
+		} else {
+			code.append(SC);
+		}
+		
+		code.append(NL).append(NL);
+		processAssignExpressions(block.getPostExecExpressions(), code);
 	}
-	
+
 	private static void processAssignExpressions(List<String> expressions, StringBuilder code) throws ParsingException {
-		for (String preExpr: expressions) {
+		for (String preExpr : expressions) {
 			String[] tokens = preExpr.split(EQUAL_REGEX);
-			
+
 			if (tokens.length != 2) {
 				throw new ParsingException(String.format("Invalid expression: %s", preExpr));
 			}
-			
+
 			code.append(String.format(SET_LOCAL_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
 		}
 	}
-	
+
 }

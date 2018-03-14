@@ -1,12 +1,13 @@
 package com.ilsid.bfa.flow;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class FlowDefinition {
 	
-	private List<String> inputParameters;
+	private List<String> inputParameters = new LinkedList<>();
 	
-	private List<String> localVariables;
+	private List<String> localVariables = new LinkedList<>();
 	
 	private List<Block> blocks;
 	
@@ -48,13 +49,13 @@ public class FlowDefinition {
 		
 		private String output;
 		
-		private List<String> inputParameters;
+		private List<String> inputParameters = new LinkedList<>();
 		
-		private List<String> preExecExpressions;
+		private List<String> preExecExpressions = new LinkedList<>();
 		
-		private List<String> postExecExpressions;
+		private List<String> postExecExpressions = new LinkedList<>();
 		
-		private List<String> expressions;
+		private List<String> expressions = new LinkedList<>();
 
 
 		public String getId() {

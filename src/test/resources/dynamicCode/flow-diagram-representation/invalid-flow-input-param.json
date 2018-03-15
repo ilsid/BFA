@@ -1,0 +1,11 @@
+{
+    "inputParameters": [
+        "id        Number",
+        "name  "
+    ],
+    "localVariables": [
+        "aSite  OSS::Site",
+        "zSite  OSS::Site"
+    ],
+    "blocks": []
+}

@@ -78,7 +78,8 @@ public class ScriptSourceGenerator {
 			String[] tokens = inParam.split(BLANK_REGEX);
 
 			if (tokens.length != 2) {
-				throw new ParsingException(String.format("Invalid flow input parameter: %s", source));
+				throw new ParsingException(String.format(
+						"Invalid expression for input parameter: [%s]. Expected [name type] expression.", inParam));
 			}
 
 			source.append(String.format(DECLARE_INPUT_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
@@ -91,7 +92,8 @@ public class ScriptSourceGenerator {
 			String[] tokens = var.split(BLANK_REGEX);
 
 			if (tokens.length != 2) {
-				throw new ParsingException(String.format("Invalid flow local variable: %s", source));
+				throw new ParsingException(String
+						.format("Invalid expression for local variable: [%s]. Expected [name type] expression.", var));
 			}
 
 			source.append(String.format(DECLARE_LOCAL_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
@@ -133,7 +135,8 @@ public class ScriptSourceGenerator {
 			String[] tokens = preExpr.split(EQUAL_REGEX);
 
 			if (tokens.length != 2) {
-				throw new ParsingException(String.format("Invalid expression: %s", preExpr));
+				throw new ParsingException(String
+						.format("Invalid assignment expression: [%s]. Expected [var = value] expression.", preExpr));
 			}
 
 			code.append(String.format(SET_LOCAL_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);

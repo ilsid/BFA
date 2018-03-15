@@ -37,6 +37,8 @@ import com.ilsid.bfa.persistence.filesystem.MetadataUtil;
 import com.ilsid.bfa.script.ClassCompilationException;
 import com.ilsid.bfa.script.ClassCompiler;
 import com.ilsid.bfa.script.ClassCompiler.ScriptCompilationUnit;
+import com.ilsid.bfa.script.ParsingException;
+import com.ilsid.bfa.script.ScriptSourceGenerator;
 import com.ilsid.bfa.script.TypeNameResolver;
 
 /**
@@ -97,6 +99,37 @@ public class ScriptManager extends AbstractManager implements Configurable {
 	}
 
 	/**
+	 * Creates new script in the repository. If no group is defined then the script is to be saved in the Default Group.
+	 * 
+	 * @param scriptName
+	 *            script name
+	 * @param scriptFlowDiagram
+	 *            flow diagram representation
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if the script's group does not exists in the repository</li>
+	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
+	 *             <li>if the script with such name already exists within the given group</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public void createScript(String scriptName, String scriptFlowDiagram) throws ManagementException {
+		checkParentScriptGroupExists(scriptName);
+
+		String scriptBody = generateScript(scriptName, scriptFlowDiagram);
+		ScriptUnit compilationUnit = compileScript(scriptName, scriptBody);
+		try {
+			startTransaction();
+			saveScript(compilationUnit, scriptBody, scriptFlowDiagram);
+			saveScriptMetadata(compilationUnit);
+			commitTransaction();
+		} catch (PersistenceException e) {
+			rollbackTransaction();
+			throw new ManagementException(String.format("Failed to create the script [%s]", scriptName), e);
+		}
+	}
+
+	/**
 	 * Updates the existing script in the repository. If no group is defined then the script is searched in the Default
 	 * Group.
 	 * 
@@ -118,6 +151,41 @@ public class ScriptManager extends AbstractManager implements Configurable {
 			throws ManagementException {
 		checkParentScriptGroupExists(scriptName);
 
+		ScriptUnit compilationUnit = compileScript(scriptName, scriptBody);
+		try {
+			startTransaction();
+			doDeleteScript(scriptName);
+			saveScript(compilationUnit, scriptBody, scriptFlowDiagram);
+			saveScriptMetadata(compilationUnit);
+			commitTransaction();
+		} catch (PersistenceException e) {
+			rollbackTransaction();
+			throw new ManagementException(String.format("Failed to update the script [%s]", scriptName), e);
+		}
+
+		DynamicClassLoader.reloadClasses();
+	}
+
+	/**
+	 * Updates the existing script in the repository. If no group is defined then the script is searched in the Default
+	 * Group.
+	 * 
+	 * @param scriptName
+	 *            the name of the script to update
+	 * @param scriptFlowDiagram
+	 *            flow diagram representation
+	 * @throws ManagementException
+	 *             <ul>
+	 *             <li>if the script's group does not exists in the repository</li>
+	 *             <li>if the script itself or any of its expressions can't be compiled or persisted</li>
+	 *             <li>if the script with such name does not exist in the repository within the given group</li>
+	 *             <li>in case of any repository access issues</li>
+	 *             </ul>
+	 */
+	public void updateScript(String scriptName, String scriptFlowDiagram) throws ManagementException {
+		checkParentScriptGroupExists(scriptName);
+
+		String scriptBody = generateScript(scriptName, scriptFlowDiagram);
 		ScriptUnit compilationUnit = compileScript(scriptName, scriptBody);
 		try {
 			startTransaction();
@@ -194,10 +262,10 @@ public class ScriptManager extends AbstractManager implements Configurable {
 
 		return body;
 	}
-	
+
 	/**
-	 * Loads a diagram representation of the given script from the repository. If no group is defined then the script
-	 * is searched in the Default Group.
+	 * Loads a diagram representation of the given script from the repository. If no group is defined then the script is
+	 * searched in the Default Group.
 	 * 
 	 * @param scriptName
 	 *            the name of the script to load
@@ -217,8 +285,7 @@ public class ScriptManager extends AbstractManager implements Configurable {
 		try {
 			diagram = repository.loadDiagram(className);
 		} catch (PersistenceException e) {
-			throw new ManagementException(String.format("Failed to load a diagram of the script [%s]", scriptName),
-					e);
+			throw new ManagementException(String.format("Failed to load a diagram of the script [%s]", scriptName), e);
 		}
 
 		return diagram;
@@ -618,6 +685,17 @@ public class ScriptManager extends AbstractManager implements Configurable {
 	@Override
 	protected TransactionManager getTransactionManager() {
 		return repository.getTransactionManager();
+	}
+
+	private String generateScript(String scriptName, String scriptFlowDiagram) throws ManagementException {
+		String code;
+		try {
+			code = ScriptSourceGenerator.generate(scriptFlowDiagram);
+		} catch (ParsingException e) {
+			throw new ManagementException(String.format("Code generation for the script [%s] failed", scriptName), e);
+		}
+
+		return code;
 	}
 
 	private void saveScript(ScriptUnit unit, String scriptBody, String scriptFlowDiagram) throws PersistenceException {

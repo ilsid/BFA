@@ -1,11 +1,13 @@
 {
-    "inputParameters": [
-        "id        Number",
-        "name  String"
-    ],
-    "localVariables": [
-        "aSite  OSS::Site",
-        "OSS::Site"
-    ],
-    "blocks": []
+	"flow": {
+	    "inputParameters": [
+	        "id        Number",
+	        "name  String"
+	    ],
+	    "localVariables": [
+	        "aSite  OSS::Site",
+	        "OSS::Site"
+	    ],
+	    "blocks": []
+	}
 }

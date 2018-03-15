@@ -582,7 +582,8 @@ function onCreateScriptDialog_btnOkClick() {
 			request('service/script/admin/create', {
 					headers: { 'Content-Type': 'application/json' },
 					method: 'POST',
-					data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
+					//data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
+					data: '{"name": "' + scriptName + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
 				}).then(function(resp){
 					tree.refreshChildrenSubTree(groupName);
 					hideDialog('createScriptDialog');
@@ -617,14 +618,26 @@ function onUpdateScriptDialog_btnOkClick() {
 			request('service/script/admin/update', {
 					headers: { 'Content-Type': 'application/json' },
 					method: 'POST',
-					data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
+					//data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
+					data: '{"name": "' + scriptName + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
 				}).then(function(resp){
 					hideDialog('updateScriptDialog');
 					var tabIdx = tabContainer.getIndexOfChild(scriptTab);
 					tabContainer.removeChild(scriptTab);
 					scriptTab.destroyRecursive();
-					createScriptTab(scriptShortName, 'tab_script_' + scriptName, scriptSource, tabIdx);
-					writeInfo('Script [' + scriptName + '] is updated');
+					
+					request('service/script/admin/getSource', {
+						headers: { 'Content-Type': 'application/json' },
+						method: 'POST',
+						data: '{"name": "' + scriptName + '"}'
+					}).then(function(resp) {
+						createScriptTab(scriptShortName, 'tab_script_' + scriptName, resp, tabIdx);
+						writeInfo('Script [' + scriptName + '] is updated');
+					}, function(err) {
+						hideDialog('updateScriptDialog');
+						writeError(err);
+					});
+					
 				}, function(err) {
 					hideDialog('updateScriptDialog');
 					writeError(err);
@@ -983,7 +996,7 @@ function initFlowEditorEventHandlers() {
 			function parseExpressions(expressions, newLine) {
 				var res = '';
 				if (expressions) {
-					var tail = (newLine != undefined) ? newLine : '';
+					var tail = (newLine != undefined) ? newLine : ' ';
 					expressions.forEach(function(expr, i, a) {
 						res += expr;
 						if (i < a.length - 1) res = res + ',' + tail;

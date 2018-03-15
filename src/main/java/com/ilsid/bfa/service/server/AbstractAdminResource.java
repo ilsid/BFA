@@ -52,7 +52,7 @@ public abstract class AbstractAdminResource {
 		}
 	}
 
-	private boolean isEmpty(Object value) {
+	protected boolean isEmpty(Object value) {
 		return (value == null || EMPTY.equals(value));
 	}
 

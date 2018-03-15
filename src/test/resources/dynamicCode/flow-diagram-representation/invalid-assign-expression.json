@@ -1,16 +1,18 @@
 {
-    "inputParameters": [],
-    "localVariables": [],
-    "blocks": [
-    	{
-            "id": "action3",
-            "type": "action",
-            "description": "Action 333",
-            "expressions": [
-                "aSite = 'TEST VAL'",
-                "zSite = ",
-                "cableName = 'A-Z'"
-            ]
-        }
-    ]
+	"flow": {
+	    "inputParameters": [],
+	    "localVariables": [],
+	    "blocks": [
+	    	{
+	            "id": "action3",
+	            "type": "action",
+	            "description": "Action 333",
+	            "expressions": [
+	                "aSite = 'TEST VAL'",
+	                "zSite = ",
+	                "cableName = 'A-Z'"
+	            ]
+	        }
+	    ]
+	}
 }

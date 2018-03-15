@@ -6,6 +6,7 @@ import java.util.List;
 import com.ilsid.bfa.common.JsonUtil;
 import com.ilsid.bfa.flow.FlowDefinition;
 import com.ilsid.bfa.flow.FlowDefinition.Block;
+import com.ilsid.bfa.flow.FlowDesign;
 
 /**
  * Generates script source.
@@ -63,14 +64,15 @@ public class ScriptSourceGenerator {
 	}
 
 	private static FlowDefinition deserialize(String source) throws ParsingException {
-		FlowDefinition res;
+		FlowDefinition flowDefinition;
 		try {
-			res = JsonUtil.toObject(source, FlowDefinition.class);
+			FlowDesign flowDesign = JsonUtil.toObject(source, FlowDesign.class);
+			flowDefinition = flowDesign.getFlow();
 		} catch (IOException e) {
 			throw new ParsingException(String.format("Failed to deserialize a flow definition: \n%s", source), e);
 		}
 
-		return res;
+		return flowDefinition;
 	}
 
 	private static void processInputParameters(StringBuilder source, FlowDefinition flow) throws ParsingException {
@@ -105,7 +107,7 @@ public class ScriptSourceGenerator {
 
 		if (exprs != null && exprs.size() > 0) {
 			processAssignExpressions(exprs, code);
-			code.append(NL);
+			code.append(NL).append(NL);
 		} else {
 			processAssignExpressions(block.getPreExecExpressions(), code);
 			code.append(NL);

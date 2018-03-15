@@ -1316,6 +1316,8 @@ function drawDiagram(canvas, diagramState) {
 	
 	draw.state = new State();
 	draw.selectedElement = null;
+	//FIXME: counter value must be a part of flow state. 
+	//Otherwise there are id conflicts when creating new elements after diagram reloading (the same id's are generated)   
 	draw.elementCounter = 1
 	
 	if (diagramState) {

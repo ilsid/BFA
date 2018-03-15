@@ -33,7 +33,8 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 * within the Default Group.
 	 * 
 	 * @param script
-	 *            the script data. The name and body must be specified
+	 *            the script data. The name must be specified. If script body is not defined then flow diagram
+	 *            representation is used for the script generation.
 	 * @return the {@link Status#OK} response
 	 * @throws ResourceException
 	 *             <ul>
@@ -49,9 +50,14 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.CREATE_OPERATION)
 	public Response create(ScriptAdminParams script) {
-		validateNonEmptyNameAndBody(Paths.SCRIPT_CREATE_SERVICE, script);
+		validateNonEmptyName(Paths.SCRIPT_CREATE_SERVICE, script);
 		try {
-			scriptManager.createScript(script.getName(), script.getBody(), script.getFlowDiagram());
+			final String body = script.getBody();
+			if (!isEmpty(body)) {
+				scriptManager.createScript(script.getName(), body, script.getFlowDiagram());
+			} else {
+				scriptManager.createScript(script.getName(), script.getFlowDiagram());
+			}
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_CREATE_SERVICE, e);
 		}
@@ -64,7 +70,8 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	 * the Default Group.
 	 * 
 	 * @param script
-	 *            the script data. The name and body must be specified
+	 *            the script data. The name must be specified. If script body is not defined then flow diagram
+	 *            representation is used for the script generation.
 	 * @return the {@link Status#OK} response.
 	 * @throws ResourceException
 	 *             <ul>
@@ -80,9 +87,14 @@ public class ScriptAdminResource extends AbstractAdminResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path(Paths.UPDATE_OPERATION)
 	public Response update(ScriptAdminParams script) {
-		validateNonEmptyNameAndBody(Paths.SCRIPT_UPDATE_SERVICE, script);
+		validateNonEmptyName(Paths.SCRIPT_UPDATE_SERVICE, script);
 		try {
-			scriptManager.updateScript(script.getName(), script.getBody(), script.getFlowDiagram());
+			final String body = script.getBody();
+			if (!isEmpty(body)) {
+				scriptManager.updateScript(script.getName(), body, script.getFlowDiagram());
+			} else {
+				scriptManager.updateScript(script.getName(), script.getFlowDiagram());
+			}
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_UPDATE_SERVICE, e);
 		}
@@ -152,7 +164,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 
 		return Response.status(Status.OK).entity(scriptSource).build();
 	}
-	
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
@@ -165,7 +177,7 @@ public class ScriptAdminResource extends AbstractAdminResource {
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_GET_DIAGRAM_SERVICE, e);
 		}
-		
+
 		if (diagram == null) {
 			diagram = StringUtils.EMPTY;
 		}

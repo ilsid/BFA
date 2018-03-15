@@ -3,6 +3,12 @@ package com.ilsid.bfa.flow;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Flow Definition representation.
+ * 
+ * @author illia.sydorovych
+ *
+ */
 public class FlowDefinition {
 	
 	private List<String> inputParameters = new LinkedList<>();

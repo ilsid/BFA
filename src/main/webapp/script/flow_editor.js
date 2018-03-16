@@ -1065,7 +1065,7 @@ function drawLineGroup(state, elms) {
 }
 
 function createStartElement() {
-	var start = drawCircle(50, 50, 'Start', 'str' + draw.elementCounter++);
+	var start = drawCircle(50, 50, 'Start', 'str' + draw.state.elementCounter++);
 	start.flowType = 'start';
 	start.fire('mousedown');
 	fireEditorEvent('flowSourceChange');
@@ -1073,7 +1073,7 @@ function createStartElement() {
 
 function createEndElement() {
 	var end = drawCircle(draw.selectedElement.cx() + draw.selectedElement.width() + 50, draw.selectedElement.cy(), 
-						'End', 'end' + draw.elementCounter++, 'endState');
+						'End', 'end' + draw.state.elementCounter++, 'endState');
 	end.flowType = 'end';
 	drawLine(draw.selectedElement, end);
 	end.fire('mousedown');
@@ -1096,7 +1096,7 @@ function createSubprocessElement() {
 
 function createConditionElement() {
 	var diam = drawDiamond(draw.selectedElement.cx() + draw.selectedElement.width() + 50, draw.selectedElement.cy(), 
-							'Is Condition Met?', 'cond' + draw.elementCounter++);
+							'Is Condition Met?', 'cond' + draw.state.elementCounter++);
 	diam.flowType = 'condition';
 	//draw.state.addFlowBlock(diam.flowId, diam.flowType);
 	drawLine(draw.selectedElement, diam);
@@ -1108,9 +1108,9 @@ function drawFlowElement(textPrefix, elementCssClass) {
 	var selectedElement = draw.selectedElement;
 	
 	var elm = drawRectangle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
-			textPrefix + ' ' + draw.elementCounter, textPrefix.toLowerCase() + draw.elementCounter, elementCssClass);
+			textPrefix + ' ' + draw.state.elementCounter, textPrefix.toLowerCase() + draw.state.elementCounter, elementCssClass);
 	
-	draw.elementCounter++;
+	draw.state.elementCounter++;
 
 	if (selectedElement.customType == 'diamond' && selectedElement.outLineGroups.length == 0) {
 		drawLine(selectedElement, elm, 'Yes');
@@ -1120,7 +1120,7 @@ function drawFlowElement(textPrefix, elementCssClass) {
 		alert('No more elements allowed');
 		elm.remove();
 		elm.text.remove();
-		draw.elementCounter--;
+		draw.state.elementCounter--;
 		return;
 	} else {
 		drawLine(selectedElement, elm);
@@ -1184,6 +1184,8 @@ function State() {
 		localVariables: [],
 		blocks: []
 	};
+	
+	this.elementCounter = 0;
 	
 	this.addFlowBlock = function(flowId, flowType) {
 		this.flow.blocks.push({
@@ -1269,7 +1271,8 @@ function State() {
 			circles: circleStates,
 			diamonds: diamStates,
 			lineGroups: lineGroupStates,
-			flow: this.flow
+			flow: this.flow,
+			elementCounter: this.elementCounter
 		};
 		
 		return res;
@@ -1316,11 +1319,12 @@ function drawDiagram(canvas, diagramState) {
 	
 	draw.state = new State();
 	draw.selectedElement = null;
-	//FIXME: counter value must be a part of flow state. 
-	//Otherwise there are id conflicts when creating new elements after diagram reloading (the same id's are generated)   
-	draw.elementCounter = 1
 	
 	if (diagramState) {
+		if (diagramState.elementCounter) {
+			draw.state.elementCounter = diagramState.elementCounter; 
+		}
+		
 		var elms = new ElementsMap();
 		
 		diagramState.circles.forEach(function(state) {

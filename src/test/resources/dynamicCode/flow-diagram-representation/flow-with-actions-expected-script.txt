@@ -4,17 +4,18 @@ DeclareInputVar("name", "String");
 DeclareLocalVar("aSite", "OSS::Site");
 DeclareLocalVar("zSite", "OSS::Site");
 
+/* Action 2 */
 SetLocalVar("a", "1");
 SetLocalVar("b", "2");
 SetLocalVar("c", "3");
-
 Action("Dummy::Action 2", "aSite", "bSite").SetResult("cable");
-
 SetLocalVar("c", "33");
 SetLocalVar("c2", "'aaaa'");
 
+/* Action 77 */
 Action("Test::Action 77");
 
+/* Action 333 */
 SetLocalVar("aSite", "'TEST VAL'");
 SetLocalVar("zSite", "'TEST VAL 2'");
 SetLocalVar("cableName", "'A-Z'");

@@ -10,7 +10,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  * @author illia.sydorovych
  *
  */
-@JsonIgnoreProperties({ "rects", "circles", "diamonds", "lineGroups" })
+@JsonIgnoreProperties({ "rects", "circles", "diamonds", "lineGroups", "elementCounter" })
 public class FlowDesign {
 	
 	private List<Object> rects;
@@ -20,6 +20,8 @@ public class FlowDesign {
 	private List<Object> diamonds;
 	
 	private List<Object> lineGroups;
+	
+	private int elementCounter;
 	
 	private FlowDefinition flow;
 
@@ -53,6 +55,14 @@ public class FlowDesign {
 
 	public void setLineGroups(List<Object> lineGroups) {
 		this.lineGroups = lineGroups;
+	}
+	
+	public int getElementCounter() {
+		return elementCounter;
+	}
+
+	public void setElementCounter(int elementCounter) {
+		this.elementCounter = elementCounter;
 	}
 
 	public FlowDefinition getFlow() {

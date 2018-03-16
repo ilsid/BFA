@@ -38,6 +38,8 @@ public class ScriptSourceGenerator {
 
 	private static final String SET_LOCAL_VAR_EXPR_PATTERN = "SetLocalVar(\"%s\", \"%s\");";
 
+	private static final String COMMENTS_PATTERN = "/* %s */";
+
 	/**
 	 * Generates script source that is ready for the pre-processing stage.
 	 * 
@@ -52,9 +54,7 @@ public class ScriptSourceGenerator {
 		StringBuilder code = new StringBuilder();
 
 		processInputParameters(code, flow);
-		code.append(NL);
 		processLocalVariables(code, flow);
-		code.append(NL);
 
 		for (Block block : flow.getBlocks()) {
 			processBlock(code, block);
@@ -75,22 +75,27 @@ public class ScriptSourceGenerator {
 		return flowDefinition;
 	}
 
-	private static void processInputParameters(StringBuilder source, FlowDefinition flow) throws ParsingException {
-		for (String inParam : flow.getInputParameters()) {
-			String[] tokens = inParam.split(BLANK_REGEX);
+	private static void processInputParameters(StringBuilder code, FlowDefinition flow) throws ParsingException {
+		final List<String> params = flow.getInputParameters();
+		for (String param : params) {
+			String[] tokens = param.split(BLANK_REGEX);
 
 			if (tokens.length != 2) {
 				throw new ParsingException(String.format(
-						"Invalid expression for input parameter: [%s]. Expected [name type] expression.", inParam));
+						"Invalid expression for input parameter: [%s]. Expected [name type] expression.", param));
 			}
 
-			source.append(String.format(DECLARE_INPUT_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
+			code.append(String.format(DECLARE_INPUT_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
 		}
 
+		if (params.size() > 0) {
+			code.append(NL);
+		}
 	}
 
-	private static void processLocalVariables(StringBuilder source, FlowDefinition flow) throws ParsingException {
-		for (String var : flow.getLocalVariables()) {
+	private static void processLocalVariables(StringBuilder code, FlowDefinition flow) throws ParsingException {
+		final List<String> vars = flow.getLocalVariables();
+		for (String var : vars) {
 			String[] tokens = var.split(BLANK_REGEX);
 
 			if (tokens.length != 2) {
@@ -98,19 +103,23 @@ public class ScriptSourceGenerator {
 						.format("Invalid expression for local variable: [%s]. Expected [name type] expression.", var));
 			}
 
-			source.append(String.format(DECLARE_LOCAL_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
+			code.append(String.format(DECLARE_LOCAL_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
+		}
+
+		if (vars.size() > 0) {
+			code.append(NL);
 		}
 	}
 
 	private static void processBlock(StringBuilder code, Block block) throws ParsingException {
+		code.append(String.format(COMMENTS_PATTERN, block.getDescription())).append(NL);
+
 		List<String> exprs = block.getExpressions();
 
 		if (exprs != null && exprs.size() > 0) {
 			processAssignExpressions(exprs, code);
-			code.append(NL).append(NL);
 		} else {
 			processAssignExpressions(block.getPreExecExpressions(), code);
-			code.append(NL);
 
 			String actionName = block.getName();
 			StringBuilder paramsExpr = new StringBuilder();
@@ -127,9 +136,11 @@ public class ScriptSourceGenerator {
 				code.append(SC);
 			}
 
-			code.append(NL).append(NL);
+			code.append(NL);
 			processAssignExpressions(block.getPostExecExpressions(), code);
 		}
+
+		code.append(NL);
 	}
 
 	private static void processAssignExpressions(List<String> expressions, StringBuilder code) throws ParsingException {

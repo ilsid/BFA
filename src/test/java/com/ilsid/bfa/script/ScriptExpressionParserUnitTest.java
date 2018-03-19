@@ -49,13 +49,13 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void arithmeticsWithIntegerAndNonNumericIsNotAllowed() {
-		assertException("2 - a",
-				"Could not parse expression [2 - a]: Number value or variable is expected after operand [-], but was [a]");
+		assertException("2 - 'a'",
+				"Could not parse expression [2 - 'a']: Number value or variable is expected after operand [-], but was ['a']");
 	}
 
 	@Test
 	public void consequentIntegersWoOperandsAreNotAllowed() {
-		assertException("2 1", "Could not parse expression [2 1]: Operand is expected after [2], but was [1]");
+		assertException("2 1", "Could not parse expression [2 1]: Operand [+,-,/,*] is expected after [2], but was [1]");
 	}
 
 	@Test
@@ -93,7 +93,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void consequentDoublesWoOperandsAreNotAllowed() {
 		assertException("2.0 1.0",
-				"Could not parse expression [2.0 1.0]: Operand is expected after [2.0], but was [1.0]");
+				"Could not parse expression [2.0 1.0]: Operand [+,-,/,*] is expected after [2.0], but was [1.0]");
 	}
 
 	@Test
@@ -166,7 +166,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void consequentIntegerVariablesWoOperandsAreNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Integer", 3), new Variable("Var2", "java.lang.Integer", 1));
 		assertException("Var1 Var2",
-				"Could not parse expression [Var1 Var2]: Operand is expected after [Var1], but was [Var2]");
+				"Could not parse expression [Var1 Var2]: Operand [+,-,/,*] is expected after [Var1], but was [Var2]");
 	}
 
 	@Test
@@ -215,7 +215,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void arithmeticsWithDoubleVariableAndNonNumericIsNotAllowed() {
-		createContext(new Variable("Var1", "java.lang.Double", 3));
+		createContext(new Variable("Var1", "java.lang.Double", 3), new Variable("a", "java.lang.String", "abc"));
 		assertException("Var1 - a",
 				"Could not parse expression [Var1 - a]: Decimal value or variable is expected after operand [-], but was [a]");
 	}
@@ -224,7 +224,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	public void consequentDoubleVariablesWoOperandsAreNotAllowed() {
 		createContext(new Variable("Var1", "java.lang.Double", 3.0), new Variable("Var2", "java.lang.Double", 1.0));
 		assertException("Var1 Var2",
-				"Could not parse expression [Var1 Var2]: Operand is expected after [Var1], but was [Var2]");
+				"Could not parse expression [Var1 Var2]: Operand [+,-,/,*] is expected after [Var1], but was [Var2]");
 	}
 
 	@Test
@@ -372,7 +372,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void consequentBooleansWoOperandsAreNotAllowed() {
 		assertException("true false",
-				"Could not parse expression [true false]: Operand is expected after [true], but was [false]");
+				"Could not parse expression [true false]: Operand [&&,||] is expected after [true], but was [false]");
 	}
 
 	@Test
@@ -545,7 +545,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 		assertException("'abc'+'fgh'", "Could not parse expression ['abc'+'fgh']: Unexpected token ['abc'+'fgh']");
 		assertException("'abc'+ 'fgh'", "Could not parse expression ['abc'+ 'fgh']: Unexpected token ['abc'+]");
 		assertException("'abc' +'fgh'",
-				"Could not parse expression ['abc' +'fgh']: Operand is expected after ['abc'], but was [+'fgh']");
+				"Could not parse expression ['abc' +'fgh']: Operand [+] is expected after ['abc'], but was [+'fgh']");
 	}
 
 	@Test
@@ -556,7 +556,7 @@ public class ScriptExpressionParserUnitTest extends BaseUnitTestCase {
 	@Test
 	public void consequentStringsWoOperandsAreNotAllowed() {
 		assertException("'abc' 'fgh'",
-				"Could not parse expression ['abc' 'fgh']: Operand is expected after ['abc'], but was ['fgh']");
+				"Could not parse expression ['abc' 'fgh']: Operand [+] is expected after ['abc'], but was ['fgh']");
 	}
 
 	@Test

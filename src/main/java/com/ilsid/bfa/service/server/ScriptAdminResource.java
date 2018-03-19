@@ -28,6 +28,8 @@ import com.ilsid.bfa.service.dto.ScriptAdminParams;
 @Path(Paths.SCRIPT_SERVICE_ADMIN_ROOT)
 public class ScriptAdminResource extends AbstractAdminResource {
 
+	private static final String FLOW_DIAGRAM_PARAM_NAME = "flow diagram";
+
 	/**
 	 * Creates the script and saves it in the code repository. If the script's group is not specified, it is created
 	 * within the Default Group.
@@ -53,10 +55,12 @@ public class ScriptAdminResource extends AbstractAdminResource {
 		validateNonEmptyName(Paths.SCRIPT_CREATE_SERVICE, script);
 		try {
 			final String body = script.getBody();
+			final String flowDiagram = script.getFlowDiagram();
 			if (!isEmpty(body)) {
-				scriptManager.createScript(script.getName(), body, script.getFlowDiagram());
+				scriptManager.createScript(script.getName(), body, flowDiagram);
 			} else {
-				scriptManager.createScript(script.getName(), script.getFlowDiagram());
+				validateNonEmptyParameter(Paths.SCRIPT_CREATE_SERVICE, FLOW_DIAGRAM_PARAM_NAME, flowDiagram);
+				scriptManager.createScript(script.getName(), flowDiagram);
 			}
 		} catch (ManagementException e) {
 			throw new ResourceException(Paths.SCRIPT_CREATE_SERVICE, e);

@@ -67,6 +67,8 @@ public class ScriptManager extends AbstractManager implements Configurable {
 
 	/**
 	 * Creates new script in the repository. If no group is defined then the script is to be saved in the Default Group.
+	 * Script body is not generated using the passed flow diagram. The passed script body is used as is. The diagram is
+	 * only saved in repository.
 	 * 
 	 * @param scriptName
 	 *            script name
@@ -100,6 +102,7 @@ public class ScriptManager extends AbstractManager implements Configurable {
 
 	/**
 	 * Creates new script in the repository. If no group is defined then the script is to be saved in the Default Group.
+	 * Script body is generated using the passed flow diagram.
 	 * 
 	 * @param scriptName
 	 *            script name

@@ -11,6 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
+import com.ilsid.bfa.TestConstants;
 import com.ilsid.bfa.common.ClassNameUtil;
 import com.ilsid.bfa.common.IOHelper;
 import com.ilsid.bfa.common.Metadata;
@@ -27,12 +28,17 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	private static final String GENERATED_SCRIPT_DEFAULT_GROUP_PATH = ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE
 			.replace('.', '/');
 
+	private static final String FLOW_JSON_DIR = TestConstants.TEST_RESOURCES_DIR
+			+ "/dynamicCode/flow-diagram-representation/";
+
 	@Test
 	public void validScriptIsCompiledAndItsSourceAndClassAreSavedInFileSystem() throws Exception {
 		long version = getRepositoryVersion();
 
 		scriptIsCompiledAndItsSourceAndClassAreSavedInFileSystem("Script 001",
-				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script_x20_001");
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script_x20_001",
+				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001_generated.src",
+						"Script_x20_001.dgm", ClassNameUtil.METADATA_FILE_NAME });
 
 		assertIncrementedVersion(version);
 	}
@@ -40,7 +46,9 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	@Test
 	public void validScriptInNonDefaultGroupIsCompiledAndItsSourceAndClassAreSavedInFileSystem() throws Exception {
 		scriptIsCompiledAndItsSourceAndClassAreSavedInFileSystem("Custom Group 01::Script 001",
-				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/script_x20_001");
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/script_x20_001",
+				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001_generated.src",
+						"Script_x20_001.dgm", ClassNameUtil.METADATA_FILE_NAME });
 	}
 
 	@Test
@@ -64,6 +72,18 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		} finally {
 			FileUtils.forceDelete(scriptDir);
 		}
+	}
+
+	@Test
+	public void validScriptWithFlowDiagramAndWithoutBodyIsSavedInFileSystem() throws Exception {
+		long version = getRepositoryVersion();
+
+		scriptWithFlowDiagramOnlyIsCompiledAndItsSourceAndClassAreSavedInFileSystem("Script 001",
+				CODE_REPOSITORY_PATH + "/" + GENERATED_SCRIPT_DEFAULT_GROUP_PATH + "/script_x20_001",
+				new String[] { "Script_x20_001.class", "Script_x20_001.src", "Script_x20_001_generated.src",
+						"Script_x20_001.dgm", ClassNameUtil.METADATA_FILE_NAME });
+
+		assertIncrementedVersion(version);
 	}
 
 	@Test
@@ -120,14 +140,15 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 	}
 
 	@Test
-	public void scriptWithoutBodyIsNotSavedInFileSystem() throws Exception {
+	public void scriptWithoutBodyAndFlowDiagramIsNotSavedInFileSystem() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
 		ScriptAdminParams script = new ScriptAdminParams("Script 002", null);
 
 		ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
 		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
-		assertTrue(response.getEntity(String.class).startsWith("The body must be defined"));
+		assertTrue(
+				response.getEntity(String.class).startsWith("The value of [flow diagram] parameter must be not empty"));
 	}
 
 	@Test
@@ -143,7 +164,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		WebResource webResource = getWebResource(Paths.SCRIPT_UPDATE_SERVICE);
 		String updatedScriptBody = IOHelper.loadScript("duplicated-expression-script-upd.txt");
 		String updatedDiagram = IOHelper.loadScript("dummy-flow-diagram.txt");
-		
+
 		ScriptAdminParams script = new ScriptAdminParams("ScriptToUpdate", updatedScriptBody, "Script to Update");
 		script.setFlowDiagram(updatedDiagram);
 
@@ -158,7 +179,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		String actualScriptBody = IOHelper.loadFileContents(scriptDir.getPath(), "ScriptToUpdate.src");
 		String actualDiagram = IOHelper.loadFileContents(scriptDir.getPath(), "ScriptToUpdate.dgm");
-		
+
 		assertEquals(updatedScriptBody, actualScriptBody);
 		assertEquals(updatedDiagram, actualDiagram);
 		assertIncrementedVersion(version);
@@ -247,7 +268,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertEquals(expectedSource, response.getEntity(String.class));
 	}
-	
+
 	@Test
 	public void sourceCodeForNonExistingScriptIsNotLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_SOURCE_SERVICE);
@@ -260,7 +281,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 		assertTrue(response.getEntity(String.class)
 				.startsWith("The script [NonExistentScript] does not exist in the repository"));
 	}
-	
+
 	@Test
 	public void diagramForScriptIsLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_DIAGRAM_SERVICE);
@@ -276,7 +297,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertEquals(expectedDiagram, response.getEntity(String.class));
 	}
-	
+
 	@Test
 	public void diagramForScriptFromNonDefaultGroupIsLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_DIAGRAM_SERVICE);
@@ -293,7 +314,7 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 		assertEquals(expectedDiagram, response.getEntity(String.class));
 	}
-	
+
 	@Test
 	public void emptyDiagramForNonExistingScriptIsLoaded() throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_GET_DIAGRAM_SERVICE);
@@ -455,16 +476,10 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 				+ GENERATED_SCRIPT_ROOT_PATH + "/custom_x20_group_x20_01/some_x20_child_x20_group");
 	}
 
-	private void scriptIsCompiledAndItsSourceAndClassAreSavedInFileSystem(String scriptName, String expectedScriptPath)
-			throws Exception {
-
+	private void createCheckDeleteScript(ScriptAdminParams script, String scriptPath, String[] files) throws Exception {
 		WebResource webResource = getWebResource(Paths.SCRIPT_CREATE_SERVICE);
-		ScriptAdminParams script = new ScriptAdminParams(scriptName,
-				IOHelper.loadScript("duplicated-expression-script.txt"));
-		
-		script.setFlowDiagram("{\"rects\": []}");
 
-		File scriptDir = new File(expectedScriptPath);
+		File scriptDir = new File(scriptPath);
 		try {
 			ClientResponse response = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, script);
 
@@ -472,11 +487,30 @@ public class ScriptAdminResourceWithFSRepositoryIntegrationTest extends FSCodeRe
 
 			assertTrue(scriptDir.isDirectory());
 			assertEquals(5, scriptDir.list().length);
-			assertFilesExist(scriptDir.getPath(), new String[] { "Script_x20_001.class", "Script_x20_001.src",
-					"Script_x20_001_generated.src", "Script_x20_001.dgm", ClassNameUtil.METADATA_FILE_NAME });
+			assertFilesExist(scriptDir.getPath(), files);
 		} finally {
 			FileUtils.forceDelete(scriptDir);
 		}
+	}
+
+	private void scriptIsCompiledAndItsSourceAndClassAreSavedInFileSystem(String scriptName, String expectedScriptPath,
+			String[] files) throws Exception {
+
+		ScriptAdminParams script = new ScriptAdminParams(scriptName,
+				IOHelper.loadScript("duplicated-expression-script.txt"));
+		script.setFlowDiagram("{\"rects\": []}");
+
+		createCheckDeleteScript(script, expectedScriptPath, files);
+	}
+
+	private void scriptWithFlowDiagramOnlyIsCompiledAndItsSourceAndClassAreSavedInFileSystem(String scriptName,
+			String expectedScriptPath, String[] files) throws Exception {
+
+		ScriptAdminParams script = new ScriptAdminParams();
+		script.setName(scriptName);
+		script.setFlowDiagram(IOHelper.loadFileContents(FLOW_JSON_DIR, "block-action-valid-for-compilation.json"));
+
+		createCheckDeleteScript(script, expectedScriptPath, files);
 	}
 
 	private void scriptGroupCanBeCreated(String groupName, String expectedTitle, String expectedPath) throws Exception {

@@ -184,8 +184,8 @@ public class ScriptExpressionParser {
 					javaExpression.append(ParsingUtil.BLANK).append(token);
 					context.setState(getNextState(context));
 				} else {
-					throw new ParsingStateException(
-							"Operand is expected after [" + context.getCurrentToken() + "], but was [" + token + "]");
+					throw new ParsingStateException(String.format("Operand [%s] is expected after [%s], but was [%s]",
+							getProperOperands(), context.getCurrentToken(), token));
 				}
 			} else {
 				javaExpression.append(ParsingUtil.RP);
@@ -196,6 +196,8 @@ public class ScriptExpressionParser {
 		}
 
 		protected abstract boolean isProperOperand(String token);
+
+		protected abstract String getProperOperands();
 	}
 
 	private abstract class OperandState implements ParsingState, NextStateProvider {
@@ -262,6 +264,11 @@ public class ScriptExpressionParser {
 		protected boolean isProperOperand(String token) {
 			return ParsingUtil.NUMERIC_OPERANDS.contains(token);
 		}
+
+		@Override
+		protected String getProperOperands() {
+			return ParsingUtil.convertToString(ParsingUtil.NUMERIC_OPERANDS);
+		}
 	}
 
 	private class IntegerOperandState extends OperandState {
@@ -315,6 +322,11 @@ public class ScriptExpressionParser {
 		@Override
 		protected boolean isProperOperand(String token) {
 			return ParsingUtil.NUMERIC_OPERANDS.contains(token);
+		}
+
+		@Override
+		protected String getProperOperands() {
+			return ParsingUtil.convertToString(ParsingUtil.NUMERIC_OPERANDS);
 		}
 
 	}
@@ -372,6 +384,10 @@ public class ScriptExpressionParser {
 			return ParsingUtil.BOOLEAN_OPERANDS.contains(token);
 		}
 
+		@Override
+		protected String getProperOperands() {
+			return ParsingUtil.convertToString(ParsingUtil.BOOLEAN_OPERANDS);
+		}
 	}
 
 	private class BooleanOperandState extends OperandState {
@@ -425,6 +441,11 @@ public class ScriptExpressionParser {
 		@Override
 		protected boolean isProperOperand(String token) {
 			return ParsingUtil.STRING_OPERANDS.contains(token);
+		}
+
+		@Override
+		protected String getProperOperands() {
+			return ParsingUtil.convertToString(ParsingUtil.STRING_OPERANDS);
 		}
 
 	}
@@ -599,6 +620,8 @@ public class ScriptExpressionParser {
 
 		private static final String LSB = "[";
 
+		private static final char COMMA = ',';
+
 		private static final String INTEGER_VAR_EXPR_TEMPLATE = "((Integer)scriptContext.getVar(\"%s\").getValue()).intValue()";
 
 		private static final String INTEGER_FLD_EXPR_TEMPLATE = "((%s)scriptContext.getVar(\"%s\").getValue()).%s.intValue()";
@@ -681,7 +704,7 @@ public class ScriptExpressionParser {
 			return String.format(ARRAY_ELEMENT_EXPR_TEMPLATE, varName, javaArrIndex);
 		}
 
-		private static boolean isEntityVariable(String token, ScriptContext context, EntityInfo info) {
+		static boolean isEntityVariable(String token, ScriptContext context, EntityInfo info) {
 			if (isVariable(token, context)) {
 				Variable var = context.getVar(token);
 				Class<?> varClass = resolveClass(var.getJavaType());
@@ -705,6 +728,10 @@ public class ScriptExpressionParser {
 		static String[] splitIntoTokens(String expression) {
 			// String literals with blanks are escaped before splitting (by blanks): ' abc ' -> '%20%abc%20'
 			return escapeStringLiteralBlanks(expression.trim()).split(BLANK_REGEX);
+		}
+
+		static String convertToString(List<String> list) {
+			return StringUtils.join(list, COMMA);
 		}
 
 		private static String escapeStringLiteralBlanks(final String scriptExpression) {

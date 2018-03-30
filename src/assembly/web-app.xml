@@ -1,0 +1,69 @@
+<assembly
+  xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+  <id>app</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>${project.build.directory}</directory>
+      <outputDirectory>lib</outputDirectory>
+      <includes>
+        <include>${project.artifactId}-${project.version}-classes.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/src/main/resources</directory>
+      <outputDirectory>config</outputDirectory>
+      <includes>
+        <include>config.properties</include>
+        <include>log4j.properties</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/src/scripts</directory>
+      <outputDirectory>.</outputDirectory>
+      <lineEnding>windows</lineEnding>
+      <includes>
+        <include>*.bat</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/src/scripts</directory>
+      <outputDirectory>.</outputDirectory>
+      <lineEnding>unix</lineEnding>
+      <includes>
+        <include>*.sh</include>
+      </includes>
+    </fileSet>
+    
+	<!-- web app files -->
+    <fileSet>
+      <directory>${project.basedir}/target/${project.build.finalName}</directory>
+      <outputDirectory>web</outputDirectory>
+      <includes>
+        <include>index.html</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/target/${project.build.finalName}/script</directory>
+      <outputDirectory>web/script</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/target/${project.build.finalName}/res</directory>
+      <outputDirectory>web/res</outputDirectory>
+    </fileSet>
+  </fileSets>
+
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>lib</outputDirectory>
+      <scope>runtime</scope>
+      <useProjectArtifact>false</useProjectArtifact>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
+    </dependencySet>
+  </dependencySets>
+</assembly>

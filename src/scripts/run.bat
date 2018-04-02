@@ -1,1 +1,1 @@
-java -cp "lib/*" -Dbfa.config=config/config.properties com.ilsid.bfa.main.Server 
+java -cp "lib/*" -Dbfa.config=config/config.properties -Dbfa.log=config/log4j.xml com.ilsid.bfa.main.Application

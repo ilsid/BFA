@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.log4j.xml.DOMConfigurator;
+
 /**
  * Provides configuration related functionality.
  * 
@@ -19,12 +21,15 @@ public class ConfigUtil {
 
 	private static final String CONFIG_SYS_PROPERTY_NAME = "bfa.config";
 
+	private static final String LOGGING_SYS_PROPERTY_NAME = "bfa.log";
+
 	private static final String DEFAULT_CONFIG_FILE = "bfa/config.properties";
 
 	private static Map<String, String> config;
 
 	/**
-	 * Loads configuration from <i>&lt;current_dir&gt;/bfa/config.properties<i> file.
+	 * Loads configuration from a file defined by <i>bfa.config</i> system property. If such property is not defined then
+	 * configuration is loaded from <i>bfa/config.properties<i> file.
 	 * 
 	 * @return return the loaded configuration
 	 * @throws IllegalStateException
@@ -33,6 +38,7 @@ public class ConfigUtil {
 	public static synchronized Map<String, String> getApplicationSettings() {
 		if (config == null) {
 			config = load();
+			configureLogging();
 		}
 
 		return config;
@@ -58,6 +64,13 @@ public class ConfigUtil {
 		}
 
 		return result;
+	}
+
+	private static void configureLogging() {
+		String configFilePath = System.getProperty(LOGGING_SYS_PROPERTY_NAME);
+		if (configFilePath != null) {
+			DOMConfigurator.configure(configFilePath);
+		}
 	}
 
 }

@@ -41,8 +41,10 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 		FileUtils.forceMkdir(REPOSITORY_ROOT_DIR);
 		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + "/code_repository/action"),
 				new File(REPOSITORY_ROOT_DIR, "action"));
+		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + "/common_lib"),
+				new File(REPOSITORY_ROOT_DIR, ActionRepositoryInitializer.COMMON_LIB_DIR));
 
-		repository = ActionRepositoryInitializer.init(REPOSITORY_ROOT_DIR_PATH);
+		repository = ActionRepositoryInitializer.init(TestConstants.REPOSITORY_ROOT_DIR_PATH);
 	}
 
 	@After
@@ -76,6 +78,15 @@ public class FilesystemActionRepositoryUnitTest extends BaseUnitTestCase {
 	@Test
 	public void noDependencyURLsAreObtainedForNonExistingAction() throws Exception {
 		assertEquals(0, repository.getDependencies(NON_EXISTING_ACTION_NAME).size());
+	}
+
+	@Test
+	public void commonLibrariesURLsCanBeObtained() throws Exception {
+		List<URL> urls = repository.getCommonLibraries();
+
+		assertEquals(2, urls.size());
+		assertTrue(urls.contains(toURL(new File(REPOSITORY_ROOT_DIR, "common_lib/jboss-logging-3.1.3.GA.jar"))));
+		assertTrue(urls.contains(toURL(new File(REPOSITORY_ROOT_DIR, "common_lib/super-csv-2.1.0.jar"))));
 	}
 
 	@Test

@@ -3,6 +3,7 @@ package com.ilsid.bfa.action.persistence;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -159,9 +160,10 @@ public class ActionClassLoader extends ClassLoader {
 	}
 
 	private void initActionClassesLoader() {
-		List<URL> dependencies;
+		List<URL> dependencies = new LinkedList<>();
 		try {
-			dependencies = repository.getDependencies(actionName);
+			dependencies.addAll(repository.getCommonLibraries());
+			dependencies.addAll(repository.getDependencies(actionName));
 		} catch (PersistenceException e) {
 			throw new IllegalStateException(
 					String.format("Failed to obtain dependencies for the action [%s]", actionName), e);

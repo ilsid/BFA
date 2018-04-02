@@ -39,7 +39,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	private final static String SCRIPT_CLASS_NAME = CompileHelper.GENERATED_SCRIPT_PACKAGE
 			+ FilesystemScriptingRepositoryUnitTest.class.getSimpleName() + "Script01";
 
-	private final static String PATH_WO_EXTENSION = REPOSITORY_ROOT_DIR_PATH + "/"
+	private final static String PATH_WO_EXTENSION = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/"
 			+ SCRIPT_CLASS_NAME.replace('.', '/');
 
 	private final static File SAVED_SCRIPT_CLASS_FILE = new File(PATH_WO_EXTENSION + ".class");
@@ -50,6 +50,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 	private final static File SAVED_SCRIPT_DIAGRAM_FILE = new File(PATH_WO_EXTENSION + ".dgm");
 
+	private final static String COMMON_LIB_DIR_PATH = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/common_lib";
+
 	private ScriptingRepository repository = new FilesystemScriptingRepository();
 
 	@Before
@@ -59,7 +61,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		repository.setConfiguration(new HashMap<String, String>() {
 			{
-				put("bfa.persistence.fs.root_dir", REPOSITORY_ROOT_DIR_PATH);
+				put("bfa.persistence.fs.root_dir", TestConstants.REPOSITORY_ROOT_DIR_PATH);
+				put("bfa.persistence.fs.common_lib_dir", COMMON_LIB_DIR_PATH);
 			}
 		});
 	}
@@ -70,9 +73,9 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void defaultScripGroupMetadataFileExists() throws Exception {
+	public void defaultScriptGroupMetadataFileExists() throws Exception {
 		String metaData = IOHelper.loadFileContents(
-				REPOSITORY_ROOT_DIR_PATH + "/"
+				TestConstants.REPOSITORY_ROOT_DIR_PATH + "/"
 						+ ClassNameUtil.GENERATED_SCRIPTS_DEFAULT_GROUP_PACKAGE.replace('.', '/'),
 				ClassNameUtil.METADATA_FILE_NAME);
 
@@ -167,7 +170,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void existingEmptyPackageCanBeDeleted() throws Exception {
-		String packageDirPath = REPOSITORY_ROOT_DIR_PATH + "/" + "com/test/pkg";
+		String packageDirPath = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/" + "com/test/pkg";
 		File packageDir = new File(packageDirPath);
 
 		FileUtils.forceMkdir(packageDir);
@@ -180,7 +183,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void existingPackageWithClassesCanBeDeleted() throws Exception {
-		String packageDirPath = REPOSITORY_ROOT_DIR_PATH + "/" + "com/test/pkg";
+		String packageDirPath = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/" + "com/test/pkg";
 		File packageDir = new File(packageDirPath);
 
 		FileUtils.forceMkdir(packageDir);
@@ -198,7 +201,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 	@Test
 	public void nonExistingPackageIsIgnoredWhenDeleting() throws Exception {
-		String packageDirPath = REPOSITORY_ROOT_DIR_PATH + "/" + "com/test/not_exist/pkg";
+		String packageDirPath = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/" + "com/test/not_exist/pkg";
 		File packageDir = new File(packageDirPath);
 
 		assertFalse(packageDir.exists());
@@ -239,19 +242,18 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 	public void noByteCodeIsLoadedforNonExistentScript() throws Exception {
 		assertNull(repository.load("some.nonexistent.script.Script001"));
 	}
-	
+
 	@Test
 	public void diagramForExistingScriptCanBeLoaded() throws Exception {
 		createCodeRepository();
 
-		String diagram = repository
-				.loadDiagram("com.ilsid.bfa.generated.script.default_group.script001.Script001");
+		String diagram = repository.loadDiagram("com.ilsid.bfa.generated.script.default_group.script001.Script001");
 		String expectedDiagram = IOHelper.loadFileContents(TestConstants.TEST_RESOURCES_DIR
 				+ "/code_repository/com/ilsid/bfa/generated/script/default_group/script001", "Script001.dgm");
 
 		assertEquals(expectedDiagram, diagram);
 	}
-	
+
 	@Test
 	public void noDiagramIsLoadedforNonExistentScript() throws Exception {
 		assertNull(repository.loadDiagram("some.nonexistent.script.Script001"));
@@ -297,7 +299,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		createCodeRepository();
 
 		String className = "com.ilsid.bfa.generated.script.default_group.script001.Script001";
-		String filePrefix = REPOSITORY_ROOT_DIR_PATH + "/" + className.replace('.', '/');
+		String filePrefix = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/" + className.replace('.', '/');
 		File classFile = new File(filePrefix + ".class");
 		File sourceFile = new File(filePrefix + ".src");
 		assertTrue(classFile.exists());
@@ -314,7 +316,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		createCodeRepository();
 
 		String className = "com.ilsid.bfa.generated.entity.default_group.Entity001";
-		String filePrefix = REPOSITORY_ROOT_DIR_PATH + "/" + className.replace('.', '/');
+		String filePrefix = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/" + className.replace('.', '/');
 		File classFile = new File(filePrefix + ".class");
 		File sourceFile = new File(filePrefix + ".src");
 		File metaFile = new File(filePrefix + "_" + ClassNameUtil.METADATA_FILE_NAME);
@@ -334,7 +336,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		createCodeRepository();
 
 		String className = "com.ilsid.bfa.generated.script.default_group.script002.Script002";
-		String filePrefix = REPOSITORY_ROOT_DIR_PATH + "/" + className.replace('.', '/');
+		String filePrefix = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/" + className.replace('.', '/');
 		File classFile = new File(filePrefix + ".class");
 		File sourceFile = new File(filePrefix + ".src");
 		assertTrue(classFile.exists());
@@ -350,7 +352,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		createCodeRepository();
 
 		String className = "com.ilsid.bfa.generated.script.default_group.script001.SomeNonExistingScript";
-		String filePrefix = REPOSITORY_ROOT_DIR_PATH + "/" + className.replace('.', '/');
+		String filePrefix = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/" + className.replace('.', '/');
 		File classFile = new File(filePrefix + ".class");
 		File sourceFile = new File(filePrefix + ".src");
 		assertFalse(classFile.exists());
@@ -370,7 +372,8 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		assertTrue(result);
 
 		String savedMetadata = IOHelper.loadFileContents(
-				REPOSITORY_ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.entity.default_group".replace('.', '/'),
+				TestConstants.REPOSITORY_ROOT_DIR_PATH + "/"
+						+ "com.ilsid.bfa.generated.entity.default_group".replace('.', '/'),
 				"Entity001_" + ClassNameUtil.METADATA_FILE_NAME);
 
 		assertEquals("{\"type\":\"ENTITY\",\"name\":\"Test_Entity_001\",\"title\":\"Test Entity 001\"}", savedMetadata);
@@ -384,9 +387,9 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		boolean result = repository.saveMetadata(className, createEntityMetadata());
 		assertFalse(result);
-		assertFalse(new File(
-				REPOSITORY_ROOT_DIR_PATH + "/" + "com.ilsid.bfa.generated.entity.default_group".replace('.', '/') + "/"
-						+ "SomeNonExistingEntity_" + ClassNameUtil.METADATA_FILE_NAME).exists());
+		assertFalse(new File(TestConstants.REPOSITORY_ROOT_DIR_PATH + "/"
+				+ "com.ilsid.bfa.generated.entity.default_group".replace('.', '/') + "/" + "SomeNonExistingEntity_"
+				+ ClassNameUtil.METADATA_FILE_NAME).exists());
 	}
 
 	@Test
@@ -399,7 +402,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		assertTrue(result);
 
 		String savedMetadata = IOHelper.loadFileContents(
-				REPOSITORY_ROOT_DIR_PATH + "/"
+				TestConstants.REPOSITORY_ROOT_DIR_PATH + "/"
 						+ "com.ilsid.bfa.generated.script.default_group.script001".replace('.', '/'),
 				ClassNameUtil.METADATA_FILE_NAME);
 
@@ -414,7 +417,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 
 		boolean result = repository.savePackageMetadata(className, createScriptMetadata());
 		assertFalse(result);
-		assertFalse(new File(REPOSITORY_ROOT_DIR_PATH + "/"
+		assertFalse(new File(TestConstants.REPOSITORY_ROOT_DIR_PATH + "/"
 				+ "com.ilsid.bfa.generated.script.default_group.somenonexistingscript".replace('.', '/') + "/"
 				+ ClassNameUtil.METADATA_FILE_NAME).exists());
 	}
@@ -554,7 +557,7 @@ public class FilesystemScriptingRepositoryUnitTest extends BaseUnitTestCase {
 		final String packageName = ClassNameUtil.GENERATED_SCRIPTS_ROOT_PACKAGE + ".some_group";
 		repository.savePackage(packageName, createGroupMetadata());
 
-		final String savedDir = REPOSITORY_ROOT_DIR_PATH + "/" + packageName.replace('.', '/');
+		final String savedDir = TestConstants.REPOSITORY_ROOT_DIR_PATH + "/" + packageName.replace('.', '/');
 		assertTrue(new File(savedDir).isDirectory());
 
 		String savedMetadata = IOHelper.loadFileContents(savedDir, ClassNameUtil.METADATA_FILE_NAME);

@@ -16,9 +16,7 @@ import com.ilsid.bfa.common.DateHelper;
 
 public abstract class BaseUnitTestCase {
 	
-	protected final static String REPOSITORY_ROOT_DIR_PATH = TestConstants.TEST_RESOURCES_DIR + "/__tmp_class_repository";
-	
-	protected final static File REPOSITORY_ROOT_DIR = new File(REPOSITORY_ROOT_DIR_PATH);
+	protected final static File REPOSITORY_ROOT_DIR = new File(TestConstants.REPOSITORY_ROOT_DIR_PATH);
 
 	private Mockery mockery = new JUnit4Mockery() {
 		{

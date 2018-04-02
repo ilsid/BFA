@@ -12,6 +12,8 @@ public class TestConstants {
 
 	public final static String CODE_REPOSITORY_DIR = TEST_RESOURCES_DIR + "/code_repository";
 	
+	public final static String REPOSITORY_ROOT_DIR_PATH = TEST_RESOURCES_DIR + "/__tmp_class_repository";
+	
 	public static final String ORIENTDB_HOME_PROPERTY = "ORIENTDB_HOME";
 
 	public final static File INIT_DATABASE_DIR = new File(TestConstants.TEST_RESOURCES_DIR,

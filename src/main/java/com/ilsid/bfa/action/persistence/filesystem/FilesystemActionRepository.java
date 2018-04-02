@@ -103,6 +103,23 @@ public class FilesystemActionRepository extends FilesystemRepository implements 
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see com.ilsid.bfa.action.persistence.ActionRepository#getCommonLibraries()
+	 */
+	@Override
+	public List<URL> getCommonLibraries() throws PersistenceException {
+		List<URL> urls = new LinkedList<>();
+		File libDir = getCommonLibDirectory();
+
+		for (File jarFile : libDir.listFiles(new JarFilesFilter())) {
+			urls.add(toURL(jarFile));
+		}
+
+		return urls;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.ilsid.bfa.action.persistence.ActionRepository#createGroup(java.lang.String)
 	 */
 	@Override

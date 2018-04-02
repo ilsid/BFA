@@ -14,6 +14,12 @@ import com.google.inject.servlet.GuiceFilter;
 import com.ilsid.bfa.service.server.ApplicationConfig;
 import com.ilsid.bfa.service.server.ConfigUtil;
 
+/**
+ * Embedded http server.
+ * 
+ * @author illia.sydorovych
+ *
+ */
 public class HttpServer {
 
 	private static final String PORT_PROPERTY = "bfa.http.server.port";
@@ -33,6 +39,10 @@ public class HttpServer {
 	private static Server server;
 
 	public static void start() throws Exception {
+		if (server.isStarted()) {
+			return;
+		}
+		
 		configuration = ConfigUtil.getApplicationSettings();
 		server = new Server(getServerPort());
 

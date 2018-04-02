@@ -43,6 +43,15 @@ public interface ActionRepository extends Configurable, Transactional {
 	List<URL> getDependencies(String actionName) throws PersistenceException;
 
 	/**
+	 * Returns a list of common libraries. Each URL represents a jar file in the common libraries storage.
+	 * 
+	 * @return a list of common libraries. If no libraries exist than an empty list is returned
+	 * @throws PersistenceException
+	 *             in case of any repository access issues
+	 */
+	List<URL> getCommonLibraries() throws PersistenceException;
+
+	/**
 	 * Creates new action group.
 	 * 
 	 * @param groupName

@@ -8,6 +8,8 @@ import com.ilsid.bfa.action.persistence.ActionRepository;
 
 public class ActionRepositoryInitializer {
 
+	public static final String COMMON_LIB_DIR = "/common_lib";
+
 	public static ActionRepository init() throws Exception {
 		return createInstance(TestConstants.CODE_REPOSITORY_DIR);
 	}
@@ -22,6 +24,7 @@ public class ActionRepositoryInitializer {
 		repository.setConfiguration(new HashMap<String, String>() {
 			{
 				put("bfa.persistence.fs.root_dir", scriptingRepositoryPath);
+				put("bfa.persistence.fs.common_lib_dir", scriptingRepositoryPath + COMMON_LIB_DIR);
 			}
 		});
 		

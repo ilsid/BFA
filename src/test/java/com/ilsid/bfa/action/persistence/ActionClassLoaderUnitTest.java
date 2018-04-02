@@ -40,9 +40,13 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
+		final File commonLibDir = new File(TMP_CODE_REPOSITORY_DIR, ActionRepositoryInitializer.COMMON_LIB_DIR);
+
 		FileUtils.forceMkdir(TMP_CODE_REPOSITORY_DIR);
+		FileUtils.copyDirectory(new File(TestConstants.TEST_RESOURCES_DIR + "/common_lib"), commonLibDir);
+
 		ActionClassLoader.setRepository(ActionRepositoryInitializer.init(TMP_CODE_REPOSITORY_DIR.getAbsolutePath()));
-		ScriptingRepositoryInitializer.init();
+		ScriptingRepositoryInitializer.init(commonLibDir.getAbsolutePath());
 	}
 
 	@AfterClass
@@ -84,6 +88,15 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
 		Field field = clazz.getDeclaredField("SOME_CONSTANT");
 		assertEquals("Some Value", field.get(null));
+	}
+
+	@Test
+	public void commonLibDependencyCanBeLoaded() throws Exception {
+		final String className = "org.jboss.logging.BasicLogger";
+		makeSureClassIsNotInClasspathOfCurrentLoader(className);
+
+		Class<?> clazz = loader.loadClass(className);
+		assertEquals(LOADER_CLASS_NAME, clazz.getClassLoader().getClass().getName());
 	}
 
 	@Test
@@ -138,15 +151,15 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 		String newActionResult = TEST_ACTION_RESULT + " Updated";
 		assertEquals(newActionResult, reloadedAction.execute()[0]);
 	}
-	
+
 	@Test
 	@SuppressWarnings("unchecked")
 	public void actionClassIsLoadedOnceBySameLoader() throws Exception {
 		Class<Action> clazz1 = (Class<Action>) loader.loadClass(ACTION_IMPL_CLASS_NAME);
 		Class<Action> clazz2 = (Class<Action>) loader.loadClass(ACTION_IMPL_CLASS_NAME);
-		
+
 		assertSame(clazz1, clazz2);
-	}	
+	}
 
 	@Test
 	public void generatedClassCanBeLoadedFromScriptingRepository() throws Exception {

@@ -34,6 +34,8 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 
 	private static final String CONFIG_PROP_LISTEN_UPDATES_ENABLED_NAME = "bfa.persistence.fs.listen_updates.enabled";
 
+	private static final String CONFIG_PROP_COMMON_LIB_DIR = "bfa.persistence.fs.common_lib_dir";
+
 	private static final String REPOSITORY_LOCKED_ERR_MSG = "Repository is locked. The operation should be tried again";
 
 	private static final String LOCK_FAILED_ERR_MSG = "Failed to lock the repository";
@@ -47,6 +49,8 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 	private File lockFile;
 
 	private File versionFile;
+
+	private File commonLibDir;
 
 	private Logger logger;
 
@@ -75,6 +79,7 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 
 		initLockFile();
 		initVersionFile();
+		initCommonLibDir(config);
 
 		if (listenUpdates(config)) {
 			initUpdateListener();
@@ -131,6 +136,10 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 				.append("\":\"").append(Metadata.DEFAULT_GROUP_TITLE).append("\"}");
 
 		return json.toString();
+	}
+
+	protected File getCommonLibDirectory() {
+		return commonLibDir;
 	}
 
 	/**
@@ -212,6 +221,26 @@ public abstract class FilesystemRepository implements Configurable, Transactiona
 				FileUtils.writeStringToFile(versionFile, INIT_VERSION_VALUE);
 			} catch (IOException e) {
 				throw new ConfigurationException("Failed to create repository version file", e);
+			}
+		}
+	}
+
+	private void initCommonLibDir(Map<String, String> config) throws ConfigurationException {
+		String dir = config.get(CONFIG_PROP_COMMON_LIB_DIR);
+		if (dir == null) {
+			throw new ConfigurationException(
+					String.format("Common libraries property [%s] is not defined", CONFIG_PROP_COMMON_LIB_DIR));
+		}
+
+		commonLibDir = new File(dir);
+
+		if (!commonLibDir.exists()) {
+			try {
+				FileUtils.forceMkdir(commonLibDir);
+			} catch (IOException e) {
+				throw new ConfigurationException(String.format(
+						"The repository initialization failure. The error occurred while creating the common libraries directory [%s]",
+						commonLibDir.getAbsolutePath()), e);
 			}
 		}
 	}

@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.log4j.xml.DOMConfigurator;
+import com.ilsid.bfa.common.LoggingConfigurator;
 
 /**
  * Provides configuration related functionality.
@@ -69,7 +69,7 @@ public class ConfigUtil {
 	private static void configureLogging() {
 		String configFilePath = System.getProperty(LOGGING_SYS_PROPERTY_NAME);
 		if (configFilePath != null) {
-			DOMConfigurator.configure(configFilePath);
+			LoggingConfigurator.configureLog4j(configFilePath);
 		}
 	}
 

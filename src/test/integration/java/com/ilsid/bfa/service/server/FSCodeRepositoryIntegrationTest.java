@@ -60,6 +60,7 @@ public abstract class FSCodeRepositoryIntegrationTest extends RESTServiceIntegra
 
 		Map<String, String> repositoryConfig = new HashMap<>();
 		repositoryConfig.put("bfa.persistence.fs.root_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
+		repositoryConfig.put("bfa.persistence.fs.common_lib_dir", IntegrationTestConstants.COMMON_LIB_DIR.getPath());
 		repositoryConfig.put("bfa.tmp_dir", IntegrationTestConstants.CODE_REPOSITORY_DIR.getPath());
 		repositoryConfig.putAll(getDatabaseServerManager().getConfig());
 		repositoryConfig.put("bfa.monitor.server.port", IntegrationTestConstants.MONITORING_SERVER_PORT);

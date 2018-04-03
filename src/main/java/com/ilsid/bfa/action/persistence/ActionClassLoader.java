@@ -1,5 +1,6 @@
 package com.ilsid.bfa.action.persistence;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -29,6 +30,8 @@ import com.ilsid.bfa.persistence.PersistenceLogger;
 public class ActionClassLoader extends ClassLoader {
 
 	private static Map<String, ActionClassLoader> loaders = new ConcurrentHashMap<>();
+
+	private static ClassLoader commonLibsLoader;
 
 	private static ActionRepository repository;
 
@@ -83,6 +86,14 @@ public class ActionClassLoader extends ClassLoader {
 	}
 
 	/**
+	 * Releases resources of the current commons libraries loader and creates the new one.
+	 */
+	public static void reloadCommonLibraries() {
+		releaseCommonLibraries();
+		initCommonLibrariesLoader();
+	}
+
+	/**
 	 * Releases resources (like jar files) locked by the given action. The consequent invocation of
 	 * {@linkplain #getLoader(String)} will return new loader for this action. Does nothing if the action with the given
 	 * name has been never loaded before.
@@ -132,6 +143,7 @@ public class ActionClassLoader extends ClassLoader {
 	@Inject
 	public static void setRepository(ActionRepository codeRepository) {
 		repository = codeRepository;
+		initCommonLibrariesLoader();
 	}
 
 	/**
@@ -159,29 +171,52 @@ public class ActionClassLoader extends ClassLoader {
 		}
 	}
 
+	static void releaseCommonLibraries() {
+		try {
+			((Closeable) commonLibsLoader).close();
+		} catch (IOException e) {
+			if (logger != null) {
+				logger.warn("Failed to close the common libraries loader", e);
+			} else {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static void initCommonLibrariesLoader() {
+		List<URL> commonLibs;
+		try {
+			commonLibs = repository.getCommonLibraries();
+		} catch (PersistenceException e) {
+			throw new IllegalStateException("Failed to obtain common libraries from repository");
+		}
+
+		URL[] urls = commonLibs.toArray(new URL[commonLibs.size()]);
+		commonLibsLoader = new URLClassLoader(urls, null);
+	}
+
 	private void initActionClassesLoader() {
 		List<URL> dependencies = new LinkedList<>();
 		try {
-			dependencies.addAll(repository.getCommonLibraries());
 			dependencies.addAll(repository.getDependencies(actionName));
 		} catch (PersistenceException e) {
 			throw new IllegalStateException(
 					String.format("Failed to obtain dependencies for the action [%s]", actionName), e);
 		}
 		URL[] urls = dependencies.toArray(new URL[dependencies.size()]);
-		actionClassesLoader = new SearchURLsFirstClassLoader(urls, actionName);
+		actionClassesLoader = new DependenciesFirstClassLoader(urls, actionName);
 	}
 
 	/*
-	 * The loader searches class within URLs first. If a class is not found, the loading is delegated to
-	 * DynamicClassLoader.
+	 * The loader searches class in the common libraries storage first and then within the provided URLs. If a class is
+	 * not found, the loading is delegated to DynamicClassLoader.
 	 */
-	private static class SearchURLsFirstClassLoader extends URLClassLoader {
+	private static class DependenciesFirstClassLoader extends URLClassLoader {
 
 		private String actionName;
 
-		public SearchURLsFirstClassLoader(URL[] urls, String actionName) {
-			super(urls, null);
+		public DependenciesFirstClassLoader(URL[] urls, String actionName) {
+			super(urls, commonLibsLoader);
 			this.actionName = actionName;
 		}
 
@@ -190,6 +225,7 @@ public class ActionClassLoader extends ClassLoader {
 			try {
 				return super.findClass(name);
 			} catch (ClassNotFoundException e) {
+
 				if (name.startsWith(ClassNameUtil.GENERATED_CLASSES_PACKAGE)) {
 					// Reload listener is registered in case of generated class, because this class may be reloaded in
 					// future. This is needed because generated classes used in actions must be loaded by the actual

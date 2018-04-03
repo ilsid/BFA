@@ -26,7 +26,7 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
 	private static final File TMP_ACTION_CODE_REPOSITORY_DIR = new File(TMP_CODE_REPOSITORY_PATH + "/action");
 
-	private static final String LOADER_CLASS_NAME = "com.ilsid.bfa.action.persistence.ActionClassLoader$SearchURLsFirstClassLoader";
+	private static final String LOADER_CLASS_NAME = "com.ilsid.bfa.action.persistence.ActionClassLoader$DependenciesFirstClassLoader";
 
 	private static final String TEST_ACTION_RESULT = "Test Action Result";
 
@@ -51,6 +51,7 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 
 	@AfterClass
 	public static void afterClass() throws Exception {
+		ActionClassLoader.releaseCommonLibraries();
 		FileUtils.forceDelete(TMP_CODE_REPOSITORY_DIR);
 		ScriptingRepositoryInitializer.cleanup();
 	}
@@ -96,7 +97,25 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 		makeSureClassIsNotInClasspathOfCurrentLoader(className);
 
 		Class<?> clazz = loader.loadClass(className);
-		assertEquals(LOADER_CLASS_NAME, clazz.getClassLoader().getClass().getName());
+		assertEquals(java.net.URLClassLoader.class.getName(), clazz.getClassLoader().getClass().getName());
+	}
+
+	@Test
+	public void commonLibDependencyIsLoadedOnce() throws Exception {
+		final String className = "org.jboss.logging.BasicLogger";
+		makeSureClassIsNotInClasspathOfCurrentLoader(className);
+
+		Class<?> clazz1 = loader.loadClass(className);
+
+		// The current loader must be closed explicitly as it was created via package private constructor (but not via
+		// getLoader() static method)
+		((ActionClassLoader) loader).close();
+		ActionClassLoader.reload(ACTION_NAME);
+
+		loader = ActionClassLoader.getLoader(ACTION_NAME);
+		Class<?> clazz2 = loader.loadClass(className);
+
+		assertSame(clazz1, clazz2);
 	}
 
 	@Test
@@ -144,7 +163,7 @@ public class ActionClassLoaderUnitTest extends BaseUnitTestCase {
 		@SuppressWarnings("unchecked")
 		Class<Action> reloadedClazz = (Class<Action>) loader.loadClass(ACTION_IMPL_CLASS_NAME);
 
-		assertTrue(reloadedClazz != clazz);
+		assertNotSame(clazz, reloadedClazz);
 		assertEquals(ACTION_IMPL_CLASS_NAME, reloadedClazz.getName());
 
 		Action reloadedAction = reloadedClazz.newInstance();

@@ -39,7 +39,7 @@ public class HttpServer {
 	private static Server server;
 
 	public static void start() throws Exception {
-		if (server.isStarted()) {
+		if (server != null && server.isStarted()) {
 			return;
 		}
 		

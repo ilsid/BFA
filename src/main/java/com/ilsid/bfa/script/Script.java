@@ -8,6 +8,7 @@ import java.util.Queue;
 import com.ilsid.bfa.action.Action;
 import com.ilsid.bfa.action.ActionContext;
 import com.ilsid.bfa.action.ActionException;
+import com.ilsid.bfa.action.persistence.ActionClassLoader;
 import com.ilsid.bfa.action.persistence.ActionLocator;
 import com.ilsid.bfa.flow.FlowElement;
 import com.ilsid.bfa.flow.FlowConstants;
@@ -157,10 +158,14 @@ public abstract class Script {
 		action.setInputParameters(params);
 
 		Object[] result;
+		ClassLoader ctxLoader = Thread.currentThread().getContextClassLoader(); 
+		Thread.currentThread().setContextClassLoader(ActionClassLoader.getCommonLibrariesLoader());
 		try {
 			result = action.execute();
 		} catch (ActionException e) {
 			throw new ScriptException(String.format("Execution of the action [%s] failed", name), e);
+		} finally {
+			Thread.currentThread().setContextClassLoader(ctxLoader);
 		}
 
 		if (result == null) {

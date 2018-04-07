@@ -8,6 +8,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.inject.Inject;
 
@@ -31,11 +34,19 @@ public class ActionClassLoader extends ClassLoader {
 
 	private static Map<String, ActionClassLoader> loaders = new ConcurrentHashMap<>();
 
+	private static ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+
 	private static ClassLoader commonLibsLoader;
 
 	private static ActionRepository repository;
 
 	private static Logger logger;
+
+	private static final ReadWriteLock COMMON_LIBS_LOCK = new ReentrantReadWriteLock();
+
+	private static final Lock READ_COMMON_LIBS_LOCK = COMMON_LIBS_LOCK.readLock();
+
+	private static final Lock WRITE_COMMON_LIBS_LOCK = COMMON_LIBS_LOCK.writeLock();
 
 	private URLClassLoader actionClassesLoader;
 
@@ -89,8 +100,13 @@ public class ActionClassLoader extends ClassLoader {
 	 * Releases resources of the current commons libraries loader and creates the new one.
 	 */
 	public static void reloadCommonLibraries() {
-		releaseCommonLibraries();
-		initCommonLibrariesLoader();
+		WRITE_COMMON_LIBS_LOCK.lock();
+		try {
+			releaseCommonLibraries();
+			initCommonLibrariesLoader();
+		} finally {
+			WRITE_COMMON_LIBS_LOCK.unlock();
+		}
 	}
 
 	/**
@@ -157,6 +173,20 @@ public class ActionClassLoader extends ClassLoader {
 		logger = loggerImpl;
 	}
 
+	/**
+	 * Returns class loader that loads classes from the common libraries storage.
+	 * 
+	 * @return common libraries class loader
+	 */
+	public static ClassLoader getCommonLibrariesLoader() {
+		READ_COMMON_LIBS_LOCK.lock();
+		try {
+			return commonLibsLoader;
+		} finally {
+			READ_COMMON_LIBS_LOCK.unlock();
+		}
+	}
+
 	void close() {
 		if (actionClassesLoader != null) {
 			try {
@@ -192,7 +222,7 @@ public class ActionClassLoader extends ClassLoader {
 		}
 
 		URL[] urls = commonLibs.toArray(new URL[commonLibs.size()]);
-		commonLibsLoader = new URLClassLoader(urls, null);
+		commonLibsLoader = new URLClassLoader(urls, contextClassLoader);
 	}
 
 	private void initActionClassesLoader() {
@@ -208,15 +238,15 @@ public class ActionClassLoader extends ClassLoader {
 	}
 
 	/*
-	 * The loader searches class in the common libraries storage first and then within the provided URLs. If a class is
-	 * not found, the loading is delegated to DynamicClassLoader.
+	 * The loader searches a class within the provided URLs first and then in the common libraries storage. If the class
+	 * is not found, the loading is delegated to DynamicClassLoader.
 	 */
 	private static class DependenciesFirstClassLoader extends URLClassLoader {
 
 		private String actionName;
 
 		public DependenciesFirstClassLoader(URL[] urls, String actionName) {
-			super(urls, commonLibsLoader);
+			super(urls, null);
 			this.actionName = actionName;
 		}
 
@@ -226,14 +256,20 @@ public class ActionClassLoader extends ClassLoader {
 				return super.findClass(name);
 			} catch (ClassNotFoundException e) {
 
-				if (name.startsWith(ClassNameUtil.GENERATED_CLASSES_PACKAGE)) {
-					// Reload listener is registered in case of generated class, because this class may be reloaded in
-					// future. This is needed because generated classes used in actions must be loaded by the actual
-					// (most recent) dynamic class loader instance to avoid ClassCastException issues
-					DynamicClassLoader.addReloadListener(new ReloadActionListener(actionName));
+				try {
+					return commonLibsLoader.loadClass(name);
+				} catch (ClassNotFoundException e2) {
+
+					if (name.startsWith(ClassNameUtil.GENERATED_CLASSES_PACKAGE)) {
+						// Reload listener is registered in case of generated class, because this class may be reloaded
+						// in future. This is needed because generated classes used in actions must be loaded by the
+						// actual (most recent) dynamic class loader instance to avoid ClassCastException issues
+						DynamicClassLoader.addReloadListener(new ReloadActionListener(actionName));
+					}
+
+					return DynamicClassLoader.getInstance().loadClass(name);
 				}
 
-				return DynamicClassLoader.getInstance().loadClass(name);
 			}
 		}
 

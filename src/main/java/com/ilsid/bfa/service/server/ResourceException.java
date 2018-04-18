@@ -38,6 +38,13 @@ public class ResourceException extends WebApplicationException {
 		this.status = status;
 		this.entity = entity;
 	}
+	
+	public ResourceException(String path, Throwable e, Object entity) {
+		super(e);
+		this.path = path;
+		hasCause = true;
+		this.entity = entity;
+	}
 
 	public ResourceException(String path, String message, Status status) {
 		this.path = path;

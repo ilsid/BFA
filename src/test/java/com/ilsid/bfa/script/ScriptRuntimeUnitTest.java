@@ -89,7 +89,8 @@ public class ScriptRuntimeUnitTest extends BaseUnitTestCase {
 		try {
 			runtime.runScript("Custom Group 003::Failed Script");
 		} catch (ScriptException e) {
-			assertEquals("Execution of the action [Failed Action] failed", e.getMessage());
+			assertEquals("Script [Custom Group 003::Failed Script] failed", e.getMessage());
+			assertEquals("Execution of the action [Failed Action] failed", e.getCause().getMessage());
 		}
 
 		assertSingleRecordWithErrorDetailsIsPersisted(FAILED_FLOWS_QUERY_TPLT);

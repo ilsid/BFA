@@ -128,6 +128,16 @@ function writeError(error, message) {
 	}
 }
 
+function writeErrorFromJsonResponse(error, fieldName) {
+	if (error.response.status == 500) {
+		writeErrorMessage('Internal server error. Please contact your system administrator.');
+		return;
+	}
+	
+	var message = JSON.parse(error.response.text)[fieldName];
+	writeErrorMessage(message);
+}
+
 function escapeEntitySource(source)  {
 	return source.replace(/"/g,'\\"');
 }
@@ -849,7 +859,7 @@ function runScript() {
 					writeInfo('Script [' + scriptName + '] is completed');
 				}, function(err) {
 					dialog.hide();
-					writeError(err, 'Script [' + scriptName + '] is failed');
+					writeErrorFromJsonResponse(err, 'errorDetails');
 				});
 	});	
 }

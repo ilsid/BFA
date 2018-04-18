@@ -10,6 +10,8 @@ import com.ilsid.bfa.BFAException;
  */
 @SuppressWarnings("serial")
 public class ScriptException extends BFAException {
+	
+	private Object flowRuntimeId;
 
 	public ScriptException(String message, Throwable cause) {
 		super(message, cause);
@@ -19,6 +21,18 @@ public class ScriptException extends BFAException {
 		super(message);
 	}
 	
+	public ScriptException(String message, Throwable cause, Object flowRuntimeId) {
+		super(message, cause);
+		this.flowRuntimeId = flowRuntimeId;
+	}
+
+	public ScriptException(String message, Object flowRuntimeId) {
+		super(message);
+		this.flowRuntimeId = flowRuntimeId;
+	}
 	
+	public Object getFlowRuntimeId() {
+		return flowRuntimeId;
+	}
 
 }

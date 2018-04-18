@@ -273,15 +273,13 @@ public class ScriptRuntime {
 		createRuntimeRecord(runtimeRecord);
 		try {
 			script.execute();
-		} catch (ScriptException e) {
+		} catch (ScriptException | RuntimeException e) {
 			updateRuntimeRecord(addErrorInfo(runtimeRecord, e));
-			throw e;
-		} catch (RuntimeException e) {
-			updateRuntimeRecord(addErrorInfo(runtimeRecord, e));
-			throw new ScriptException(String.format("Script [%s] failed", scriptName), e);
+			throw new ScriptException(String.format("Script [%s] failed", scriptName), e, flowRuntimeId);
 		} catch (Error e) {
 			updateRuntimeRecord(addErrorInfo(runtimeRecord, new Exception("System error occurred", e)));
-			throw new ScriptException(String.format("Script [%s] failed with system error", scriptName), e);
+			throw new ScriptException(String.format("Script [%s] failed with system error", scriptName), e,
+					flowRuntimeId);
 		} finally {
 			script.cleanup();
 		}

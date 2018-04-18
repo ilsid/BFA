@@ -12,6 +12,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ilsid.bfa.common.ExceptionUtil;
 import com.ilsid.bfa.persistence.QueryPage;
 import com.ilsid.bfa.runtime.dto.RuntimeStatusType;
 import com.ilsid.bfa.runtime.dto.ScriptRuntimeCriteria;
@@ -54,6 +55,7 @@ public class ScriptRuntimeResource {
 	@Path(Paths.RUN_OPERATION)
 	public Response run(ScriptRuntimeParams script) {
 		Object runtimeId;
+		RuntimeStatus result;
 		try {
 			final Object[] params = script.getInputParameters();
 			if (params != null && params.length > 0) {
@@ -62,11 +64,14 @@ public class ScriptRuntimeResource {
 				runtimeId = scriptRuntime.runScript(script.getName());
 			}
 		} catch (ScriptException e) {
-			throw new ResourceException(Paths.SCRIPT_RUN_SERVICE, e);
+			result = RuntimeStatus.runtimeId(e.getFlowRuntimeId()).statusType(RuntimeStatusType.FAILED)
+					.errorDetails(ExceptionUtil.getExceptionMessageChain(e)).build();
+			throw new ResourceException(Paths.SCRIPT_RUN_SERVICE, e, result);
 		}
-		RuntimeStatus status = RuntimeStatus.runtimeId(runtimeId).statusType(RuntimeStatusType.COMPLETED).build();
 
-		return Response.status(Status.OK).entity(status).build();
+		result = RuntimeStatus.runtimeId(runtimeId).statusType(RuntimeStatusType.COMPLETED).build();
+
+		return Response.status(Status.OK).entity(result).build();
 	}
 
 	@POST

@@ -10,14 +10,13 @@ import java.util.List;
  *
  */
 public class FlowDefinition {
-	
+
 	private List<String> inputParameters = new LinkedList<>();
-	
+
 	private List<String> localVariables = new LinkedList<>();
-	
+
 	private List<Block> blocks;
-	
-	
+
 	public List<String> getInputParameters() {
 		return inputParameters;
 	}
@@ -42,27 +41,31 @@ public class FlowDefinition {
 		this.blocks = blocks;
 	}
 
-
+	/**
+	 * Flow Block: Start, End, Action, Sub-Process, Condition.
+	 * 
+	 * @author illia.sydorovych
+	 *
+	 */
 	public static class Block {
-		
-		private String id;
-		
-		private String type;
-		
-		private String name;
-		
-		private String description;
-		
-		private String output;
-		
-		private List<String> inputParameters = new LinkedList<>();
-		
-		private List<String> preExecExpressions = new LinkedList<>();
-		
-		private List<String> postExecExpressions = new LinkedList<>();
-		
-		private List<String> expressions = new LinkedList<>();
 
+		private String id;
+
+		private String type;
+
+		private String name;
+
+		private String description;
+
+		private String output;
+
+		private List<String> inputParameters = new LinkedList<>();
+
+		private List<String> preExecExpressions = new LinkedList<>();
+
+		private List<String> postExecExpressions = new LinkedList<>();
+
+		private List<String> expressions = new LinkedList<>();
 
 		public String getId() {
 			return id;
@@ -103,7 +106,7 @@ public class FlowDefinition {
 		public void setOutput(String output) {
 			this.output = output;
 		}
-		
+
 		public List<String> getInputParameters() {
 			return inputParameters;
 		}
@@ -137,5 +140,19 @@ public class FlowDefinition {
 		}
 
 	}
-	
+
+	public static class BlockType {
+
+		public static final String START = "start";
+
+		public static final String END = "end";
+
+		public static final String ACTION = "action";
+
+		public static final String SUBPROCESS = "subprocess";
+
+		public static final String CONDITION = "condition";
+
+	}
+
 }

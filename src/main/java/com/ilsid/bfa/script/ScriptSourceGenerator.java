@@ -57,7 +57,7 @@ public class ScriptSourceGenerator {
 		processLocalVariables(code, flow);
 
 		for (Block block : flow.getBlocks()) {
-			processBlock(code, block);
+			BlockSourceGenerator.processBlock(code, block);
 		}
 
 		return code.toString();
@@ -111,49 +111,82 @@ public class ScriptSourceGenerator {
 		}
 	}
 
-	private static void processBlock(StringBuilder code, Block block) throws ParsingException {
-		code.append(String.format(COMMENTS_PATTERN, block.getDescription())).append(NL);
+	private static abstract class BlockSourceGenerator {
 
-		List<String> exprs = block.getExpressions();
-
-		if (exprs != null && exprs.size() > 0) {
-			processAssignExpressions(exprs, code);
-		} else {
-			processAssignExpressions(block.getPreExecExpressions(), code);
-
-			String actionName = block.getName();
-			StringBuilder paramsExpr = new StringBuilder();
-
-			for (String param : block.getInputParameters()) {
-				paramsExpr.append(COMMA).append(DQ).append(param).append(DQ);
+		public static void processBlock(StringBuilder code, Block block) throws ParsingException {
+			BlockSourceGenerator sourceGenerator = BlockSourceGeneratorFactory.getGenerator(block.getType());
+			if (sourceGenerator != null) {
+				sourceGenerator.doProcessBlock(code, block);
 			}
-			code.append(String.format(ACTION_EXPR_PATTERN, actionName, paramsExpr.toString()));
+		}
 
-			String output = block.getOutput();
-			if (output != null && output.trim().length() > 0) {
-				code.append(String.format(ACTION_RESULT_EXPR_PATTERN, output));
+		protected abstract void doProcessBlock(StringBuilder code, Block block) throws ParsingException;
+
+		protected void processAssignExpressions(List<String> expressions, StringBuilder code) throws ParsingException {
+			for (String preExpr : expressions) {
+				String[] tokens = preExpr.split(EQUAL_REGEX);
+
+				if (tokens.length != 2) {
+					throw new ParsingException(String.format(
+							"Invalid assignment expression: [%s]. Expected [var = value] expression.", preExpr));
+				}
+
+				code.append(String.format(SET_LOCAL_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
+			}
+		}
+
+	}
+
+	private static class ActionSourceGenerator extends BlockSourceGenerator {
+
+		public void doProcessBlock(StringBuilder code, Block block) throws ParsingException {
+			code.append(String.format(COMMENTS_PATTERN, block.getDescription())).append(NL);
+
+			List<String> exprs = block.getExpressions();
+
+			if (exprs != null && exprs.size() > 0) {
+				processAssignExpressions(exprs, code);
 			} else {
-				code.append(SC);
+				processAssignExpressions(block.getPreExecExpressions(), code);
+
+				String actionName = block.getName();
+				StringBuilder paramsExpr = new StringBuilder();
+
+				for (String param : block.getInputParameters()) {
+					paramsExpr.append(COMMA).append(DQ).append(param).append(DQ);
+				}
+				code.append(String.format(ACTION_EXPR_PATTERN, actionName, paramsExpr.toString()));
+
+				String output = block.getOutput();
+				if (output != null && output.trim().length() > 0) {
+					code.append(String.format(ACTION_RESULT_EXPR_PATTERN, output));
+				} else {
+					code.append(SC);
+				}
+
+				code.append(NL);
+				processAssignExpressions(block.getPostExecExpressions(), code);
 			}
 
 			code.append(NL);
-			processAssignExpressions(block.getPostExecExpressions(), code);
 		}
 
-		code.append(NL);
 	}
 
-	private static void processAssignExpressions(List<String> expressions, StringBuilder code) throws ParsingException {
-		for (String preExpr : expressions) {
-			String[] tokens = preExpr.split(EQUAL_REGEX);
+	//TODO: add other block source generator implementations
+	private static class BlockSourceGeneratorFactory {
 
-			if (tokens.length != 2) {
-				throw new ParsingException(String
-						.format("Invalid assignment expression: [%s]. Expected [var = value] expression.", preExpr));
+		private static final BlockSourceGenerator ACTION_SOURCE_GENERATOR = new ActionSourceGenerator();
+
+		public static BlockSourceGenerator getGenerator(String blockType) {
+
+			if (FlowDefinition.BlockType.ACTION.equals(blockType)) {
+				return ACTION_SOURCE_GENERATOR;
 			}
 
-			code.append(String.format(SET_LOCAL_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
+			return null;
 		}
+
 	}
 
 }

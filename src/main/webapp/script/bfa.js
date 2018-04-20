@@ -583,8 +583,10 @@ function onCreateScriptDialog_btnOkClick() {
 			var tabContainer = registry.byId('tabContainer');
 			var scriptTab = tabContainer.selectedChildWidget;
 			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
-			var scriptSource = scriptEditor.getValue();
-			var scriptBody = escapeScriptSource(scriptSource);
+			// TODO: script source is generated only now, it is not taken from editor
+			// In future, both options (generated/manual script creation) will be available
+			//var scriptSource = scriptEditor.getValue();
+			//var scriptBody = escapeScriptSource(scriptSource);
 			var flowCanvas = bfa.flowEditorContext.canvas;
 			var flowDiagramState = flowCanvas.state.save(); 
 			var flowDiagramStateStr = escapeFlowDiagramState(JSON.stringify(flowDiagramState, null, 4));
@@ -592,7 +594,6 @@ function onCreateScriptDialog_btnOkClick() {
 			request('service/script/admin/create', {
 					headers: { 'Content-Type': 'application/json' },
 					method: 'POST',
-					//data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
 					data: '{"name": "' + scriptName + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
 				}).then(function(resp){
 					tree.refreshChildrenSubTree(groupName);
@@ -600,8 +601,19 @@ function onCreateScriptDialog_btnOkClick() {
 					var tabIdx = tabContainer.getIndexOfChild(scriptTab);
 					tabContainer.removeChild(scriptTab);
 					scriptTab.destroyRecursive();
-					createScriptTab(scriptShortName, 'tab_script_' + scriptName, scriptSource, tabIdx);
-					writeInfo('Script [' + scriptName + '] is created');
+					
+					request('service/script/admin/getSource', {
+						headers: { 'Content-Type': 'application/json' },
+						method: 'POST',
+						data: '{"name": "' + scriptName + '"}'
+					}).then(function(resp) {
+						createScriptTab(scriptShortName, 'tab_script_' + scriptName, resp, tabIdx);
+						writeInfo('Script [' + scriptName + '] is created');
+					}, function(err) {
+						hideDialog('updateScriptDialog');
+						writeError(err);
+					});
+					
 				}, function(err) {
 					hideDialog('createScriptDialog');
 					writeError(err);
@@ -619,8 +631,10 @@ function onUpdateScriptDialog_btnOkClick() {
 			var tabContainer = registry.byId('tabContainer');
 			var scriptTab = tabContainer.selectedChildWidget;
 			var scriptEditor = scriptTab.getChildren()[1].getChildren()[0].editor;
-			var scriptSource = scriptEditor.getValue();
-			var scriptBody = escapeScriptSource(scriptSource);
+			// TODO: script source is generated only now, it is not taken from editor
+			// In future, both options (generated/manual script creation) will be available
+			//var scriptSource = scriptEditor.getValue();
+			//var scriptBody = escapeScriptSource(scriptSource);
 			var flowCanvas = bfa.flowEditorContext.canvas;
 			var flowDiagramState = flowCanvas.state.save(); 
 			var flowDiagramStateStr = escapeFlowDiagramState(JSON.stringify(flowDiagramState, null, 4));
@@ -628,7 +642,6 @@ function onUpdateScriptDialog_btnOkClick() {
 			request('service/script/admin/update', {
 					headers: { 'Content-Type': 'application/json' },
 					method: 'POST',
-					//data: '{"name": "' + scriptName + '", "body": "' + scriptBody + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
 					data: '{"name": "' + scriptName + '", "flowDiagram": "' + flowDiagramStateStr + '"}'
 				}).then(function(resp){
 					hideDialog('updateScriptDialog');

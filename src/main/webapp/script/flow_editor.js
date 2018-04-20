@@ -579,7 +579,6 @@ function AttachPointsProvider() {
 	function getDiamondPoints(diam) {
 		var pts = diam.array().value;
 		
-		
 		// diamond vertex points + midpoints of each diamond's edge 
 		return [new Point(pts[0][0], pts[0][1]),
 				new Point(pts[1][0], pts[1][1]),
@@ -1067,6 +1066,7 @@ function drawLineGroup(state, elms) {
 function createStartElement() {
 	var start = drawCircle(50, 50, 'Start', 'str' + draw.state.elementCounter++);
 	start.flowType = 'start';
+	draw.state.addFlowBlock(start.flowId, start.flowType);
 	start.fire('mousedown');
 	fireEditorEvent('flowSourceChange');
 }
@@ -1075,6 +1075,7 @@ function createEndElement() {
 	var end = drawCircle(draw.selectedElement.cx() + draw.selectedElement.width() + 50, draw.selectedElement.cy(), 
 						'End', 'end' + draw.state.elementCounter++, 'endState');
 	end.flowType = 'end';
+	draw.state.addFlowBlock(end.flowId, end.flowType);
 	drawLine(draw.selectedElement, end);
 	end.fire('mousedown');
 	fireEditorEvent('flowSourceChange');
@@ -1090,7 +1091,7 @@ function createActionElement() {
 function createSubprocessElement() {
 	var sub = drawFlowElement('Sub-Process', 'subProcess');
 	sub.flowType = 'subprocess';
-	//draw.state.addFlowBlock(sub.flowId, sub.flowType);
+	draw.state.addFlowBlock(sub.flowId, sub.flowType);
 	fireEditorEvent('flowSourceChange');
 }
 
@@ -1098,7 +1099,7 @@ function createConditionElement() {
 	var diam = drawDiamond(draw.selectedElement.cx() + draw.selectedElement.width() + 50, draw.selectedElement.cy(), 
 							'Is Condition Met?', 'cond' + draw.state.elementCounter++);
 	diam.flowType = 'condition';
-	//draw.state.addFlowBlock(diam.flowId, diam.flowType);
+	draw.state.addFlowBlock(diam.flowId, diam.flowType);
 	drawLine(draw.selectedElement, diam);
 	diam.fire('mousedown');
 	fireEditorEvent('flowSourceChange');

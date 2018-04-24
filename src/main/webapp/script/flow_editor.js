@@ -94,6 +94,20 @@ function LineGroup(line, flowId) {
 		return state;
 	}
 	
+	this.getLabel = function() {
+		var line = this.head;
+		var label;
+		do {
+			if (line.label) {
+				label = line.label[1].text();
+				break;
+			}
+			line = line.nextLine;
+		} while (line);
+		
+		return label;
+	};
+	
 	function selectLine(line) {
 		if (line.hasClass('unselectedLine')) {
 			line.removeClass('unselectedLine');
@@ -1082,52 +1096,67 @@ function createEndElement() {
 }
 
 function createActionElement() {
-	var action = drawFlowElement('Action');
-	action.flowType = 'action';
-	draw.state.addFlowBlock(action.flowId, action.flowType);
-	fireEditorEvent('flowSourceChange');
+	var action = drawFlowElement('Action', drawRectangle);
+	if (action != null) {
+		action.flowType = 'action';
+		draw.state.addFlowBlock(action.flowId, action.flowType);
+		fireEditorEvent('flowSourceChange');
+	}
 }
 
 function createSubprocessElement() {
-	var sub = drawFlowElement('Sub-Process', 'subProcess');
-	sub.flowType = 'subprocess';
-	draw.state.addFlowBlock(sub.flowId, sub.flowType);
-	fireEditorEvent('flowSourceChange');
+	var sub = drawFlowElement('Sub-Process', drawRectangle, 'subProcess');
+	if (sub != null) {
+		sub.flowType = 'subprocess';
+		draw.state.addFlowBlock(sub.flowId, sub.flowType);
+		fireEditorEvent('flowSourceChange');
+	}
 }
 
 function createConditionElement() {
-	var diam = drawDiamond(draw.selectedElement.cx() + draw.selectedElement.width() + 50, draw.selectedElement.cy(), 
-							'Is Condition Met?', 'cond' + draw.state.elementCounter++);
-	diam.flowType = 'condition';
-	draw.state.addFlowBlock(diam.flowId, diam.flowType);
-	drawLine(draw.selectedElement, diam);
-	diam.fire('mousedown');
-	fireEditorEvent('flowSourceChange');
+	var diam = drawFlowElement('Condition', drawDiamond);
+	
+	if (diam != null) {
+		diam.flowType = 'condition';
+		draw.state.addFlowBlock(diam.flowId, diam.flowType);
+		fireEditorEvent('flowSourceChange');
+	}
 }
 
-function drawFlowElement(textPrefix, elementCssClass) {
+function drawFlowElement(textPrefix, drawFunction, elementCssClass) {
 	var selectedElement = draw.selectedElement;
+	var elm;
 	
-	var elm = drawRectangle(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
-			textPrefix + ' ' + draw.state.elementCounter, textPrefix.toLowerCase() + draw.state.elementCounter, elementCssClass);
-	
-	draw.state.elementCounter++;
-
+	//TODO: refactor ugly logic here
 	if (selectedElement.customType == 'diamond' && selectedElement.outLineGroups.length == 0) {
+		elm =  drawConditionBranchElement(textPrefix, drawFunction, elementCssClass);
 		drawLine(selectedElement, elm, 'Yes');
 	} else if (selectedElement.customType == 'diamond' && selectedElement.outLineGroups.length == 1) {
-		drawLine(selectedElement, elm, 'No');
+		elm =  drawConditionBranchElement(textPrefix, drawFunction, elementCssClass);
+		if (selectedElement.outLineGroups[0].getLabel() == 'Yes') {
+			drawLine(selectedElement, elm, 'No');
+		} else {
+			drawLine(selectedElement, elm, 'Yes');
+		}
 	} else if (selectedElement.customType == 'diamond' && selectedElement.outLineGroups.length == 2) {
-		alert('No more elements allowed');
-		elm.remove();
-		elm.text.remove();
-		draw.state.elementCounter--;
-		return;
+		// No new element is created
+		return null;
 	} else {
+		elm =  drawConditionBranchElement(textPrefix, drawFunction, elementCssClass);
 		drawLine(selectedElement, elm);
 	}
 	
 	elm.fire('mousedown');
+	
+	return elm;
+}
+
+function drawConditionBranchElement(textPrefix, drawFunction, elementCssClass) {
+	var selectedElement = draw.selectedElement;
+	var elm;
+	elm = drawFunction(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
+			textPrefix + ' ' + draw.state.elementCounter, textPrefix.toLowerCase() + draw.state.elementCounter, elementCssClass);
+	draw.state.elementCounter++;
 	
 	return elm;
 }

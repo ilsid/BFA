@@ -1,0 +1,27 @@
+DeclareInputVar("connection", "Test::ConnectionInfo");
+DeclareInputVar("objName", "String");
+
+DeclareLocalVar("obj", "Test::SomeObject");
+DeclareLocalVar("result", "Array");
+
+/* Connect to Database */
+Action("Test::Connect", "connection");
+
+/* Try Get Object by Name */
+Action("Test::Get Object by Name", "objName").SetResult("result");
+SetLocalVar("obj", "result[1]");
+
+/* Object Missed? */
+if (Equal("obj", "null")) {
+    
+    /* Create Object */
+    SetLocalVar("obj.name", "objName");
+    SetLocalVar("obj.status", "'SomeStatus'");
+    SetLocalVar("obj.type", "'SomeType'");
+    Action("Test::Create Object", "obj").SetResult("result");
+    SetLocalVar("obj", "result[1]");
+    
+}
+
+/* Disconnect from Database */
+Action("Test::Disconnect");

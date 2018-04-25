@@ -39,6 +39,7 @@ public class ScriptSourceGenerator {
 	private static final String SET_LOCAL_VAR_EXPR_PATTERN = "SetLocalVar(\"%s\", \"%s\");";
 
 	private static final String COMMENTS_PATTERN = "/* %s */";
+	
 
 	/**
 	 * Generates script source that is ready for the pre-processing stage.
@@ -172,16 +173,50 @@ public class ScriptSourceGenerator {
 		}
 
 	}
+	
+	//TODO: complete implementation
+	private static class ConditionSourceGenerator extends BlockSourceGenerator {
+		
+		private static final String EQUAL_EXPR_PATTERN = "Equal(\"%s\"%s))";
+		
+		private static final String IF_EXPR_PATTERN = "if (%s) {\n%s\n}";
+
+		@Override
+		protected void doProcessBlock(StringBuilder code, Block block) throws ParsingException {
+			List<String> exprs = block.getExpressions();
+			
+			if (exprs.size() > 0) {
+				String expr = exprs.get(0);
+				
+				StringBuilder branchCode = new StringBuilder();
+				for (Block branchBlock: block.getTrueBranch()) {
+					BlockSourceGenerator.processBlock(branchCode, branchBlock);
+				}
+				
+				code.append(branchCode);
+			}
+			
+		}
+		
+		private void processConditionExpression(String expression, StringBuilder code) throws ParsingException {
+			
+		}
+		
+	}
 
 	//TODO: add other block source generator implementations
 	private static class BlockSourceGeneratorFactory {
 
 		private static final BlockSourceGenerator ACTION_SOURCE_GENERATOR = new ActionSourceGenerator();
+		
+		private static final BlockSourceGenerator CONDITION_SOURCE_GENERATOR = new ConditionSourceGenerator();
 
 		public static BlockSourceGenerator getGenerator(String blockType) {
 
 			if (FlowDefinition.BlockType.ACTION.equals(blockType)) {
 				return ACTION_SOURCE_GENERATOR;
+			} else if (FlowDefinition.BlockType.CONDITION.equals(blockType)) {
+				return CONDITION_SOURCE_GENERATOR;
 			}
 
 			return null;

@@ -1,5 +1,6 @@
 package com.ilsid.bfa.script;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
@@ -29,6 +30,12 @@ public class ScriptSourceGeneratorUnitTest extends BaseUnitTestCase {
 	@Test
 	public void wholeFlowWithActionsIsParsed() throws Exception {
 		assertScriptCode("flow-with-actions.json", "flow-with-actions-expected-script.txt");
+	}
+	
+	@Test
+	@Ignore
+	public void conditionBlockWithTrueBranchOnlyIsParsed() throws Exception {
+		assertScriptCode("condition-true-branch-only.json", "condition-true-branch-only-expected-script.txt");
 	}
 
 	@Test

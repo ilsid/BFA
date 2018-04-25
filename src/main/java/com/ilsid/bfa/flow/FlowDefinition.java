@@ -66,6 +66,11 @@ public class FlowDefinition {
 		private List<String> postExecExpressions = new LinkedList<>();
 
 		private List<String> expressions = new LinkedList<>();
+		
+		private List<Block> trueBranch;
+		
+		private List<Block> falseBranch;
+
 
 		public String getId() {
 			return id;
@@ -138,9 +143,26 @@ public class FlowDefinition {
 		public void setExpressions(List<String> expressions) {
 			this.expressions = expressions;
 		}
+		
+		public List<Block> getTrueBranch() {
+			return trueBranch;
+		}
+
+		public void setTrueBranch(List<Block> trueBranch) {
+			this.trueBranch = trueBranch;
+		}
+
+		public List<Block> getFalseBranch() {
+			return falseBranch;
+		}
+
+		public void setFalseBranch(List<Block> falseBranch) {
+			this.falseBranch = falseBranch;
+		}
+		
 
 	}
-
+	
 	public static class BlockType {
 
 		public static final String START = "start";

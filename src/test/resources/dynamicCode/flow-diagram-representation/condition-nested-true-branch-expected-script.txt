@@ -21,6 +21,18 @@ if (Equal("obj", "null")) {
     Action("Test::Create Object", "obj").SetResult("result");
     SetLocalVar("obj", "result[1]");
     
+    /* Object Missed Again? */
+    if (Equal("obj", "null")) {
+
+        /* Create Object */
+        SetLocalVar("obj.name", "objName");
+        SetLocalVar("obj.status", "'AnotherStatus'");
+        SetLocalVar("obj.type", "'AnotherType'");
+        Action("Test::Create Object", "obj").SetResult("result");
+        SetLocalVar("obj", "result[1]");
+        
+    }
+
 }
 
 /* Disconnect from Database */

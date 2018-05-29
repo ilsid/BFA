@@ -1,6 +1,5 @@
 package com.ilsid.bfa.script;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ilsid.bfa.BaseUnitTestCase;
@@ -33,9 +32,13 @@ public class ScriptSourceGeneratorUnitTest extends BaseUnitTestCase {
 	}
 	
 	@Test
-	@Ignore
 	public void conditionBlockWithTrueBranchOnlyIsParsed() throws Exception {
 		assertScriptCode("condition-true-branch-only.json", "condition-true-branch-only-expected-script.txt");
+	}
+	
+	@Test
+	public void conditionBlockWithNestedTrueBranchIsParsed() throws Exception {
+		assertScriptCode("condition-nested-true-branch.json", "condition-nested-true-branch-expected-script.txt");
 	}
 
 	@Test

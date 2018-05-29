@@ -18,8 +18,6 @@ public class ScriptSourceGenerator {
 
 	private static final String BLANK_REGEX = "\\s+";
 
-	private static final String EQUAL_REGEX = "\\s*=\\s*";
-
 	private static final String NL = "\n";
 
 	private static final String SC = ";";
@@ -39,7 +37,6 @@ public class ScriptSourceGenerator {
 	private static final String SET_LOCAL_VAR_EXPR_PATTERN = "SetLocalVar(\"%s\", \"%s\");";
 
 	private static final String COMMENTS_PATTERN = "/* %s */";
-	
 
 	/**
 	 * Generates script source that is ready for the pre-processing stage.
@@ -114,41 +111,66 @@ public class ScriptSourceGenerator {
 
 	private static abstract class BlockSourceGenerator {
 
+		private static final String EMPTY = "";
+
+		private static final String ASSIGN_REGEX = "\\s*=\\s*";
+
+		private static final int INIT_SOURCE_LEVEL = 0;
+
+		private static final String INDENT_SPACES = "    ";
+
 		public static void processBlock(StringBuilder code, Block block) throws ParsingException {
+			processBlock(code, block, INIT_SOURCE_LEVEL);
+		}
+
+		public static void processBlock(StringBuilder code, Block block, int level) throws ParsingException {
 			BlockSourceGenerator sourceGenerator = BlockSourceGeneratorFactory.getGenerator(block.getType());
 			if (sourceGenerator != null) {
-				sourceGenerator.doProcessBlock(code, block);
+				sourceGenerator.doProcessBlock(code, block, level);
 			}
 		}
 
-		protected abstract void doProcessBlock(StringBuilder code, Block block) throws ParsingException;
+		protected abstract void doProcessBlock(StringBuilder code, Block block, int level) throws ParsingException;
 
-		protected void processAssignExpressions(List<String> expressions, StringBuilder code) throws ParsingException {
+		protected void processAssignExpressions(List<String> expressions, StringBuilder code, String indent)
+				throws ParsingException {
 			for (String preExpr : expressions) {
-				String[] tokens = preExpr.split(EQUAL_REGEX);
+				String[] tokens = preExpr.split(ASSIGN_REGEX);
 
 				if (tokens.length != 2) {
 					throw new ParsingException(String.format(
 							"Invalid assignment expression: [%s]. Expected [var = value] expression.", preExpr));
 				}
 
-				code.append(String.format(SET_LOCAL_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL);
+				code.append(String.format(SET_LOCAL_VAR_EXPR_PATTERN, tokens[0], tokens[1])).append(NL).append(indent);
 			}
+		}
+
+		protected String getIndent(int level) {
+			StringBuilder sb = new StringBuilder(EMPTY);
+			for (int i = 0; i < level; i++) {
+				sb.append(INDENT_SPACES);
+			}
+
+			return sb.toString();
 		}
 
 	}
 
 	private static class ActionSourceGenerator extends BlockSourceGenerator {
 
-		public void doProcessBlock(StringBuilder code, Block block) throws ParsingException {
-			code.append(String.format(COMMENTS_PATTERN, block.getDescription())).append(NL);
+		public void doProcessBlock(StringBuilder code, Block block, int level) throws ParsingException {
+			final String indent = getIndent(level);
+			code.append(indent);
+
+			code.append(String.format(COMMENTS_PATTERN, block.getDescription())).append(NL).append(indent);
 
 			List<String> exprs = block.getExpressions();
 
 			if (exprs != null && exprs.size() > 0) {
-				processAssignExpressions(exprs, code);
+				processAssignExpressions(exprs, code, indent);
 			} else {
-				processAssignExpressions(block.getPreExecExpressions(), code);
+				processAssignExpressions(block.getPreExecExpressions(), code, indent);
 
 				String actionName = block.getName();
 				StringBuilder paramsExpr = new StringBuilder();
@@ -165,50 +187,61 @@ public class ScriptSourceGenerator {
 					code.append(SC);
 				}
 
-				code.append(NL);
-				processAssignExpressions(block.getPostExecExpressions(), code);
+				code.append(NL).append(indent);
+				processAssignExpressions(block.getPostExecExpressions(), code, indent);
 			}
 
 			code.append(NL);
 		}
 
 	}
-	
-	//TODO: complete implementation
+
+	// TODO: complete implementation
 	private static class ConditionSourceGenerator extends BlockSourceGenerator {
-		
-		private static final String EQUAL_EXPR_PATTERN = "Equal(\"%s\"%s))";
-		
-		private static final String IF_EXPR_PATTERN = "if (%s) {\n%s\n}";
+
+		private static final String EQUAL_REGEX = "\\s*==\\s*";
+
+		private static final String EQUAL_EXPR_PATTERN = "Equal(\"%s\", \"%s\")";
+
+		private static final String IF_EXPR_PATTERN = "if (%s) {\n\n%s%s}";
 
 		@Override
-		protected void doProcessBlock(StringBuilder code, Block block) throws ParsingException {
-			List<String> exprs = block.getExpressions();
+		protected void doProcessBlock(StringBuilder code, Block block, int level) throws ParsingException {
+			final String indent = getIndent(level);
+			code.append(indent);
 			
+			List<String> exprs = block.getExpressions();
+
 			if (exprs.size() > 0) {
 				String expr = exprs.get(0);
-				
-				StringBuilder branchCode = new StringBuilder();
-				for (Block branchBlock: block.getTrueBranch()) {
-					BlockSourceGenerator.processBlock(branchCode, branchBlock);
+				String[] tokens = expr.split(EQUAL_REGEX);
+
+				if (tokens.length != 2) {
+					throw new ParsingException(String
+							.format("Invalid equality expression: [%s]. Expected [var == value] expression.", expr));
 				}
-				
-				code.append(branchCode);
+
+				code.append(String.format(COMMENTS_PATTERN, block.getDescription())).append(NL).append(indent);
+
+				StringBuilder branchCode = new StringBuilder();
+				for (Block branchBlock : block.getTrueBranch()) {
+					BlockSourceGenerator.processBlock(branchCode, branchBlock, level + 1);
+				}
+
+				String equalExpr = String.format(EQUAL_EXPR_PATTERN, tokens[0], tokens[1]);
+				String ifExpr = String.format(IF_EXPR_PATTERN, equalExpr, branchCode, indent);
+				code.append(ifExpr).append(NL).append(NL);
 			}
-			
+
 		}
-		
-		private void processConditionExpression(String expression, StringBuilder code) throws ParsingException {
-			
-		}
-		
+
 	}
 
-	//TODO: add other block source generator implementations
+	// TODO: add other block source generator implementations
 	private static class BlockSourceGeneratorFactory {
 
 		private static final BlockSourceGenerator ACTION_SOURCE_GENERATOR = new ActionSourceGenerator();
-		
+
 		private static final BlockSourceGenerator CONDITION_SOURCE_GENERATOR = new ConditionSourceGenerator();
 
 		public static BlockSourceGenerator getGenerator(String blockType) {

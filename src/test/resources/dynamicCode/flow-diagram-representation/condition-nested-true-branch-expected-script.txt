@@ -13,7 +13,7 @@ SetLocalVar("obj", "result[1]");
 
 /* Object Missed? */
 if (Equal("obj", "null")) {
-
+    
     /* Create Object */
     SetLocalVar("obj.name", "objName");
     SetLocalVar("obj.status", "'SomeStatus'");
@@ -23,7 +23,7 @@ if (Equal("obj", "null")) {
     
     /* Object Missed Again? */
     if (Equal("obj", "null")) {
-
+        
         /* Create Object */
         SetLocalVar("obj.name", "objName");
         SetLocalVar("obj.status", "'AnotherStatus'");

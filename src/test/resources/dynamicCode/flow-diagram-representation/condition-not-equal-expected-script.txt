@@ -11,15 +11,11 @@ Action("Test::Connect", "connection");
 Action("Test::Get Object by Name", "objName").SetResult("result");
 SetLocalVar("obj", "result[1]");
 
-/* Object Missed? */
-if (Equal("obj", "null")) {
+/* Object Exists? */
+if (!Equal("obj", "null")) {
     
-    /* Create Object */
-    SetLocalVar("obj.name", "objName");
-    SetLocalVar("obj.status", "'SomeStatus'");
-    SetLocalVar("obj.type", "'SomeType'");
-    Action("Test::Create Object", "obj").SetResult("result");
-    SetLocalVar("obj", "result[1]");
+    /* Do Something with Object */
+    Action("Test::Do Something with Object", "obj");
     
 }
 

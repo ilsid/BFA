@@ -1,0 +1,44 @@
+{
+	 "flow": {
+        "inputParameters": [
+            "connection  Test::ConnectionInfo",
+            "objName    String"
+        ],
+        "localVariables": [
+            "obj  Test::SomeObject",
+            "result  Array"
+        ],
+        "blocks": [
+            {
+                "id": "condition1",
+                "type": "condition",
+                "description": "Object Missed?",
+                "expressions": [
+                    "obj > null"
+                ],
+				"trueBranch": [
+					{
+						"id": "action2",
+						"type": "action",
+						"description": "Create Object",
+						"name": "Test::Create Object",
+						"output": "result",
+						"inputParameters": [
+							"obj"
+						],
+						"preExecExpressions": [
+							"obj.name = objName",
+							"obj.status = 'SomeStatus'",
+							"obj.type = 'SomeType'"
+						],
+						"postExecExpressions": [
+							"obj = result[1]"
+						]
+					}
+				],
+				"falseBranch": [
+				]
+            }
+        ]
+    }
+}

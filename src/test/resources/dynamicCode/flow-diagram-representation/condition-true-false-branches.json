@@ -1,0 +1,85 @@
+{
+	 "flow": {
+        "inputParameters": [
+            "connection  Test::ConnectionInfo",
+            "objName    String"
+        ],
+        "localVariables": [
+            "obj  Test::SomeObject",
+            "result  Array"
+        ],
+        "blocks": [
+            {
+                "id": "action1",
+                "type": "action",
+                "description": "Connect to Database",
+                "name": "Test::Connect",
+                "output": "",
+                "inputParameters": [
+                    "connection"
+                ],
+                "preExecExpressions": [],
+                "postExecExpressions": []
+            },
+			{
+                "id": "action11",
+                "type": "action",
+                "description": "Try Get Object by Name",
+                "name": "Test::Get Object by Name",
+                "output": "result",
+                "inputParameters": [
+                    "objName"
+                ],
+                "preExecExpressions": [
+                ],
+                "postExecExpressions": [
+                    "obj = result[1]"
+                ]
+            },
+			{
+                "id": "condition1",
+                "type": "condition",
+                "description": "Object Missed?",
+                "expressions": [
+                    "obj == null"
+                ],
+				"trueBranch": [
+					{
+						"id": "action2",
+						"type": "action",
+						"description": "Create Object",
+						"name": "Test::Create Object",
+						"output": "result",
+						"inputParameters": [
+							"obj"
+						],
+						"preExecExpressions": [
+							"obj.name = objName",
+							"obj.status = 'SomeStatus'",
+							"obj.type = 'SomeType'"
+						],
+						"postExecExpressions": [
+							"obj = result[1]"
+						]
+					}
+				],
+				"falseBranch": [
+					{
+						"id": "action33",
+						"type": "action",
+						"description": "Assign Object",
+						"expressions": [
+		                    "obj = result[1]"
+		                ]
+					}
+				]
+            },
+            {
+                "id": "action6",
+                "type": "action",
+                "description": "Disconnect from Database",
+                "name": "Test::Disconnect"
+            }
+        ]
+    }
+}

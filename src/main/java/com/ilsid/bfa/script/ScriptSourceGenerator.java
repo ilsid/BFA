@@ -201,36 +201,70 @@ public class ScriptSourceGenerator {
 
 		private static final String EQUAL_REGEX = "\\s*==\\s*";
 
+		private static final String NOT_EQUAL_REGEX = "\\s*!=\\s*";
+
 		private static final String EQUAL_EXPR_PATTERN = "Equal(\"%s\", \"%s\")";
 
-		private static final String IF_EXPR_PATTERN = "if (%s) {\n\n%s%s}";
+		private static final String NOT_EQUAL_EXPR_PATTERN = "!Equal(\"%s\", \"%s\")";
+
+		private static final String IF_EXPR_PATTERN = "if (%s) {\n%s\n%s%s}";
+
+		private static final String ELSE_EXPR_PATTERN = "else {\n%s\n%s%s}";
 
 		@Override
 		protected void doProcessBlock(StringBuilder code, Block block, int level) throws ParsingException {
 			final String indent = getIndent(level);
 			code.append(indent);
-			
+
 			List<String> exprs = block.getExpressions();
+			String conditionPattern = EQUAL_EXPR_PATTERN;
 
 			if (exprs.size() > 0) {
 				String expr = exprs.get(0);
 				String[] tokens = expr.split(EQUAL_REGEX);
 
 				if (tokens.length != 2) {
-					throw new ParsingException(String
-							.format("Invalid equality expression: [%s]. Expected [var == value] expression.", expr));
+					tokens = expr.split(NOT_EQUAL_REGEX);
+
+					if (tokens.length != 2) {
+						throw new ParsingException(String.format(
+								"Invalid condition expression: [%s]. Expected [var == value] or [var != value] expression.",
+								expr));
+					}
+					
+					conditionPattern = NOT_EQUAL_EXPR_PATTERN;
 				}
 
 				code.append(String.format(COMMENTS_PATTERN, block.getDescription())).append(NL).append(indent);
 
-				StringBuilder branchCode = new StringBuilder();
+				final int branchCodeLevel = level + 1;
+				final String branchIndent = getIndent(branchCodeLevel);
+
+				StringBuilder trueBranchCode = new StringBuilder();
 				for (Block branchBlock : block.getTrueBranch()) {
-					BlockSourceGenerator.processBlock(branchCode, branchBlock, level + 1);
+					BlockSourceGenerator.processBlock(trueBranchCode, branchBlock, branchCodeLevel);
 				}
 
-				String equalExpr = String.format(EQUAL_EXPR_PATTERN, tokens[0], tokens[1]);
-				String ifExpr = String.format(IF_EXPR_PATTERN, equalExpr, branchCode, indent);
-				code.append(ifExpr).append(NL).append(NL);
+				String conditionExpr = String.format(conditionPattern, tokens[0], tokens[1]);
+				String ifExpr = String.format(IF_EXPR_PATTERN, conditionExpr, branchIndent, trueBranchCode, indent);
+				String elseExpr = null;
+
+				if (block.getFalseBranch().size() > 0) {
+					StringBuilder falseBranchCode = new StringBuilder();
+					for (Block branchBlock : block.getFalseBranch()) {
+						BlockSourceGenerator.processBlock(falseBranchCode, branchBlock, branchCodeLevel);
+					}
+
+					elseExpr = String.format(ELSE_EXPR_PATTERN, branchIndent, falseBranchCode, indent);
+				}
+
+				code.append(ifExpr).append(NL);
+
+				if (elseExpr != null) {
+					code.append(indent).append(elseExpr).append(NL);
+				}
+
+				code.append(NL);
 			}
 
 		}

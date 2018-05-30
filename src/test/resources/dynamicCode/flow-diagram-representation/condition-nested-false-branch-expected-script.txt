@@ -22,6 +22,23 @@ if (Equal("obj", "null")) {
     SetLocalVar("obj", "result[1]");
     
 }
+else {
+    
+    /* Some Another Condition Met? */
+    if (Equal("obj", "'AAAA'")) {
+        
+        /* Do Some Action */
+        Action("Test::Do Action");
+        
+    }
+    else {
+        
+        /* Do Another Action */
+        Action("Test::Do Another Action");
+        
+    }
+
+}
 
 /* Disconnect from Database */
 Action("Test::Disconnect");

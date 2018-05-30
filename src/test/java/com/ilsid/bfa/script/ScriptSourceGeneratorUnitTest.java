@@ -37,8 +37,23 @@ public class ScriptSourceGeneratorUnitTest extends BaseUnitTestCase {
 	}
 	
 	@Test
+	public void conditionBlockWithNotEqualConditionIsParsed() throws Exception {
+		assertScriptCode("condition-not-equal.json", "condition-not-equal-expected-script.txt");
+	}
+		
+	@Test
 	public void conditionBlockWithNestedTrueBranchIsParsed() throws Exception {
 		assertScriptCode("condition-nested-true-branch.json", "condition-nested-true-branch-expected-script.txt");
+	}
+	
+	@Test
+	public void conditionBlockWithTrueAndFalseBranchesIsParsed() throws Exception {
+		assertScriptCode("condition-true-false-branches.json", "condition-true-false-branches-expected-script.txt");
+	}
+	
+	@Test
+	public void conditionBlockWithNestedFalseBranchIsParsed() throws Exception {
+		assertScriptCode("condition-nested-false-branch.json", "condition-nested-false-branch-expected-script.txt");
 	}
 
 	@Test
@@ -57,6 +72,12 @@ public class ScriptSourceGeneratorUnitTest extends BaseUnitTestCase {
 	public void invalidAssignExpressionIsNotParsed() throws Exception {
 		assertException("invalid-assign-expression.json",
 				"Invalid assignment expression: [zSite = ]. Expected [var = value] expression.");
+	}
+	
+	@Test
+	public void invalidConditionIsNotParsed() throws Exception {
+		assertException("invalid-condition.json",
+				"Invalid condition expression: [obj > null]. Expected [var == value] or [var != value] expression.");
 	}
 
 	private void assertScriptCode(String inFlowFileName, String outScriptFileName) throws Exception {
@@ -83,5 +104,5 @@ public class ScriptSourceGeneratorUnitTest extends BaseUnitTestCase {
 			assertEquals(expectedMsg, e.getMessage());
 		}
 	}
-
+	
 }

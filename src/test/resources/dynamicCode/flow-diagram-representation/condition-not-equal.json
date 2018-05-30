@@ -1,0 +1,68 @@
+{
+	 "flow": {
+        "inputParameters": [
+            "connection  Test::ConnectionInfo",
+            "objName    String"
+        ],
+        "localVariables": [
+            "obj  Test::SomeObject",
+            "result  Array"
+        ],
+        "blocks": [
+            {
+                "id": "action1",
+                "type": "action",
+                "description": "Connect to Database",
+                "name": "Test::Connect",
+                "output": "",
+                "inputParameters": [
+                    "connection"
+                ],
+                "preExecExpressions": [],
+                "postExecExpressions": []
+            },
+			{
+                "id": "action11",
+                "type": "action",
+                "description": "Try Get Object by Name",
+                "name": "Test::Get Object by Name",
+                "output": "result",
+                "inputParameters": [
+                    "objName"
+                ],
+                "preExecExpressions": [
+                ],
+                "postExecExpressions": [
+                    "obj = result[1]"
+                ]
+            },
+			{
+                "id": "condition1",
+                "type": "condition",
+                "description": "Object Exists?",
+                "expressions": [
+                    "obj != null"
+                ],
+				"trueBranch": [
+					{
+						"id": "action2",
+						"type": "action",
+						"description": "Do Something with Object",
+						"name": "Test::Do Something with Object",
+						"inputParameters": [
+		                    "obj"
+		                ]
+					}
+				],
+				"falseBranch": [
+				]
+            },
+            {
+                "id": "action6",
+                "type": "action",
+                "description": "Disconnect from Database",
+                "name": "Test::Disconnect"
+            }
+        ]
+    }
+}

@@ -22,6 +22,12 @@ if (Equal("obj", "null")) {
     SetLocalVar("obj", "result[1]");
     
 }
+else {
+    
+    /* Assign Object */
+    SetLocalVar("obj", "result[1]");
+    
+}
 
 /* Disconnect from Database */
 Action("Test::Disconnect");

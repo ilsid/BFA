@@ -1079,7 +1079,7 @@ function initFlowEditorEventHandlers() {
 				registry.byId('elementPropertiesToolbar_expressionsCheck').set('checked', exprOnly);
 				setDisabledStateForElementFields(exprOnly);
 				
-				var btnApply=registry.byId('elementPropertiesToolbar_btnApply');
+				var btnApply = registry.byId('elementPropertiesToolbar_btnApply');
 				btnApply.set('disabled', true);
 			}
 			

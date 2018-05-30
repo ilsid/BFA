@@ -1115,7 +1115,6 @@ function createSubprocessElement() {
 
 function createConditionElement() {
 	var diam = drawFlowElement('Condition', drawDiamond);
-	
 	if (diam != null) {
 		diam.flowType = 'condition';
 		draw.state.addFlowBlock(diam.flowId, diam.flowType);
@@ -1155,7 +1154,9 @@ function drawConditionBranchElement(textPrefix, drawFunction, elementCssClass) {
 	var selectedElement = draw.selectedElement;
 	var elm;
 	elm = drawFunction(selectedElement.cx() + selectedElement.width() + 50, selectedElement.cy(), 
-			textPrefix + ' ' + draw.state.elementCounter, textPrefix.toLowerCase() + draw.state.elementCounter, elementCssClass);
+			textPrefix + ' ' + draw.state.elementCounter, 
+			textPrefix.toLowerCase() + draw.state.elementCounter, 
+			elementCssClass);
 	draw.state.elementCounter++;
 	
 	return elm;

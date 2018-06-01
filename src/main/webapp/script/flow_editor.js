@@ -1234,12 +1234,19 @@ function State() {
 	};
 	
 	//TODO: adjust arrows positions in case of rect width increasing  
-	this.setRectLabel = function(flowId, label) {
-		var rect = this.rects.find(function(e) {
+	this.setElementLabel = function(flowId, label) {
+		var elm = this.rects.find(function(e) {
 			return e.flowId == flowId;
 		});
-		rect.text.text(label);
-		alignElementText(rect, rect.text);
+		
+		if (!elm) {
+			elm = this.diamonds.find(function(e) {
+				return e.flowId == flowId;
+			});
+		} 
+		
+		elm.text.text(label);
+		alignElementText(elm, elm.text);
 	};
 	
 	this.addRect = function(rect) {

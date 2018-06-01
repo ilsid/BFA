@@ -786,49 +786,44 @@ function onElementPropertiesToolbar_btnApplyClick() {
 		function(registry) {
 			var flowState = bfa.flowEditorContext.canvas.state;
 			var block = flowState.findFlowBlock(bfa.flowEditorContext.elementId);
-			var elmType = block.type;
 						
-			if (elmType === 'action') {
-				var txtDesc = registry.byId('elmProps_textDesc');
-				var txtName = registry.byId('elmProps_textName');
-				var txtInput = registry.byId('elmProps_textActionInputParams');
-				var txtOutput = registry.byId('elmProps_textActionOutput');
-				var txtPreExpr = registry.byId('elmProps_textPreExpressions');
-				var txtPostExpr = registry.byId('elmProps_textPostExpressions');
-				var txtExpr = registry.byId('elmProps_textExpressions');
-				
-				var expressionsOnly = !txtExpr.get('disabled');
-				var requiredFields = [txtDesc];
-				
-				if (expressionsOnly) {
-					requiredFields.push(txtExpr);
-				} else {
-					requiredFields.push(txtName);
-				}
-
-				var btnApply = registry.byId('elementPropertiesToolbar_btnApply');
-				
-				if (!fieldsAreValid(requiredFields)) {
-					// button focus triggers onBlur() for last invalid field
-					btnApply.focus();
-					return;
-				}
-				
-				block.type = elmType;
-				block.description = txtDesc.get('value').trim();
-				flowState.setRectLabel(block.id, block.description);
-				
-				if (expressionsOnly) {
-					block.expressions = parseExpressions(txtExpr);
-				} else {
-					block.name = txtName.get('value').trim();
-					block.output = txtOutput.get('value').trim();
-					block.inputParameters = parseExpressions(txtInput);
-					block.preExecExpressions = parseExpressions(txtPreExpr);
-					block.postExecExpressions = parseExpressions(txtPostExpr);
-				}
+			var txtDesc = registry.byId('elmProps_textDesc');
+			var txtName = registry.byId('elmProps_textName');
+			var txtInput = registry.byId('elmProps_textActionInputParams');
+			var txtOutput = registry.byId('elmProps_textActionOutput');
+			var txtPreExpr = registry.byId('elmProps_textPreExpressions');
+			var txtPostExpr = registry.byId('elmProps_textPostExpressions');
+			var txtExpr = registry.byId('elmProps_textExpressions');
+			var btnApply = registry.byId('elementPropertiesToolbar_btnApply');
+			
+			var expressionsOnly = !txtExpr.get('disabled');
+			var requiredFields = [txtDesc];
+			
+			if (expressionsOnly) {
+				requiredFields.push(txtExpr);
+			} else {
+				requiredFields.push(txtName);
 			}
 			
+			if (!fieldsAreValid(requiredFields)) {
+				// button focus triggers onBlur() for last invalid field
+				btnApply.focus();
+				return;
+			}
+			
+			block.description = txtDesc.get('value').trim();
+			flowState.setElementLabel(block.id, block.description);
+			
+			if (expressionsOnly) {
+				block.expressions = parseExpressions(txtExpr);
+			} else {
+				block.name = txtName.get('value').trim();
+				block.output = txtOutput.get('value').trim();
+				block.inputParameters = parseExpressions(txtInput);
+				block.preExecExpressions = parseExpressions(txtPreExpr);
+				block.postExecExpressions = parseExpressions(txtPostExpr);
+			}
+
 			var txtInputVars = registry.byId('elmProps_textFlowInputVars');
 			var txtLocalVars = registry.byId('elmProps_textFlowLocalVars');
 			flowState.flow.inputParameters = parseExpressions(txtInputVars);
@@ -1014,21 +1009,21 @@ function initFlowEditorEventHandlers() {
 			}
 		}
 		
-		document.addEventListener('diagramElementSelect', function(event) {
-
-			function parseExpressions(expressions, newLine) {
-				var res = '';
-				if (expressions) {
-					var tail = (newLine != undefined) ? newLine : ' ';
-					expressions.forEach(function(expr, i, a) {
-						res += expr;
-						if (i < a.length - 1) res = res + ',' + tail;
-					});
-				}
-				
-				return res;
+		function parseExpressions(expressions, newLine) {
+			var res = '';
+			if (expressions) {
+				var tail = (newLine != undefined) ? newLine : ' ';
+				expressions.forEach(function(expr, i, a) {
+					res += expr;
+					if (i < a.length - 1) res = res + ',' + tail;
+				});
 			}
 			
+			return res;
+		}
+		
+		document.addEventListener('diagramElementSelect', function(event) {
+
 			var elmPropsPane = registry.byId('elementPropertiesTab');
 			var bottomTabContainer = registry.byId('bottomTabContainer');
 			var btnDelete = bfa.flowEditorContext.btnDeleteElement;
@@ -1050,38 +1045,39 @@ function initFlowEditorEventHandlers() {
 				f.set('value', '');
 			});
 			
-			if (block.type === 'action') {
-				var txtDesc = registry.byId('elmProps_textDesc');
-				var txtName = registry.byId('elmProps_textName');
-				var txtInput = registry.byId('elmProps_textActionInputParams');
-				var txtOutput = registry.byId('elmProps_textActionOutput');
-				var txtPreExpr = registry.byId('elmProps_textPreExpressions');
-				var txtPostExpr = registry.byId('elmProps_textPostExpressions');
-				var txtExpr = registry.byId('elmProps_textExpressions');
-				
-				txtDesc.set('value', block.description);
+			var txtDesc = registry.byId('elmProps_textDesc');
+			var txtName = registry.byId('elmProps_textName');
+			var txtExpr = registry.byId('elmProps_textExpressions');
+			var txtInput = registry.byId('elmProps_textActionInputParams');
+			var txtOutput = registry.byId('elmProps_textActionOutput');
+			var txtPreExpr = registry.byId('elmProps_textPreExpressions');
+			var txtPostExpr = registry.byId('elmProps_textPostExpressions');
+			var checkboxExprs=registry.byId('elementPropertiesToolbar_expressionsCheck');
 
-				var exprOnly = block.hasOwnProperty('expressions');
-				var lf = '\n';
-				
-				if (exprOnly) {
-					txtExpr.set('value', parseExpressions(block.expressions, lf));
-					txtExpr.set('rows', block.expressions.length);
-				} else {
-					txtName.set('value', block.name);
-					txtInput.set('value', parseExpressions(block.inputParameters));
-					txtOutput.set('value', block.output);
-					txtPreExpr.set('value', parseExpressions(block.preExecExpressions, lf));
-					txtPostExpr.set('value', parseExpressions(block.postExecExpressions, lf));
-					txtExpr.set('rows', 2);
-				}
-				
-				registry.byId('elementPropertiesToolbar_expressionsCheck').set('checked', exprOnly);
-				setDisabledStateForElementFields(exprOnly);
-				
-				var btnApply = registry.byId('elementPropertiesToolbar_btnApply');
-				btnApply.set('disabled', true);
+			var exprOnly = block.hasOwnProperty('expressions');
+			var isConditionBlock = (block.type == 'condition');
+			var lf = '\n';
+			
+			txtDesc.set('value', block.description);
+			checkboxExprs.set('disabled', isConditionBlock);
+			
+			if (exprOnly) {
+				txtExpr.set('value', parseExpressions(block.expressions, lf));
+				txtExpr.set('rows', block.expressions.length);
+			} else {
+				txtName.set('value', block.name);
+				txtInput.set('value', parseExpressions(block.inputParameters));
+				txtOutput.set('value', block.output);
+				txtPreExpr.set('value', parseExpressions(block.preExecExpressions, lf));
+				txtPostExpr.set('value', parseExpressions(block.postExecExpressions, lf));
+				txtExpr.set('rows', 2);
 			}
+			
+			checkboxExprs.set('checked', exprOnly);
+			setDisabledStateForElementFields(exprOnly);
+			
+			var btnApply = registry.byId('elementPropertiesToolbar_btnApply');
+			btnApply.set('disabled', true);
 			
 			var txtInputVars = registry.byId('elmProps_textFlowInputVars');
 			var txtLocalVars = registry.byId('elmProps_textFlowLocalVars');

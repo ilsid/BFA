@@ -67,9 +67,9 @@ public class FlowDefinition {
 
 		private List<String> expressions = new LinkedList<>();
 		
-		private List<Block> trueBranch;
+		private List<Block> trueBranch = new LinkedList<>();
 		
-		private List<Block> falseBranch;
+		private List<Block> falseBranch = new LinkedList<>();
 
 
 		public String getId() {
